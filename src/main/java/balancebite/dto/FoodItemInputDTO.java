@@ -1,12 +1,6 @@
-package balancebite.model;
+package balancebite.dto;
 
-import jakarta.persistence.*;
-
-@Entity
-@Table(name = "fooditems")
-public class FoodItem {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+public class FoodItemInputDTO {
     private Long id;
     private String name;
     private int calories;
@@ -58,13 +52,7 @@ public class FoodItem {
     private int polyphenols;
 
     // Constructors
-    public FoodItem() {
-    }
 
-    // Getters en Setters
-    public Long getId() {
-        return id;
-    }
 
     public String getName() {
         return name;

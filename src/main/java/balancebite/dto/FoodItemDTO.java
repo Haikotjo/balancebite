@@ -1,12 +1,6 @@
-package balancebite.model;
+package balancebite.dto;
 
-import jakarta.persistence.*;
-
-@Entity
-@Table(name = "fooditems")
-public class FoodItem {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+public class FoodItemDTO {
     private Long id;
     private String name;
     private int calories;
@@ -58,12 +52,69 @@ public class FoodItem {
     private int polyphenols;
 
     // Constructors
-    public FoodItem() {
+    public FoodItemDTO() {
     }
 
-    // Getters en Setters
+    public FoodItemDTO(Long id, String name, int calories, int protein, int fat, int carbs, int vitaminA, int vitaminC, int vitaminD, int vitaminE, int vitaminK, int thiamine, int riboflavine, int niacine, int vitaminB6, int foliumzuur, int vitaminB12, int pantotheenzuur, int biotine, int calcium, int iron, int magnesium, int phosphorus, int potassium, int sodium, int zinc, int copper, int manganese, int selenium, int omega3, int omega6, int iodine, int fluoride, int chromium, int molybdenum, int lysine, int tryptophan, int phenylalanine, int valine, int leucine, int isoleucine, int threonine, int methionine, int histidine, int solubleFiber, int insolubleFiber, int flavonoids, int carotenoids, int polyphenols) {
+        this.id = id;
+        this.name = name;
+        this.calories = calories;
+        this.protein = protein;
+        this.fat = fat;
+        this.carbs = carbs;
+        this.vitaminA = vitaminA;
+        this.vitaminC = vitaminC;
+        this.vitaminD = vitaminD;
+        this.vitaminE = vitaminE;
+        this.vitaminK = vitaminK;
+        this.thiamine = thiamine;
+        this.riboflavine = riboflavine;
+        this.niacine = niacine;
+        this.vitaminB6 = vitaminB6;
+        this.foliumzuur = foliumzuur;
+        this.vitaminB12 = vitaminB12;
+        this.pantotheenzuur = pantotheenzuur;
+        this.biotine = biotine;
+        this.calcium = calcium;
+        this.iron = iron;
+        this.magnesium = magnesium;
+        this.phosphorus = phosphorus;
+        this.potassium = potassium;
+        this.sodium = sodium;
+        this.zinc = zinc;
+        this.copper = copper;
+        this.manganese = manganese;
+        this.selenium = selenium;
+        this.omega3 = omega3;
+        this.omega6 = omega6;
+        this.iodine = iodine;
+        this.fluoride = fluoride;
+        this.chromium = chromium;
+        this.molybdenum = molybdenum;
+        this.lysine = lysine;
+        this.tryptophan = tryptophan;
+        this.phenylalanine = phenylalanine;
+        this.valine = valine;
+        this.leucine = leucine;
+        this.isoleucine = isoleucine;
+        this.threonine = threonine;
+        this.methionine = methionine;
+        this.histidine = histidine;
+        this.solubleFiber = solubleFiber;
+        this.insolubleFiber = insolubleFiber;
+        this.flavonoids = flavonoids;
+        this.carotenoids = carotenoids;
+        this.polyphenols = polyphenols;
+    }
+
+    // Getters and Setters
+
     public Long getId() {
         return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public String getName() {
