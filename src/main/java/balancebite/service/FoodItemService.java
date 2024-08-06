@@ -1,47 +1,48 @@
 package balancebite.service;
 
-import balancebite.dto.FoodItemInputDTO;
-import balancebite.model.FoodItem;
-import balancebite.repository.FoodItemRepository;
+import balancebite.config.ApiConfig;
+import balancebite.dto.NutrientAPIDTO;
 import balancebite.mapper.FoodItemMapper;
-import balancebite.dto.UsdaFoodResponseDTO;
+import balancebite.model.FoodItem;
+import balancebite.model.NutrientInfo;
+import balancebite.repository.FoodItemRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.springframework.web.client.RestTemplate;
+
+import java.util.stream.Collectors;
 
 @Service
 public class FoodItemService {
 
-    private static final Logger logger = LoggerFactory.getLogger(FoodItemService.class);
-
-    private final FoodItemRepository foodItemRepository;
-    private final FoodItemMapper foodItemMapper;
-    private final UsdaApiService usdaApiService;
+    @Autowired
+    private FoodItemRepository foodItemRepository;
 
     @Autowired
-    public FoodItemService(FoodItemRepository foodItemRepository, FoodItemMapper foodItemMapper, UsdaApiService usdaApiService) {
-        this.foodItemRepository = foodItemRepository;
-        this.foodItemMapper = foodItemMapper;
-        this.usdaApiService = usdaApiService;
-    }
+    private ApiConfig apiConfig;
 
-    public void saveFoodItem(String fdcId) {
+    @Autowired
+    private RestTemplate restTemplate;
+
+    public void fetchAndSaveFoodItem(String fdcId) {
+        String apiUrl = "https://api.nal.usda.gov/fdc/v1/food/" + fdcId + "?api_key=" + apiConfig.getUsdaApiKey();
+        NutrientAPIDTO response = restTemplate.getForObject(apiUrl, NutrientAPIDTO.class);
+
         try {
-            logger.info("Fetching food data for FDC ID: {}", fdcId);
-            UsdaFoodResponseDTO usdaFoodResponse = usdaApiService.getFoodData(fdcId);
-            logger.debug("Received USDA Response: {}", usdaFoodResponse);
-
-            FoodItemInputDTO foodItemInputDTO = foodItemMapper.toInputDto(usdaFoodResponse);
-            logger.debug("Mapped FoodItemInputDTO: {}", foodItemInputDTO);
-
-            FoodItem foodItem = foodItemMapper.toEntity(foodItemInputDTO);
-            logger.debug("Mapped FoodItem Entity: {}", foodItem);
-
-            foodItemRepository.save(foodItem);
-            logger.info("Food item saved successfully: {}", foodItem);
+            ObjectMapper objectMapper = new ObjectMapper();
+            String jsonResponse = objectMapper.writeValueAsString(response);
+            System.out.println("API Response: " + jsonResponse);
         } catch (Exception e) {
-            logger.error("Error saving food item", e);
+            e.printStackTrace();
+        }
+
+        if (response != null && response.getFoodNutrients() != null) {
+            FoodItem foodItem = new FoodItem(response.getDescription(),
+                    response.getFoodNutrients().stream()
+                            .map(n -> new NutrientInfo(n.getNutrient().getName(), n.getAmount(), n.getUnitName()))
+                            .collect(Collectors.toList()));
+            foodItemRepository.save(foodItem);
         }
     }
 }

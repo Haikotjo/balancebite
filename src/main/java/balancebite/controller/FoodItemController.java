@@ -1,29 +1,42 @@
 package balancebite.controller;
 
-import balancebite.dto.UsdaFoodResponseDTO;
+import balancebite.model.FoodItem;
+import balancebite.repository.FoodItemRepository;
 import balancebite.service.FoodItemService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+import java.util.Optional;
+
 @RestController
-@RequestMapping("/api/fooditems")
+@RequestMapping("/food-items")
 public class FoodItemController {
 
-    private final FoodItemService foodItemService;
+    @Autowired
+    private FoodItemService foodItemService;
 
     @Autowired
-    public FoodItemController(FoodItemService foodItemService) {
-        this.foodItemService = foodItemService;
+    private FoodItemRepository foodItemRepository;
+
+    @GetMapping("/fetch/{fdcId}")
+    public String fetchFoodItem(@PathVariable String fdcId) {
+        foodItemService.fetchAndSaveFoodItem(fdcId);
+        return "Food item for FDC ID " + fdcId + " fetched and saved successfully";
     }
 
-    @PostMapping("/usda/{fdcId}")
-    public ResponseEntity<String> createFoodItemFromUsda(@PathVariable String fdcId) {
-        try {
-            foodItemService.saveFoodItem(fdcId);
-            return ResponseEntity.ok("Food item saved successfully!");
-        } catch (Exception e) {
-            return ResponseEntity.status(500).body("Error fetching data from USDA API");
-        }
+    @GetMapping
+    public List<FoodItem> getAllFoodItems() {
+        return foodItemRepository.findAll();
+    }
+
+    @GetMapping("/search")
+    public List<FoodItem> searchFoodItems(@RequestParam String name) {
+        return foodItemRepository.findByNameContainingIgnoreCase(name);
+    }
+
+    @GetMapping("/{id}")
+    public Optional<FoodItem> getFoodItemById(@PathVariable Long id) {
+        return foodItemRepository.findById(id);
     }
 }

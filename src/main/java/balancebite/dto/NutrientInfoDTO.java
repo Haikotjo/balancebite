@@ -1,35 +1,21 @@
-package balancebite.model;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+package balancebite.dto;
 
-@Entity
-public class Nutrient {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+public class NutrientInfoDTO {
     private String nutrientName;
     private Double value;
     private String unitName;
 
     // No-argument constructor
-    public Nutrient() {
-    }
+    public NutrientInfoDTO() {}
 
     // Parameterized constructor
-    public Nutrient(String nutrientName, Double value, String unitName) {
+    public NutrientInfoDTO(String nutrientName, Double value, String unitName) {
         this.nutrientName = nutrientName;
         this.value = value;
         this.unitName = unitName;
     }
 
-    // getters en setters
-
-    public Long getId() {
-        return id;
-    }
-
+    // Getters and setters
     public String getNutrientName() {
         return nutrientName;
     }

@@ -1,32 +1,24 @@
-package balancebite.dto;
+package balancebite.model;
 
-public class NutrientDTO {
-    private Long id;
+import jakarta.persistence.Embeddable;
+
+@Embeddable
+public class NutrientInfo {
     private String nutrientName;
     private Double value;
     private String unitName;
 
     // No-argument constructor
-    public NutrientDTO() {
-    }
+    public NutrientInfo() {}
 
     // Parameterized constructor
-    public NutrientDTO(Long id, String nutrientName, Double value, String unitName) {
-        this.id = id;
+    public NutrientInfo(String nutrientName, Double value, String unitName) {
         this.nutrientName = nutrientName;
         this.value = value;
         this.unitName = unitName;
     }
 
-    // Getters en setters
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
+    // Getters and setters
     public String getNutrientName() {
         return nutrientName;
     }
