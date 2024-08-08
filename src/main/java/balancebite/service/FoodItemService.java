@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
@@ -34,7 +35,7 @@ public class FoodItemService {
             String jsonResponse = objectMapper.writeValueAsString(response);
             System.out.println("API Response: " + jsonResponse);
         } catch (Exception e) {
-            e.printStackTrace();
+//            e.printStackTrace();
         }
 
         if (response != null && response.getFoodNutrients() != null) {
@@ -43,6 +44,12 @@ public class FoodItemService {
                             .map(n -> new NutrientInfo(n.getNutrient().getName(), n.getAmount(), n.getUnitName()))
                             .collect(Collectors.toList()));
             foodItemRepository.save(foodItem);
+        }
+    }
+
+    public void fetchAndSaveAllFoodItems(List<String> fdcIds) {
+        for (String fdcId : fdcIds) {
+            fetchAndSaveFoodItem(fdcId);
         }
     }
 }
