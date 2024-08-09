@@ -46,10 +46,19 @@ public class MealService {
 
         for (MealIngredient ingredient : meal.getMealIngredients()) {
             FoodItem foodItem = ingredient.getFoodItem();
+            System.out.println("Calculating nutrients for FoodItem: " + foodItem.getName() + ", Quantity: " + ingredient.getQuantity());
+
             for (NutrientInfo nutrient : foodItem.getNutrients()) {
                 double nutrientValue = nutrient.getValue() * (ingredient.getQuantity() / 100.0);
-                totalNutrients.computeIfAbsent(nutrient.getNutrientName(), k -> new NutrientInfoDTO(nutrient.getNutrientName(), 0.0, nutrient.getUnitName()))
-                        .setValue(totalNutrients.get(nutrient.getNutrientName()).getValue() + nutrientValue);
+
+                // Negeer voedingsstoffen met een waarde van 0 of null
+                if (nutrientValue > 0) {
+                    String key = nutrient.getNutrientName() + " (" + nutrient.getUnitName() + ")";
+                    totalNutrients.computeIfAbsent(key, k -> new NutrientInfoDTO(nutrient.getNutrientName(), 0.0, nutrient.getUnitName()))
+                            .setValue(totalNutrients.get(key).getValue() + nutrientValue);
+
+                    System.out.println("Updated total for " + key + ": " + totalNutrients.get(key).getValue());
+                }
             }
         }
 
