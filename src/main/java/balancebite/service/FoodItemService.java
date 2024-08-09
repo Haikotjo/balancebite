@@ -35,17 +35,24 @@ public class FoodItemService {
             String jsonResponse = objectMapper.writeValueAsString(response);
             System.out.println("API Response: " + jsonResponse);
         } catch (Exception e) {
-//            e.printStackTrace();
+//        e.printStackTrace();
         }
 
         if (response != null && response.getFoodNutrients() != null) {
             FoodItem foodItem = new FoodItem(response.getDescription(),
                     response.getFoodNutrients().stream()
-                            .map(n -> new NutrientInfo(n.getNutrient().getName(), n.getAmount(), n.getUnitName()))
+                            .map(n -> new NutrientInfo(
+                                    n.getNutrient().getName(),
+                                    n.getAmount(),
+                                    n.getUnitName(),
+                                    n.getNutrient().getNutrientId(),  // Stel nutrientId in
+                                    n.getNutrient().getTypeName() // Stel typeName in
+                            ))
                             .collect(Collectors.toList()));
             foodItemRepository.save(foodItem);
         }
     }
+
 
     public void fetchAndSaveAllFoodItems(List<String> fdcIds) {
         for (String fdcId : fdcIds) {

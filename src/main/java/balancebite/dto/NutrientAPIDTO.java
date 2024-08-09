@@ -62,13 +62,27 @@ public class NutrientAPIDTO {
 
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class NutrientDTO {
+        @JsonProperty("id")
+        private Long nutrientId;  // Voegt het ID van de nutrient toe
+
         @JsonProperty("name")
         private String name;
 
         @JsonProperty("unitName")
         private String unitName;
 
+        @JsonProperty("number")
+        private String typeName;  // Voegt het nummer/type van de nutrient toe
+
         // Getters and Setters
+
+        public Long getNutrientId() {
+            return nutrientId;
+        }
+
+        public void setNutrientId(Long nutrientId) {
+            this.nutrientId = nutrientId;
+        }
 
         public String getName() {
             return name;
@@ -84,6 +98,14 @@ public class NutrientAPIDTO {
 
         public void setUnitName(String unitName) {
             this.unitName = unitName;
+        }
+
+        public String getTypeName() {
+            return typeName;
+        }
+
+        public void setTypeName(String typeName) {
+            this.typeName = typeName;
         }
     }
 }
