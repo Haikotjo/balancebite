@@ -1,20 +1,21 @@
 package balancebite.dto;
 
-public class MacronutrientsDTO {
-    private double proteins; // in grams
-    private double carbohydrates; // in grams
-    private double fats; // in grams
+public class MacronutrientDTO {
+    private double proteins;
+    private double carbohydrates;
+    private double fats;
+    private double kcals;
 
-    // Constructor
-    public MacronutrientsDTO() {}
+    // Constructors, Getters en Setters
+    public MacronutrientDTO() {}
 
-    public MacronutrientsDTO(double proteins, double carbohydrates, double fats) {
+    public MacronutrientDTO(double proteins, double carbohydrates, double fats, double kcals) {
         this.proteins = proteins;
         this.carbohydrates = carbohydrates;
         this.fats = fats;
+        this.kcals = kcals;
     }
 
-    // Getters and Setters
     public double getProteins() {
         return proteins;
     }
@@ -37,5 +38,13 @@ public class MacronutrientsDTO {
 
     public void setFats(double fats) {
         this.fats = fats;
+    }
+
+    public double getKcals() {
+        return kcals;
+    }
+
+    public void setKcals(double kcals) {
+        this.kcals = kcals;
     }
 }

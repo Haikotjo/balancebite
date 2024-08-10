@@ -13,6 +13,12 @@ public class Meal {
 
     private String name;
 
+    // Nieuwe velden voor macronutriënten
+    private double proteins;
+    private double carbohydrates;
+    private double fats;
+    private double kcals;
+
     @OneToMany(mappedBy = "meal", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<MealIngredient> mealIngredients = new ArrayList<>();
 
@@ -50,5 +56,38 @@ public class Meal {
         for (MealIngredient mealIngredient : mealIngredients) {
             addMealIngredient(mealIngredient);
         }
+    }
+
+    // Getters en setters voor macronutriënten
+    public double getProteins() {
+        return proteins;
+    }
+
+    public void setProteins(double proteins) {
+        this.proteins = proteins;
+    }
+
+    public double getCarbohydrates() {
+        return carbohydrates;
+    }
+
+    public void setCarbohydrates(double carbohydrates) {
+        this.carbohydrates = carbohydrates;
+    }
+
+    public double getFats() {
+        return fats;
+    }
+
+    public void setFats(double fats) {
+        this.fats = fats;
+    }
+
+    public double getKcals() {
+        return kcals;
+    }
+
+    public void setKcals(double kcals) {
+        this.kcals = kcals;
     }
 }

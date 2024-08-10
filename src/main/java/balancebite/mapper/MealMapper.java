@@ -39,7 +39,11 @@ public class MealMapper {
                                 meal.getId(),
                                 ingredient.getFoodItem() != null ? ingredient.getFoodItem().getId() : null,
                                 ingredient.getQuantity()
-                        )).collect(Collectors.toList())
+                        )).collect(Collectors.toList()),
+                meal.getProteins(),       // Voeg hier de macronutriënten toe
+                meal.getCarbohydrates(),
+                meal.getFats(),
+                meal.getKcals()
         );
     }
 }
