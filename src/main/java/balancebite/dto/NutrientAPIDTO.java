@@ -71,9 +71,6 @@ public class NutrientAPIDTO {
         @JsonProperty("unitName")
         private String unitName;
 
-        @JsonProperty("number")
-        private String typeName;  // Voegt het nummer/type van de nutrient toe
-
         // Getters and Setters
 
         public Long getNutrientId() {
@@ -98,14 +95,6 @@ public class NutrientAPIDTO {
 
         public void setUnitName(String unitName) {
             this.unitName = unitName;
-        }
-
-        public String getTypeName() {
-            return typeName;
-        }
-
-        public void setTypeName(String typeName) {
-            this.typeName = typeName;
         }
     }
 }

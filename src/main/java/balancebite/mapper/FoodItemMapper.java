@@ -16,7 +16,7 @@ public class FoodItemMapper {
             return null;
         }
         List<NutrientInfo> nutrients = inputDTO.getNutrients().stream()
-                .map(n -> new NutrientInfo(n.getNutrientName(), n.getValue(), n.getUnitName(), n.getNutrientId(), n.getTypeName()))
+                .map(n -> new NutrientInfo(n.getNutrientName(), n.getValue(), n.getUnitName(), n.getNutrientId()))
                 .collect(Collectors.toList());
         return new FoodItem(inputDTO.getName(), nutrients);
     }
@@ -26,7 +26,7 @@ public class FoodItemMapper {
             return null;
         }
         List<NutrientInfoDTO> nutrients = foodItem.getNutrients().stream()
-                .map(n -> new NutrientInfoDTO(n.getNutrientName(), n.getValue(), n.getUnitName(), n.getNutrientId(), n.getTypeName()))
+                .map(n -> new NutrientInfoDTO(n.getNutrientName(), n.getValue(), n.getUnitName(), n.getNutrientId()))
                 .collect(Collectors.toList());
         return new FoodItemDTO(foodItem.getId(), foodItem.getName(), nutrients);
     }

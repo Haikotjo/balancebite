@@ -45,8 +45,7 @@ public class FoodItemService {
                                     n.getNutrient().getName(),
                                     n.getAmount(),
                                     n.getUnitName(),
-                                    n.getNutrient().getNutrientId(),  // Stel nutrientId in
-                                    n.getNutrient().getTypeName() // Stel typeName in
+                                    n.getNutrient().getNutrientId()
                             ))
                             .collect(Collectors.toList()));
             foodItemRepository.save(foodItem);
