@@ -14,6 +14,9 @@ public class MealDTO {
     private double fats;
     private double kcals;
 
+    // Vitaminen en Mineralen voor de response
+    private VitaminsAndMineralsDTO vitaminsAndMinerals;
+
     // Constructors
     public MealDTO() {}
 
@@ -23,7 +26,7 @@ public class MealDTO {
         this.mealIngredients = mealIngredients;
     }
 
-    public MealDTO(Long id, String name, List<MealIngredientDTO> mealIngredients, double proteins, double carbohydrates, double fats, double kcals) {
+    public MealDTO(Long id, String name, List<MealIngredientDTO> mealIngredients, double proteins, double carbohydrates, double fats, double kcals, VitaminsAndMineralsDTO vitaminsAndMinerals) {
         this.id = id;
         this.name = name;
         this.mealIngredients = mealIngredients;
@@ -31,6 +34,7 @@ public class MealDTO {
         this.carbohydrates = carbohydrates;
         this.fats = fats;
         this.kcals = kcals;
+        this.vitaminsAndMinerals = vitaminsAndMinerals;
     }
 
     // Getters
@@ -60,5 +64,42 @@ public class MealDTO {
 
     public double getKcals() {
         return kcals;
+    }
+
+    public VitaminsAndMineralsDTO getVitaminsAndMinerals() {
+        return vitaminsAndMinerals;
+    }
+
+    // Setters (indien nodig)
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setMealIngredients(List<MealIngredientDTO> mealIngredients) {
+        this.mealIngredients = mealIngredients;
+    }
+
+    public void setProteins(double proteins) {
+        this.proteins = proteins;
+    }
+
+    public void setCarbohydrates(double carbohydrates) {
+        this.carbohydrates = carbohydrates;
+    }
+
+    public void setFats(double fats) {
+        this.fats = fats;
+    }
+
+    public void setKcals(double kcals) {
+        this.kcals = kcals;
+    }
+
+    public void setVitaminsAndMinerals(VitaminsAndMineralsDTO vitaminsAndMinerals) {
+        this.vitaminsAndMinerals = vitaminsAndMinerals;
     }
 }

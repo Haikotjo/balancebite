@@ -13,6 +13,9 @@ public class MealInputDTO {
     private double fats;
     private double kcals;
 
+    // Vitaminen en Mineralen
+    private VitaminsAndMineralsDTO vitaminsAndMinerals;
+
     // Constructors
     public MealInputDTO() {}
 
@@ -21,13 +24,14 @@ public class MealInputDTO {
         this.mealIngredients = mealIngredients;
     }
 
-    public MealInputDTO(String name, List<MealIngredientInputDTO> mealIngredients, double proteins, double carbohydrates, double fats, double kcals) {
+    public MealInputDTO(String name, List<MealIngredientInputDTO> mealIngredients, double proteins, double carbohydrates, double fats, double kcals, VitaminsAndMineralsDTO vitaminsAndMinerals) {
         this.name = name;
         this.mealIngredients = mealIngredients;
         this.proteins = proteins;
         this.carbohydrates = carbohydrates;
         this.fats = fats;
         this.kcals = kcals;
+        this.vitaminsAndMinerals = vitaminsAndMinerals;
     }
 
     // Getters
@@ -53,5 +57,38 @@ public class MealInputDTO {
 
     public double getKcals() {
         return kcals;
+    }
+
+    public VitaminsAndMineralsDTO getVitaminsAndMinerals() {
+        return vitaminsAndMinerals;
+    }
+
+    // Setters (indien nodig)
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setMealIngredients(List<MealIngredientInputDTO> mealIngredients) {
+        this.mealIngredients = mealIngredients;
+    }
+
+    public void setProteins(double proteins) {
+        this.proteins = proteins;
+    }
+
+    public void setCarbohydrates(double carbohydrates) {
+        this.carbohydrates = carbohydrates;
+    }
+
+    public void setFats(double fats) {
+        this.fats = fats;
+    }
+
+    public void setKcals(double kcals) {
+        this.kcals = kcals;
+    }
+
+    public void setVitaminsAndMinerals(VitaminsAndMineralsDTO vitaminsAndMinerals) {
+        this.vitaminsAndMinerals = vitaminsAndMinerals;
     }
 }
