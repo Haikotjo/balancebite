@@ -14,6 +14,8 @@ public class FoodItem {
 
     private String name;
 
+    // This annotation maps the nutrients list to the "food_item_nutrients" table,
+    // where each NutrientInfo is stored with a foreign key reference to this FoodItem.
     @ElementCollection
     @CollectionTable(name = "food_item_nutrients", joinColumns = @JoinColumn(name = "food_item_id"))
     private List<NutrientInfo> nutrients;

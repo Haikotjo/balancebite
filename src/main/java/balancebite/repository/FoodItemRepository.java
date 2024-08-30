@@ -7,4 +7,5 @@ import java.util.List;
 
 public interface FoodItemRepository extends JpaRepository<FoodItem, Long> {
     List<FoodItem> findByNameContainingIgnoreCase(String name);
+    boolean existsByName(String name);
 }

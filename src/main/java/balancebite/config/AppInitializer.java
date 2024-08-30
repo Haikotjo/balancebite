@@ -4,8 +4,7 @@ import balancebite.service.FoodItemService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 
-import jakarta.annotation.PostConstruct;  // Veranderd naar jakarta.annotation.PostConstruct
-import java.util.Arrays;
+import jakarta.annotation.PostConstruct;
 import java.util.List;
 
 @Configuration
@@ -14,12 +13,18 @@ public class AppInitializer {
     @Autowired
     private FoodItemService foodItemService;
 
+    @Autowired
+    private FoodConfig foodConfig; // Inject the configuration class
+
     @PostConstruct
     public void init() {
-        List<String> fdcIds = Arrays.asList("170513 ", "169287", "169999", "173944");
-        foodItemService.fetchAndSaveAllFoodItems(fdcIds);
+        try {
+            List<String> fdcIds = foodConfig.getFdcIds(); // Get the list from YAML
+
+            foodItemService.fetchAndSaveAllFoodItems(fdcIds);
+        } catch (Exception e) {
+            System.err.println("Error in AppInitializer: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 }
-
-
-//, "323505", "169910", "2346409", "2685573", "1999634", "747447", "171705", "169124", "2344766", "173424", "172688", "171409", "171269", "174276"
