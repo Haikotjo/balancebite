@@ -18,6 +18,10 @@ public class DailyIntake {
     private double fiber = 30.0;
     private double water = 2500.0; // in milliliters
 
+    // Energy
+    private double kcals = 2000.0; // standaard dagelijkse kcal
+    private double kJ = 8374.0; // standaard dagelijkse kJ
+
     // Vitamines
     private double vitaminA = 900.0; // in µg
     private double vitaminC = 90.0; // in mg
@@ -60,14 +64,20 @@ public class DailyIntake {
             // Trek de voedingswaarden van de maaltijd af van de dagelijkse waarden
             for (NutrientInfo nutrient : foodItem.getNutrients()) {
                 double nutrientValue = nutrient.getValue() * (ingredient.getQuantity() / 100.0);
-                switch (nutrient.getNutrientName().toLowerCase()) {
+                String nutrientName = nutrient.getNutrientName().toLowerCase();
+                String unitName = nutrient.getUnitName().toLowerCase();
+
+                switch (nutrientName) {
                     case "protein":
+                    case "protein (g)": // Correctie als er een eenheid in nutrient_name zit
                         proteins -= nutrientValue;
                         break;
+                    case "carbohydrate, by difference":
                     case "carbohydrates":
                         carbohydrates -= nutrientValue;
                         break;
                     case "total lipid (fat)":
+                    case "fat":
                         fats -= nutrientValue;
                         break;
                     case "fiber, total dietary":
@@ -76,19 +86,30 @@ public class DailyIntake {
                     case "water":
                         water -= nutrientValue;
                         break;
-                    case "vitamin a":
+                    case "energy":
+                        if (unitName.equals("kcal")) {
+                            kcals -= nutrientValue;
+                            System.out.println("Afgetrokken kcals: " + nutrientValue);
+                            System.out.println("Resterende kcals: " + kcals);
+                        } else if (unitName.equals("kj")) {
+                            kJ -= nutrientValue;
+                            System.out.println("Afgetrokken kJ: " + nutrientValue);
+                            System.out.println("Resterende kJ: " + kJ);
+                        }
+                        break;
+                    case "vitamin a, rae":
                         vitaminA -= nutrientValue;
                         break;
-                    case "vitamin c":
+                    case "vitamin c, total ascorbic acid":
                         vitaminC -= nutrientValue;
                         break;
-                    case "vitamin d":
+                    case "vitamin d (d2 + d3)":
                         vitaminD -= nutrientValue;
                         break;
-                    case "vitamin e":
+                    case "vitamin e (alpha-tocopherol)":
                         vitaminE -= nutrientValue;
                         break;
-                    case "vitamin k":
+                    case "vitamin k (phylloquinone)":
                         vitaminK -= nutrientValue;
                         break;
                     case "thiamin":
@@ -100,13 +121,13 @@ public class DailyIntake {
                     case "niacin":
                         niacin -= nutrientValue;
                         break;
-                    case "vitamin b6":
+                    case "vitamin b-6":
                         vitaminB6 -= nutrientValue;
                         break;
-                    case "folate":
+                    case "folate, total":
                         folate -= nutrientValue;
                         break;
-                    case "vitamin b12":
+                    case "vitamin b-12":
                         vitaminB12 -= nutrientValue;
                         break;
                     case "pantothenic acid":
@@ -115,37 +136,37 @@ public class DailyIntake {
                     case "biotin":
                         biotin -= nutrientValue;
                         break;
-                    case "calcium":
+                    case "calcium, ca":
                         calcium -= nutrientValue;
                         break;
-                    case "iron":
+                    case "iron, fe":
                         iron -= nutrientValue;
                         break;
-                    case "magnesium":
+                    case "magnesium, mg":
                         magnesium -= nutrientValue;
                         break;
-                    case "phosphorus":
+                    case "phosphorus, p":
                         phosphorus -= nutrientValue;
                         break;
-                    case "potassium":
+                    case "potassium, k":
                         potassium -= nutrientValue;
                         break;
-                    case "sodium":
+                    case "sodium, na":
                         sodium -= nutrientValue;
                         break;
-                    case "zinc":
+                    case "zinc, zn":
                         zinc -= nutrientValue;
                         break;
-                    case "copper":
+                    case "copper, cu":
                         copper -= nutrientValue;
                         break;
-                    case "manganese":
+                    case "manganese, mn":
                         manganese -= nutrientValue;
                         break;
-                    case "selenium":
+                    case "selenium, se":
                         selenium -= nutrientValue;
                         break;
-                    case "saturated fats":
+                    case "fatty acids, total saturated":
                         saturatedFats -= nutrientValue;
                         break;
                     case "cholesterol":
@@ -200,6 +221,22 @@ public class DailyIntake {
 
     public void setWater(double water) {
         this.water = water;
+    }
+
+    public double getKcals() {
+        return kcals;
+    }
+
+    public void setKcals(double kcals) {
+        this.kcals = kcals;
+    }
+
+    public double getkJ() {
+        return kJ;
+    }
+
+    public void setkJ(double kJ) {
+        this.kJ = kJ;
     }
 
     public double getVitaminA() {
