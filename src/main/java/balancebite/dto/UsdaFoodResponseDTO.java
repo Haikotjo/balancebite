@@ -32,18 +32,18 @@ public class UsdaFoodResponseDTO {
     public static class FoodNutrientDTO {
 
         @JsonProperty("nutrient")
-        private Nutrient nutrient;
+        private NutrientDTO nutrient;
 
         @JsonProperty("amount")
         private double amount;
 
         // Getters and Setters
 
-        public Nutrient getNutrient() {
+        public NutrientDTO getNutrient() {
             return nutrient;
         }
 
-        public void setNutrient(Nutrient nutrient) {
+        public void setNutrient(NutrientDTO nutrient) {
             this.nutrient = nutrient;
         }
 
@@ -54,14 +54,32 @@ public class UsdaFoodResponseDTO {
         public void setAmount(double amount) {
             this.amount = amount;
         }
+
+        public String getUnitName() {
+            return nutrient != null ? nutrient.getUnitName() : null;
+        }
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)
-    public static class Nutrient {
+    public static class NutrientDTO {
+        @JsonProperty("id")
+        private Long nutrientId;  // Voegt het ID van de nutrient toe
+
         @JsonProperty("name")
         private String name;
 
+        @JsonProperty("unitName")
+        private String unitName;
+
         // Getters and Setters
+
+        public Long getNutrientId() {
+            return nutrientId;
+        }
+
+        public void setNutrientId(Long nutrientId) {
+            this.nutrientId = nutrientId;
+        }
 
         public String getName() {
             return name;
@@ -69,6 +87,14 @@ public class UsdaFoodResponseDTO {
 
         public void setName(String name) {
             this.name = name;
+        }
+
+        public String getUnitName() {
+            return unitName;
+        }
+
+        public void setUnitName(String unitName) {
+            this.unitName = unitName;
         }
     }
 }
