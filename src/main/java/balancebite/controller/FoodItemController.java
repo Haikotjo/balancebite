@@ -1,17 +1,28 @@
 package balancebite.controller;
 
 import balancebite.service.FoodItemService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/**
+ * REST controller for managing FoodItem-related operations.
+ * Provides endpoints to fetch and save food items from the USDA API.
+ */
 @RestController
 @RequestMapping("/fooditems")
 public class FoodItemController {
 
-    @Autowired
-    private FoodItemService foodItemService;
+    private final FoodItemService foodItemService;
+
+    /**
+     * Constructor for dependency injection.
+     *
+     * @param foodItemService Service for managing FoodItem operations.
+     */
+    public FoodItemController(FoodItemService foodItemService) {
+        this.foodItemService = foodItemService;
+    }
 
     /**
      * Endpoint to fetch and save a single FoodItem by FDC ID.
