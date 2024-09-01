@@ -1,5 +1,6 @@
 package balancebite.controller;
 
+import balancebite.dto.FoodItemDTO;
 import balancebite.dto.UsdaFoodResponseDTO;
 import balancebite.service.FoodItemService;
 import balancebite.service.UsdaApiService;
@@ -64,5 +65,27 @@ public class FoodItemController {
         } else {
             return "Food items for the following FDC IDs were fetched and saved successfully: " + String.join(", ", savedItems);
         }
+    }
+
+
+    /**
+     * Endpoint to retrieve a single FoodItem by its ID from the database.
+     *
+     * @param id The ID of the food item to retrieve.
+     * @return The corresponding FoodItemDTO, or null if not found.
+     */
+    @GetMapping("/id/{id}")
+    public FoodItemDTO getFoodItemById(@PathVariable Long id) {
+        return foodItemService.getFoodItemById(id);
+    }
+
+    /**
+     * Endpoint to retrieve all FoodItems from the database.
+     *
+     * @return A list of all FoodItemDTOs in the database.
+     */
+    @GetMapping("/all")
+    public List<FoodItemDTO> getAllFoodItems() {
+        return foodItemService.getAllFoodItems();
     }
 }

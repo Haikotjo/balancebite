@@ -1,7 +1,9 @@
 package balancebite.service;
 
+import balancebite.dto.FoodItemDTO;
 import balancebite.dto.UsdaFoodResponseDTO;
 import balancebite.exception.UsdaApiException;
+import balancebite.mapper.FoodItemMapper;
 import balancebite.model.FoodItem;
 import balancebite.model.NutrientInfo;
 import balancebite.repository.FoodItemRepository;
@@ -9,6 +11,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -48,7 +51,17 @@ public class FoodItemService {
                     return false; // Food item already exists
                 }
 
-                FoodItem foodItem = new FoodItem(response.getDescription(),
+                // Extract the primary portion from the response if available
+                String portionDescription = null;
+                double gramWeight = 0;
+                if (response.getFoodPortions() != null && !response.getFoodPortions().isEmpty()) {
+                    UsdaFoodResponseDTO.FoodPortionDTO portion = response.getFoodPortions().get(0);
+                    portionDescription = portion.getAmount() + " " + (portion.getModifier() != null ? portion.getModifier() : portion.getMeasureUnit().getName());
+                    gramWeight = portion.getGramWeight();
+                }
+
+                FoodItem foodItem = new FoodItem(
+                        response.getDescription(),
                         response.getFoodNutrients().stream()
                                 .map(n -> new NutrientInfo(
                                         n.getNutrient().getName(),
@@ -56,12 +69,14 @@ public class FoodItemService {
                                         n.getUnitName(),
                                         n.getNutrient().getNutrientId()
                                 ))
-                                .collect(Collectors.toList()));
+                                .collect(Collectors.toList()),
+                        portionDescription, // Add portion description
+                        gramWeight // Add gram weight
+                );
                 foodItemRepository.save(foodItem);
                 return true; // Food item successfully saved
             }
         } catch (UsdaApiException e) {
-            // Log and handle the exception
             System.err.println("Error fetching food data from USDA API: " + e.getMessage());
         }
         return false; // Failure to save food item
@@ -82,7 +97,18 @@ public class FoodItemService {
             for (UsdaFoodResponseDTO response : responses) {
                 if (response.getFoodNutrients() != null && response.getDescription() != null && !response.getDescription().isEmpty()) {
                     if (!foodItemRepository.existsByName(response.getDescription())) {
-                        FoodItem foodItem = new FoodItem(response.getDescription(),
+
+                        // Extract the primary portion from the response if available
+                        String portionDescription = null;
+                        double gramWeight = 0;
+                        if (response.getFoodPortions() != null && !response.getFoodPortions().isEmpty()) {
+                            UsdaFoodResponseDTO.FoodPortionDTO portion = response.getFoodPortions().get(0);
+                            portionDescription = portion.getAmount() + " " + (portion.getModifier() != null ? portion.getModifier() : portion.getMeasureUnit().getName());
+                            gramWeight = portion.getGramWeight();
+                        }
+
+                        FoodItem foodItem = new FoodItem(
+                                response.getDescription(),
                                 response.getFoodNutrients().stream()
                                         .map(n -> new NutrientInfo(
                                                 n.getNutrient().getName(),
@@ -90,16 +116,41 @@ public class FoodItemService {
                                                 n.getUnitName(),
                                                 n.getNutrient().getNutrientId()
                                         ))
-                                        .collect(Collectors.toList()));
+                                        .collect(Collectors.toList()),
+                                portionDescription, // Add portion description
+                                gramWeight // Add gram weight
+                        );
                         foodItemRepository.save(foodItem);
                         successfullySavedIds.add(response.getDescription());
                     }
                 }
             }
         } catch (UsdaApiException e) {
-            // Log and handle the exception
             System.err.println("Error fetching food data from USDA API: " + e.getMessage());
         }
         return successfullySavedIds;
+    }
+
+    /**
+     * Retrieves a single FoodItem by its ID from the database.
+     *
+     * @param id The ID of the food item to retrieve.
+     * @return The corresponding FoodItemDTO, or null if not found.
+     */
+    public FoodItemDTO getFoodItemById(Long id) {
+        Optional<FoodItem> foodItemOptional = foodItemRepository.findById(id);
+        return foodItemOptional.map(FoodItemMapper::toDTO).orElse(null);
+    }
+
+    /**
+     * Retrieves all FoodItems from the database.
+     *
+     * @return A list of all FoodItemDTOs in the database.
+     */
+    public List<FoodItemDTO> getAllFoodItems() {
+        List<FoodItem> foodItems = foodItemRepository.findAll();
+        return foodItems.stream()
+                .map(FoodItemMapper::toDTO)
+                .collect(Collectors.toList());
     }
 }

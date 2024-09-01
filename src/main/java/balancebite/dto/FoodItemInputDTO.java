@@ -19,6 +19,16 @@ public class FoodItemInputDTO {
     private List<NutrientInfoDTO> nutrients;
 
     /**
+     * Description of the portion, such as "1 medium banana".
+     */
+    private String portionDescription;
+
+    /**
+     * The gram weight of the portion.
+     */
+    private double gramWeight;
+
+    /**
      * No-argument constructor required for deserialization.
      */
     public FoodItemInputDTO() {}
@@ -28,10 +38,14 @@ public class FoodItemInputDTO {
      *
      * @param name The name of the food item.
      * @param nutrients The list of nutrients associated with the food item.
+     * @param portionDescription The description of the portion.
+     * @param gramWeight The gram weight of the portion.
      */
-    public FoodItemInputDTO(String name, List<NutrientInfoDTO> nutrients) {
+    public FoodItemInputDTO(String name, List<NutrientInfoDTO> nutrients, String portionDescription, double gramWeight) {
         this.name = name;
         this.nutrients = nutrients;
+        this.portionDescription = portionDescription;
+        this.gramWeight = gramWeight;
     }
 
     // Getters and setters
@@ -70,5 +84,41 @@ public class FoodItemInputDTO {
      */
     public void setNutrients(List<NutrientInfoDTO> nutrients) {
         this.nutrients = nutrients;
+    }
+
+    /**
+     * Gets the description of the portion.
+     *
+     * @return The description of the portion.
+     */
+    public String getPortionDescription() {
+        return portionDescription;
+    }
+
+    /**
+     * Sets the description of the portion.
+     *
+     * @param portionDescription The new description of the portion.
+     */
+    public void setPortionDescription(String portionDescription) {
+        this.portionDescription = portionDescription;
+    }
+
+    /**
+     * Gets the gram weight of the portion.
+     *
+     * @return The gram weight of the portion.
+     */
+    public double getGramWeight() {
+        return gramWeight;
+    }
+
+    /**
+     * Sets the gram weight of the portion.
+     *
+     * @param gramWeight The new gram weight of the portion.
+     */
+    public void setGramWeight(double gramWeight) {
+        this.gramWeight = gramWeight;
     }
 }

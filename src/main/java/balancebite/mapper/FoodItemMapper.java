@@ -28,7 +28,12 @@ public class FoodItemMapper {
         List<NutrientInfo> nutrients = inputDTO.getNutrients().stream()
                 .map(n -> new NutrientInfo(n.getNutrientName(), n.getValue(), n.getUnitName(), n.getNutrientId()))
                 .collect(Collectors.toList());
-        return new FoodItem(inputDTO.getName(), nutrients);
+        return new FoodItem(
+                inputDTO.getName(),
+                nutrients,
+                inputDTO.getPortionDescription(), // Map portion description
+                inputDTO.getGramWeight() // Map gram weight
+        );
     }
 
     /**
@@ -44,6 +49,12 @@ public class FoodItemMapper {
         List<NutrientInfoDTO> nutrients = foodItem.getNutrients().stream()
                 .map(n -> new NutrientInfoDTO(n.getNutrientName(), n.getValue(), n.getUnitName(), n.getNutrientId()))
                 .collect(Collectors.toList());
-        return new FoodItemDTO(foodItem.getId(), foodItem.getName(), nutrients);
+        return new FoodItemDTO(
+                foodItem.getId(),
+                foodItem.getName(),
+                nutrients,
+                foodItem.getPortionDescription(), // Map portion description
+                foodItem.getGramWeight() // Map gram weight
+        );
     }
 }

@@ -33,6 +33,16 @@ public class FoodItem {
     private List<NutrientInfo> nutrients;
 
     /**
+     * Description of the portion, such as "1 medium banana".
+     */
+    private String portionDescription;
+
+    /**
+     * The gram weight of the portion.
+     */
+    private double gramWeight;
+
+    /**
      * List of meal ingredients associated with this food item.
      * This relationship is managed by the MealIngredient entity.
      */
@@ -45,14 +55,18 @@ public class FoodItem {
     public FoodItem() {}
 
     /**
-     * Constructor to initialize a FoodItem with a name and a list of nutrients.
+     * Constructor to initialize a FoodItem with a name, list of nutrients, portion description, and gram weight.
      *
-     * @param name Name of the food item.
-     * @param nutrients List of nutrients associated with the food item.
+     * @param name The name of the food item.
+     * @param nutrients The list of nutrients associated with the food item.
+     * @param portionDescription The description of the portion.
+     * @param gramWeight The gram weight of the portion.
      */
-    public FoodItem(String name, List<NutrientInfo> nutrients) {
+    public FoodItem(String name, List<NutrientInfo> nutrients, String portionDescription, double gramWeight) {
         this.name = name;
         this.nutrients = nutrients;
+        this.portionDescription = portionDescription;
+        this.gramWeight = gramWeight;
     }
 
     // Getters and setters
@@ -100,6 +114,42 @@ public class FoodItem {
      */
     public void setNutrients(List<NutrientInfo> nutrients) {
         this.nutrients = nutrients;
+    }
+
+    /**
+     * Gets the description of the portion.
+     *
+     * @return The description of the portion.
+     */
+    public String getPortionDescription() {
+        return portionDescription;
+    }
+
+    /**
+     * Sets the description of the portion.
+     *
+     * @param portionDescription The new description of the portion.
+     */
+    public void setPortionDescription(String portionDescription) {
+        this.portionDescription = portionDescription;
+    }
+
+    /**
+     * Gets the gram weight of the portion.
+     *
+     * @return The gram weight of the portion.
+     */
+    public double getGramWeight() {
+        return gramWeight;
+    }
+
+    /**
+     * Sets the gram weight of the portion.
+     *
+     * @param gramWeight The new gram weight of the portion.
+     */
+    public void setGramWeight(double gramWeight) {
+        this.gramWeight = gramWeight;
     }
 
     /**
