@@ -1,6 +1,8 @@
 package balancebite.controller;
 
+import balancebite.dto.UsdaFoodResponseDTO;
 import balancebite.service.FoodItemService;
+import balancebite.service.UsdaApiService;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -14,14 +16,17 @@ import java.util.List;
 public class FoodItemController {
 
     private final FoodItemService foodItemService;
+    private final UsdaApiService usdaApiService; // Voeg de UsdaApiService hier toe
 
     /**
      * Constructor for dependency injection.
      *
      * @param foodItemService Service for managing FoodItem operations.
+     * @param usdaApiService Service for interacting with the USDA API.
      */
-    public FoodItemController(FoodItemService foodItemService) {
+    public FoodItemController(FoodItemService foodItemService, UsdaApiService usdaApiService) {
         this.foodItemService = foodItemService;
+        this.usdaApiService = usdaApiService; // Initialiseer de UsdaApiService hier
     }
 
     /**
@@ -29,16 +34,17 @@ public class FoodItemController {
      * Calls the FoodItemService to retrieve and save the food item.
      *
      * @param fdcId The FDC ID of the food item to fetch.
-     * @return A success message indicating the food item has been fetched and saved.
+     * @return A success message indicating the food item has been fetched and saved, or an error message.
      */
     @GetMapping("/{fdcId}")
     public String fetchFoodItem(@PathVariable String fdcId) {
+        UsdaFoodResponseDTO response = usdaApiService.getFoodData(fdcId);  // Haal de USDA API response op
         boolean isNew = foodItemService.fetchAndSaveFoodItem(fdcId);
 
         if (isNew) {
-            return "Food item for FDC ID " + fdcId + " fetched and saved successfully";
+            return "Food item '" + response.getDescription() + "' for FDC ID " + fdcId + " fetched and saved successfully.";
         } else {
-            return "Food item for FDC ID " + fdcId + " already exists and was not added again";
+            return "Food item for FDC ID " + fdcId + " already exists or could not be fetched.";
         }
     }
 
@@ -47,11 +53,16 @@ public class FoodItemController {
      * Calls the FoodItemService to retrieve and save the food items in a single API call.
      *
      * @param fdcIds The list of FDC IDs of the food items to fetch.
-     * @return A success message indicating the food items have been fetched and saved.
+     * @return A message indicating the result of the operation.
      */
     @PostMapping("/fetchAll")
     public String fetchAllFoodItems(@RequestBody List<String> fdcIds) {
-        foodItemService.fetchAndSaveAllFoodItems(fdcIds);
-        return "Food items for provided FDC IDs fetched and saved successfully";
+        List<String> savedItems = foodItemService.fetchAndSaveAllFoodItems(fdcIds);
+
+        if (savedItems.isEmpty()) {
+            return "No food items were fetched and saved. Please check the provided FDC IDs.";
+        } else {
+            return "Food items for the following FDC IDs were fetched and saved successfully: " + String.join(", ", savedItems);
+        }
     }
 }
