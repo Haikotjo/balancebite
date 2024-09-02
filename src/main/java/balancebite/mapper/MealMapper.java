@@ -10,15 +10,24 @@ import org.springframework.stereotype.Component;
 
 import java.util.stream.Collectors;
 
+/**
+ * Mapper class for converting between Meal entities and DTOs.
+ */
 @Component
 public class MealMapper {
 
+    /**
+     * Converts a Meal entity to a MealDTO.
+     *
+     * @param meal the Meal entity to be converted.
+     * @return the created MealDTO.
+     */
     public MealDTO toDTO(Meal meal) {
         if (meal == null) {
             return null;
         }
 
-        // Maak een VitaminsAndMineralsDTO aan op basis van de gegevens in de Meal-entiteit
+        // Create a VitaminsAndMineralsDTO from the VitaminsAndMinerals entity in the Meal entity
         VitaminsAndMineralsDTO vitaminsAndMineralsDTO = null;
         if (meal.getVitaminsAndMinerals() != null) {
             VitaminsAndMinerals vitaminsAndMinerals = meal.getVitaminsAndMinerals();
@@ -53,7 +62,7 @@ public class MealMapper {
             vitaminsAndMineralsDTO.setMolybdenum(vitaminsAndMinerals.getMolybdenum());
         }
 
-        // Zet de Meal-entiteit om naar MealDTO
+        // Map MealIngredients to MealIngredientDTOs and include the usePortion flag
         return new MealDTO(
                 meal.getId(),
                 meal.getName(),
@@ -62,7 +71,8 @@ public class MealMapper {
                                 ingredient.getId(),
                                 meal.getId(),
                                 ingredient.getFoodItem() != null ? ingredient.getFoodItem().getId() : null,
-                                ingredient.getQuantity()
+                                ingredient.getQuantity(),
+                                ingredient.getUsePortion() // Include the usePortion flag
                         ))
                         .collect(Collectors.toList()),
                 meal.getProteins(),

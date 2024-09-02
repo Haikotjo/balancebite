@@ -36,7 +36,18 @@ public class MealIngredientMapper {
     public MealIngredient toEntity(MealIngredientInputDTO inputDTO, Meal meal) {
         FoodItem foodItem = foodItemRepository.findById(inputDTO.getFoodItemId())
                 .orElseThrow(() -> new IllegalArgumentException("Invalid food item ID: " + inputDTO.getFoodItemId()));
-        return new MealIngredient(meal, foodItem, inputDTO.getQuantity());
+
+        double quantity;
+        if (Boolean.TRUE.equals(inputDTO.getUsePortion())) {
+            // Use the standard portion size (gramWeight) from FoodItem
+            quantity = foodItem.getGramWeight();
+        } else {
+            // Use the manually provided quantity
+            quantity = inputDTO.getQuantity();
+        }
+
+        // Use the constructor that includes the usePortion flag
+        return new MealIngredient(meal, foodItem, quantity, inputDTO.getUsePortion());
     }
 
     /**
@@ -50,7 +61,8 @@ public class MealIngredientMapper {
                 mealIngredient.getId(),
                 mealIngredient.getMeal().getId(),
                 mealIngredient.getFoodItem().getId(),
-                mealIngredient.getQuantity()
+                mealIngredient.getQuantity(),
+                mealIngredient.getUsePortion()
         );
     }
 }

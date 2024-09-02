@@ -9,7 +9,6 @@ import balancebite.model.VitaminsAndMinerals;
 import balancebite.repository.FoodItemRepository;
 import balancebite.repository.MealRepository;
 import balancebite.utils.NutrientCalculator;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,15 +16,32 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+/**
+ * Service class for managing Meal entities.
+ */
 @Service
 public class MealService {
 
-    @Autowired
-    private MealRepository mealRepository;
+    private final MealRepository mealRepository;
+    private final FoodItemRepository foodItemRepository;
 
-    @Autowired
-    private FoodItemRepository foodItemRepository;
+    /**
+     * Constructor for MealService, using constructor injection.
+     *
+     * @param mealRepository the repository for managing Meal entities.
+     * @param foodItemRepository the repository for managing FoodItem entities.
+     */
+    public MealService(MealRepository mealRepository, FoodItemRepository foodItemRepository) {
+        this.mealRepository = mealRepository;
+        this.foodItemRepository = foodItemRepository;
+    }
 
+    /**
+     * Creates a new Meal entity from the provided MealInputDTO.
+     *
+     * @param mealInputDTO the DTO containing the input data for creating a Meal.
+     * @return the created Meal entity.
+     */
     @Transactional
     public Meal createMeal(MealInputDTO mealInputDTO) {
         Meal meal = new Meal();
@@ -35,8 +51,19 @@ public class MealService {
         List<MealIngredient> mealIngredients = mealInputDTO.getMealIngredients().stream().map(inputDTO -> {
             FoodItem foodItem = foodItemRepository.findById(inputDTO.getFoodItemId())
                     .orElseThrow(() -> new IllegalArgumentException("Invalid food item ID: " + inputDTO.getFoodItemId()));
-            return new MealIngredient(meal, foodItem, inputDTO.getQuantity());
+
+            double quantity;
+            if (Boolean.TRUE.equals(inputDTO.getUsePortion())) {
+                // Use the standard portion size (gramWeight) from FoodItem
+                quantity = foodItem.getGramWeight();
+            } else {
+                // Use the manually provided quantity
+                quantity = inputDTO.getQuantity();
+            }
+
+            return new MealIngredient(meal, foodItem, quantity, inputDTO.getUsePortion());
         }).collect(Collectors.toList());
+
         meal.addMealIngredients(mealIngredients);
 
         // Calculate the nutrients using the NutrientCalculator
@@ -87,17 +114,33 @@ public class MealService {
         return mealRepository.save(meal);
     }
 
-    // Deze methode wordt niet meer gebruikt voor berekeningen, maar kan nog steeds worden gebruikt als je specifieke nutriënten wilt opvragen
+    /**
+     * Calculates the nutrients for a given Meal by its ID.
+     *
+     * @param mealId the ID of the Meal.
+     * @return a Map of nutrient names to NutrientInfoDTOs.
+     */
     public Map<String, NutrientInfoDTO> calculateNutrients(Long mealId) {
         Meal meal = mealRepository.findById(mealId)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid meal ID: " + mealId));
         return NutrientCalculator.calculateNutrients(meal);
     }
 
+    /**
+     * Retrieves all Meals from the repository.
+     *
+     * @return a List of all Meal entities.
+     */
     public List<Meal> getAllMeals() {
         return mealRepository.findAll();
     }
 
+    /**
+     * Retrieves a Meal by its ID.
+     *
+     * @param id the ID of the Meal.
+     * @return the Meal entity.
+     */
     public Meal getMealById(Long id) {
         return mealRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid meal ID: " + id));
