@@ -6,21 +6,40 @@ import balancebite.model.Meal;
 import balancebite.model.MealIngredient;
 import balancebite.repository.MealIngredientRepository;
 import balancebite.repository.MealRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+/**
+ * Service class responsible for managing meal ingredients.
+ */
 @Service
 public class MealIngredientService {
 
-    @Autowired
-    private MealIngredientRepository mealIngredientRepository;
+    private final MealIngredientRepository mealIngredientRepository;
+    private final MealRepository mealRepository;
+    private final MealIngredientMapper mealIngredientMapper;
 
-    @Autowired
-    private MealRepository mealRepository;
+    /**
+     * Constructor for MealIngredientService, using constructor injection
+     * for better testability and clear dependency management.
+     *
+     * @param mealIngredientRepository the repository for managing meal ingredients.
+     * @param mealRepository the repository for managing meals.
+     * @param mealIngredientMapper the mapper for converting DTOs to entities.
+     */
+    public MealIngredientService(MealIngredientRepository mealIngredientRepository,
+                                 MealRepository mealRepository,
+                                 MealIngredientMapper mealIngredientMapper) {
+        this.mealIngredientRepository = mealIngredientRepository;
+        this.mealRepository = mealRepository;
+        this.mealIngredientMapper = mealIngredientMapper;
+    }
 
-    @Autowired
-    private MealIngredientMapper mealIngredientMapper;
-
+    /**
+     * Adds a meal ingredient to a specific meal.
+     *
+     * @param mealId the ID of the meal to which the ingredient should be added.
+     * @param inputDTO the DTO containing the data of the meal ingredient to be added.
+     */
     public void addMealIngredient(Long mealId, MealIngredientInputDTO inputDTO) {
         Meal meal = mealRepository.findById(mealId)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid meal ID: " + mealId));
