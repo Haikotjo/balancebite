@@ -1,7 +1,9 @@
 package balancebite.service;
 
+import balancebite.dto.MealDTO;
 import balancebite.dto.MealInputDTO;
 import balancebite.dto.NutrientInfoDTO;
+import balancebite.mapper.MealMapper;
 import balancebite.model.FoodItem;
 import balancebite.model.Meal;
 import balancebite.model.MealIngredient;
@@ -24,26 +26,29 @@ public class MealService {
 
     private final MealRepository mealRepository;
     private final FoodItemRepository foodItemRepository;
+    private final MealMapper mealMapper;
 
     /**
      * Constructor for MealService, using constructor injection.
      *
      * @param mealRepository the repository for managing Meal entities.
      * @param foodItemRepository the repository for managing FoodItem entities.
+     * @param mealMapper the mapper for converting Meal entities to DTOs.
      */
-    public MealService(MealRepository mealRepository, FoodItemRepository foodItemRepository) {
+    public MealService(MealRepository mealRepository, FoodItemRepository foodItemRepository, MealMapper mealMapper) {
         this.mealRepository = mealRepository;
         this.foodItemRepository = foodItemRepository;
+        this.mealMapper = mealMapper;
     }
 
     /**
      * Creates a new Meal entity from the provided MealInputDTO.
      *
      * @param mealInputDTO the DTO containing the input data for creating a Meal.
-     * @return the created Meal entity.
+     * @return the created MealDTO with a success message.
      */
     @Transactional
-    public Meal createMeal(MealInputDTO mealInputDTO) {
+    public MealDTO createMeal(MealInputDTO mealInputDTO) {
         Meal meal = new Meal();
         meal.setName(mealInputDTO.getName());
 
@@ -63,7 +68,8 @@ public class MealService {
             }
 
             // Maak een nieuwe MealIngredient aan
-            return new MealIngredient(meal, foodItem, quantity, inputDTO.getQuantity() == null || inputDTO.getQuantity() == 0.0);
+            return new MealIngredient(meal, foodItem, quantity);
+
         }).collect(Collectors.toList());
 
         // Add the mealIngredients to the meal
@@ -114,7 +120,10 @@ public class MealService {
         meal.setVitaminsAndMinerals(vitaminsAndMinerals);
 
         // Save the meal to the database
-        return mealRepository.save(meal);
+        Meal savedMeal = mealRepository.save(meal);
+
+        // Return the MealDTO with the success message
+        return mealMapper.toDTO(savedMeal);
     }
 
     /**

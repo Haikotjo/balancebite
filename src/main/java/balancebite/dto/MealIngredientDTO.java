@@ -10,7 +10,6 @@ public class MealIngredientDTO {
     private Long mealId;
     private Long foodItemId;
     private double quantity;
-    private Boolean usePortion;
 
     // Constructors
 
@@ -26,14 +25,12 @@ public class MealIngredientDTO {
      * @param mealId the ID of the meal associated with this ingredient.
      * @param foodItemId the ID of the food item associated with this ingredient.
      * @param quantity the quantity of the food item in this meal.
-     * @param usePortion flag indicating whether the standard portion size is used.
      */
-    public MealIngredientDTO(Long id, Long mealId, Long foodItemId, double quantity, Boolean usePortion) {
+    public MealIngredientDTO(Long id, Long mealId, Long foodItemId, double quantity) {
         this.id = id;
         this.mealId = mealId;
         this.foodItemId = foodItemId;
         this.quantity = quantity;
-        this.usePortion = usePortion;
     }
 
     // Getters
@@ -74,15 +71,6 @@ public class MealIngredientDTO {
         return quantity;
     }
 
-    /**
-     * Gets the flag indicating whether the standard portion size is used.
-     *
-     * @return true if the standard portion size is used, false otherwise.
-     */
-    public Boolean getUsePortion() {
-        return usePortion;
-    }
-
     // Setters
 
     /**
@@ -119,14 +107,5 @@ public class MealIngredientDTO {
      */
     public void setQuantity(double quantity) {
         this.quantity = quantity;
-    }
-
-    /**
-     * Sets the flag indicating whether the standard portion size is used.
-     *
-     * @param usePortion true to use the standard portion size, false otherwise.
-     */
-    public void setUsePortion(Boolean usePortion) {
-        this.usePortion = usePortion;
     }
 }

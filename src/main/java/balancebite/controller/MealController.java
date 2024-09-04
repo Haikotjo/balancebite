@@ -25,8 +25,8 @@ public class MealController {
 
     @PostMapping
     public MealDTO createMeal(@RequestBody MealInputDTO mealInputDTO) {
-        Meal createdMeal = mealService.createMeal(mealInputDTO);
-        return mealMapper.toDTO(createdMeal);  // Gebruik de instantie methode hier
+        // De service methode retourneert nu een MealDTO
+        return mealService.createMeal(mealInputDTO);
     }
 
     @GetMapping("/{id}/nutrients")

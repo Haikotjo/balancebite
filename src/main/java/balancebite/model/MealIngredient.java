@@ -23,8 +23,6 @@ public class MealIngredient {
 
     private double quantity;
 
-    private Boolean usePortion;
-
     /**
      * No-argument constructor for JPA.
      */
@@ -36,13 +34,11 @@ public class MealIngredient {
      * @param meal the meal to which this ingredient belongs.
      * @param foodItem the food item that makes up this ingredient.
      * @param quantity the quantity of the food item in the meal.
-     * @param usePortion whether the standard portion size of the food item was used.
      */
-    public MealIngredient(Meal meal, FoodItem foodItem, double quantity, Boolean usePortion) {
+    public MealIngredient(Meal meal, FoodItem foodItem, double quantity) {
         this.meal = meal;
         this.foodItem = foodItem;
         this.quantity = quantity;
-        this.usePortion = usePortion;
     }
 
     // Getters and setters
@@ -108,23 +104,5 @@ public class MealIngredient {
      */
     public void setQuantity(double quantity) {
         this.quantity = quantity;
-    }
-
-    /**
-     * Gets the flag indicating whether the standard portion size of the food item was used.
-     *
-     * @return true if the standard portion size was used, false otherwise.
-     */
-    public Boolean getUsePortion() {
-        return usePortion;
-    }
-
-    /**
-     * Sets the flag indicating whether the standard portion size of the food item was used.
-     *
-     * @param usePortion true to indicate the standard portion size was used, false otherwise.
-     */
-    public void setUsePortion(Boolean usePortion) {
-        this.usePortion = usePortion;
     }
 }

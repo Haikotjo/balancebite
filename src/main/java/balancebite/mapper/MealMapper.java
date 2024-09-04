@@ -20,7 +20,7 @@ public class MealMapper {
      * Converts a Meal entity to a MealDTO.
      *
      * @param meal the Meal entity to be converted.
-     * @return the created MealDTO.
+     * @return the created MealDTO with the success message.
      */
     public MealDTO toDTO(Meal meal) {
         if (meal == null) {
@@ -62,7 +62,13 @@ public class MealMapper {
             vitaminsAndMineralsDTO.setMolybdenum(vitaminsAndMinerals.getMolybdenum());
         }
 
-        // Map MealIngredients to MealIngredientDTOs and include the usePortion flag
+        // Prepare the success message
+        String successMessage = "Meal successfully created with the following ingredients: " +
+                meal.getMealIngredients().stream()
+                        .map(ingredient -> ingredient.getFoodItem().getName() + " (" + ingredient.getQuantity() + "g)")
+                        .collect(Collectors.joining(", "));
+
+        // Convert Meal entity to MealDTO including the success message
         return new MealDTO(
                 meal.getId(),
                 meal.getName(),
@@ -71,15 +77,15 @@ public class MealMapper {
                                 ingredient.getId(),
                                 meal.getId(),
                                 ingredient.getFoodItem() != null ? ingredient.getFoodItem().getId() : null,
-                                ingredient.getQuantity(),
-                                ingredient.getUsePortion() // Include the usePortion flag
+                                ingredient.getQuantity()
                         ))
                         .collect(Collectors.toList()),
                 meal.getProteins(),
                 meal.getCarbohydrates(),
                 meal.getFats(),
                 meal.getKcals(),
-                vitaminsAndMineralsDTO
+                vitaminsAndMineralsDTO,
+                successMessage
         );
     }
 }
