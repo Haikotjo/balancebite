@@ -8,7 +8,7 @@ package balancebite.dto;
 public class MealIngredientInputDTO {
 
     private Long foodItemId;
-    private double quantity;
+    private Double quantity;
     private Boolean usePortion;
 
     // Constructors
@@ -47,7 +47,7 @@ public class MealIngredientInputDTO {
      *
      * @return the quantity of the food item.
      */
-    public double getQuantity() {
+    public Double getQuantity() {
         return quantity;
     }
 

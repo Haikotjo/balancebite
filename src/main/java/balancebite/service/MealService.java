@@ -47,23 +47,26 @@ public class MealService {
         Meal meal = new Meal();
         meal.setName(mealInputDTO.getName());
 
-        // Set the mealIngredients
+        // Stel de mealIngredients in
         List<MealIngredient> mealIngredients = mealInputDTO.getMealIngredients().stream().map(inputDTO -> {
+            // Zoek het FoodItem op basis van foodItemId
             FoodItem foodItem = foodItemRepository.findById(inputDTO.getFoodItemId())
                     .orElseThrow(() -> new IllegalArgumentException("Invalid food item ID: " + inputDTO.getFoodItemId()));
 
             double quantity;
-            if (Boolean.TRUE.equals(inputDTO.getUsePortion())) {
-                // Use the standard portion size (gramWeight) from FoodItem
+            if (inputDTO.getQuantity() == null || inputDTO.getQuantity() == 0.0) {
+                // Gebruik de standaardportie (gramWeight) van FoodItem als de quantity null of 0 is
                 quantity = foodItem.getGramWeight();
             } else {
-                // Use the manually provided quantity
+                // Gebruik de opgegeven hoeveelheid (quantity) als die groter is dan 0
                 quantity = inputDTO.getQuantity();
             }
 
-            return new MealIngredient(meal, foodItem, quantity, inputDTO.getUsePortion());
+            // Maak een nieuwe MealIngredient aan
+            return new MealIngredient(meal, foodItem, quantity, inputDTO.getQuantity() == null || inputDTO.getQuantity() == 0.0);
         }).collect(Collectors.toList());
 
+        // Add the mealIngredients to the meal
         meal.addMealIngredients(mealIngredients);
 
         // Calculate the nutrients using the NutrientCalculator
