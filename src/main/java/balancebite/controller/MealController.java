@@ -29,10 +29,14 @@ public class MealController {
         return mealService.createMeal(mealInputDTO);
     }
 
-
-    @GetMapping("/{id}/nutrients")
+    @GetMapping("/nutrients/{id}")
     public Map<String, NutrientInfoDTO> calculateNutrients(@PathVariable Long id) {
         return mealService.calculateNutrients(id);
+    }
+
+    @GetMapping("/nutrients-per-food-item/{id}")
+    public Map<Long, Map<String, NutrientInfoDTO>> calculateNutrientsPerFoodItem(@PathVariable Long id) {
+        return mealService.calculateNutrientsPerFoodItem(id);
     }
 
     @GetMapping("/all")

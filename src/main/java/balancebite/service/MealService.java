@@ -10,6 +10,7 @@ import balancebite.model.MealIngredient;
 import balancebite.model.NutrientInfo;
 import balancebite.repository.FoodItemRepository;
 import balancebite.repository.MealRepository;
+import balancebite.utils.NutrientCalculatorUtil;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -54,7 +55,6 @@ public class MealService {
         Meal meal = new Meal();
         meal.setName(mealInputDTO.getName());
 
-        // Create meal ingredients and associate them with the meal
         List<MealIngredient> mealIngredients = mealInputDTO.getMealIngredients().stream().map(inputDTO -> {
             FoodItem foodItem = foodItemRepository.findById(inputDTO.getFoodItemId())
                     .orElseThrow(() -> new IllegalArgumentException("Invalid food item ID: " + inputDTO.getFoodItemId()));
@@ -62,23 +62,13 @@ public class MealService {
                     ? foodItem.getGramWeight()
                     : inputDTO.getQuantity();
             return new MealIngredient(meal, foodItem, quantity);
-        }).collect(Collectors.toList());
+        }).toList();
 
         meal.addMealIngredients(mealIngredients);
-
-        // Calculate the total nutrients for the meal
-        Map<String, Double> totalNutrients = calculateTotalNutrients(mealIngredients);
-
-        // Set calculated nutrients on the Meal object
-//        meal.setProteins(totalNutrients.getOrDefault("Proteins", 0.0));
-//        meal.setCarbohydrates(totalNutrients.getOrDefault("Carbohydrates", 0.0));
-//        meal.setFats(totalNutrients.getOrDefault("Fats", 0.0));
-//        meal.setKcals(totalNutrients.getOrDefault("Energy", 0.0));
 
         // Save the meal to the database
         Meal savedMeal = mealRepository.save(meal);
 
-        // Return the MealDTO with the success message
         return mealMapper.toDTO(savedMeal);
     }
 
@@ -86,57 +76,26 @@ public class MealService {
      * Retrieves the total nutrients for a given Meal by its ID.
      *
      * @param mealId the ID of the Meal.
-     * @return a Map of nutrient names and their corresponding total values for the meal.
+     * @return a map of nutrient names and their corresponding total values for the meal.
      */
     public Map<String, NutrientInfoDTO> calculateNutrients(Long mealId) {
         Meal meal = mealRepository.findById(mealId)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid meal ID: " + mealId));
 
-        // Calculate total nutrients from meal ingredients
-        Map<String, NutrientInfoDTO> totalNutrients = new HashMap<>();
-
-        for (MealIngredient ingredient : meal.getMealIngredients()) {
-            for (NutrientInfo nutrient : ingredient.getFoodItem().getNutrients()) {
-                String nutrientName = nutrient.getNutrientName();
-                double adjustedValue = nutrient.getValue() * (ingredient.getQuantity() / 100.0);
-
-                // If the nutrient already exists, add the new value; otherwise, create a new DTO
-                totalNutrients.merge(
-                        nutrientName,
-                        new NutrientInfoDTO(nutrientName, adjustedValue, nutrient.getUnitName(), nutrient.getNutrientId()),
-                        (existing, newValue) -> {
-                            existing.setValue(existing.getValue() + newValue.getValue());
-                            return existing;
-                        }
-                );
-            }
-        }
-
-        return totalNutrients;
+        return NutrientCalculatorUtil.calculateTotalNutrients(meal.getMealIngredients());
     }
 
     /**
-     * Calculates the total nutrients for the provided meal ingredients.
-     * Nutrients are retrieved from the associated FoodItem for each ingredient.
+     * Retrieves the nutrients per food item for a given Meal by its ID.
      *
-     * @param mealIngredients the list of ingredients for the meal.
-     * @return a map of nutrient names and their corresponding total values for the meal.
+     * @param mealId the ID of the Meal.
+     * @return a map where the key is the food item ID, and the value is the map of nutrient names and their corresponding total values.
      */
-    private Map<String, Double> calculateTotalNutrients(List<MealIngredient> mealIngredients) {
-        Map<String, Double> totalNutrients = new HashMap<>();
+    public Map<Long, Map<String, NutrientInfoDTO>> calculateNutrientsPerFoodItem(Long mealId) {
+        Meal meal = mealRepository.findById(mealId)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid meal ID: " + mealId));
 
-        for (MealIngredient ingredient : mealIngredients) {
-            // Retrieve nutrients from the FoodItem associated with the MealIngredient
-            List<NutrientInfo> nutrients = ingredient.getFoodItem().getNutrients();
-
-            // Calculate nutrient amounts based on the quantity of each ingredient
-            for (NutrientInfo nutrient : nutrients) {
-                double adjustedValue = nutrient.getValue() * (ingredient.getQuantity() / 100.0);
-                totalNutrients.merge(nutrient.getNutrientName(), adjustedValue, Double::sum);
-            }
-        }
-
-        return totalNutrients;
+        return NutrientCalculatorUtil.calculateNutrientsPerFoodItem(meal.getMealIngredients());
     }
 
     /**
