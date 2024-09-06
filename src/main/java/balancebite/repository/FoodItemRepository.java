@@ -1,13 +1,16 @@
 package balancebite.repository;
 
 import balancebite.model.FoodItem;
+import balancebite.model.NutrientInfo;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 
 /**
- * Repository interface for FoodItem entity.
- * Provides methods to perform CRUD operations and custom queries.
+ * Repository interface for FoodItem and NutrientInfo entities.
+ * Provides methods to perform CRUD operations and custom queries related to food items and nutrients.
  */
 public interface FoodItemRepository extends JpaRepository<FoodItem, Long> {
 

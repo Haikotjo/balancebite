@@ -29,6 +29,7 @@ public class MealController {
         return mealService.createMeal(mealInputDTO);
     }
 
+
     @GetMapping("/{id}/nutrients")
     public Map<String, NutrientInfoDTO> calculateNutrients(@PathVariable Long id) {
         return mealService.calculateNutrients(id);

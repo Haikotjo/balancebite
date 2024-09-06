@@ -13,15 +13,6 @@ public class MealDTO {
     private String name;
     private List<MealIngredientDTO> mealIngredients;
 
-    // Macronutrients for the response
-    private double proteins;
-    private double carbohydrates;
-    private double fats;
-    private double kcals;
-
-    // Vitamins and Minerals for the response
-    private VitaminsAndMineralsDTO vitaminsAndMinerals;
-
     // Message for success or additional information
     private String message;
 
@@ -33,38 +24,15 @@ public class MealDTO {
     /**
      * Constructor for creating a MealDTO with basic meal information.
      *
-     * @param id              the ID of the meal.
-     * @param name            the name of the meal.
-     * @param mealIngredients the list of ingredients in the meal.
-     */
-    public MealDTO(Long id, String name, List<MealIngredientDTO> mealIngredients) {
-        this.id = id;
-        this.name = name;
-        this.mealIngredients = mealIngredients;
-    }
-
-    /**
-     * Constructor for creating a MealDTO with macronutrients and vitamins/minerals information.
-     *
      * @param id                the ID of the meal.
      * @param name              the name of the meal.
      * @param mealIngredients   the list of ingredients in the meal.
-     * @param proteins          the amount of proteins in the meal.
-     * @param carbohydrates     the amount of carbohydrates in the meal.
-     * @param fats              the amount of fats in the meal.
-     * @param kcals             the amount of kilocalories in the meal.
-     * @param vitaminsAndMinerals the vitamins and minerals data for the meal.
      * @param message           the message indicating the status of meal creation.
      */
-    public MealDTO(Long id, String name, List<MealIngredientDTO> mealIngredients, double proteins, double carbohydrates, double fats, double kcals, VitaminsAndMineralsDTO vitaminsAndMinerals, String message) {
+    public MealDTO(Long id, String name, List<MealIngredientDTO> mealIngredients, String message) {
         this.id = id;
         this.name = name;
         this.mealIngredients = mealIngredients;
-        this.proteins = proteins;
-        this.carbohydrates = carbohydrates;
-        this.fats = fats;
-        this.kcals = kcals;
-        this.vitaminsAndMinerals = vitaminsAndMinerals;
         this.message = message;
     }
 
@@ -95,51 +63,6 @@ public class MealDTO {
      */
     public List<MealIngredientDTO> getMealIngredients() {
         return mealIngredients;
-    }
-
-    /**
-     * Gets the total amount of proteins in the meal.
-     *
-     * @return the amount of proteins in grams.
-     */
-    public double getProteins() {
-        return proteins;
-    }
-
-    /**
-     * Gets the total amount of carbohydrates in the meal.
-     *
-     * @return the amount of carbohydrates in grams.
-     */
-    public double getCarbohydrates() {
-        return carbohydrates;
-    }
-
-    /**
-     * Gets the total amount of fats in the meal.
-     *
-     * @return the amount of fats in grams.
-     */
-    public double getFats() {
-        return fats;
-    }
-
-    /**
-     * Gets the total amount of kilocalories in the meal.
-     *
-     * @return the amount of kilocalories.
-     */
-    public double getKcals() {
-        return kcals;
-    }
-
-    /**
-     * Gets the vitamins and minerals data of the meal.
-     *
-     * @return the vitamins and minerals data as a VitaminsAndMineralsDTO.
-     */
-    public VitaminsAndMineralsDTO getVitaminsAndMinerals() {
-        return vitaminsAndMinerals;
     }
 
     /**
@@ -178,51 +101,6 @@ public class MealDTO {
      */
     public void setMealIngredients(List<MealIngredientDTO> mealIngredients) {
         this.mealIngredients = mealIngredients;
-    }
-
-    /**
-     * Sets the amount of proteins in the meal.
-     *
-     * @param proteins the amount of proteins to set.
-     */
-    public void setProteins(double proteins) {
-        this.proteins = proteins;
-    }
-
-    /**
-     * Sets the amount of carbohydrates in the meal.
-     *
-     * @param carbohydrates the amount of carbohydrates to set.
-     */
-    public void setCarbohydrates(double carbohydrates) {
-        this.carbohydrates = carbohydrates;
-    }
-
-    /**
-     * Sets the amount of fats in the meal.
-     *
-     * @param fats the amount of fats to set.
-     */
-    public void setFats(double fats) {
-        this.fats = fats;
-    }
-
-    /**
-     * Sets the amount of kilocalories in the meal.
-     *
-     * @param kcals the amount of kilocalories to set.
-     */
-    public void setKcals(double kcals) {
-        this.kcals = kcals;
-    }
-
-    /**
-     * Sets the vitamins and minerals data for the meal.
-     *
-     * @param vitaminsAndMinerals the vitamins and minerals data to set.
-     */
-    public void setVitaminsAndMinerals(VitaminsAndMineralsDTO vitaminsAndMinerals) {
-        this.vitaminsAndMinerals = vitaminsAndMinerals;
     }
 
     /**

@@ -7,19 +7,20 @@ import balancebite.mapper.MealMapper;
 import balancebite.model.FoodItem;
 import balancebite.model.Meal;
 import balancebite.model.MealIngredient;
-import balancebite.model.VitaminsAndMinerals;
+import balancebite.model.NutrientInfo;
 import balancebite.repository.FoodItemRepository;
 import balancebite.repository.MealRepository;
-import balancebite.utils.NutrientCalculator;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
  * Service class for managing Meal entities.
+ * Handles the creation, retrieval, and processing of Meal entities and their related data.
  */
 @Service
 public class MealService {
@@ -43,81 +44,36 @@ public class MealService {
 
     /**
      * Creates a new Meal entity from the provided MealInputDTO.
+     * This method calculates the nutrients based on the food items and quantities provided.
      *
      * @param mealInputDTO the DTO containing the input data for creating a Meal.
-     * @return the created MealDTO with a success message.
+     * @return the created MealDTO with a success message and calculated nutrients.
      */
     @Transactional
     public MealDTO createMeal(MealInputDTO mealInputDTO) {
         Meal meal = new Meal();
         meal.setName(mealInputDTO.getName());
 
-        // Stel de mealIngredients in
+        // Create meal ingredients and associate them with the meal
         List<MealIngredient> mealIngredients = mealInputDTO.getMealIngredients().stream().map(inputDTO -> {
-            // Zoek het FoodItem op basis van foodItemId
             FoodItem foodItem = foodItemRepository.findById(inputDTO.getFoodItemId())
                     .orElseThrow(() -> new IllegalArgumentException("Invalid food item ID: " + inputDTO.getFoodItemId()));
-
-            double quantity;
-            if (inputDTO.getQuantity() == null || inputDTO.getQuantity() == 0.0) {
-                // Gebruik de standaardportie (gramWeight) van FoodItem als de quantity null of 0 is
-                quantity = foodItem.getGramWeight();
-            } else {
-                // Gebruik de opgegeven hoeveelheid (quantity) als die groter is dan 0
-                quantity = inputDTO.getQuantity();
-            }
-
-            // Maak een nieuwe MealIngredient aan
+            double quantity = inputDTO.getQuantity() == null || inputDTO.getQuantity() == 0.0
+                    ? foodItem.getGramWeight()
+                    : inputDTO.getQuantity();
             return new MealIngredient(meal, foodItem, quantity);
-
         }).collect(Collectors.toList());
 
-        // Add the mealIngredients to the meal
         meal.addMealIngredients(mealIngredients);
 
-        // Calculate the nutrients using the NutrientCalculator
-        Map<String, NutrientInfoDTO> nutrients = NutrientCalculator.calculateNutrients(meal);
+        // Calculate the total nutrients for the meal
+        Map<String, Double> totalNutrients = calculateTotalNutrients(mealIngredients);
 
-        // Set the calculated macronutrients on the Meal object
-        meal.setProteins(nutrients.getOrDefault("Proteins (g)", new NutrientInfoDTO()).getValue());
-        meal.setCarbohydrates(nutrients.getOrDefault("Carbohydrates (g)", new NutrientInfoDTO()).getValue());
-        meal.setFats(nutrients.getOrDefault("Fats (g)", new NutrientInfoDTO()).getValue());
-        meal.setKcals(nutrients.getOrDefault("Energy (kcal)", new NutrientInfoDTO()).getValue());
-
-        // Set the calculated vitamins and minerals on the Meal object
-        VitaminsAndMinerals vitaminsAndMinerals = new VitaminsAndMinerals();
-        vitaminsAndMinerals.setVitaminA(nutrients.getOrDefault("Vitamin A (µg)", new NutrientInfoDTO()).getValue());
-        vitaminsAndMinerals.setVitaminC(nutrients.getOrDefault("Vitamin C (mg)", new NutrientInfoDTO()).getValue());
-        vitaminsAndMinerals.setVitaminD(nutrients.getOrDefault("Vitamin D (IU)", new NutrientInfoDTO()).getValue());
-        vitaminsAndMinerals.setVitaminE(nutrients.getOrDefault("Vitamin E (mg)", new NutrientInfoDTO()).getValue());
-        vitaminsAndMinerals.setVitaminK(nutrients.getOrDefault("Vitamin K (µg)", new NutrientInfoDTO()).getValue());
-        vitaminsAndMinerals.setThiamin(nutrients.getOrDefault("Thiamin (mg)", new NutrientInfoDTO()).getValue());
-        vitaminsAndMinerals.setRiboflavin(nutrients.getOrDefault("Riboflavin (mg)", new NutrientInfoDTO()).getValue());
-        vitaminsAndMinerals.setNiacin(nutrients.getOrDefault("Niacin (mg)", new NutrientInfoDTO()).getValue());
-        vitaminsAndMinerals.setVitaminB6(nutrients.getOrDefault("Vitamin B6 (mg)", new NutrientInfoDTO()).getValue());
-        vitaminsAndMinerals.setFolate(nutrients.getOrDefault("Folate (µg)", new NutrientInfoDTO()).getValue());
-        vitaminsAndMinerals.setVitaminB12(nutrients.getOrDefault("Vitamin B12 (µg)", new NutrientInfoDTO()).getValue());
-        vitaminsAndMinerals.setPantothenicAcid(nutrients.getOrDefault("Pantothenic Acid (mg)", new NutrientInfoDTO()).getValue());
-        vitaminsAndMinerals.setBiotin(nutrients.getOrDefault("Biotin (µg)", new NutrientInfoDTO()).getValue());
-        vitaminsAndMinerals.setCholine(nutrients.getOrDefault("Choline (mg)", new NutrientInfoDTO()).getValue());
-
-        vitaminsAndMinerals.setCalcium(nutrients.getOrDefault("Calcium (mg)", new NutrientInfoDTO()).getValue());
-        vitaminsAndMinerals.setIron(nutrients.getOrDefault("Iron (mg)", new NutrientInfoDTO()).getValue());
-        vitaminsAndMinerals.setMagnesium(nutrients.getOrDefault("Magnesium (mg)", new NutrientInfoDTO()).getValue());
-        vitaminsAndMinerals.setPhosphorus(nutrients.getOrDefault("Phosphorus (mg)", new NutrientInfoDTO()).getValue());
-        vitaminsAndMinerals.setPotassium(nutrients.getOrDefault("Potassium (mg)", new NutrientInfoDTO()).getValue());
-        vitaminsAndMinerals.setSodium(nutrients.getOrDefault("Sodium (mg)", new NutrientInfoDTO()).getValue());
-        vitaminsAndMinerals.setZinc(nutrients.getOrDefault("Zinc (mg)", new NutrientInfoDTO()).getValue());
-        vitaminsAndMinerals.setCopper(nutrients.getOrDefault("Copper (mg)", new NutrientInfoDTO()).getValue());
-        vitaminsAndMinerals.setManganese(nutrients.getOrDefault("Manganese (mg)", new NutrientInfoDTO()).getValue());
-        vitaminsAndMinerals.setSelenium(nutrients.getOrDefault("Selenium (µg)", new NutrientInfoDTO()).getValue());
-        vitaminsAndMinerals.setFluoride(nutrients.getOrDefault("Fluoride (mg)", new NutrientInfoDTO()).getValue());
-        vitaminsAndMinerals.setChromium(nutrients.getOrDefault("Chromium (µg)", new NutrientInfoDTO()).getValue());
-        vitaminsAndMinerals.setIodine(nutrients.getOrDefault("Iodine (µg)", new NutrientInfoDTO()).getValue());
-        vitaminsAndMinerals.setMolybdenum(nutrients.getOrDefault("Molybdenum (µg)", new NutrientInfoDTO()).getValue());
-
-        // Set the VitaminsAndMinerals object on the Meal
-        meal.setVitaminsAndMinerals(vitaminsAndMinerals);
+        // Set calculated nutrients on the Meal object
+//        meal.setProteins(totalNutrients.getOrDefault("Proteins", 0.0));
+//        meal.setCarbohydrates(totalNutrients.getOrDefault("Carbohydrates", 0.0));
+//        meal.setFats(totalNutrients.getOrDefault("Fats", 0.0));
+//        meal.setKcals(totalNutrients.getOrDefault("Energy", 0.0));
 
         // Save the meal to the database
         Meal savedMeal = mealRepository.save(meal);
@@ -127,21 +83,66 @@ public class MealService {
     }
 
     /**
-     * Calculates the nutrients for a given Meal by its ID.
+     * Retrieves the total nutrients for a given Meal by its ID.
      *
      * @param mealId the ID of the Meal.
-     * @return a Map of nutrient names to NutrientInfoDTOs.
+     * @return a Map of nutrient names and their corresponding total values for the meal.
      */
     public Map<String, NutrientInfoDTO> calculateNutrients(Long mealId) {
         Meal meal = mealRepository.findById(mealId)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid meal ID: " + mealId));
-        return NutrientCalculator.calculateNutrients(meal);
+
+        // Calculate total nutrients from meal ingredients
+        Map<String, NutrientInfoDTO> totalNutrients = new HashMap<>();
+
+        for (MealIngredient ingredient : meal.getMealIngredients()) {
+            for (NutrientInfo nutrient : ingredient.getFoodItem().getNutrients()) {
+                String nutrientName = nutrient.getNutrientName();
+                double adjustedValue = nutrient.getValue() * (ingredient.getQuantity() / 100.0);
+
+                // If the nutrient already exists, add the new value; otherwise, create a new DTO
+                totalNutrients.merge(
+                        nutrientName,
+                        new NutrientInfoDTO(nutrientName, adjustedValue, nutrient.getUnitName(), nutrient.getNutrientId()),
+                        (existing, newValue) -> {
+                            existing.setValue(existing.getValue() + newValue.getValue());
+                            return existing;
+                        }
+                );
+            }
+        }
+
+        return totalNutrients;
+    }
+
+    /**
+     * Calculates the total nutrients for the provided meal ingredients.
+     * Nutrients are retrieved from the associated FoodItem for each ingredient.
+     *
+     * @param mealIngredients the list of ingredients for the meal.
+     * @return a map of nutrient names and their corresponding total values for the meal.
+     */
+    private Map<String, Double> calculateTotalNutrients(List<MealIngredient> mealIngredients) {
+        Map<String, Double> totalNutrients = new HashMap<>();
+
+        for (MealIngredient ingredient : mealIngredients) {
+            // Retrieve nutrients from the FoodItem associated with the MealIngredient
+            List<NutrientInfo> nutrients = ingredient.getFoodItem().getNutrients();
+
+            // Calculate nutrient amounts based on the quantity of each ingredient
+            for (NutrientInfo nutrient : nutrients) {
+                double adjustedValue = nutrient.getValue() * (ingredient.getQuantity() / 100.0);
+                totalNutrients.merge(nutrient.getNutrientName(), adjustedValue, Double::sum);
+            }
+        }
+
+        return totalNutrients;
     }
 
     /**
      * Retrieves all Meals from the repository.
      *
-     * @return a List of all Meal entities.
+     * @return a list of all Meal entities.
      */
     public List<Meal> getAllMeals() {
         return mealRepository.findAll();
