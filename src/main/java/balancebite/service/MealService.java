@@ -7,7 +7,6 @@ import balancebite.mapper.MealMapper;
 import balancebite.model.FoodItem;
 import balancebite.model.Meal;
 import balancebite.model.MealIngredient;
-import balancebite.model.NutrientInfo;
 import balancebite.repository.FoodItemRepository;
 import balancebite.repository.MealRepository;
 import balancebite.utils.NutrientCalculatorUtil;
@@ -17,7 +16,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * Service class for managing Meal entities.
@@ -97,6 +95,61 @@ public class MealService {
 
         return NutrientCalculatorUtil.calculateNutrientsPerFoodItem(meal.getMealIngredients());
     }
+
+    /**
+     * Retrieves only the macronutrients (such as proteins, carbohydrates, fats, and energy)
+     * for a given Meal by its ID. This includes total fats as well as specific types of fatty acids.
+     *
+     * @param mealId the ID of the Meal.
+     * @return a map of macronutrient names and their corresponding values for the meal,
+     *         with fats grouped into a separate section.
+     */
+    public Map<String, Object> getMacronutrients(Long mealId) {
+        Meal meal = mealRepository.findById(mealId)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid meal ID: " + mealId));
+
+        // Calculate all nutrients for the meal
+        Map<String, NutrientInfoDTO> allNutrients = NutrientCalculatorUtil.calculateTotalNutrients(meal.getMealIngredients());
+
+        // Define macronutrient names (energy, protein, carbohydrates, and fats)
+        String[] macronutrientNames = {
+                "Energy kcal",
+                "Protein g",
+                "Carbohydrate, by difference g"
+        };
+
+        // Define fat-related nutrient names
+        String[] fatNames = {
+                "Total lipid (fat) g",  // Total fats
+                "Fatty acids, total saturated g",  // Saturated fats
+                "Fatty acids, total monounsaturated g",  // Monounsaturated fats
+                "Fatty acids, total polyunsaturated g"  // Polyunsaturated fats
+        };
+
+        // Initialize the map to store the macronutrients
+        Map<String, Object> macronutrients = new HashMap<>();
+
+        // Add the main macronutrients (excluding fats)
+        for (String macro : macronutrientNames) {
+            if (allNutrients.containsKey(macro)) {
+                macronutrients.put(macro, allNutrients.get(macro).getValue());
+            }
+        }
+
+        // Add the fat-related nutrients into a separate section within the response
+        Map<String, Double> fatSection = new HashMap<>();
+        for (String fat : fatNames) {
+            if (allNutrients.containsKey(fat)) {
+                fatSection.put(fat, allNutrients.get(fat).getValue());
+            }
+        }
+
+        // Add the fat section to the macronutrients map
+        macronutrients.put("Fat", fatSection);
+
+        return macronutrients;
+    }
+
 
     /**
      * Retrieves all Meals from the repository.
