@@ -95,4 +95,18 @@ public class MealController {
     public Map<String, Object> getMacronutrients(@PathVariable Long id) {
         return mealService.getMacronutrients(id);
     }
+
+    /**
+     * Retrieves only the macronutrients for each food item in a given meal by its ID.
+     * This includes values such as Energy (kcal), Protein, Carbohydrates, and Fats,
+     * where fats are grouped into a separate section.
+     *
+     * @param mealId the ID of the meal.
+     * @return a map where the key is the food item ID, and the value is a map of macronutrient names and their corresponding values.
+     */
+    @GetMapping("/macronutrients-per-food-item/{mealId}")
+    public Map<Long, Map<String, Object>> getMacronutrientsPerFoodItem(@PathVariable Long mealId) {
+        return mealService.getMacronutrientsPerFoodItem(mealId);
+    }
+
 }

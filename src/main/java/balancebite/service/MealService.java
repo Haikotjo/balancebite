@@ -150,7 +150,6 @@ public class MealService {
         return macronutrients;
     }
 
-
     /**
      * Retrieves all Meals from the repository.
      *
@@ -170,4 +169,66 @@ public class MealService {
         return mealRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid meal ID: " + id));
     }
+
+    /**
+     * Retrieves only the macronutrients (such as proteins, carbohydrates, fats, and energy)
+     * for each food item in a given Meal by its ID.
+     *
+     * @param mealId the ID of the Meal.
+     * @return a map where the key is the food item ID, and the value is a map of macronutrient names and their corresponding values.
+     */
+    public Map<Long, Map<String, Object>> getMacronutrientsPerFoodItem(Long mealId) {
+        Meal meal = mealRepository.findById(mealId)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid meal ID: " + mealId));
+
+        // Retrieve all nutrients per food item
+        Map<Long, Map<String, NutrientInfoDTO>> allNutrientsPerFoodItem = NutrientCalculatorUtil.calculateNutrientsPerFoodItem(meal.getMealIngredients());
+
+        // Define macronutrient names (energy, protein, carbohydrates, and fats)
+        String[] macronutrientNames = {
+                "Energy kcal",
+                "Protein g",
+                "Carbohydrate, by difference g"
+        };
+
+        // Define fat-related nutrient names
+        String[] fatNames = {
+                "Total lipid (fat) g",  // Total fats
+                "Fatty acids, total saturated g",  // Saturated fats
+                "Fatty acids, total monounsaturated g",  // Monounsaturated fats
+                "Fatty acids, total polyunsaturated g"  // Polyunsaturated fats
+        };
+
+        // Initialize the map to store macronutrients per food item
+        Map<Long, Map<String, Object>> macronutrientsPerFoodItem = new HashMap<>();
+
+        // Loop over each food item and filter macronutrients
+        for (Map.Entry<Long, Map<String, NutrientInfoDTO>> entry : allNutrientsPerFoodItem.entrySet()) {
+            Long foodItemId = entry.getKey();
+            Map<String, NutrientInfoDTO> nutrients = entry.getValue();
+
+            Map<String, Object> macronutrients = new HashMap<>();
+            Map<String, Double> fatSection = new HashMap<>();
+
+            // Filter and add main macronutrients (excluding fats)
+            for (String macro : macronutrientNames) {
+                if (nutrients.containsKey(macro)) {
+                    macronutrients.put(macro, nutrients.get(macro).getValue());
+                }
+            }
+
+            // Filter and add fat-related nutrients into a separate section
+            for (String fat : fatNames) {
+                if (nutrients.containsKey(fat)) {
+                    fatSection.put(fat, nutrients.get(fat).getValue());
+                }
+            }
+
+            macronutrients.put("Fat", fatSection);
+            macronutrientsPerFoodItem.put(foodItemId, macronutrients);
+        }
+
+        return macronutrientsPerFoodItem;
+    }
+
 }
