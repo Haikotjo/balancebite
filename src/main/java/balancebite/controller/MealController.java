@@ -1,7 +1,7 @@
 package balancebite.controller;
 
-import balancebite.dto.MealDTO;
-import balancebite.dto.MealInputDTO;
+import balancebite.dto.meal.MealDTO;
+import balancebite.dto.meal.MealInputDTO;
 import balancebite.dto.NutrientInfoDTO;
 import balancebite.mapper.MealMapper;
 import balancebite.model.Meal;

@@ -1,4 +1,4 @@
-package balancebite.dto;
+package balancebite.dto.mealingredient;
 
 /**
  * Data Transfer Object (DTO) representing the data of a Meal Ingredient.

@@ -1,6 +1,6 @@
 package balancebite.controller;
 
-import balancebite.dto.MealIngredientInputDTO;
+import balancebite.dto.mealingredient.MealIngredientInputDTO;
 import balancebite.service.MealIngredientService;
 import org.springframework.web.bind.annotation.*;
 

@@ -1,12 +1,8 @@
-package balancebite.dto;
+package balancebite.dto.meal;
 
-import balancebite.model.Meal;
-import balancebite.model.MealIngredient;
-import balancebite.model.NutrientInfo;
+import balancebite.dto.mealingredient.MealIngredientInputDTO;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Data Transfer Object (DTO) for capturing input data related to a Meal.

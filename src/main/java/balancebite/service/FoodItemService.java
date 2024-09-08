@@ -1,6 +1,6 @@
 package balancebite.service;
 
-import balancebite.dto.FoodItemDTO;
+import balancebite.dto.fooditem.FoodItemDTO;
 import balancebite.dto.UsdaFoodResponseDTO;
 import balancebite.exception.UsdaApiException;
 import balancebite.mapper.FoodItemMapper;

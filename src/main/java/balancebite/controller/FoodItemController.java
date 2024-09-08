@@ -1,6 +1,6 @@
 package balancebite.controller;
 
-import balancebite.dto.FoodItemDTO;
+import balancebite.dto.fooditem.FoodItemDTO;
 import balancebite.dto.UsdaFoodResponseDTO;
 import balancebite.service.FoodItemService;
 import balancebite.service.UsdaApiService;

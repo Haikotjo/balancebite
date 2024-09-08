@@ -1,4 +1,6 @@
-package balancebite.dto;
+package balancebite.dto.meal;
+
+import balancebite.dto.mealingredient.MealIngredientDTO;
 
 import java.util.List;
 
