@@ -12,12 +12,15 @@ import java.util.stream.Collectors;
 
 /**
  * Mapper class for converting between Meal entities and DTOs.
+ * Handles the transformation of Meal entities, including their ingredients,
+ * into corresponding Data Transfer Objects (DTOs).
  */
 @Component
 public class MealMapper {
 
     /**
      * Converts a Meal entity to a MealDTO.
+     * This includes converting the meal's ingredients and generating a success message.
      *
      * @param meal the Meal entity to be converted.
      * @return the created MealDTO with the success message.
@@ -27,13 +30,13 @@ public class MealMapper {
             return null;
         }
 
-        // Convert Meal entity to MealDTO including the success message
+        // Create a success message based on the meal ingredients
         String successMessage = "Meal successfully created with the following ingredients: " +
                 meal.getMealIngredients().stream()
                         .map(ingredient -> ingredient.getFoodItem().getName() + " (" + ingredient.getQuantity() + "g)")
                         .collect(Collectors.joining(", "));
 
-        // Calculate nutrients dynamically from the meal ingredients
+        // Convert the Meal entity to a MealDTO
         return new MealDTO(
                 meal.getId(),
                 meal.getName(),
@@ -50,10 +53,10 @@ public class MealMapper {
     }
 
     /**
-     * Calculates nutrients dynamically based on the food items in the meal ingredients.
+     * (Optional) Method for calculating nutrients dynamically based on the meal ingredients.
+     * This method is currently not implemented and can be expanded as needed.
      *
      * @param mealIngredients the list of ingredients in the meal.
-     * @return a map of nutrient names and their aggregated values.
      */
     private void calculateNutrients(List<MealIngredient> mealIngredients) {
         // Loop through each ingredient and process nutrients dynamically
