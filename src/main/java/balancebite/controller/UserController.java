@@ -1,6 +1,7 @@
 package balancebite.controller;
 
-import balancebite.model.User;
+import balancebite.dto.user.UserDTO;
+import balancebite.dto.user.UserInputDTO;
 import balancebite.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -23,10 +24,10 @@ public class UserController {
     /**
      * Retrieves all users.
      *
-     * @return a list of all users.
+     * @return a list of all UserDTOs.
      */
     @GetMapping
-    public List<User> getAllUsers() {
+    public List<UserDTO> getAllUsers() {
         return userService.getAllUsers();
     }
 
@@ -34,24 +35,24 @@ public class UserController {
      * Retrieves a user by their ID.
      *
      * @param id the ID of the user to retrieve.
-     * @return the user if found, or 404 Not Found if not.
+     * @return the UserDTO if found, or 404 Not Found if not.
      */
     @GetMapping("/{id}")
-    public ResponseEntity<User> getUserById(@PathVariable Long id) {
-        Optional<User> user = userService.getUserById(id);
-        return user.map(ResponseEntity::ok)
+    public ResponseEntity<UserDTO> getUserById(@PathVariable Long id) {
+        Optional<UserDTO> userDTO = userService.getUserById(id);
+        return userDTO.map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     /**
      * Creates a new user.
      *
-     * @param user the user to create.
-     * @return the created user.
+     * @param inputDTO the user data to create.
+     * @return the created UserDTO.
      */
     @PostMapping
-    public User createUser(@RequestBody User user) {
-        return userService.createUser(user);
+    public UserDTO createUser(@RequestBody UserInputDTO inputDTO) {
+        return userService.createUser(inputDTO);
     }
 
     /**
@@ -62,11 +63,25 @@ public class UserController {
      */
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
-        if (userService.getUserById(id).isPresent()) {
+        Optional<UserDTO> userDTO = userService.getUserById(id);
+        if (userDTO.isPresent()) {
             userService.deleteUser(id);
             return ResponseEntity.noContent().build();
         } else {
             return ResponseEntity.notFound().build();
         }
+    }
+
+    /**
+     * Adds a meal to the user's personal meal list.
+     *
+     * @param userId the ID of the user.
+     * @param mealId the ID of the meal to add.
+     * @return HTTP response indicating success or failure.
+     */
+    @PostMapping("/{userId}/meals/{mealId}")
+    public ResponseEntity<Void> addMealToUser(@PathVariable Long userId, @PathVariable Long mealId) {
+        userService.addMealToUser(userId, mealId);
+        return ResponseEntity.ok().build(); // Return 200 OK
     }
 }

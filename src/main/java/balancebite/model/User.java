@@ -1,6 +1,8 @@
 package balancebite.model;
 
 import jakarta.persistence.*;
+
+import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -43,7 +45,7 @@ public class User {
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "meal_id")
     )
-    private Set<Meal> meals;
+    private Set<Meal> meals = new HashSet<>();
 
     /**
      * Default constructor for JPA.
