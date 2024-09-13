@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Service class for managing Meal entities.
@@ -67,7 +68,7 @@ public class MealService {
         // Save the meal to the database
         Meal savedMeal = mealRepository.save(meal);
 
-        return mealMapper.toDTO(savedMeal);
+        return mealMapper.toDTO(savedMeal);  // Use mapper
     }
 
     /**
@@ -153,21 +154,23 @@ public class MealService {
     /**
      * Retrieves all Meals from the repository.
      *
-     * @return a list of all Meal entities.
+     * @return a list of MealDTOs.
      */
-    public List<Meal> getAllMeals() {
-        return mealRepository.findAll();
+    public List<MealDTO> getAllMeals() {
+        List<Meal> meals = mealRepository.findAll();
+        return meals.stream().map(mealMapper::toDTO).toList();  // Use mapper
     }
 
     /**
      * Retrieves a Meal by its ID.
      *
      * @param id the ID of the Meal.
-     * @return the Meal entity.
+     * @return the MealDTO.
      */
-    public Meal getMealById(Long id) {
-        return mealRepository.findById(id)
+    public MealDTO getMealById(Long id) {
+        Meal meal = mealRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid meal ID: " + id));
+        return mealMapper.toDTO(meal);  // Use mapper
     }
 
     /**

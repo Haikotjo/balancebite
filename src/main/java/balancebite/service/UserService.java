@@ -1,7 +1,9 @@
 package balancebite.service;
 
+import balancebite.dto.meal.MealDTO;
 import balancebite.dto.user.UserDTO;
 import balancebite.dto.user.UserInputDTO;
+import balancebite.mapper.MealMapper;
 import balancebite.mapper.UserMapper;
 import balancebite.model.Meal;
 import balancebite.model.User;
@@ -21,11 +23,19 @@ import java.util.stream.Collectors;
 @Service
 public class UserService {
 
-    @Autowired
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
+    private final MealRepository mealRepository;
+    private final UserMapper userMapper;
+    private final MealMapper mealMapper;
 
+    // Constructor injection
     @Autowired
-    private MealRepository mealRepository;
+    public UserService(UserRepository userRepository, MealRepository mealRepository, UserMapper userMapper, MealMapper mealMapper) {
+        this.userRepository = userRepository;
+        this.mealRepository = mealRepository;
+        this.userMapper = userMapper;
+        this.mealMapper = mealMapper;
+    }
 
     /**
      * Retrieves all users from the repository and converts them to UserDTOs.
@@ -34,7 +44,7 @@ public class UserService {
      */
     public List<UserDTO> getAllUsers() {
         return userRepository.findAll().stream()
-                .map(UserMapper::toDTO)
+                .map(userMapper::toDTO)  // Use instance method
                 .collect(Collectors.toList());
     }
 
@@ -45,7 +55,8 @@ public class UserService {
      * @return the UserDTO if found, or Optional.empty if not.
      */
     public Optional<UserDTO> getUserById(Long id) {
-        return userRepository.findById(id).map(UserMapper::toDTO);
+        return userRepository.findById(id)
+                .map(userMapper::toDTO);  // Use instance method
     }
 
     /**
@@ -55,22 +66,22 @@ public class UserService {
      * @return the created UserDTO.
      */
     public UserDTO createUser(UserInputDTO inputDTO) {
-        User user = UserMapper.toEntity(inputDTO);
+        User user = userMapper.toEntity(inputDTO);
         User savedUser = userRepository.save(user);
-        return UserMapper.toDTO(savedUser);
+        return userMapper.toDTO(savedUser);
     }
 
     /**
      * Deletes a user by their ID.
      *
-     * @param id the ID of the user to delete.
+     * @param id the ID of the user to be deleted.
      */
     public void deleteUser(Long id) {
         userRepository.deleteById(id);
     }
 
     /**
-     * Adds a meal to the user's personal meal list.
+     * Adds a meal to a user's meal list by user ID and meal ID.
      *
      * @param userId the ID of the user.
      * @param mealId the ID of the meal to add.
@@ -83,5 +94,42 @@ public class UserService {
 
         user.getMeals().add(meal); // Add meal to user's meal list
         userRepository.save(user); // Save changes
+    }
+
+    /**
+     * Retrieves all meals for a specific user.
+     *
+     * @param userId the ID of the user.
+     * @return a list of MealDTOs for the user.
+     * @throws IllegalArgumentException if the user is not found.
+     */
+    public List<MealDTO> getAllMealsForUser(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid user ID: " + userId));
+
+        // Convert meals to MealDTOs
+        return user.getMeals().stream()
+                .map(mealMapper::toDTO)  // Use instance method
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Retrieves a specific meal for a user by the meal ID.
+     *
+     * @param userId the ID of the user.
+     * @param mealId the ID of the meal.
+     * @return the MealDTO if the meal is found, or throws an exception if not.
+     * @throws IllegalArgumentException if the user or meal is not found.
+     */
+    public MealDTO getMealForUser(Long userId, Long mealId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid user ID: " + userId));
+
+        // Find the meal in the user's meals
+        return user.getMeals().stream()
+                .filter(meal -> meal.getId().equals(mealId))
+                .findFirst()
+                .map(mealMapper::toDTO)  // Use instance method
+                .orElseThrow(() -> new IllegalArgumentException("Meal not found for user: " + mealId));
     }
 }

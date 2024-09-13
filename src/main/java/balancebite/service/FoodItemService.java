@@ -23,16 +23,19 @@ public class FoodItemService {
 
     private final FoodItemRepository foodItemRepository;
     private final UsdaApiService usdaApiService;
+    private final FoodItemMapper foodItemMapper;
 
     /**
      * Constructor for dependency injection.
      *
      * @param foodItemRepository Repository for storing and retrieving FoodItems.
      * @param usdaApiService Service for interacting with the USDA API.
+     * @param foodItemMapper Mapper for converting between FoodItem entities and DTOs.
      */
-    public FoodItemService(FoodItemRepository foodItemRepository, UsdaApiService usdaApiService) {
+    public FoodItemService(FoodItemRepository foodItemRepository, UsdaApiService usdaApiService, FoodItemMapper foodItemMapper) {
         this.foodItemRepository = foodItemRepository;
         this.usdaApiService = usdaApiService;
+        this.foodItemMapper = foodItemMapper;
     }
 
     /**
@@ -139,7 +142,7 @@ public class FoodItemService {
      */
     public FoodItemDTO getFoodItemById(Long id) {
         Optional<FoodItem> foodItemOptional = foodItemRepository.findById(id);
-        return foodItemOptional.map(FoodItemMapper::toDTO).orElse(null);
+        return foodItemOptional.map(foodItemMapper::toDTO).orElse(null); // Use the mapper
     }
 
     /**
@@ -150,7 +153,24 @@ public class FoodItemService {
     public List<FoodItemDTO> getAllFoodItems() {
         List<FoodItem> foodItems = foodItemRepository.findAll();
         return foodItems.stream()
-                .map(FoodItemMapper::toDTO)
+                .map(foodItemMapper::toDTO) // Use the mapper
                 .collect(Collectors.toList());
     }
+
+    /**
+     * Deletes a FoodItem by its ID from the database.
+     *
+     * @param id The ID of the food item to delete.
+     * @return True if the food item was deleted, false if it was not found.
+     */
+    public boolean deleteFoodItemById(Long id) {
+        Optional<FoodItem> foodItemOptional = foodItemRepository.findById(id);
+        if (foodItemOptional.isPresent()) {
+            foodItemRepository.deleteById(id);
+            return true; // Successfully deleted
+        } else {
+            return false; // Food item not found
+        }
+    }
+
 }

@@ -3,13 +3,13 @@ INSERT INTO users (id, name, email, password) VALUES (1, 'John Doe', 'johndoe@ex
 
 -- Voeg de maaltijden toe
 -- Ontbijt (Breakfast)
-INSERT INTO meals (id, name) VALUES (1, 'Breakfast');
+INSERT INTO meals (name) VALUES ('Breakfast');
 
 -- Lunch
-INSERT INTO meals (id, name) VALUES (2, 'Lunch');
+INSERT INTO meals (name) VALUES ('Lunch');
 
 -- Diner (Dinner)
-INSERT INTO meals (id, name) VALUES (3, 'Dinner');
+INSERT INTO meals (name) VALUES ('Dinner');
 
 -- Voeg de ingrediënten voor het ontbijt (Breakfast) toe
 -- Bananas, raw (126 grams)
