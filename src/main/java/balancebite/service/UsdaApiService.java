@@ -5,9 +5,6 @@ import balancebite.dto.UsdaFoodResponseDTO;
 import balancebite.exception.UsdaApiException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
@@ -44,6 +41,16 @@ public class UsdaApiService {
     }
 
     /**
+     * Helper method to build the URL dynamically.
+     *
+     * @param path The specific API path to append to the base URL.
+     * @return The complete URL with the API key.
+     */
+    private String buildUrl(String path) {
+        return "https://api.nal.usda.gov/fdc/v1/" + path + "?api_key=" + apiConfig.getUsdaApiKey();
+    }
+
+    /**
      * Fetches food data from the USDA API for a single food item identified by its FDC ID.
      *
      * @param fdcId The FoodData Central ID of the food item to fetch.
@@ -52,16 +59,26 @@ public class UsdaApiService {
      */
     public UsdaFoodResponseDTO getFoodData(String fdcId) {
         try {
-            String apiKey = apiConfig.getUsdaApiKey();
-            String url = "https://api.nal.usda.gov/fdc/v1/food/" + fdcId + "?api_key=" + apiKey;
+            // Gebruik de helper-methode voor de URL-opbouw
+            String url = buildUrl("food/" + fdcId);
 
-            // Use ResponseEntity to check the HTTP status code
+            // Verzend het HTTP GET-verzoek
             ResponseEntity<String> responseEntity = restTemplate.getForEntity(url, String.class);
+
+            // Controleer of de HTTP status succesvol is (2xx)
             if (!responseEntity.getStatusCode().is2xxSuccessful()) {
-                throw new UsdaApiException("Failed to fetch food data: " + responseEntity.getStatusCode().toString());
+                if (responseEntity.getStatusCode().is4xxClientError()) {
+                    throw new UsdaApiException("Client error occurred: " + responseEntity.getStatusCode());
+                } else if (responseEntity.getStatusCode().is5xxServerError()) {
+                    throw new UsdaApiException("Server error occurred: " + responseEntity.getStatusCode());
+                } else {
+                    throw new UsdaApiException("Unexpected error: " + responseEntity.getStatusCode());
+                }
             }
 
+            // JSON-antwoord omzetten naar UsdaFoodResponseDTO
             return objectMapper.readValue(responseEntity.getBody(), UsdaFoodResponseDTO.class);
+
         } catch (RestClientException e) {
             throw new UsdaApiException("Failed to fetch food data from USDA API for FDC ID: " + fdcId, e);
         } catch (Exception e) {
@@ -78,23 +95,28 @@ public class UsdaApiService {
      */
     public List<UsdaFoodResponseDTO> getMultipleFoodData(List<String> fdcIds) {
         try {
-            String apiKey = apiConfig.getUsdaApiKey();
-            String url = "https://api.nal.usda.gov/fdc/v1/foods?api_key=" + apiKey;
+            // Gebruik de helper-methode voor de URL-opbouw
+            String url = buildUrl("foods");
 
             Map<String, Object> requestBody = new HashMap<>();
             requestBody.put("fdcIds", fdcIds);
 
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-            HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
+            ResponseEntity<String> responseEntity = restTemplate.postForEntity(url, requestBody, String.class);
 
-            // Use ResponseEntity to check the HTTP status code
-            ResponseEntity<String> responseEntity = restTemplate.postForEntity(url, entity, String.class);
+            // Controleer of de HTTP status succesvol is (2xx)
             if (!responseEntity.getStatusCode().is2xxSuccessful()) {
-                throw new UsdaApiException("Failed to fetch multiple food data: " + responseEntity.getStatusCode().toString());
+                if (responseEntity.getStatusCode().is4xxClientError()) {
+                    throw new UsdaApiException("Client error occurred: " + responseEntity.getStatusCode());
+                } else if (responseEntity.getStatusCode().is5xxServerError()) {
+                    throw new UsdaApiException("Server error occurred: " + responseEntity.getStatusCode());
+                } else {
+                    throw new UsdaApiException("Unexpected error: " + responseEntity.getStatusCode());
+                }
             }
 
+            // JSON-antwoord omzetten naar een lijst van UsdaFoodResponseDTO
             return Arrays.asList(objectMapper.readValue(responseEntity.getBody(), UsdaFoodResponseDTO[].class));
+
         } catch (RestClientException e) {
             throw new UsdaApiException("Failed to fetch multiple food data from USDA API", e);
         } catch (Exception e) {

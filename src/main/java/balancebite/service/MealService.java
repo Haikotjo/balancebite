@@ -32,9 +32,9 @@ public class MealService {
     /**
      * Constructor for MealService, using constructor injection.
      *
-     * @param mealRepository the repository for managing Meal entities.
+     * @param mealRepository     the repository for managing Meal entities.
      * @param foodItemRepository the repository for managing FoodItem entities.
-     * @param mealMapper the mapper for converting Meal entities to DTOs.
+     * @param mealMapper         the mapper for converting Meal entities to DTOs.
      */
     public MealService(MealRepository mealRepository, FoodItemRepository foodItemRepository, MealMapper mealMapper) {
         this.mealRepository = mealRepository;
@@ -103,7 +103,7 @@ public class MealService {
      *
      * @param mealId the ID of the Meal.
      * @return a map of macronutrient names and their corresponding values for the meal,
-     *         with fats grouped into a separate section.
+     * with fats grouped into a separate section.
      */
     public Map<String, Object> getMacronutrients(Long mealId) {
         Meal meal = mealRepository.findById(mealId)
@@ -234,4 +234,46 @@ public class MealService {
         return macronutrientsPerFoodItem;
     }
 
+    /**
+     * Updates an existing Meal entity with new information.
+     * This method updates the meal's name and ingredients based on the provided MealInputDTO.
+     * After updating the meal, a success message is generated to indicate the changes.
+     *
+     * @param id the ID of the meal to be updated
+     * @param mealInputDTO the DTO containing the updated meal information
+     * @return the updated MealDTO containing the new meal data with a success message
+     * @throws RuntimeException if the meal with the given ID is not found
+     * @throws IllegalArgumentException if any food item ID in the ingredients is invalid
+     */
+    @Transactional
+    public MealDTO updateMeal(Long id, MealInputDTO mealInputDTO) {
+        // Fetch the existing meal by ID
+        Meal existingMeal = mealRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Meal not found with id " + id));
+
+        // Update the meal's name
+        existingMeal.setName(mealInputDTO.getName());
+
+        // Clear the current meal ingredients so we can update them
+        existingMeal.getMealIngredients().clear();
+
+        // Map the updated meal ingredients from the input DTO
+        List<MealIngredient> updatedIngredients = mealInputDTO.getMealIngredients().stream().map(inputDTO -> {
+            FoodItem foodItem = foodItemRepository.findById(inputDTO.getFoodItemId())
+                    .orElseThrow(() -> new IllegalArgumentException("Invalid food item ID: " + inputDTO.getFoodItemId()));
+            double quantity = inputDTO.getQuantity() == null || inputDTO.getQuantity() == 0.0
+                    ? foodItem.getGramWeight()
+                    : inputDTO.getQuantity();
+            return new MealIngredient(existingMeal, foodItem, quantity);
+        }).toList();
+
+        // Add the new or updated ingredients to the meal
+        existingMeal.addMealIngredients(updatedIngredients);
+
+        // Save the updated meal in the database
+        Meal savedMeal = mealRepository.save(existingMeal);
+
+        // Convert the updated meal to a DTO and return it with a success message for the update
+        return mealMapper.toUpdatedDTO(savedMeal);
+    }
 }

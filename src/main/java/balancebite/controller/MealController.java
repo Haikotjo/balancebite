@@ -136,4 +136,22 @@ public class MealController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
     }
+
+    /**
+     * Updates an existing meal by ID.
+     *
+     * @param id the ID of the meal to be updated
+     * @param mealInputDTO the new details of the meal
+     * @return ResponseEntity containing the updated MealDTO or a 404 Not Found status if the meal is not found
+     */
+    @PutMapping("/{id}")
+    public ResponseEntity<MealDTO> updateMeal(@PathVariable Long id, @RequestBody MealInputDTO mealInputDTO) {
+        try {
+            MealDTO updatedMeal = mealService.updateMeal(id, mealInputDTO);
+            return ResponseEntity.ok(updatedMeal);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        }
+    }
+
 }

@@ -20,7 +20,8 @@ public class MealMapper {
 
     /**
      * Converts a Meal entity to a MealDTO.
-     * This includes converting the meal's ingredients and generating a success message.
+     * This includes converting the meal's ingredients and generating a success message
+     * for meal creation.
      *
      * @param meal the Meal entity to be converted.
      * @return the created MealDTO with the success message.
@@ -30,8 +31,43 @@ public class MealMapper {
             return null;
         }
 
-        // Create a success message based on the meal ingredients
+        // Create a success message based on the meal ingredients (for creation)
         String successMessage = "Meal successfully created with the following ingredients: " +
+                meal.getMealIngredients().stream()
+                        .map(ingredient -> ingredient.getFoodItem().getName() + " (" + ingredient.getQuantity() + "g)")
+                        .collect(Collectors.joining(", "));
+
+        // Convert the Meal entity to a MealDTO
+        return new MealDTO(
+                meal.getId(),
+                meal.getName(),
+                meal.getMealIngredients().stream()
+                        .map(ingredient -> new MealIngredientDTO(
+                                ingredient.getId(),
+                                meal.getId(),
+                                ingredient.getFoodItem() != null ? ingredient.getFoodItem().getId() : null,
+                                ingredient.getQuantity()
+                        ))
+                        .collect(Collectors.toList()),
+                successMessage
+        );
+    }
+
+    /**
+     * Converts a Meal entity to a MealDTO for the update operation.
+     * This includes converting the meal's ingredients and generating a success message
+     * for meal update.
+     *
+     * @param meal the Meal entity to be converted.
+     * @return the updated MealDTO with the success message.
+     */
+    public MealDTO toUpdatedDTO(Meal meal) {
+        if (meal == null) {
+            return null;
+        }
+
+        // Create a success message based on the meal ingredients (for update)
+        String successMessage = "Meal successfully updated to include the following ingredients: " +
                 meal.getMealIngredients().stream()
                         .map(ingredient -> ingredient.getFoodItem().getName() + " (" + ingredient.getQuantity() + "g)")
                         .collect(Collectors.joining(", "));
