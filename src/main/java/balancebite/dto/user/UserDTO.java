@@ -1,6 +1,7 @@
 package balancebite.dto.user;
 
 import balancebite.dto.meal.MealDTO;
+import balancebite.model.Role;
 import java.util.List;
 
 /**
@@ -29,6 +30,11 @@ public class UserDTO {
      * This contains basic meal information (e.g., ID and name).
      */
     private List<MealDTO> meals;
+
+    /**
+     * The role of the user.
+     */
+    private Role role;
 
     // Getters and setters
     public Long getId() {
@@ -61,5 +67,13 @@ public class UserDTO {
 
     public void setMeals(List<MealDTO> meals) {
         this.meals = meals;
+    }
+
+    public Role getRole() {
+        return role;
+    }
+
+    public void setRole(Role role) {
+        this.role = role;
     }
 }

@@ -1,5 +1,7 @@
 package balancebite.dto.user;
 
+import balancebite.model.Role;
+
 /**
  * Data Transfer Object (DTO) for creating or updating a user.
  * This DTO is used to receive user data from the client when creating or updating a user.
@@ -20,6 +22,11 @@ public class UserInputDTO {
      * The password of the user. This should be hashed before storing in the database.
      */
     private String password;
+
+    /**
+     * The role of the user.
+     */
+    private Role role;
 
     // Getters and setters
     public String getName() {
@@ -44,5 +51,13 @@ public class UserInputDTO {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public Role getRole() {
+        return role;
+    }
+
+    public void setRole(Role role) {
+        this.role = role;
     }
 }

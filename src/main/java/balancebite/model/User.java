@@ -1,13 +1,12 @@
 package balancebite.model;
 
 import jakarta.persistence.*;
-
 import java.util.HashSet;
 import java.util.Set;
 
 /**
  * Represents a user entity in the system.
- * Each user has a unique ID, name, email, and password, and can be associated with multiple meals.
+ * Each user has a unique ID, name, email, and password, and can be associated with multiple meals and a role.
  */
 @Entity
 @Table(name = "users")
@@ -48,6 +47,13 @@ public class User {
     private Set<Meal> meals = new HashSet<>();
 
     /**
+     * The role of the user, which defines their permissions and access levels.
+     * This is represented as an enum with values like USER and ADMIN.
+     */
+    @Enumerated(EnumType.STRING)
+    private Role role;
+
+    /**
      * Default constructor for JPA.
      */
     public User() {
@@ -62,13 +68,15 @@ public class User {
      * @param email    The email of the user.
      * @param password The password for the user account.
      * @param meals    The set of meals associated with the user.
+     * @param role     The role of the user.
      */
-    public User(Long id, String name, String email, String password, Set<Meal> meals) {
+    public User(Long id, String name, String email, String password, Set<Meal> meals, Role role) {
         this.id = id;
         this.name = name;
         this.email = email;
         this.password = password;
         this.meals = meals;
+        this.role = role;
     }
 
     /**
@@ -150,5 +158,23 @@ public class User {
      */
     public void setMeals(Set<Meal> meals) {
         this.meals = meals;
+    }
+
+    /**
+     * Gets the role of the user.
+     *
+     * @return The role of the user.
+     */
+    public Role getRole() {
+        return role;
+    }
+
+    /**
+     * Sets the role of the user.
+     *
+     * @param role The role to set for the user.
+     */
+    public void setRole(Role role) {
+        this.role = role;
     }
 }
