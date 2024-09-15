@@ -1,5 +1,5 @@
--- Voeg een user toe
--- INSERT INTO users (id, name, email, password) VALUES ('John Doe', 'johndoe@example.com', 'password123');
+-- Voeg een nieuwe user toe zonder handmatig een ID in te stellen
+INSERT INTO users (name, email, password) VALUES ('John Doe', 'johndoe@example.com', 'password123');
 
 -- Voeg de maaltijden toe
 -- Ontbijt (Breakfast)
@@ -38,6 +38,6 @@ INSERT INTO meal_ingredients (meal_id, food_item_id, quantity) VALUES (3, 8, 100
 INSERT INTO meal_ingredients (meal_id, food_item_id, quantity) VALUES (3, 14, 25.5);
 
 -- Koppel de user aan de maaltijden
--- INSERT INTO user_meals (user_id, meal_id) VALUES (1, 1); -- User heeft het ontbijt
--- INSERT INTO user_meals (user_id, meal_id) VALUES (1, 2); -- User heeft de lunch
--- INSERT INTO user_meals (user_id, meal_id) VALUES (1, 3); -- User heeft het diner
+INSERT INTO user_meals (user_id, meal_id) VALUES (1, 1); -- User heeft het ontbijt
+INSERT INTO user_meals (user_id, meal_id) VALUES (1, 2); -- User heeft de lunch
+INSERT INTO user_meals (user_id, meal_id) VALUES (1, 3); -- User heeft het diner
