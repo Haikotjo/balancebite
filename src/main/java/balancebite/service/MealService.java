@@ -72,29 +72,68 @@ public class MealService {
     }
 
     /**
-     * Retrieves the total nutrients for a given Meal by its ID.
+     * Updates an existing Meal entity with new information.
+     * This method updates the meal's name and ingredients based on the provided MealInputDTO.
+     * After updating the meal, a success message is generated to indicate the changes.
      *
-     * @param mealId the ID of the Meal.
-     * @return a map of nutrient names and their corresponding total values for the meal.
+     * @param id the ID of the meal to be updated
+     * @param mealInputDTO the DTO containing the updated meal information
+     * @return the updated MealDTO containing the new meal data with a success message
+     * @throws RuntimeException if the meal with the given ID is not found
+     * @throws IllegalArgumentException if any food item ID in the ingredients is invalid
      */
-    public Map<String, NutrientInfoDTO> calculateNutrients(Long mealId) {
-        Meal meal = mealRepository.findById(mealId)
-                .orElseThrow(() -> new IllegalArgumentException("Invalid meal ID: " + mealId));
+    @Transactional
+    public MealDTO updateMeal(Long id, MealInputDTO mealInputDTO) {
+        // Fetch the existing meal by ID
+        Meal existingMeal = mealRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Meal not found with id " + id));
 
-        return NutrientCalculatorUtil.calculateTotalNutrients(meal.getMealIngredients());
+        // Update the meal's name
+        existingMeal.setName(mealInputDTO.getName());
+
+        // Clear the current meal ingredients so we can update them
+        existingMeal.getMealIngredients().clear();
+
+        // Map the updated meal ingredients from the input DTO
+        List<MealIngredient> updatedIngredients = mealInputDTO.getMealIngredients().stream().map(inputDTO -> {
+            FoodItem foodItem = foodItemRepository.findById(inputDTO.getFoodItemId())
+                    .orElseThrow(() -> new IllegalArgumentException("Invalid food item ID: " + inputDTO.getFoodItemId()));
+            double quantity = inputDTO.getQuantity() == null || inputDTO.getQuantity() == 0.0
+                    ? foodItem.getGramWeight()
+                    : inputDTO.getQuantity();
+            return new MealIngredient(existingMeal, foodItem, quantity);
+        }).toList();
+
+        // Add the new or updated ingredients to the meal
+        existingMeal.addMealIngredients(updatedIngredients);
+
+        // Save the updated meal in the database
+        Meal savedMeal = mealRepository.save(existingMeal);
+
+        // Convert the updated meal to a DTO and return it with a success message for the update
+        return mealMapper.toUpdatedDTO(savedMeal);
     }
 
     /**
-     * Retrieves the nutrients per food item for a given Meal by its ID.
+     * Retrieves all Meals from the repository.
      *
-     * @param mealId the ID of the Meal.
-     * @return a map where the key is the food item ID, and the value is the map of nutrient names and their corresponding total values.
+     * @return a list of MealDTOs.
      */
-    public Map<Long, Map<String, NutrientInfoDTO>> calculateNutrientsPerFoodItem(Long mealId) {
-        Meal meal = mealRepository.findById(mealId)
-                .orElseThrow(() -> new IllegalArgumentException("Invalid meal ID: " + mealId));
+    public List<MealDTO> getAllMeals() {
+        List<Meal> meals = mealRepository.findAll();
+        return meals.stream().map(mealMapper::toDTO).toList();  // Use mapper
+    }
 
-        return NutrientCalculatorUtil.calculateNutrientsPerFoodItem(meal.getMealIngredients());
+    /**
+     * Retrieves a Meal by its ID.
+     *
+     * @param id the ID of the Meal.
+     * @return the MealDTO.
+     */
+    public MealDTO getMealById(Long id) {
+        Meal meal = mealRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid meal ID: " + id));
+        return mealMapper.toDTO(meal);  // Use mapper
     }
 
     /**
@@ -149,28 +188,6 @@ public class MealService {
         macronutrients.put("Fat", fatSection);
 
         return macronutrients;
-    }
-
-    /**
-     * Retrieves all Meals from the repository.
-     *
-     * @return a list of MealDTOs.
-     */
-    public List<MealDTO> getAllMeals() {
-        List<Meal> meals = mealRepository.findAll();
-        return meals.stream().map(mealMapper::toDTO).toList();  // Use mapper
-    }
-
-    /**
-     * Retrieves a Meal by its ID.
-     *
-     * @param id the ID of the Meal.
-     * @return the MealDTO.
-     */
-    public MealDTO getMealById(Long id) {
-        Meal meal = mealRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Invalid meal ID: " + id));
-        return mealMapper.toDTO(meal);  // Use mapper
     }
 
     /**
@@ -235,45 +252,28 @@ public class MealService {
     }
 
     /**
-     * Updates an existing Meal entity with new information.
-     * This method updates the meal's name and ingredients based on the provided MealInputDTO.
-     * After updating the meal, a success message is generated to indicate the changes.
+     * Retrieves the total nutrients for a given Meal by its ID.
      *
-     * @param id the ID of the meal to be updated
-     * @param mealInputDTO the DTO containing the updated meal information
-     * @return the updated MealDTO containing the new meal data with a success message
-     * @throws RuntimeException if the meal with the given ID is not found
-     * @throws IllegalArgumentException if any food item ID in the ingredients is invalid
+     * @param mealId the ID of the Meal.
+     * @return a map of nutrient names and their corresponding total values for the meal.
      */
-    @Transactional
-    public MealDTO updateMeal(Long id, MealInputDTO mealInputDTO) {
-        // Fetch the existing meal by ID
-        Meal existingMeal = mealRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Meal not found with id " + id));
+    public Map<String, NutrientInfoDTO> calculateNutrients(Long mealId) {
+        Meal meal = mealRepository.findById(mealId)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid meal ID: " + mealId));
 
-        // Update the meal's name
-        existingMeal.setName(mealInputDTO.getName());
+        return NutrientCalculatorUtil.calculateTotalNutrients(meal.getMealIngredients());
+    }
 
-        // Clear the current meal ingredients so we can update them
-        existingMeal.getMealIngredients().clear();
+    /**
+     * Retrieves the nutrients per food item for a given Meal by its ID.
+     *
+     * @param mealId the ID of the Meal.
+     * @return a map where the key is the food item ID, and the value is the map of nutrient names and their corresponding total values.
+     */
+    public Map<Long, Map<String, NutrientInfoDTO>> calculateNutrientsPerFoodItem(Long mealId) {
+        Meal meal = mealRepository.findById(mealId)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid meal ID: " + mealId));
 
-        // Map the updated meal ingredients from the input DTO
-        List<MealIngredient> updatedIngredients = mealInputDTO.getMealIngredients().stream().map(inputDTO -> {
-            FoodItem foodItem = foodItemRepository.findById(inputDTO.getFoodItemId())
-                    .orElseThrow(() -> new IllegalArgumentException("Invalid food item ID: " + inputDTO.getFoodItemId()));
-            double quantity = inputDTO.getQuantity() == null || inputDTO.getQuantity() == 0.0
-                    ? foodItem.getGramWeight()
-                    : inputDTO.getQuantity();
-            return new MealIngredient(existingMeal, foodItem, quantity);
-        }).toList();
-
-        // Add the new or updated ingredients to the meal
-        existingMeal.addMealIngredients(updatedIngredients);
-
-        // Save the updated meal in the database
-        Meal savedMeal = mealRepository.save(existingMeal);
-
-        // Convert the updated meal to a DTO and return it with a success message for the update
-        return mealMapper.toUpdatedDTO(savedMeal);
+        return NutrientCalculatorUtil.calculateNutrientsPerFoodItem(meal.getMealIngredients());
     }
 }

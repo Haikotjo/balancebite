@@ -43,32 +43,17 @@ public class MealController {
     }
 
     /**
-     * Retrieves the total nutrients for a given Meal by its ID.
+     * Updates an existing meal by ID.
      *
-     * @param id the ID of the meal.
-     * @return ResponseEntity containing a map of nutrient names and their corresponding total values, or an error if not found.
+     * @param id the ID of the meal to be updated
+     * @param mealInputDTO the new details of the meal
+     * @return ResponseEntity containing the updated MealDTO or a 404 Not Found status if the meal is not found
      */
-    @GetMapping("/nutrients/{id}")
-    public ResponseEntity<Map<String, NutrientInfoDTO>> calculateNutrients(@PathVariable Long id) {
+    @PutMapping("/{id}")
+    public ResponseEntity<MealDTO> updateMeal(@PathVariable Long id, @RequestBody MealInputDTO mealInputDTO) {
         try {
-            Map<String, NutrientInfoDTO> nutrients = mealService.calculateNutrients(id);
-            return ResponseEntity.ok(nutrients);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
-        }
-    }
-
-    /**
-     * Retrieves the nutrients per food item for a given Meal by its ID.
-     *
-     * @param id the ID of the meal.
-     * @return ResponseEntity containing a map of food item IDs to nutrient maps, or an error if not found.
-     */
-    @GetMapping("/nutrients-per-food-item/{id}")
-    public ResponseEntity<Map<Long, Map<String, NutrientInfoDTO>>> calculateNutrientsPerFoodItem(@PathVariable Long id) {
-        try {
-            Map<Long, Map<String, NutrientInfoDTO>> nutrientsPerFoodItem = mealService.calculateNutrientsPerFoodItem(id);
-            return ResponseEntity.ok(nutrientsPerFoodItem);
+            MealDTO updatedMeal = mealService.updateMeal(id, mealInputDTO);
+            return ResponseEntity.ok(updatedMeal);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
@@ -96,6 +81,38 @@ public class MealController {
         try {
             MealDTO mealDTO = mealService.getMealById(id);
             return ResponseEntity.ok(mealDTO);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        }
+    }
+
+    /**
+     * Retrieves the total nutrients for a given Meal by its ID.
+     *
+     * @param id the ID of the meal.
+     * @return ResponseEntity containing a map of nutrient names and their corresponding total values, or an error if not found.
+     */
+    @GetMapping("/nutrients/{id}")
+    public ResponseEntity<Map<String, NutrientInfoDTO>> calculateNutrients(@PathVariable Long id) {
+        try {
+            Map<String, NutrientInfoDTO> nutrients = mealService.calculateNutrients(id);
+            return ResponseEntity.ok(nutrients);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        }
+    }
+
+    /**
+     * Retrieves the nutrients per food item for a given Meal by its ID.
+     *
+     * @param id the ID of the meal.
+     * @return ResponseEntity containing a map of food item IDs to nutrient maps, or an error if not found.
+     */
+    @GetMapping("/nutrients-per-food-item/{id}")
+    public ResponseEntity<Map<Long, Map<String, NutrientInfoDTO>>> calculateNutrientsPerFoodItem(@PathVariable Long id) {
+        try {
+            Map<Long, Map<String, NutrientInfoDTO>> nutrientsPerFoodItem = mealService.calculateNutrientsPerFoodItem(id);
+            return ResponseEntity.ok(nutrientsPerFoodItem);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
@@ -136,22 +153,4 @@ public class MealController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
     }
-
-    /**
-     * Updates an existing meal by ID.
-     *
-     * @param id the ID of the meal to be updated
-     * @param mealInputDTO the new details of the meal
-     * @return ResponseEntity containing the updated MealDTO or a 404 Not Found status if the meal is not found
-     */
-    @PutMapping("/{id}")
-    public ResponseEntity<MealDTO> updateMeal(@PathVariable Long id, @RequestBody MealInputDTO mealInputDTO) {
-        try {
-            MealDTO updatedMeal = mealService.updateMeal(id, mealInputDTO);
-            return ResponseEntity.ok(updatedMeal);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
-        }
-    }
-
 }
