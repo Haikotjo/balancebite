@@ -3,85 +3,89 @@ package balancebite.controller;
 import balancebite.dto.user.UserDTO;
 import balancebite.dto.user.UserInputDTO;
 import balancebite.service.UserService;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Optional;
 
 /**
- * Controller class for managing users.
- * Provides endpoints for CRUD operations.
+ * REST controller responsible for managing user-related actions.
  */
 @RestController
 @RequestMapping("/users")
 public class UserController {
 
-    @Autowired
-    private UserService userService;
+    private final UserService userService;
 
     /**
-     * Retrieves all users.
+     * Constructor to initialize the UserController with the UserService.
      *
-     * @return a list of all UserDTOs.
+     * @param userService The service responsible for user-related business logic.
      */
-    @GetMapping
-    public List<UserDTO> getAllUsers() {
-        return userService.getAllUsers();
+    public UserController(UserService userService) {
+        this.userService = userService;
     }
 
     /**
-     * Retrieves a user by their ID.
+     * Endpoint to create a new user.
+     * Meals are not added during user creation.
      *
-     * @param id the ID of the user to retrieve.
-     * @return the UserDTO if found, or 404 Not Found if not.
+     * @param userInputDTO The input data for creating the user.
+     * @return The created UserDTO and 201 status code.
+     */
+    @PostMapping
+    public ResponseEntity<UserDTO> createUser(@RequestBody UserInputDTO userInputDTO) {
+        UserDTO createdUser = userService.createUser(userInputDTO);
+        return new ResponseEntity<>(createdUser, HttpStatus.CREATED);
+    }
+
+    /**
+     * Endpoint to update an existing user.
+     *
+     * @param id The ID of the user to update.
+     * @param userInputDTO The input data for updating the user.
+     * @return The updated UserDTO and 200 status code.
+     */
+    @PutMapping("/{id}")
+    public ResponseEntity<UserDTO> updateUser(@PathVariable Long id, @RequestBody UserInputDTO userInputDTO) {
+        UserDTO updatedUser = userService.updateUser(id, userInputDTO);
+        return ResponseEntity.ok(updatedUser);
+    }
+
+    /**
+     * Endpoint to retrieve all users.
+     *
+     * @return A list of UserDTOs and 200 status code.
+     */
+    @GetMapping
+    public ResponseEntity<List<UserDTO>> getAllUsers() {
+        List<UserDTO> users = userService.getAllUsers();
+        return ResponseEntity.ok(users);
+    }
+
+    /**
+     * Endpoint to retrieve a specific user by ID.
+     *
+     * @param id The ID of the user to retrieve.
+     * @return The UserDTO and 200 status code.
      */
     @GetMapping("/{id}")
     public ResponseEntity<UserDTO> getUserById(@PathVariable Long id) {
-        Optional<UserDTO> userDTO = userService.getUserById(id);
-        return userDTO.map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
+        UserDTO user = userService.getUserById(id);
+        return ResponseEntity.ok(user);
     }
 
     /**
-     * Creates a new user.
+     * Endpoint to delete an existing user by ID.
      *
-     * @param inputDTO the user data to create.
-     * @return the created UserDTO.
-     */
-    @PostMapping
-    public UserDTO createUser(@RequestBody UserInputDTO inputDTO) {
-        return userService.createUser(inputDTO);
-    }
-
-    /**
-     * Deletes a user by their ID.
-     *
-     * @param id the ID of the user to delete.
-     * @return 204 No Content if successful, or 404 Not Found if the user does not exist.
+     * @param id The ID of the user to delete.
+     * @return A 204 No Content status code if successful.
      */
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
-        Optional<UserDTO> userDTO = userService.getUserById(id);
-        if (userDTO.isPresent()) {
-            userService.deleteUser(id);
-            return ResponseEntity.noContent().build();
-        } else {
-            return ResponseEntity.notFound().build();
-        }
+        userService.deleteUser(id);
+        return ResponseEntity.noContent().build();
     }
 
-    /**
-     * Adds a meal to the user's personal meal list.
-     *
-     * @param userId the ID of the user.
-     * @param mealId the ID of the meal to add.
-     * @return HTTP response indicating success or failure.
-     */
-    @PostMapping("/{userId}/meals/{mealId}")
-    public ResponseEntity<Void> addMealToUser(@PathVariable Long userId, @PathVariable Long mealId) {
-        userService.addMealToUser(userId, mealId);
-        return ResponseEntity.ok().build(); // Return 200 OK
-    }
 }

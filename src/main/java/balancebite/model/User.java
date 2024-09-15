@@ -44,7 +44,7 @@ public class User {
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "meal_id")
     )
-    private Set<Meal> meals = new HashSet<>();
+    private Set<Meal> meals = new HashSet<>(); // Initialize with an empty set
 
     /**
      * The role of the user, which defines their permissions and access levels.
@@ -151,13 +151,8 @@ public class User {
         return meals;
     }
 
-    /**
-     * Sets the meals associated with the user.
-     *
-     * @param meals The set of meals to associate with the user.
-     */
     public void setMeals(Set<Meal> meals) {
-        this.meals = meals;
+        this.meals = meals != null ? meals : new HashSet<>();
     }
 
     /**

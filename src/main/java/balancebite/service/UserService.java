@@ -1,135 +1,108 @@
 package balancebite.service;
 
-import balancebite.dto.meal.MealDTO;
 import balancebite.dto.user.UserDTO;
 import balancebite.dto.user.UserInputDTO;
-import balancebite.mapper.MealMapper;
 import balancebite.mapper.UserMapper;
-import balancebite.model.Meal;
 import balancebite.model.User;
-import balancebite.repository.MealRepository;
 import balancebite.repository.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
- * Service class for managing User entities.
- * Handles creation, retrieval, and deletion of users.
+ * Service class responsible for managing users.
  */
 @Service
+@Transactional
 public class UserService {
 
     private final UserRepository userRepository;
-    private final MealRepository mealRepository;
     private final UserMapper userMapper;
-    private final MealMapper mealMapper;
 
-    // Constructor injection
-    @Autowired
-    public UserService(UserRepository userRepository, MealRepository mealRepository, UserMapper userMapper, MealMapper mealMapper) {
+    /**
+     * Constructor that initializes the UserService with the required repositories and mappers.
+     *
+     * @param userRepository Repository to interact with the User data in the database.
+     * @param userMapper Mapper to convert between User entities and DTOs.
+     */
+    public UserService(UserRepository userRepository, UserMapper userMapper) {
         this.userRepository = userRepository;
-        this.mealRepository = mealRepository;
         this.userMapper = userMapper;
-        this.mealMapper = mealMapper;
     }
 
     /**
-     * Retrieves all users from the repository and converts them to UserDTOs.
+     * Creates a new user in the system based on the provided UserInputDTO.
+     * Meals are not added at the time of creation.
      *
-     * @return a list of all UserDTOs.
+     * @param userInputDTO The input data for creating the user.
+     * @return The created UserDTO.
      */
-    public List<UserDTO> getAllUsers() {
-        return userRepository.findAll().stream()
-                .map(userMapper::toDTO)  // Use instance method
-                .collect(Collectors.toList());
-    }
-
-    /**
-     * Retrieves a user by their ID and converts them to a UserDTO.
-     *
-     * @param id the ID of the user.
-     * @return the UserDTO if found, or Optional.empty if not.
-     */
-    public Optional<UserDTO> getUserById(Long id) {
-        return userRepository.findById(id)
-                .map(userMapper::toDTO);  // Use instance method
-    }
-
-    /**
-     * Creates a new user based on the UserInputDTO and saves it to the repository.
-     *
-     * @param inputDTO the data for creating the user.
-     * @return the created UserDTO.
-     */
-    public UserDTO createUser(UserInputDTO inputDTO) {
-        User user = userMapper.toEntity(inputDTO);
+    public UserDTO createUser(UserInputDTO userInputDTO) {
+        User user = userMapper.toEntity(userInputDTO);
+        user.setMeals(null);  // No meals added at this point
         User savedUser = userRepository.save(user);
         return userMapper.toDTO(savedUser);
     }
 
     /**
-     * Deletes a user by their ID.
+     * Updates an existing user in the system based on the provided UserInputDTO.
+     * This can include updating the meals associated with the user.
      *
-     * @param id the ID of the user to be deleted.
+     * @param id The ID of the user to update.
+     * @param userInputDTO The input data for updating the user.
+     * @return The updated UserDTO.
      */
-    public void deleteUser(Long id) {
-        userRepository.deleteById(id);
+    public UserDTO updateUser(Long id, UserInputDTO userInputDTO) {
+        User existingUser = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found with ID " + id));
+
+        // Update the user's information
+        existingUser.setName(userInputDTO.getName());
+        existingUser.setEmail(userInputDTO.getEmail());
+        existingUser.setPassword(userInputDTO.getPassword());  // Hash the password before saving in the service layer
+        existingUser.setRole(userInputDTO.getRole());
+
+        // Save the updated user
+        User updatedUser = userRepository.save(existingUser);
+        return userMapper.toDTO(updatedUser);
     }
 
     /**
-     * Adds a meal to a user's meal list by user ID and meal ID.
+     * Retrieves all users in the system.
      *
-     * @param userId the ID of the user.
-     * @param mealId the ID of the meal to add.
+     * @return A list of UserDTOs representing all users.
      */
-    public void addMealToUser(Long userId, Long mealId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("Invalid user ID: " + userId));
-        Meal meal = mealRepository.findById(mealId)
-                .orElseThrow(() -> new IllegalArgumentException("Invalid meal ID: " + mealId));
-
-        user.getMeals().add(meal); // Add meal to user's meal list
-        userRepository.save(user); // Save changes
-    }
-
-    /**
-     * Retrieves all meals for a specific user.
-     *
-     * @param userId the ID of the user.
-     * @return a list of MealDTOs for the user.
-     * @throws IllegalArgumentException if the user is not found.
-     */
-    public List<MealDTO> getAllMealsForUser(Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("Invalid user ID: " + userId));
-
-        // Convert meals to MealDTOs
-        return user.getMeals().stream()
-                .map(mealMapper::toDTO)  // Use instance method
+    public List<UserDTO> getAllUsers() {
+        List<User> users = userRepository.findAll();
+        return users.stream()
+                .map(userMapper::toDTO)
                 .collect(Collectors.toList());
     }
 
     /**
-     * Retrieves a specific meal for a user by the meal ID.
+     * Retrieves a user by their unique ID.
      *
-     * @param userId the ID of the user.
-     * @param mealId the ID of the meal.
-     * @return the MealDTO if the meal is found, or throws an exception if not.
-     * @throws IllegalArgumentException if the user or meal is not found.
+     * @param id The ID of the user to retrieve.
+     * @return The UserDTO representing the user.
      */
-    public MealDTO getMealForUser(Long userId, Long mealId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("Invalid user ID: " + userId));
-
-        // Find the meal in the user's meals
-        return user.getMeals().stream()
-                .filter(meal -> meal.getId().equals(mealId))
-                .findFirst()
-                .map(mealMapper::toDTO)  // Use instance method
-                .orElseThrow(() -> new IllegalArgumentException("Meal not found for user: " + mealId));
+    public UserDTO getUserById(Long id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found with ID " + id));
+        return userMapper.toDTO(user);
     }
+
+    /**
+     * Deletes a user by their ID.
+     *
+     * @param id The ID of the user to delete.
+     */
+    public void deleteUser(Long id) {
+        if (!userRepository.existsById(id)) {
+            throw new RuntimeException("User not found with ID " + id);
+        }
+        userRepository.deleteById(id);
+    }
+
 }
