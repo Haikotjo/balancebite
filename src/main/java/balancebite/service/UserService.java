@@ -3,7 +3,9 @@ package balancebite.service;
 import balancebite.dto.user.UserDTO;
 import balancebite.dto.user.UserInputDTO;
 import balancebite.mapper.UserMapper;
+import balancebite.model.Meal;
 import balancebite.model.User;
+import balancebite.repository.MealRepository;
 import balancebite.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,18 +21,22 @@ import java.util.stream.Collectors;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final MealRepository mealRepository;  // Add MealRepository
     private final UserMapper userMapper;
 
     /**
      * Constructor that initializes the UserService with the required repositories and mappers.
      *
      * @param userRepository Repository to interact with the User data in the database.
+     * @param mealRepository Repository to interact with the Meal data in the database.
      * @param userMapper Mapper to convert between User entities and DTOs.
      */
-    public UserService(UserRepository userRepository, UserMapper userMapper) {
+    public UserService(UserRepository userRepository, MealRepository mealRepository, UserMapper userMapper) {
         this.userRepository = userRepository;
+        this.mealRepository = mealRepository;  // Initialize MealRepository
         this.userMapper = userMapper;
     }
+
 
     /**
      * Creates a new user in the system based on the provided UserInputDTO.
@@ -105,4 +111,43 @@ public class UserService {
         userRepository.deleteById(id);
     }
 
+    /**
+     * Adds an existing meal to the user's list of meals.
+     *
+     * @param userId The ID of the user.
+     * @param mealId The ID of the meal to be added.
+     * @return The updated UserDTO with the new meal included.
+     */
+    public UserDTO addMealToUser(Long userId, Long mealId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found with ID " + userId));
+
+        Meal meal = mealRepository.findById(mealId)
+                .orElseThrow(() -> new RuntimeException("Meal not found with ID " + mealId));
+
+        user.getMeals().add(meal); // Add the meal to the user's meals
+        User updatedUser = userRepository.save(user);
+
+        return userMapper.toDTO(updatedUser);
+    }
+
+    /**
+     * Removes a meal from the user's list of meals.
+     *
+     * @param userId The ID of the user.
+     * @param mealId The ID of the meal to be removed.
+     * @return The updated UserDTO without the removed meal.
+     */
+    public UserDTO removeMealFromUser(Long userId, Long mealId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found with ID " + userId));
+
+        Meal meal = mealRepository.findById(mealId)
+                .orElseThrow(() -> new RuntimeException("Meal not found with ID " + mealId));
+
+        user.getMeals().remove(meal); // Remove the meal from the user's meals
+        User updatedUser = userRepository.save(user);
+
+        return userMapper.toDTO(updatedUser);
+    }
 }

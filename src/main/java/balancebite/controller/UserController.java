@@ -88,4 +88,29 @@ public class UserController {
         return ResponseEntity.noContent().build();
     }
 
+    /**
+     * Endpoint to add a meal to the user's list of meals.
+     *
+     * @param userId The ID of the user.
+     * @param mealId The ID of the meal to add.
+     * @return A 200 OK status code if the meal was added successfully.
+     */
+    @PostMapping("/{userId}/meals/{mealId}")
+    public ResponseEntity<UserDTO> addMealToUser(@PathVariable Long userId, @PathVariable Long mealId) {
+        UserDTO updatedUser = userService.addMealToUser(userId, mealId);
+        return ResponseEntity.ok(updatedUser);
+    }
+
+    /**
+     * Endpoint to remove a meal from the user's list of meals.
+     *
+     * @param userId The ID of the user.
+     * @param mealId The ID of the meal to remove.
+     * @return A 200 OK status code if the meal was removed successfully.
+     */
+    @DeleteMapping("/{userId}/meals/{mealId}")
+    public ResponseEntity<UserDTO> removeMealFromUser(@PathVariable Long userId, @PathVariable Long mealId) {
+        UserDTO updatedUser = userService.removeMealFromUser(userId, mealId);
+        return ResponseEntity.ok(updatedUser);
+    }
 }
