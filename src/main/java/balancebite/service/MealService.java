@@ -7,16 +7,15 @@ import balancebite.mapper.MealMapper;
 import balancebite.model.FoodItem;
 import balancebite.model.Meal;
 import balancebite.model.MealIngredient;
+import balancebite.model.User;
 import balancebite.repository.FoodItemRepository;
 import balancebite.repository.MealRepository;
+import balancebite.repository.UserRepository;
 import balancebite.utils.NutrientCalculatorUtil;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 /**
  * Service class for managing Meal entities.
@@ -27,6 +26,7 @@ public class MealService {
 
     private final MealRepository mealRepository;
     private final FoodItemRepository foodItemRepository;
+    private final UserRepository userRepository;
     private final MealMapper mealMapper;
 
     /**
@@ -34,11 +34,13 @@ public class MealService {
      *
      * @param mealRepository     the repository for managing Meal entities.
      * @param foodItemRepository the repository for managing FoodItem entities.
+     * @param userRepository     the repository for managing User entities.
      * @param mealMapper         the mapper for converting Meal entities to DTOs.
      */
-    public MealService(MealRepository mealRepository, FoodItemRepository foodItemRepository, MealMapper mealMapper) {
+    public MealService(MealRepository mealRepository, FoodItemRepository foodItemRepository, UserRepository userRepository, MealMapper mealMapper) {
         this.mealRepository = mealRepository;
         this.foodItemRepository = foodItemRepository;
+        this.userRepository = userRepository;
         this.mealMapper = mealMapper;
     }
 
@@ -69,6 +71,57 @@ public class MealService {
         Meal savedMeal = mealRepository.save(meal);
 
         return mealMapper.toDTO(savedMeal);  // Use mapper
+    }
+
+    /**
+     * Creates a new Meal entity for a specific user based on the provided MealInputDTO.
+     * The meal is associated with the user, and the meal ingredients are also processed.
+     *
+     * @param mealInputDTO The DTO containing the input data for creating a Meal.
+     * @param userId The ID of the user to whom the meal will be associated.
+     * @return The created MealDTO with a success message and calculated nutrients.
+     * @throws RuntimeException If the user is not found.
+     * @throws IllegalArgumentException If any of the food item IDs are invalid.
+     */
+    @Transactional
+    public MealDTO createMealForUser(MealInputDTO mealInputDTO, Long userId) {
+        // Create a new Meal entity
+        Meal meal = new Meal();
+        meal.setName(mealInputDTO.getName());
+
+        // Associate the meal with the user
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        // Create a set or list of users and add the user to it
+        List<User> users = new ArrayList<>();
+        users.add(user);
+        meal.setUsers(users);  // Link the meal to the user
+
+        // Process and map the meal ingredients
+        List<MealIngredient> mealIngredients = mealInputDTO.getMealIngredients().stream().map(inputDTO -> {
+            FoodItem foodItem = foodItemRepository.findById(inputDTO.getFoodItemId())
+                    .orElseThrow(() -> new IllegalArgumentException("Invalid food item ID: " + inputDTO.getFoodItemId()));
+
+            // Calculate quantity (use foodItem's gram weight if quantity is not provided)
+            double quantity = inputDTO.getQuantity() == null || inputDTO.getQuantity() == 0.0
+                    ? foodItem.getGramWeight()
+                    : inputDTO.getQuantity();
+
+            // Create a new MealIngredient and associate it with the meal
+            return new MealIngredient(meal, foodItem, quantity);
+        }).toList();
+
+        // Add the ingredients to the meal
+        meal.addMealIngredients(mealIngredients);
+
+        // Save the meal to the database
+        Meal savedMeal = mealRepository.save(meal);
+
+        // Convert the saved Meal entity to a DTO and return it
+        return mealMapper.toDTO(savedMeal);
+
+        // !!! DEZE METHODE SAMENVOEGEN MET ADMIN LOGICA IN EEN ENKELE METHOD MET ROLCONTROLE LATER !!!
     }
 
     /**

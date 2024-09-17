@@ -32,6 +32,19 @@ public class Meal {
     private List<MealIngredient> mealIngredients = new ArrayList<>();
 
     /**
+     * Many-to-Many relationship with User.
+     * A meal can be associated with multiple users, and a user can have multiple meals.
+     */
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "user_meals",  // Join table to link users and meals
+            joinColumns = @JoinColumn(name = "meal_id"),  // Foreign key column in user_meals for meal
+            inverseJoinColumns = @JoinColumn(name = "user_id")  // Foreign key column in user_meals for user
+    )
+    private List<User> users = new ArrayList<>();
+
+
+    /**
      * No-argument constructor required by JPA.
      */
     public Meal() {}
@@ -100,5 +113,23 @@ public class Meal {
         for (MealIngredient mealIngredient : mealIngredients) {
             addMealIngredient(mealIngredient);
         }
+    }
+
+    /**
+     * Gets the list of users associated with the meal.
+     *
+     * @return the list of users associated with the meal.
+     */
+    public List<User> getUsers() {
+        return users;
+    }
+
+    /**
+     * Sets the list of users associated with the meal.
+     *
+     * @param users the list of users to associate with the meal.
+     */
+    public void setUsers(List<User> users) {
+        this.users = users;
     }
 }

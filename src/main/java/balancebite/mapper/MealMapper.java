@@ -2,9 +2,11 @@ package balancebite.mapper;
 
 import balancebite.dto.meal.MealDTO;
 import balancebite.dto.mealingredient.MealIngredientDTO;
+import balancebite.dto.user.UserDTO;
 import balancebite.model.Meal;
 import balancebite.model.MealIngredient;
 import balancebite.model.NutrientInfo;
+import balancebite.model.User;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -20,8 +22,8 @@ public class MealMapper {
 
     /**
      * Converts a Meal entity to a MealDTO.
-     * This includes converting the meal's ingredients and generating a success message
-     * for meal creation.
+     * This includes converting the meal's ingredients, associated users,
+     * and generating a success message for meal creation.
      *
      * @param meal the Meal entity to be converted.
      * @return the created MealDTO with the success message.
@@ -37,7 +39,7 @@ public class MealMapper {
                         .map(ingredient -> ingredient.getFoodItem().getName() + " (" + ingredient.getQuantity() + "g)")
                         .collect(Collectors.joining(", "));
 
-        // Convert the Meal entity to a MealDTO
+        // Convert the Meal entity to a MealDTO, including the associated users
         return new MealDTO(
                 meal.getId(),
                 meal.getName(),
@@ -49,14 +51,17 @@ public class MealMapper {
                                 ingredient.getQuantity()
                         ))
                         .collect(Collectors.toList()),
+                meal.getUsers().stream()
+                        .map(user -> new UserDTO(user.getId(), user.getName(), user.getEmail(), null))  // Convert users to UserDTO
+                        .collect(Collectors.toList()),
                 successMessage
         );
     }
 
     /**
      * Converts a Meal entity to a MealDTO for the update operation.
-     * This includes converting the meal's ingredients and generating a success message
-     * for meal update.
+     * This includes converting the meal's ingredients, associated users,
+     * and generating a success message for meal update.
      *
      * @param meal the Meal entity to be converted.
      * @return the updated MealDTO with the success message.
@@ -72,7 +77,7 @@ public class MealMapper {
                         .map(ingredient -> ingredient.getFoodItem().getName() + " (" + ingredient.getQuantity() + "g)")
                         .collect(Collectors.joining(", "));
 
-        // Convert the Meal entity to a MealDTO
+        // Convert the Meal entity to a MealDTO, including the associated users
         return new MealDTO(
                 meal.getId(),
                 meal.getName(),
@@ -83,6 +88,9 @@ public class MealMapper {
                                 ingredient.getFoodItem() != null ? ingredient.getFoodItem().getId() : null,
                                 ingredient.getQuantity()
                         ))
+                        .collect(Collectors.toList()),
+                meal.getUsers().stream()
+                        .map(user -> new UserDTO(user.getId(), user.getName(), user.getEmail(), null))  // Convert users to UserDTO
                         .collect(Collectors.toList()),
                 successMessage
         );

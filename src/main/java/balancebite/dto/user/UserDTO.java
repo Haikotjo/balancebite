@@ -36,6 +36,47 @@ public class UserDTO {
      */
     private Role role;
 
+    // Constructors
+
+    /**
+     * Default no-argument constructor for UserDTO.
+     * Used by frameworks like Hibernate or Jackson.
+     */
+    public UserDTO() {
+        // Default constructor
+    }
+
+    /**
+     * Constructor for creating a UserDTO with meals.
+     *
+     * @param id the ID of the user.
+     * @param name the name of the user.
+     * @param email the email of the user.
+     * @param meals the list of meals associated with the user.
+     * @param role the role of the user.
+     */
+    public UserDTO(Long id, String name, String email, List<MealDTO> meals, Role role) {
+        this.id = id;
+        this.name = name;
+        this.email = email;
+        this.meals = meals;
+        this.role = role;
+    }
+
+    /**
+     * Constructor for creating a UserDTO without the meals.
+     *
+     * @param id the ID of the user.
+     * @param name the name of the user.
+     * @param email the email of the user.
+     */
+    public UserDTO(Long id, String name, String email, Role role) {
+        this.id = id;
+        this.name = name;
+        this.email = email;
+        this.role = role;
+    }
+
     // Getters and setters
     public Long getId() {
         return id;

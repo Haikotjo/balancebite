@@ -1,6 +1,7 @@
 package balancebite.dto.meal;
 
 import balancebite.dto.mealingredient.MealIngredientDTO;
+import balancebite.dto.user.UserDTO;  // Import UserDTO
 
 import java.util.List;
 
@@ -14,6 +15,9 @@ public class MealDTO {
     private Long id;
     private String name;
     private List<MealIngredientDTO> mealIngredients;
+
+    // List of users associated with the meal
+    private List<UserDTO> users;
 
     // Message for success or additional information
     private String message;
@@ -29,12 +33,14 @@ public class MealDTO {
      * @param id                the ID of the meal.
      * @param name              the name of the meal.
      * @param mealIngredients   the list of ingredients in the meal.
+     * @param users             the list of users associated with the meal.
      * @param message           the message indicating the status of meal creation.
      */
-    public MealDTO(Long id, String name, List<MealIngredientDTO> mealIngredients, String message) {
+    public MealDTO(Long id, String name, List<MealIngredientDTO> mealIngredients, List<UserDTO> users, String message) {
         this.id = id;
         this.name = name;
         this.mealIngredients = mealIngredients;
+        this.users = users;
         this.message = message;
     }
 
@@ -65,6 +71,15 @@ public class MealDTO {
      */
     public List<MealIngredientDTO> getMealIngredients() {
         return mealIngredients;
+    }
+
+    /**
+     * Gets the list of users associated with the meal.
+     *
+     * @return the list of users.
+     */
+    public List<UserDTO> getUsers() {
+        return users;
     }
 
     /**
@@ -103,6 +118,15 @@ public class MealDTO {
      */
     public void setMealIngredients(List<MealIngredientDTO> mealIngredients) {
         this.mealIngredients = mealIngredients;
+    }
+
+    /**
+     * Sets the list of users associated with the meal.
+     *
+     * @param users the list of users to set.
+     */
+    public void setUsers(List<UserDTO> users) {
+        this.users = users;
     }
 
     /**

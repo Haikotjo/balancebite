@@ -43,6 +43,19 @@ public class MealController {
     }
 
     /**
+     * Creates a new Meal entity for a specific user based on the provided MealInputDTO.
+     *
+     * @param mealInputDTO the input data for creating the meal.
+     * @param userId the ID of the user to associate the meal with.
+     * @return ResponseEntity containing the created MealDTO object and status.
+     */
+    @PostMapping("/user/{userId}")
+    public ResponseEntity<MealDTO> createMealForUser(@RequestBody MealInputDTO mealInputDTO, @PathVariable Long userId) {
+        MealDTO createdMeal = mealService.createMealForUser(mealInputDTO, userId);
+        return ResponseEntity.status(HttpStatus.CREATED).body(createdMeal);
+    }
+
+    /**
      * Updates an existing meal by ID.
      *
      * @param id the ID of the meal to be updated
@@ -64,7 +77,7 @@ public class MealController {
      *
      * @return ResponseEntity containing a list of MealDTO objects representing all meals.
      */
-    @GetMapping("/all")
+    @GetMapping()
     public ResponseEntity<List<MealDTO>> getAllMeals() {
         List<MealDTO> mealDTOs = mealService.getAllMeals();
         return ResponseEntity.ok(mealDTOs);
