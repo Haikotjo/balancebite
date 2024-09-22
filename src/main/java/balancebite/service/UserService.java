@@ -194,18 +194,19 @@ public class UserService {
         Map<String, Double> recommendedIntakes = recommendedDailyIntake.getAllRecommendedIntakes();
 
         // Map to store the remaining intake for each nutrient
-        Map<String, Double> remainingIntakes = new HashMap<>();
+        Map<String, Double> remainingIntakes = new HashMap<>(recommendedIntakes); // Start with the full intake
 
         // Subtract the nutrients from the meal from the recommended daily intake
         for (Map.Entry<String, NutrientInfoDTO> entry : mealNutrients.entrySet()) {
             // Extract the nutrient name and strip the unit name (e.g., "g", "mg") from the end
-            String nutrient = entry.getKey().split(" ")[0];  // Split on space and keep the first part
+            String nutrientWithUnit = entry.getKey();
+            String nutrientName = nutrientWithUnit.split(" ")[0];  // Remove unit names like "g" or "mg"
             NutrientInfoDTO nutrientInfo = entry.getValue();
 
             // If the nutrient is found in the recommended intake, subtract its value
-            if (recommendedIntakes.containsKey(nutrient)) {
-                double remainingIntake = Math.max(0, recommendedIntakes.get(nutrient) - nutrientInfo.getValue());
-                remainingIntakes.put(nutrient, remainingIntake);
+            if (remainingIntakes.containsKey(nutrientName)) {
+                double remainingIntake = Math.max(0, remainingIntakes.get(nutrientName) - nutrientInfo.getValue());
+                remainingIntakes.put(nutrientName, remainingIntake);
             }
         }
 
