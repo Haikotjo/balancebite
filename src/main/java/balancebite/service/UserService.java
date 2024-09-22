@@ -164,45 +164,56 @@ public class UserService {
 
 
 
+    /**
+     * Processes the consumption of a meal by a user, updating the user's intake of nutrients.
+     * The method retrieves the nutrients of the meal, deducts them from the recommended daily intake,
+     * and returns the remaining intake for each nutrient.
+     *
+     * @param userId The ID of the user consuming the meal.
+     * @param mealId The ID of the meal being consumed.
+     * @return A map containing the remaining daily intake for each nutrient after the meal consumption.
+     */
     @Transactional
     public Map<String, Double> eatMeal(Long userId, Long mealId) {
-        // Haal de gebruiker op
+        // Retrieve the user by their ID
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found with ID " + userId));
 
-        // Haal de maaltijd op
+        // Retrieve the meal by its ID
         Meal meal = mealRepository.findById(mealId)
                 .orElseThrow(() -> new RuntimeException("Meal not found with ID " + mealId));
 
-        // Voeg de maaltijd toe aan de gebruiker
+        // Add the meal to the user's list of meals
         user.getMeals().add(meal);
 
-        // Haal de voedingswaarden van de maaltijd op
+        // Retrieve the nutrient values of the meal
         Map<String, NutrientInfoDTO> mealNutrients = mealService.calculateNutrients(mealId);
 
-        // Haal de aanbevolen dagelijkse inname op
+        // Retrieve the recommended daily intake values
         RecommendedDailyIntake recommendedDailyIntake = new RecommendedDailyIntake();
         Map<String, Double> recommendedIntakes = recommendedDailyIntake.getAllRecommendedIntakes();
 
-        // Map om de overgebleven hoeveelheden per voedingsstof op te slaan
+        // Map to store the remaining intake for each nutrient
         Map<String, Double> remainingIntakes = new HashMap<>();
 
-        // Trek de voedingsstoffen van de maaltijd af van de algemene dagelijkse inname
+        // Subtract the nutrients from the meal from the recommended daily intake
         for (Map.Entry<String, NutrientInfoDTO> entry : mealNutrients.entrySet()) {
-            String nutrient = entry.getKey();
+            // Extract the nutrient name and strip the unit name (e.g., "g", "mg") from the end
+            String nutrient = entry.getKey().split(" ")[0];  // Split on space and keep the first part
             NutrientInfoDTO nutrientInfo = entry.getValue();
 
-            // Als de voedingsstof in de dagelijkse inname zit, trek het af
+            // If the nutrient is found in the recommended intake, subtract its value
             if (recommendedIntakes.containsKey(nutrient)) {
                 double remainingIntake = Math.max(0, recommendedIntakes.get(nutrient) - nutrientInfo.getValue());
                 remainingIntakes.put(nutrient, remainingIntake);
             }
         }
 
-        // Bewaar de updates in de database (deze is optioneel omdat we de intake niet opslaan)
+        // Save the user with the updated meals (optional, since nutrient tracking is not stored in the database)
         userRepository.save(user);
 
-        // Return de overgebleven intake naar de client
+        // Return the remaining intake for each nutrient to the client
         return remainingIntakes;
     }
+
 }

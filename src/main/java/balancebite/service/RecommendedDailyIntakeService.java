@@ -24,7 +24,10 @@ public class RecommendedDailyIntakeService {
      * @return The RecommendedDailyIntakeDTO.
      */
     public RecommendedDailyIntakeDTO getRecommendedDailyIntake() {
+        // Maak een nieuw RecommendedDailyIntake object
         RecommendedDailyIntake dailyIntake = new RecommendedDailyIntake();
+
+        // Gebruik de mapper om het om te zetten naar DTO
         return intakeMapper.toDTO(dailyIntake);
     }
 
