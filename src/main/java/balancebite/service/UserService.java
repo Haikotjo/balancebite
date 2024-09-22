@@ -1,16 +1,20 @@
 package balancebite.service;
 
+import balancebite.dto.NutrientInfoDTO;
 import balancebite.dto.user.UserDTO;
 import balancebite.dto.user.UserInputDTO;
 import balancebite.mapper.UserMapper;
 import balancebite.model.Meal;
+import balancebite.model.RecommendedDailyIntake;
 import balancebite.model.User;
 import balancebite.repository.MealRepository;
 import balancebite.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -21,21 +25,25 @@ import java.util.stream.Collectors;
 public class UserService {
 
     private final UserRepository userRepository;
-    private final MealRepository mealRepository;  // Add MealRepository
+    private final MealRepository mealRepository;
     private final UserMapper userMapper;
+    private final MealService mealService;  // Add MealService
 
     /**
-     * Constructor that initializes the UserService with the required repositories and mappers.
+     * Constructor that initializes the UserService with the required repositories, mappers, and services.
      *
      * @param userRepository Repository to interact with the User data in the database.
      * @param mealRepository Repository to interact with the Meal data in the database.
      * @param userMapper Mapper to convert between User entities and DTOs.
+     * @param mealService Service to interact with Meal-related operations.
      */
-    public UserService(UserRepository userRepository, MealRepository mealRepository, UserMapper userMapper) {
+    public UserService(UserRepository userRepository, MealRepository mealRepository, UserMapper userMapper, MealService mealService) {
         this.userRepository = userRepository;
-        this.mealRepository = mealRepository;  // Initialize MealRepository
+        this.mealRepository = mealRepository;
         this.userMapper = userMapper;
+        this.mealService = mealService;  // Initialize MealService
     }
+
 
 
     /**
@@ -149,5 +157,52 @@ public class UserService {
         User updatedUser = userRepository.save(user);
 
         return userMapper.toDTO(updatedUser);
+    }
+
+
+
+
+
+
+    @Transactional
+    public Map<String, Double> eatMeal(Long userId, Long mealId) {
+        // Haal de gebruiker op
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found with ID " + userId));
+
+        // Haal de maaltijd op
+        Meal meal = mealRepository.findById(mealId)
+                .orElseThrow(() -> new RuntimeException("Meal not found with ID " + mealId));
+
+        // Voeg de maaltijd toe aan de gebruiker
+        user.getMeals().add(meal);
+
+        // Haal de voedingswaarden van de maaltijd op
+        Map<String, NutrientInfoDTO> mealNutrients = mealService.calculateNutrients(mealId);
+
+        // Haal de aanbevolen dagelijkse inname op
+        RecommendedDailyIntake recommendedDailyIntake = new RecommendedDailyIntake();
+        Map<String, Double> recommendedIntakes = recommendedDailyIntake.getAllRecommendedIntakes();
+
+        // Map om de overgebleven hoeveelheden per voedingsstof op te slaan
+        Map<String, Double> remainingIntakes = new HashMap<>();
+
+        // Trek de voedingsstoffen van de maaltijd af van de algemene dagelijkse inname
+        for (Map.Entry<String, NutrientInfoDTO> entry : mealNutrients.entrySet()) {
+            String nutrient = entry.getKey();
+            NutrientInfoDTO nutrientInfo = entry.getValue();
+
+            // Als de voedingsstof in de dagelijkse inname zit, trek het af
+            if (recommendedIntakes.containsKey(nutrient)) {
+                double remainingIntake = Math.max(0, recommendedIntakes.get(nutrient) - nutrientInfo.getValue());
+                remainingIntakes.put(nutrient, remainingIntake);
+            }
+        }
+
+        // Bewaar de updates in de database (deze is optioneel omdat we de intake niet opslaan)
+        userRepository.save(user);
+
+        // Return de overgebleven intake naar de client
+        return remainingIntakes;
     }
 }

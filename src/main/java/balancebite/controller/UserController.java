@@ -2,12 +2,14 @@ package balancebite.controller;
 
 import balancebite.dto.user.UserDTO;
 import balancebite.dto.user.UserInputDTO;
+import balancebite.model.RecommendedDailyIntake;
 import balancebite.service.UserService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * REST controller responsible for managing user-related actions.
@@ -112,5 +114,14 @@ public class UserController {
     public ResponseEntity<UserDTO> removeMealFromUser(@PathVariable Long userId, @PathVariable Long mealId) {
         UserDTO updatedUser = userService.removeMealFromUser(userId, mealId);
         return ResponseEntity.ok(updatedUser);
+    }
+
+
+
+
+    @PostMapping("/{userId}/eat-meal/{mealId}")
+    public ResponseEntity<Map<String, Double>> eatMeal(@PathVariable Long userId, @PathVariable Long mealId) {
+        Map<String, Double> remainingIntakes = userService.eatMeal(userId, mealId);
+        return ResponseEntity.ok(remainingIntakes);
     }
 }
