@@ -38,3 +38,8 @@ logs/
 # OS-specifieke bestanden
 .DS_Store
 Thumbs.db
+
+# Ignore .env and application.properties
+.env
+application.properties
+
