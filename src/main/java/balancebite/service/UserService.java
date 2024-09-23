@@ -189,24 +189,30 @@ public class UserService {
         // Retrieve the nutrient values of the meal
         Map<String, NutrientInfoDTO> mealNutrients = mealService.calculateNutrients(mealId);
 
-        // Retrieve the recommended daily intake values
+        // Retrieve the recommended daily intake values and normalize the keys
         RecommendedDailyIntake recommendedDailyIntake = new RecommendedDailyIntake();
-        Map<String, Double> recommendedIntakes = recommendedDailyIntake.getAllRecommendedIntakes();
+        Map<String, Double> recommendedIntakes = recommendedDailyIntake.getAllRecommendedIntakes().entrySet().stream()
+                .collect(Collectors.toMap(
+                        entry -> normalizeNutrientName(entry.getKey()),  // Normalize the keys (nutrient names)
+                        Map.Entry::getValue
+                ));
 
-        // Map to store the remaining intake for each nutrient
-        Map<String, Double> remainingIntakes = new HashMap<>(recommendedIntakes); // Start with the full intake
+        // Map to store the remaining intake for each nutrient, initialized with full recommended intake
+        Map<String, Double> remainingIntakes = new HashMap<>(recommendedIntakes);
 
         // Subtract the nutrients from the meal from the recommended daily intake
         for (Map.Entry<String, NutrientInfoDTO> entry : mealNutrients.entrySet()) {
-            // Extract the nutrient name and strip the unit name (e.g., "g", "mg") from the end
-            String nutrientWithUnit = entry.getKey();
-            String nutrientName = nutrientWithUnit.split(" ")[0];  // Remove unit names like "g" or "mg"
+            // Extract the nutrient name and normalize (lowercase and remove spaces)
+            String nutrientName = normalizeNutrientName(entry.getKey());
+
             NutrientInfoDTO nutrientInfo = entry.getValue();
 
-            // If the nutrient is found in the recommended intake, subtract its value
+            // If the nutrient is found in the recommended intake, subtract its value from the daily intake
             if (remainingIntakes.containsKey(nutrientName)) {
-                double remainingIntake = Math.max(0, remainingIntakes.get(nutrientName) - nutrientInfo.getValue());
-                remainingIntakes.put(nutrientName, remainingIntake);
+                double remainingIntake = remainingIntakes.get(nutrientName) - nutrientInfo.getValue();
+                remainingIntakes.put(nutrientName, remainingIntake);  // Allow negative values to indicate excess consumption
+            } else {
+                System.out.println("Nutrient not found in recommended daily intake: " + nutrientName);
             }
         }
 
@@ -216,5 +222,17 @@ public class UserService {
         // Return the remaining intake for each nutrient to the client
         return remainingIntakes;
     }
+
+    /**
+     * Normalizes nutrient names by converting them to lowercase and removing all spaces.
+     *
+     * @param nutrientName The nutrient name to normalize.
+     * @return The normalized nutrient name.
+     */
+    private String normalizeNutrientName(String nutrientName) {
+        return nutrientName.toLowerCase().replace(" ", "");  // Convert to lowercase and remove spaces
+    }
+
+
 
 }

@@ -11,7 +11,7 @@ public class RecommendedDailyIntake {
 
         // Proximates
         intakeMap.put("Water", 3700.0); // in ml
-        intakeMap.put("Energy", 2500.0); // in kcal
+        intakeMap.put("Energy kcal", 2500.0); // in kcal
         intakeMap.put("Protein", 56.0); // in grams
         intakeMap.put("Total lipid (fat)", 78.0); // in grams
 //        intakeMap.put("Ash", null);
