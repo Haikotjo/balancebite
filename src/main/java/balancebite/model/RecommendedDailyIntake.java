@@ -1,13 +1,40 @@
 package balancebite.model;
 
+import jakarta.persistence.*;
+
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Represents the recommended daily intake of nutrients for a user.
+ * This entity stores a map of nutrients and their respective recommended intake values.
+ */
+@Entity
+@Table(name = "recommended_daily_intake")
 public class RecommendedDailyIntake {
-    private Map<String, Double> intakeMap;
 
+    /**
+     * The unique identifier for the recommended daily intake entity.
+     */
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    /**
+     * A map of nutrients and their recommended daily intake values.
+     * The nutrient name is the key, and the corresponding value is the recommended intake.
+     */
+    @ElementCollection
+    @MapKeyColumn(name = "nutrient_name")
+    @Column(name = "nutrient_value")
+    @CollectionTable(name = "intake_map", joinColumns = @JoinColumn(name = "intake_id"))
+    private Map<String, Double> intakeMap = new HashMap<>();
+
+    /**
+     * Default constructor for creating a RecommendedDailyIntake entity.
+     * Initializes the recommended daily intake map with default values for various nutrients.
+     */
     public RecommendedDailyIntake() {
-        intakeMap = new HashMap<>();
 
         // Proximates
         intakeMap.put("Water", 3700.0); // in ml
@@ -136,14 +163,32 @@ public class RecommendedDailyIntake {
 //        intakeMap.put("Phytosterols", null);
     }
 
+    /**
+     * Retrieves the recommended intake value for a given nutrient.
+     *
+     * @param nutrient The name of the nutrient to retrieve.
+     * @return The recommended intake value for the nutrient, or null if not found.
+     */
     public Double getRecommendedIntake(String nutrient) {
         return intakeMap.getOrDefault(nutrient, null);
     }
 
+    /**
+     * Retrieves the entire map of recommended nutrient intake values.
+     *
+     * @return A map containing all nutrient names and their recommended intake values.
+     */
     public Map<String, Double> getAllRecommendedIntakes() {
         return intakeMap;
     }
 
+    /**
+     * Updates the intake value for a specific nutrient.
+     * If the nutrient does not exist in the map, the update will not take place.
+     *
+     * @param nutrientName The name of the nutrient to update.
+     * @param updatedValue The new recommended intake value for the nutrient.
+     */
     public void updateIntake(String nutrientName, Double updatedValue) {
         if (intakeMap.containsKey(nutrientName)) {
             intakeMap.put(nutrientName, updatedValue);

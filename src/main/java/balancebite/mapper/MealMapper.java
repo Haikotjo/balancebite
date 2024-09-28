@@ -52,7 +52,8 @@ public class MealMapper {
                         ))
                         .collect(Collectors.toList()),
                 meal.getUsers().stream()
-                        .map(user -> new UserDTO(user.getId(), user.getName(), user.getEmail(), null))  // Convert users to UserDTO
+                        .map(user -> new UserDTO(user.getId(), user.getName(), user.getEmail()))
+                        // Convert users to UserDTO
                         .collect(Collectors.toList()),
                 successMessage
         );
@@ -90,7 +91,8 @@ public class MealMapper {
                         ))
                         .collect(Collectors.toList()),
                 meal.getUsers().stream()
-                        .map(user -> new UserDTO(user.getId(), user.getName(), user.getEmail(), null))  // Convert users to UserDTO
+                        .map(user -> new UserDTO(user.getId(), user.getName(), user.getEmail()))
+                        // Convert users to UserDTO
                         .collect(Collectors.toList()),
                 successMessage
         );

@@ -1,6 +1,6 @@
 package balancebite.controller;
 
-import balancebite.dto.RecommendedDailyIntakeDTO;
+import balancebite.dto.recommendeddailyintake.RecommendedDailyIntakeDTO;
 
 import balancebite.service.RecommendedDailyIntakeService;
 import org.springframework.http.ResponseEntity;

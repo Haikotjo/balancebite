@@ -54,29 +54,41 @@ public class User {
     private Role role;
 
     /**
-     * Default constructor for JPA.
+     * The recommended daily intake associated with the user.
+     * This represents the daily nutrient intake goals or limits for the user,
+     * including values for macronutrients, vitamins, minerals, and other nutritional components.
+     * The relationship is one-to-one, meaning each user has their own personalized daily intake.
+     * The daily intake is automatically persisted and managed when the user is saved or updated.
+     */
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "recommended_daily_intake_id", referencedColumnName = "id")
+    private RecommendedDailyIntake recommendedDailyIntake;
+
+    /**
+     * Default no-argument constructor for User entity.
      */
     public User() {
         // Default constructor for JPA
     }
 
     /**
-     * Full constructor for creating a User entity.
+     * Full constructor for creating a User entity without an ID.
+     * The ID is automatically generated when the entity is persisted.
      *
-     * @param id       The unique identifier for the user.
      * @param name     The name of the user.
      * @param email    The email of the user.
      * @param password The password for the user account.
      * @param meals    The set of meals associated with the user.
      * @param role     The role of the user.
+     * @param recommendedDailyIntake The recommended daily intake of the user.
      */
-    public User(Long id, String name, String email, String password, Set<Meal> meals, Role role) {
-        this.id = id;
+    public User(String name, String email, String password, Set<Meal> meals, Role role, RecommendedDailyIntake recommendedDailyIntake) {
         this.name = name;
         this.email = email;
         this.password = password;
-        this.meals = meals;
+        this.meals = meals != null ? meals : new HashSet<>();
         this.role = role;
+        this.recommendedDailyIntake = recommendedDailyIntake;
     }
 
     /**
@@ -172,4 +184,23 @@ public class User {
     public void setRole(Role role) {
         this.role = role;
     }
+
+    /**
+     * Gets the recommended daily intake associated with the user.
+     *
+     * @return The recommended daily intake of the user.
+     */
+    public RecommendedDailyIntake getRecommendedDailyIntake() {
+        return recommendedDailyIntake;
+    }
+
+    /**
+     * Sets the recommended daily intake for the user.
+     *
+     * @param recommendedDailyIntake The recommended daily intake to set for the user.
+     */
+    public void setRecommendedDailyIntake(RecommendedDailyIntake recommendedDailyIntake) {
+        this.recommendedDailyIntake = recommendedDailyIntake;
+    }
+
 }

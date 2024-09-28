@@ -1,7 +1,7 @@
 package balancebite.service;
 
-import balancebite.dto.RecommendedDailyIntakeDTO;
-import balancebite.dto.RecommendedDailyIntakeInputDTO;
+import balancebite.dto.recommendeddailyintake.RecommendedDailyIntakeDTO;
+import balancebite.dto.recommendeddailyintake.RecommendedDailyIntakeInputDTO;
 import balancebite.mapper.RecommendedDailyIntakeMapper;
 import balancebite.model.RecommendedDailyIntake;
 import org.springframework.stereotype.Service;

@@ -1,6 +1,6 @@
 package balancebite.mapper;
 
-import balancebite.dto.RecommendedDailyIntakeDTO;
+import balancebite.dto.recommendeddailyintake.RecommendedDailyIntakeDTO;
 import balancebite.model.RecommendedDailyIntake;
 import org.springframework.stereotype.Component;
 

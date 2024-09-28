@@ -1,63 +1,130 @@
 package balancebite.dto.user;
 
+import balancebite.dto.recommendeddailyintake.RecommendedDailyIntakeDTO;
 import balancebite.model.Role;
 
 /**
- * Data Transfer Object (DTO) for creating or updating a user.
- * This DTO is used to receive user data from the client when creating or updating a user.
+ * Data Transfer Object (DTO) voor het creëren of updaten van een gebruiker.
+ * Deze DTO wordt gebruikt om gebruikersgegevens van de client te ontvangen bij het aanmaken of updaten van een gebruiker.
  */
 public class UserInputDTO {
 
     /**
-     * The name of the user.
+     * De naam van de gebruiker.
      */
     private String name;
 
     /**
-     * The email of the user.
+     * Het e-mailadres van de gebruiker.
      */
     private String email;
 
     /**
-     * The password of the user. This should be hashed before storing in the database.
+     * Het wachtwoord van de gebruiker. Dit moet gehashed worden voordat het in de database wordt opgeslagen.
      */
     private String password;
 
     /**
-     * The role of the user.
+     * De rol van de gebruiker (bijvoorbeeld USER of ADMIN).
      */
     private Role role;
 
-    // Getters and setters
+    /**
+     * De aanbevolen dagelijkse inname van de gebruiker.
+     * Dit vertegenwoordigt de gepersonaliseerde voedingsdoelen van de gebruiker,
+     * zoals macronutriënten en micronutriënten die de gebruiker dagelijks moet consumeren.
+     */
+    private RecommendedDailyIntakeDTO recommendedDailyIntake;
+
+    // Getters en setters
+
+    /**
+     * Haalt de naam van de gebruiker op.
+     *
+     * @return de naam van de gebruiker.
+     */
     public String getName() {
         return name;
     }
 
+    /**
+     * Stelt de naam van de gebruiker in.
+     *
+     * @param name de naam om in te stellen.
+     */
     public void setName(String name) {
         this.name = name;
     }
 
+    /**
+     * Haalt het e-mailadres van de gebruiker op.
+     *
+     * @return het e-mailadres van de gebruiker.
+     */
     public String getEmail() {
         return email;
     }
 
+    /**
+     * Stelt het e-mailadres van de gebruiker in.
+     *
+     * @param email het e-mailadres om in te stellen.
+     */
     public void setEmail(String email) {
         this.email = email;
     }
 
+    /**
+     * Haalt het wachtwoord van de gebruiker op.
+     *
+     * @return het wachtwoord van de gebruiker.
+     */
     public String getPassword() {
         return password;
     }
 
+    /**
+     * Stelt het wachtwoord van de gebruiker in.
+     *
+     * @param password het wachtwoord om in te stellen.
+     */
     public void setPassword(String password) {
         this.password = password;
     }
 
+    /**
+     * Haalt de rol van de gebruiker op.
+     *
+     * @return de rol van de gebruiker.
+     */
     public Role getRole() {
         return role;
     }
 
+    /**
+     * Stelt de rol van de gebruiker in.
+     *
+     * @param role de rol om in te stellen (bijvoorbeeld USER of ADMIN).
+     */
     public void setRole(Role role) {
         this.role = role;
+    }
+
+    /**
+     * Haalt de aanbevolen dagelijkse inname van de gebruiker op.
+     *
+     * @return de aanbevolen dagelijkse inname van de gebruiker.
+     */
+    public RecommendedDailyIntakeDTO getRecommendedDailyIntake() {
+        return recommendedDailyIntake;
+    }
+
+    /**
+     * Stelt de aanbevolen dagelijkse inname voor de gebruiker in.
+     *
+     * @param recommendedDailyIntake de aanbevolen dagelijkse inname om in te stellen.
+     */
+    public void setRecommendedDailyIntake(RecommendedDailyIntakeDTO recommendedDailyIntake) {
+        this.recommendedDailyIntake = recommendedDailyIntake;
     }
 }
