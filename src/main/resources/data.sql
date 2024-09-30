@@ -1,7 +1,10 @@
 -- Voeg een nieuwe user toe zonder handmatig een ID in te stellen
 INSERT INTO users (name, email, password) VALUES ('John Doe', 'johndoe@example.com', 'password123');
 
--- Voeg de maaltijden toe
+-- Voeg een tweede nieuwe user toe
+INSERT INTO users (name, email, password) VALUES ('Jane Smith', 'janesmith@example.com', 'password456');
+
+-- Voeg de maaltijden toe voor John Doe
 -- Ontbijt (Breakfast)
 INSERT INTO meals (name) VALUES ('Breakfast');
 
@@ -37,7 +40,56 @@ INSERT INTO meal_ingredients (meal_id, food_item_id, quantity) VALUES (3, 8, 100
 -- Egg, whole, cooked, hard-boiled (1 tbsp = 8.5 grams, assume 3 tablespoons)
 INSERT INTO meal_ingredients (meal_id, food_item_id, quantity) VALUES (3, 14, 25.5);
 
--- Koppel de user aan de maaltijden
-INSERT INTO user_meals (user_id, meal_id) VALUES (1, 1); -- User heeft het ontbijt
-INSERT INTO user_meals (user_id, meal_id) VALUES (1, 2); -- User heeft de lunch
-INSERT INTO user_meals (user_id, meal_id) VALUES (1, 3); -- User heeft het diner
+-- Koppel de maaltijden aan John Doe (user_id = 1)
+INSERT INTO user_meals (user_id, meal_id) VALUES (1, 1); -- Ontbijt
+INSERT INTO user_meals (user_id, meal_id) VALUES (1, 2); -- Lunch
+INSERT INTO user_meals (user_id, meal_id) VALUES (1, 3); -- Diner
+
+-- Voeg de maaltijden toe voor Jane Smith
+-- Snack
+INSERT INTO meals (name) VALUES ('Snack');
+
+-- Salad
+INSERT INTO meals (name) VALUES ('Salad');
+
+-- Dinner Special
+INSERT INTO meals (name) VALUES ('Dinner Special');
+
+-- Voeg de ingrediënten voor de snack toe
+-- Apple, raw (1 medium = 182 grams)
+INSERT INTO meal_ingredients (meal_id, food_item_id, quantity) VALUES (4, 5, 182);
+-- Almonds, raw (28 grams)
+INSERT INTO meal_ingredients (meal_id, food_item_id, quantity) VALUES (4, 6, 28);
+
+-- Voeg de ingrediënten voor de salade toe
+-- Lettuce, romaine (1 head = 626 grams)
+INSERT INTO meal_ingredients (meal_id, food_item_id, quantity) VALUES (5, 9, 626);
+-- Tomatoes, raw (1 medium = 123 grams)
+INSERT INTO meal_ingredients (meal_id, food_item_id, quantity) VALUES (5, 10, 123);
+-- Cucumbers, raw (1 medium = 201 grams)
+INSERT INTO meal_ingredients (meal_id, food_item_id, quantity) VALUES (5, 12, 201);
+
+-- Voeg de ingrediënten voor het Dinner Special toe
+-- Chicken, cooked, roasted (1 cup = 140 grams)
+INSERT INTO meal_ingredients (meal_id, food_item_id, quantity) VALUES (6, 13, 140);
+-- Rice, white, cooked (1 cup = 158 grams)
+INSERT INTO meal_ingredients (meal_id, food_item_id, quantity) VALUES (6, 14, 158);
+-- Broccoli, raw (1 cup = 91 grams)
+INSERT INTO meal_ingredients (meal_id, food_item_id, quantity) VALUES (6, 16, 91);
+
+-- Koppel de maaltijden aan Jane Smith (user_id = 2)
+INSERT INTO user_meals (user_id, meal_id) VALUES (2, 4); -- Snack
+INSERT INTO user_meals (user_id, meal_id) VALUES (2, 5); -- Salad
+INSERT INTO user_meals (user_id, meal_id) VALUES (2, 6); -- Dinner Special
+
+-- -- Voeg aanbevolen dagelijkse inname toe voor John Doe (user_id = 1)
+-- INSERT INTO recommended_daily_intake (id) VALUES (1); -- Maakt de dagelijkse inname voor John Doe
+--
+-- -- Voeg aanbevolen dagelijkse inname toe voor Jane Smith (user_id = 2)
+-- INSERT INTO recommended_daily_intake (id) VALUES (2); -- Maakt de dagelijkse inname voor Jane Smith
+--
+-- -- Koppel de dagelijkse inname aan John Doe (user_id = 1)
+-- UPDATE users SET recommended_daily_intake_id = 1 WHERE id = 1;
+--
+-- -- Koppel de dagelijkse inname aan Jane Smith (user_id = 2)
+-- UPDATE users SET recommended_daily_intake_id = 2 WHERE id = 2;

@@ -189,49 +189,74 @@ public class UserService {
         // Retrieve the nutrient values of the meal
         Map<String, NutrientInfoDTO> mealNutrients = mealService.calculateNutrients(mealId);
 
+        // Get the user's existing recommended daily intake
+        RecommendedDailyIntake recommendedDailyIntake = user.getRecommendedDailyIntake();
+
+        // Check if the user has a recommended daily intake set
+        if (recommendedDailyIntake == null) {
+            throw new RuntimeException("Recommended daily intake not found for user with ID " + userId);
+        }
+
         // Retrieve the recommended daily intake values and normalize the keys
-        RecommendedDailyIntake recommendedDailyIntake = new RecommendedDailyIntake();
         Map<String, Double> recommendedIntakes = recommendedDailyIntake.getAllRecommendedIntakes().entrySet().stream()
                 .collect(Collectors.toMap(
                         entry -> normalizeNutrientName(entry.getKey()),  // Normalize the keys (nutrient names)
                         Map.Entry::getValue
                 ));
 
+        // Log the normalized nutrient names from the intake map
+        recommendedIntakes.forEach((nutrientName, value) -> {
+            System.out.println("Intake map normalized nutrient name: " + nutrientName);
+        });
+
         // Map to store the remaining intake for each nutrient, initialized with full recommended intake
         Map<String, Double> remainingIntakes = new HashMap<>(recommendedIntakes);
 
         // Subtract the nutrients from the meal from the recommended daily intake
         for (Map.Entry<String, NutrientInfoDTO> entry : mealNutrients.entrySet()) {
-            // Extract the nutrient name and normalize (lowercase and remove spaces)
-            String nutrientName = normalizeNutrientName(entry.getKey());
+            String originalNutrientName = entry.getKey();  // Original nutrient name from meal
+            String normalizedNutrientName = normalizeNutrientName(originalNutrientName);  // Normalized version of the meal nutrient name
+
+            // Log both the original and normalized nutrient names from the meal
+            System.out.println("Meal original nutrient name: " + originalNutrientName);
+            System.out.println("Meal normalized nutrient name: " + normalizedNutrientName);
 
             NutrientInfoDTO nutrientInfo = entry.getValue();
 
-            // If the nutrient is found in the recommended intake, subtract its value from the daily intake
-            if (remainingIntakes.containsKey(nutrientName)) {
-                double remainingIntake = remainingIntakes.get(nutrientName) - nutrientInfo.getValue();
-                remainingIntakes.put(nutrientName, remainingIntake);  // Allow negative values to indicate excess consumption
+            // Compare against the recommended daily intake map
+            if (remainingIntakes.containsKey(normalizedNutrientName)) {
+                System.out.println("Matching nutrient found in intake map: " + normalizedNutrientName);
+
+                double remainingIntake = remainingIntakes.get(normalizedNutrientName) - nutrientInfo.getValue();
+                remainingIntakes.put(normalizedNutrientName, remainingIntake);  // Update remaining intake
             } else {
-                System.out.println("Nutrient not found in recommended daily intake: " + nutrientName);
+                System.out.println("Nutrient not found in recommended daily intake: " + normalizedNutrientName);
             }
         }
 
-        // Save the user with the updated meals (optional, since nutrient tracking is not stored in the database)
+        // Save the user with the updated meals
         userRepository.save(user);
 
         // Return the remaining intake for each nutrient to the client
         return remainingIntakes;
     }
 
+
+
+
     /**
-     * Normalizes nutrient names by converting them to lowercase and removing all spaces.
+     * Normalizes nutrient names by converting them to lowercase, removing units like "g", "mg", and "µg"
+     * only at the end of the string, and then removing all spaces.
      *
      * @param nutrientName The nutrient name to normalize.
-     * @return The normalized nutrient name.
+     * @return The normalized nutrient name without units at the end and without spaces.
      */
     private String normalizeNutrientName(String nutrientName) {
-        return nutrientName.toLowerCase().replace(" ", "");  // Convert to lowercase and remove spaces
+        return nutrientName.toLowerCase()
+                .replaceAll("\\s(g|mg|µg)$", "")  // Remove " g", " mg", " µg" at the end
+                .replace(" ", "");  // Remove all remaining spaces
     }
+
 
 
 
