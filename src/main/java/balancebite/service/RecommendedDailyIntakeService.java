@@ -8,36 +8,35 @@ import balancebite.repository.RecommendedDailyIntakeRepository;
 import balancebite.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * Service class responsible for managing Recommended Daily Intake logic.
- * Handles the logic of assigning and retrieving recommended daily intake for users.
  */
 @Service
 public class RecommendedDailyIntakeService {
 
     private final RecommendedDailyIntakeMapper intakeMapper;
-    private final UserRepository userRepository;
     private final RecommendedDailyIntakeRepository intakeRepository;
+    private final UserRepository userRepository;  // Toegevoegd om met User te werken
 
     public RecommendedDailyIntakeService(RecommendedDailyIntakeMapper intakeMapper,
-                                         UserRepository userRepository,
-                                         RecommendedDailyIntakeRepository intakeRepository) {
+                                         RecommendedDailyIntakeRepository intakeRepository,
+                                         UserRepository userRepository) {
         this.intakeMapper = intakeMapper;
-        this.userRepository = userRepository;
         this.intakeRepository = intakeRepository;
+        this.userRepository = userRepository;
     }
 
     /**
-     * Retrieves the RecommendedDailyIntake for a specific user by their ID.
-     * If the user doesn't have a recommended daily intake yet, a new one will be created.
+     * Creates a new recommended daily intake for a specific user.
      *
-     * @param userId The ID of the user whose intake is being retrieved.
-     * @return The RecommendedDailyIntakeDTO containing the recommended daily intake for the user.
+     * @param userId The ID of the user to assign the recommended daily intake to.
+     * @return The created RecommendedDailyIntakeDTO.
      */
-    public RecommendedDailyIntakeDTO getRecommendedDailyIntakeByUserId(Long userId) {
-        // Zoek de user op basis van het ID
+    public RecommendedDailyIntakeDTO createRecommendedDailyIntakeForUser(Long userId) {
         Optional<User> userOptional = userRepository.findById(userId);
 
         if (userOptional.isEmpty()) {
@@ -46,17 +45,39 @@ public class RecommendedDailyIntakeService {
 
         User user = userOptional.get();
 
-        // Controleer of de user al een RecommendedDailyIntake heeft
-        RecommendedDailyIntake dailyIntake = user.getRecommendedDailyIntake();
+        // Create a new RecommendedDailyIntake with default values
+        RecommendedDailyIntake newIntake = new RecommendedDailyIntake();
 
-        // Als de user geen intake heeft, maak een nieuwe aan en koppel deze aan de user
-        if (dailyIntake == null) {
-            dailyIntake = new RecommendedDailyIntake();
-            user.setRecommendedDailyIntake(dailyIntake);
-            userRepository.save(user); // Sla de user met de nieuwe intake op
+        // Assign the new intake to the user
+        user.setRecommendedDailyIntake(newIntake);
+
+        // Save the user with the new recommended intake
+        userRepository.save(user);
+
+        return intakeMapper.toDTO(newIntake);
+    }
+
+    /**
+     * Deletes the RecommendedDailyIntake for a specific user.
+     *
+     * @param userId The ID of the user whose intake will be deleted.
+     */
+    public void deleteRecommendedDailyIntakeForUser(Long userId) {
+        Optional<User> userOptional = userRepository.findById(userId);
+
+        if (userOptional.isEmpty()) {
+            throw new IllegalArgumentException("User with ID " + userId + " not found");
         }
 
-        // Gebruik de mapper om het om te zetten naar DTO
-        return intakeMapper.toDTO(dailyIntake);
+        User user = userOptional.get();
+
+        if (user.getRecommendedDailyIntake() == null) {
+            throw new IllegalArgumentException("User with ID " + userId + " does not have a recommended daily intake");
+        }
+
+        // Remove the recommended daily intake
+        user.setRecommendedDailyIntake(null);
+        userRepository.save(user);
     }
+
 }
