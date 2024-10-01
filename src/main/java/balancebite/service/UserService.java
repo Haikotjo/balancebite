@@ -8,6 +8,7 @@ import balancebite.model.Meal;
 import balancebite.model.RecommendedDailyIntake;
 import balancebite.model.User;
 import balancebite.repository.MealRepository;
+import balancebite.repository.RecommendedDailyIntakeRepository;
 import balancebite.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,6 +27,8 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final MealRepository mealRepository;
+
+    private final RecommendedDailyIntakeRepository recommendedDailyIntakeRepository;
     private final UserMapper userMapper;
     private final MealService mealService;  // Add MealService
 
@@ -37,11 +40,12 @@ public class UserService {
      * @param userMapper Mapper to convert between User entities and DTOs.
      * @param mealService Service to interact with Meal-related operations.
      */
-    public UserService(UserRepository userRepository, MealRepository mealRepository, UserMapper userMapper, MealService mealService) {
+    public UserService(UserRepository userRepository, MealRepository mealRepository, UserMapper userMapper, MealService mealService, RecommendedDailyIntakeRepository recommendedDailyIntakeRepository) {
         this.userRepository = userRepository;
         this.mealRepository = mealRepository;
         this.userMapper = userMapper;
-        this.mealService = mealService;  // Initialize MealService
+        this.mealService = mealService;
+        this.recommendedDailyIntakeRepository = recommendedDailyIntakeRepository;
     }
 
 
@@ -163,11 +167,11 @@ public class UserService {
 
 
 
-
     /**
      * Processes the consumption of a meal by a user, updating the user's intake of nutrients.
      * The method retrieves the nutrients of the meal, deducts them from the recommended daily intake,
-     * and returns the remaining intake for each nutrient.
+     * and updates the remaining intake for each nutrient. The updated intake values are then saved
+     * for the user in the RecommendedDailyIntake.
      *
      * @param userId The ID of the user consuming the meal.
      * @param mealId The ID of the meal being consumed.
@@ -183,9 +187,6 @@ public class UserService {
         Meal meal = mealRepository.findById(mealId)
                 .orElseThrow(() -> new RuntimeException("Meal not found with ID " + mealId));
 
-        // Add the meal to the user's list of meals
-        user.getMeals().add(meal);
-
         // Retrieve the nutrient values of the meal
         Map<String, NutrientInfoDTO> mealNutrients = mealService.calculateNutrients(mealId);
 
@@ -200,14 +201,15 @@ public class UserService {
         // Retrieve the recommended daily intake values and normalize the keys
         Map<String, Double> recommendedIntakes = recommendedDailyIntake.getAllRecommendedIntakes().entrySet().stream()
                 .collect(Collectors.toMap(
-                        entry -> normalizeNutrientName(entry.getKey()),  // Normalize the keys (nutrient names)
+                        entry -> normalizeNutrientName(entry.getKey()),  // Normalize the nutrient names in the intakeMap
                         Map.Entry::getValue
                 ));
 
-        // Log the normalized nutrient names from the intake map
-        recommendedIntakes.forEach((nutrientName, value) -> {
-            System.out.println("Intake map normalized nutrient name: " + nutrientName);
-        });
+        // Log de volledige intakeMap na normalisatie
+        System.out.println("Intake map after normalization:");
+        recommendedIntakes.forEach((nutrient, value) ->
+                System.out.println("Nutrient: " + nutrient + ", Value: " + value)
+        );
 
         // Map to store the remaining intake for each nutrient, initialized with full recommended intake
         Map<String, Double> remainingIntakes = new HashMap<>(recommendedIntakes);
@@ -217,29 +219,39 @@ public class UserService {
             String originalNutrientName = entry.getKey();  // Original nutrient name from meal
             String normalizedNutrientName = normalizeNutrientName(originalNutrientName);  // Normalized version of the meal nutrient name
 
-            // Log both the original and normalized nutrient names from the meal
-            System.out.println("Meal original nutrient name: " + originalNutrientName);
-            System.out.println("Meal normalized nutrient name: " + normalizedNutrientName);
+            // Log both original and normalized nutrient names
+            System.out.println("Original nutrient name from meal: " + originalNutrientName);
+            System.out.println("Normalized nutrient name from meal: " + normalizedNutrientName);
 
             NutrientInfoDTO nutrientInfo = entry.getValue();
 
-            // Compare against the recommended daily intake map
+            // Check if the normalized nutrient exists in the recommended intake
             if (remainingIntakes.containsKey(normalizedNutrientName)) {
-                System.out.println("Matching nutrient found in intake map: " + normalizedNutrientName);
-
+                // Subtract the nutrient value from the daily intake
                 double remainingIntake = remainingIntakes.get(normalizedNutrientName) - nutrientInfo.getValue();
                 remainingIntakes.put(normalizedNutrientName, remainingIntake);  // Update remaining intake
+
+                // Update the recommended intake for this nutrient in the intakeMap of the RecommendedDailyIntake
+                recommendedDailyIntake.updateIntake(normalizedNutrientName, remainingIntake);
+
+                System.out.println("Updated intake for nutrient: " + normalizedNutrientName + " to " + remainingIntake);
             } else {
-                System.out.println("Nutrient not found in recommended daily intake: " + normalizedNutrientName);
+                // Log nutrient not found
+                System.out.println("Nutrient not found in intake map: " + normalizedNutrientName);
             }
         }
 
-        // Save the user with the updated meals
-        userRepository.save(user);
+        // Save the updated RecommendedDailyIntake (including the intakeMap)
+        recommendedDailyIntakeRepository.save(recommendedDailyIntake);  // This is the repository for RecommendedDailyIntake
 
         // Return the remaining intake for each nutrient to the client
         return remainingIntakes;
     }
+
+
+
+
+
 
 
 
