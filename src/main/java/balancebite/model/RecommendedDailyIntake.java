@@ -1,13 +1,12 @@
 package balancebite.model;
 
 import jakarta.persistence.*;
-
-import java.util.HashMap;
-import java.util.Map;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Represents the recommended daily intake of nutrients for a user.
- * This entity stores a map of nutrients and their respective recommended intake values.
+ * This entity stores a set of nutrients and their respective recommended intake values.
  */
 @Entity
 @Table(name = "recommended_daily_intake")
@@ -21,14 +20,11 @@ public class RecommendedDailyIntake {
     private Long id;
 
     /**
-     * A map of nutrients and their recommended daily intake values.
-     * The nutrient name is the key, and the corresponding value is the recommended intake.
+     * A set of nutrients and their recommended daily intake values.
      */
-    @ElementCollection
-    @MapKeyColumn(name = "nutrient_name")
-    @Column(name = "nutrient_value")
-    @CollectionTable(name = "intake_map", joinColumns = @JoinColumn(name = "intake_id"))
-    private Map<String, Double> intakeMap = new HashMap<>();
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @JoinColumn(name = "recommended_daily_intake_id")
+    private Set<Nutrient> nutrients = new HashSet<>();
 
     /**
      * Default constructor for creating a RecommendedDailyIntake entity.
@@ -37,163 +33,148 @@ public class RecommendedDailyIntake {
     public RecommendedDailyIntake() {
 
         // Proximates
-        intakeMap.put("Water", 3700.0); // in ml
-        intakeMap.put("Energy kcal", 2500.0); // in kcal
-        intakeMap.put("Protein", 56.0); // in grams
-        intakeMap.put("Total lipid (fat)", 78.0); // in grams
-//        intakeMap.put("Ash", null);
-        intakeMap.put("Carbohydrates", 130.0); // in grams
-        intakeMap.put("Carbohydrate, by difference", 130.0); // in grams
-        intakeMap.put("Fiber, total dietary", 38.0); // in grams
-        intakeMap.put("Total Sugars", 50.0); // in grams
+        addNutrient("Water", 3700.0);
+        addNutrient("Energy kcal", 2500.0);
+        addNutrient("Protein", 56.0);
+        addNutrient("Total lipid (fat)", 78.0);
+        addNutrient("Carbohydrates", 130.0);
+        addNutrient("Carbohydrate, by difference", 130.0);
+        addNutrient("Fiber, total dietary", 38.0);
+        addNutrient("Total Sugars", 50.0);
+        addNutrient("Ash", null);
 
         // Minerals
-        intakeMap.put("Calcium, Ca", 1300.0); // in mg
-        intakeMap.put("Iron, Fe", 18.0); // in mg
-        intakeMap.put("Magnesium, Mg", 420.0); // in mg
-        intakeMap.put("Phosphorus, P", 700.0); // in mg
-        intakeMap.put("Potassium, K", 4700.0); // in mg
-        intakeMap.put("Sodium, Na", 2300.0); // in mg
-        intakeMap.put("Zinc, Zn", 11.0); // in mg
-        intakeMap.put("Copper, Cu", 0.9); // in mg
-        intakeMap.put("Manganese, Mn", 2.3); // in mg
-        intakeMap.put("Selenium, Se", 55.0); // in mcg
+        addNutrient("Calcium, Ca", 1300.0);
+        addNutrient("Iron, Fe", 18.0);
+        addNutrient("Magnesium, Mg", 420.0);
+        addNutrient("Phosphorus, P", 700.0);
+        addNutrient("Potassium, K", 4700.0);
+        addNutrient("Sodium, Na", 2300.0);
+        addNutrient("Zinc, Zn", 11.0);
+        addNutrient("Copper, Cu", 0.9);
+        addNutrient("Manganese, Mn", 2.3);
+        addNutrient("Selenium, Se", 55.0);
 
         // Vitamins and Other Components
-        intakeMap.put("Vitamin C, total ascorbic acid", 90.0); // in mg
-        intakeMap.put("Thiamin", 1.2); // in mg
-        intakeMap.put("Riboflavin", 1.3); // in mg
-        intakeMap.put("Niacin", 16.0); // in mg
-        intakeMap.put("Pantothenic acid", 5.0); // in mg
-        intakeMap.put("Vitamin B-6", 1.3); // in mg
-        intakeMap.put("Folate, total", 400.0); // in mcg
-        intakeMap.put("Folic acid", 400.0); // in mcg
-        intakeMap.put("Folate, food", 400.0); // in mcg
-        intakeMap.put("Folate, DFE", 400.0); // in mcg
-        intakeMap.put("Choline, total", 550.0); // in mg
-        intakeMap.put("Vitamin B-12", 2.4); // in mcg
-//        intakeMap.put("Vitamin B-12, added", null);
-        intakeMap.put("Vitamin A, RAE", 900.0); // in mcg
-        intakeMap.put("Retinol", 900.0); // in mcg
-//        intakeMap.put("Carotene, beta", null);
-//        intakeMap.put("Carotene, alpha", null);
-//        intakeMap.put("Cryptoxanthin, beta", null);
-        intakeMap.put("Vitamin A, IU", 3000.0); // in IU
-//        intakeMap.put("Lycopene", null);
-//        intakeMap.put("Lutein + zeaxanthin", null);
-        intakeMap.put("Vitamin E (alpha-tocopherol)", 15.0); // in mg
-//        intakeMap.put("Vitamin E, added", null);
-        intakeMap.put("Vitamin D (D2 + D3), International Units", 800.0); // in IU
-        intakeMap.put("Vitamin D (D2 + D3)", 20.0); // in mcg
-        intakeMap.put("Vitamin K (phylloquinone)", 120.0); // in mcg
+        addNutrient("Vitamin C, total ascorbic acid", 90.0);
+        addNutrient("Thiamin", 1.2);
+        addNutrient("Riboflavin", 1.3);
+        addNutrient("Niacin", 16.0);
+        addNutrient("Pantothenic acid", 5.0);
+        addNutrient("Vitamin B-6", 1.3);
+        addNutrient("Folate, total", 400.0);
+        addNutrient("Folic acid", 400.0);
+        addNutrient("Folate, food", 400.0);
+        addNutrient("Folate, DFE", 400.0);
+        addNutrient("Choline, total", 550.0);
+        addNutrient("Vitamin B-12", 2.4);
+        addNutrient("Vitamin B-12, added", null);
+        addNutrient("Vitamin A, RAE", 900.0);
+        addNutrient("Retinol", 900.0);
+        addNutrient("Carotene, beta", null);
+        addNutrient("Carotene, alpha", null);
+        addNutrient("Cryptoxanthin, beta", null);
+        addNutrient("Vitamin A, IU", 3000.0);
+        addNutrient("Lycopene", null);
+        addNutrient("Lutein + zeaxanthin", null);
+        addNutrient("Vitamin E (alpha-tocopherol)", 15.0);
+        addNutrient("Vitamin E, added", null);
+        addNutrient("Vitamin D (D2 + D3), International Units", 800.0);
+        addNutrient("Vitamin D (D2 + D3)", 20.0);
+        addNutrient("Vitamin K (phylloquinone)", 120.0);
+        addNutrient("Vitamin K (Dihydrophylloquinone)", null);
 
         // Lipids
-        intakeMap.put("Fatty acids, total saturated", 20.0); // in grams
-//        intakeMap.put("SFA 4:0", null);
-//        intakeMap.put("SFA 6:0", null);
-//        intakeMap.put("SFA 8:0", null);
-//        intakeMap.put("SFA 10:0", null);
-//        intakeMap.put("SFA 12:0", null);
-//        intakeMap.put("SFA 14:0", null);
-//        intakeMap.put("SFA 16:0", null);
-//        intakeMap.put("SFA 18:0", null);
-//        intakeMap.put("Fatty acids, total monounsaturated", null);
-//        intakeMap.put("MUFA 16:1", null);
-//        intakeMap.put("MUFA 18:1", null);
-//        intakeMap.put("MUFA 20:1", null);
-//        intakeMap.put("MUFA 22:1", null);
-//        intakeMap.put("Fatty acids, total polyunsaturated", 17.0); // in grams
-//        intakeMap.put("PUFA 18:2", null);
-//        intakeMap.put("PUFA 18:3", 1.6); // in grams
-//        intakeMap.put("PUFA 18:4", null);
-//        intakeMap.put("PUFA 20:4", null);
-//        intakeMap.put("PUFA 20:5 n-3 (EPA)", null);
-//        intakeMap.put("PUFA 22:5 n-3 (DPA)", null);
-//        intakeMap.put("PUFA 22:6 n-3 (DHA)", null);
-//        intakeMap.put("Fatty acids, total trans", null);
-        intakeMap.put("Cholesterol", 300.0); // in mg
+        addNutrient("Fatty acids, total saturated", 20.0);
+        addNutrient("SFA 4:0", null);
+        addNutrient("SFA 6:0", null);
+        addNutrient("SFA 8:0", null);
+        addNutrient("SFA 10:0", null);
+        addNutrient("SFA 12:0", null);
+        addNutrient("SFA 14:0", null);
+        addNutrient("SFA 16:0", null);
+        addNutrient("SFA 18:0", null);
+        addNutrient("Fatty acids, total monounsaturated", null);
+        addNutrient("MUFA 16:1", null);
+        addNutrient("MUFA 18:1", null);
+        addNutrient("MUFA 20:1", null);
+        addNutrient("MUFA 22:1", null);
+        addNutrient("Fatty acids, total polyunsaturated", 17.0);
+        addNutrient("PUFA 18:2", null);
+        addNutrient("PUFA 18:3", 1.6);
+        addNutrient("PUFA 18:4", null);
+        addNutrient("PUFA 20:4", null);
+        addNutrient("PUFA 20:5 n-3 (EPA)", null);
+        addNutrient("PUFA 22:5 n-3 (DPA)", null);
+        addNutrient("PUFA 22:6 n-3 (DHA)", null);
+        addNutrient("Fatty acids, total trans", null);
+        addNutrient("Cholesterol", 300.0);
 
         // Amino acids
-        intakeMap.put("Tryptophan", 280.0); // in mg
-        intakeMap.put("Threonine", 1050.0); // in mg
-        intakeMap.put("Isoleucine", 1400.0); // in mg
-        intakeMap.put("Leucine", 2730.0); // in mg
-        intakeMap.put("Lysine", 2100.0); // in mg
-        intakeMap.put("Methionine", 728.0); // in mg
-        intakeMap.put("Cystine", 287.0); // in mg
-        intakeMap.put("Phenylalanine", 875.0); // in mg
-        intakeMap.put("Tyrosine", 875.0); // in mg
-        intakeMap.put("Valine", 1820.0); // in mg
-//        intakeMap.put("Arginine", null);
-        intakeMap.put("Histidine", 700.0); // in mg
-//        intakeMap.put("Alanine", null);
-//        intakeMap.put("Aspartic acid", null);
-//        intakeMap.put("Glutamic acid", null);
-//        intakeMap.put("Glycine", null);
-//        intakeMap.put("Proline", null);
-//        intakeMap.put("Serine", null);
+        addNutrient("Tryptophan", 280.0);
+        addNutrient("Threonine", 1050.0);
+        addNutrient("Isoleucine", 1400.0);
+        addNutrient("Leucine", 2730.0);
+        addNutrient("Lysine", 2100.0);
+        addNutrient("Methionine", 728.0);
+        addNutrient("Cystine", 287.0);
+        addNutrient("Phenylalanine", 875.0);
+        addNutrient("Tyrosine", 875.0);
+        addNutrient("Valine", 1820.0);
+        addNutrient("Arginine", null);
+        addNutrient("Histidine", 700.0);
+        addNutrient("Alanine", null);
+        addNutrient("Aspartic acid", null);
+        addNutrient("Glutamic acid", null);
+        addNutrient("Glycine", null);
+        addNutrient("Proline", null);
+        addNutrient("Serine", null);
 
         // Other Components
-//        intakeMap.put("Alcohol, ethyl", null);
-        intakeMap.put("Caffeine", 400.0); // in mg
-//        intakeMap.put("Theobromine", null);
-//        intakeMap.put("Sucrose", null);
-//        intakeMap.put("Glucose", null);
-//        intakeMap.put("Fructose", null);
-//        intakeMap.put("Lactose", null);
-//        intakeMap.put("Maltose", null);
-//        intakeMap.put("Galactose", null);
-//        intakeMap.put("Starch", null);
-//        intakeMap.put("Betaine", null);
-//        intakeMap.put("Tocopherol, beta", null);
-//        intakeMap.put("Tocopherol, gamma", null);
-//        intakeMap.put("Tocopherol, delta", null);
-//        intakeMap.put("Tocotrienol, alpha", null);
-//        intakeMap.put("Tocotrienol, beta", null);
-//        intakeMap.put("Tocotrienol, gamma", null);
-//        intakeMap.put("Tocotrienol, delta", null);
-//        intakeMap.put("Vitamin K (Dihydrophylloquinone)", null);
-//        intakeMap.put("SFA 15:0", null);
-//        intakeMap.put("SFA 17:0", null);
-//        intakeMap.put("SFA 20:0", null);
-//        intakeMap.put("SFA 22:0", null);
-//        intakeMap.put("SFA 24:0", null);
-//        intakeMap.put("MUFA 14:1", null);
-        intakeMap.put("Fluoride, F", 4.0); // in mg
-//        intakeMap.put("Phytosterols", null);
+        addNutrient("Alcohol, ethyl", null);
+        addNutrient("Caffeine", 400.0);
+        addNutrient("Theobromine", null);
+        addNutrient("Sucrose", null);
+        addNutrient("Glucose", null);
+        addNutrient("Fructose", null);
+        addNutrient("Lactose", null);
+        addNutrient("Maltose", null);
+        addNutrient("Galactose", null);
+        addNutrient("Starch", null);
+        addNutrient("Betaine", null);
+        addNutrient("Tocopherol, beta", null);
+        addNutrient("Tocopherol, gamma", null);
+        addNutrient("Tocopherol, delta", null);
+        addNutrient("Tocotrienol, alpha", null);
+        addNutrient("Tocotrienol, beta", null);
+        addNutrient("Tocotrienol, gamma", null);
+        addNutrient("Tocotrienol, delta", null);
+        addNutrient("SFA 15:0", null);
+        addNutrient("SFA 17:0", null);
+        addNutrient("SFA 20:0", null);
+        addNutrient("SFA 22:0", null);
+        addNutrient("SFA 24:0", null);
+        addNutrient("MUFA 14:1", null);
+        addNutrient("Fluoride, F", 4.0);
+        addNutrient("Phytosterols", null);
     }
 
     /**
-     * Retrieves the recommended intake value for a given nutrient.
+     * Adds a new nutrient with its recommended value to the nutrient set.
      *
-     * @param nutrient The name of the nutrient to retrieve.
-     * @return The recommended intake value for the nutrient, or null if not found.
+     * @param name  The name of the nutrient.
+     * @param value The recommended value for the nutrient.
      */
-    public Double getRecommendedIntake(String nutrient) {
-        return intakeMap.getOrDefault(nutrient, null);
+    private void addNutrient(String name, Double value) {
+        nutrients.add(new Nutrient(name, value));
     }
 
     /**
-     * Retrieves the entire map of recommended nutrient intake values.
+     * Retrieves the set of all nutrients.
      *
-     * @return A map containing all nutrient names and their recommended intake values.
+     * @return A set of all nutrients and their recommended values.
      */
-    public Map<String, Double> getAllRecommendedIntakes() {
-        return intakeMap;
-    }
-
-    /**
-     * Updates the intake value for a specific nutrient.
-     * If the nutrient does not exist in the map, the update will not take place.
-     *
-     * @param nutrientName The name of the nutrient to update.
-     * @param updatedValue The new recommended intake value for the nutrient.
-     */
-    public void updateIntake(String nutrientName, Double updatedValue) {
-        if (intakeMap.containsKey(nutrientName)) {
-            intakeMap.put(nutrientName, updatedValue);
-        } else {
-            System.out.println("Nutrient not found: " + nutrientName);
-        }
+    public Set<Nutrient> getNutrients() {
+        return nutrients;
     }
 }

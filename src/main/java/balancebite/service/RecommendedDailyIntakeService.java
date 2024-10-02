@@ -45,17 +45,25 @@ public class RecommendedDailyIntakeService {
 
         User user = userOptional.get();
 
-        // Create a new RecommendedDailyIntake with default values
+        // Create a new RecommendedDailyIntake which initializes the nutrients with default values
         RecommendedDailyIntake newIntake = new RecommendedDailyIntake();
 
-        // Assign the new intake to the user
+        // Ensure the nutrients set is not empty (optional logging can be added here)
+        if (newIntake.getNutrients().isEmpty()) {
+            throw new RuntimeException("RecommendedDailyIntake was not properly initialized with nutrients.");
+        }
+
+        // Assign the new RecommendedDailyIntake to the user
         user.setRecommendedDailyIntake(newIntake);
 
-        // Save the user with the new recommended intake
+        // Save the user, which will cascade and save the RecommendedDailyIntake and its nutrients
         userRepository.save(user);
 
+        // Convert the RecommendedDailyIntake to a DTO and return it
         return intakeMapper.toDTO(newIntake);
     }
+
+
 
     /**
      * Deletes the RecommendedDailyIntake for a specific user.

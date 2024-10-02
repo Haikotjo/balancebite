@@ -1,9 +1,13 @@
 package balancebite.dto.recommendeddailyintake;
 
+import balancebite.model.Nutrient;
+
+import java.util.List;
+
 /**
  * Data Transfer Object (DTO) for input related to Recommended Daily Intake.
  * This DTO is used to transfer input data from the client that may affect the calculation of the recommended daily intake,
- * such as user-specific factors like weight and gender.
+ * such as user-specific factors like weight, gender, and a list of specific nutrients.
  */
 public class RecommendedDailyIntakeInputDTO {
 
@@ -20,6 +24,12 @@ public class RecommendedDailyIntakeInputDTO {
     private String gender;
 
     /**
+     * A list of specific nutrients that the user wants to include in the calculation.
+     * Each nutrient can be customized with a name and value.
+     */
+    private List<Nutrient> customNutrients;
+
+    /**
      * Default no-argument constructor for serialization/deserialization purposes.
      * Used by frameworks like Jackson to map incoming JSON data.
      */
@@ -28,14 +38,16 @@ public class RecommendedDailyIntakeInputDTO {
     }
 
     /**
-     * Full constructor to create a RecommendedDailyIntakeInputDTO with weight and gender.
+     * Full constructor to create a RecommendedDailyIntakeInputDTO with weight, gender, and custom nutrients.
      *
-     * @param weight The weight of the user in kilograms.
-     * @param gender The gender of the user (e.g., "male", "female").
+     * @param weight          The weight of the user in kilograms.
+     * @param gender          The gender of the user (e.g., "male", "female").
+     * @param customNutrients A list of custom nutrients specified by the user.
      */
-    public RecommendedDailyIntakeInputDTO(Double weight, String gender) {
+    public RecommendedDailyIntakeInputDTO(Double weight, String gender, List<Nutrient> customNutrients) {
         this.weight = weight;
         this.gender = gender;
+        this.customNutrients = customNutrients;
     }
 
     /**
@@ -72,5 +84,23 @@ public class RecommendedDailyIntakeInputDTO {
      */
     public void setGender(String gender) {
         this.gender = gender;
+    }
+
+    /**
+     * Gets the list of custom nutrients specified by the user.
+     *
+     * @return The list of custom nutrients.
+     */
+    public List<Nutrient> getCustomNutrients() {
+        return customNutrients;
+    }
+
+    /**
+     * Sets the list of custom nutrients specified by the user.
+     *
+     * @param customNutrients The list of custom nutrients to set.
+     */
+    public void setCustomNutrients(List<Nutrient> customNutrients) {
+        this.customNutrients = customNutrients;
     }
 }

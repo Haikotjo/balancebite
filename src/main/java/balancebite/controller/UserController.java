@@ -3,6 +3,7 @@ package balancebite.controller;
 import balancebite.dto.user.UserDTO;
 import balancebite.dto.user.UserInputDTO;
 import balancebite.model.RecommendedDailyIntake;
+import balancebite.service.RecommendedDailyIntakeService;
 import balancebite.service.UserService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,14 +20,17 @@ import java.util.Map;
 public class UserController {
 
     private final UserService userService;
+    private final RecommendedDailyIntakeService recommendedDailyIntakeService;  // Injecteer RecommendedDailyIntakeService
 
     /**
-     * Constructor to initialize the UserController with the UserService.
+     * Constructor to initialize the UserController with the UserService and RecommendedDailyIntakeService.
      *
      * @param userService The service responsible for user-related business logic.
+     * @param recommendedDailyIntakeService The service responsible for recommended daily intake logic.
      */
-    public UserController(UserService userService) {
+    public UserController(UserService userService, RecommendedDailyIntakeService recommendedDailyIntakeService) {
         this.userService = userService;
+        this.recommendedDailyIntakeService = recommendedDailyIntakeService;  // Constructor injectie voor RecommendedDailyIntakeService
     }
 
     /**
@@ -124,4 +128,9 @@ public class UserController {
         Map<String, Double> remainingIntakes = userService.eatMeal(userId, mealId);
         return ResponseEntity.ok(remainingIntakes);
     }
+
+
+
+
+
 }

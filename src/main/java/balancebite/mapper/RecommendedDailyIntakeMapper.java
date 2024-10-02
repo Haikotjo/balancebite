@@ -1,8 +1,11 @@
 package balancebite.mapper;
 
 import balancebite.dto.recommendeddailyintake.RecommendedDailyIntakeDTO;
+import balancebite.model.Nutrient;
 import balancebite.model.RecommendedDailyIntake;
 import org.springframework.stereotype.Component;
+
+import java.util.Set;
 
 /**
  * Mapper class for converting between RecommendedDailyIntake and RecommendedDailyIntakeDTO.
@@ -21,12 +24,13 @@ public class RecommendedDailyIntakeMapper {
         if (recommendedDailyIntake == null) {
             return null;
         }
-        return new RecommendedDailyIntakeDTO(recommendedDailyIntake.getAllRecommendedIntakes());
+
+        // Return the DTO directly with the set of Nutrients
+        return new RecommendedDailyIntakeDTO(recommendedDailyIntake.getNutrients());
     }
 
     /**
      * Converts a RecommendedDailyIntakeDTO back to a RecommendedDailyIntake entity.
-     * This can be useful when applying changes or updates from the client.
      *
      * @param recommendedDailyIntakeDTO The DTO to convert.
      * @return A new RecommendedDailyIntake entity.
@@ -35,8 +39,12 @@ public class RecommendedDailyIntakeMapper {
         if (recommendedDailyIntakeDTO == null) {
             return null;
         }
+
+        // Create a new RecommendedDailyIntake entity and add the nutrients
         RecommendedDailyIntake entity = new RecommendedDailyIntake();
-        entity.getAllRecommendedIntakes().putAll(recommendedDailyIntakeDTO.getIntakeMap());
+        Set<Nutrient> nutrients = recommendedDailyIntakeDTO.getNutrients();
+
+        entity.getNutrients().addAll(nutrients);
         return entity;
     }
 }

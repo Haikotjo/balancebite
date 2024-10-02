@@ -1,19 +1,20 @@
 package balancebite.dto.recommendeddailyintake;
 
-import java.util.Map;
+import balancebite.model.Nutrient;
+
+import java.util.Set;
 
 /**
  * Data Transfer Object (DTO) for Recommended Daily Intake.
  * This DTO is used to transfer the recommended daily intake data to and from the client.
- * It includes a map of nutrients and their respective recommended intake values.
+ * It includes a set of nutrients and their respective recommended intake values.
  */
 public class RecommendedDailyIntakeDTO {
 
     /**
-     * A map of nutrient names and their recommended daily intake values.
-     * The nutrient name serves as the key, and the recommended intake value is the value.
+     * A set of nutrient DTOs representing the nutrients and their recommended daily intake values.
      */
-    private Map<String, Double> intakeMap;
+    private Set<Nutrient> nutrients;
 
     /**
      * Default no-argument constructor for serialization/deserialization purposes.
@@ -24,29 +25,29 @@ public class RecommendedDailyIntakeDTO {
     }
 
     /**
-     * Full constructor to create a RecommendedDailyIntakeDTO with a specified nutrient intake map.
+     * Full constructor to create a RecommendedDailyIntakeDTO with a specified set of nutrients.
      *
-     * @param intakeMap The map containing nutrient names as keys and their recommended daily intake values as values.
+     * @param nutrients The set of NutrientDTO objects representing nutrient names and their recommended daily intake values.
      */
-    public RecommendedDailyIntakeDTO(Map<String, Double> intakeMap) {
-        this.intakeMap = intakeMap;
+    public RecommendedDailyIntakeDTO(Set<Nutrient> nutrients) {
+        this.nutrients = nutrients;
     }
 
     /**
-     * Retrieves the map of nutrient names and their corresponding recommended daily intake values.
+     * Retrieves the set of nutrients and their corresponding recommended daily intake values.
      *
-     * @return The intake map containing nutrient names as keys and their daily recommended values as values.
+     * @return The set of nutrients.
      */
-    public Map<String, Double> getIntakeMap() {
-        return intakeMap;
+    public Set<Nutrient> getNutrients() {
+        return nutrients;
     }
 
     /**
-     * Sets the map of nutrient names and their corresponding recommended daily intake values.
+     * Sets the set of nutrients and their corresponding recommended daily intake values.
      *
-     * @param intakeMap The intake map to set, with nutrient names as keys and their recommended daily values as values.
+     * @param nutrients The set of nutrients to set, each represented as a NutrientDTO object.
      */
-    public void setIntakeMap(Map<String, Double> intakeMap) {
-        this.intakeMap = intakeMap;
+    public void setNutrients(Set<Nutrient> nutrients) {
+        this.nutrients = nutrients;
     }
 }

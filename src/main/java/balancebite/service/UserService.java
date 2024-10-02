@@ -5,11 +5,14 @@ import balancebite.dto.user.UserDTO;
 import balancebite.dto.user.UserInputDTO;
 import balancebite.mapper.UserMapper;
 import balancebite.model.Meal;
+import balancebite.model.Nutrient;
 import balancebite.model.RecommendedDailyIntake;
 import balancebite.model.User;
 import balancebite.repository.MealRepository;
 import balancebite.repository.RecommendedDailyIntakeRepository;
 import balancebite.repository.UserRepository;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,6 +34,9 @@ public class UserService {
     private final RecommendedDailyIntakeRepository recommendedDailyIntakeRepository;
     private final UserMapper userMapper;
     private final MealService mealService;  // Add MealService
+
+    @PersistenceContext
+    private EntityManager entityManager;
 
     /**
      * Constructor that initializes the UserService with the required repositories, mappers, and services.
@@ -193,25 +199,18 @@ public class UserService {
         // Get the user's existing recommended daily intake
         RecommendedDailyIntake recommendedDailyIntake = user.getRecommendedDailyIntake();
 
-        // Check if the user has a recommended daily intake set
         if (recommendedDailyIntake == null) {
             throw new RuntimeException("Recommended daily intake not found for user with ID " + userId);
         }
 
         // Retrieve the recommended daily intake values and normalize the keys
-        Map<String, Double> recommendedIntakes = recommendedDailyIntake.getAllRecommendedIntakes().entrySet().stream()
+        Map<String, Double> recommendedIntakes = recommendedDailyIntake.getNutrients().stream()
                 .collect(Collectors.toMap(
-                        entry -> normalizeNutrientName(entry.getKey()),  // Normalize the nutrient names in the intakeMap
-                        Map.Entry::getValue
+                        nutrient -> normalizeNutrientName(nutrient.getName()),  // Normalize the nutrient names
+                        nutrient -> nutrient.getValue() != null ? nutrient.getValue() : 0.0  // Handle null values
                 ));
 
-        // Log de volledige intakeMap na normalisatie
-        System.out.println("Intake map after normalization:");
-        recommendedIntakes.forEach((nutrient, value) ->
-                System.out.println("Nutrient: " + nutrient + ", Value: " + value)
-        );
-
-        // Map to store the remaining intake for each nutrient, initialized with full recommended intake
+        // Map to store the remaining intake for each nutrient
         Map<String, Double> remainingIntakes = new HashMap<>(recommendedIntakes);
 
         // Subtract the nutrients from the meal from the recommended daily intake
@@ -219,35 +218,37 @@ public class UserService {
             String originalNutrientName = entry.getKey();  // Original nutrient name from meal
             String normalizedNutrientName = normalizeNutrientName(originalNutrientName);  // Normalized version of the meal nutrient name
 
-            // Log both original and normalized nutrient names
-            System.out.println("Original nutrient name from meal: " + originalNutrientName);
-            System.out.println("Normalized nutrient name from meal: " + normalizedNutrientName);
-
             NutrientInfoDTO nutrientInfo = entry.getValue();
 
             // Check if the normalized nutrient exists in the recommended intake
             if (remainingIntakes.containsKey(normalizedNutrientName)) {
+                // Check if nutrient value is not null before subtracting
+                double nutrientValue = nutrientInfo.getValue() != null ? nutrientInfo.getValue() : 0.0;
                 // Subtract the nutrient value from the daily intake
-                double remainingIntake = remainingIntakes.get(normalizedNutrientName) - nutrientInfo.getValue();
+                double remainingIntake = remainingIntakes.get(normalizedNutrientName) - nutrientValue;
                 remainingIntakes.put(normalizedNutrientName, remainingIntake);  // Update remaining intake
 
-                // Update the recommended intake for this nutrient in the intakeMap of the RecommendedDailyIntake
-                recommendedDailyIntake.updateIntake(normalizedNutrientName, remainingIntake);
-
-                System.out.println("Updated intake for nutrient: " + normalizedNutrientName + " to " + remainingIntake);
-            } else {
-                // Log nutrient not found
-                System.out.println("Nutrient not found in intake map: " + normalizedNutrientName);
+                // Update the recommended intake for this nutrient in the Nutrient entity
+                recommendedDailyIntake.getNutrients().forEach(nutrient -> {
+                    if (normalizeNutrientName(nutrient.getName()).equals(normalizedNutrientName)) {
+                        nutrient.setValue(remainingIntake);  // Allow negative values here
+                    }
+                });
             }
         }
 
-        // Save the updated RecommendedDailyIntake (including the intakeMap)
-        recommendedDailyIntakeRepository.save(recommendedDailyIntake);  // This is the repository for RecommendedDailyIntake
+        // Save the updated RecommendedDailyIntake (including the nutrient set) and force a flush to the database
+        try {
+            recommendedDailyIntakeRepository.save(recommendedDailyIntake);
+            entityManager.flush();  // Ensure the changes are flushed to the database immediately
+        } catch (Exception e) {
+            System.out.println("Error saving RecommendedDailyIntake: " + e.getMessage());
+            e.printStackTrace();
+        }
 
         // Return the remaining intake for each nutrient to the client
         return remainingIntakes;
     }
-
 
 
 
@@ -268,8 +269,4 @@ public class UserService {
                 .replaceAll("\\s(g|mg|µg)$", "")  // Remove " g", " mg", " µg" at the end
                 .replace(" ", "");  // Remove all remaining spaces
     }
-
-
-
-
 }
