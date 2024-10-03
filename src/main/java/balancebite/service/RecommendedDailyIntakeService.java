@@ -63,8 +63,6 @@ public class RecommendedDailyIntakeService {
         return intakeMapper.toDTO(newIntake);
     }
 
-
-
     /**
      * Deletes the RecommendedDailyIntake for a specific user.
      *
@@ -86,6 +84,29 @@ public class RecommendedDailyIntakeService {
         // Remove the recommended daily intake
         user.setRecommendedDailyIntake(null);
         userRepository.save(user);
+    }
+
+    /**
+     * Retrieves the recommended daily intake for a specific user by their user ID.
+     *
+     * @param userId The ID of the user.
+     * @return The RecommendedDailyIntakeDTO of the user.
+     */
+    public RecommendedDailyIntakeDTO getRecommendedDailyIntakeForUser(Long userId) {
+        Optional<User> userOptional = userRepository.findById(userId);
+
+        if (userOptional.isEmpty()) {
+            throw new IllegalArgumentException("User with ID " + userId + " not found");
+        }
+
+        User user = userOptional.get();
+
+        RecommendedDailyIntake intake = user.getRecommendedDailyIntake();
+        if (intake == null) {
+            throw new IllegalArgumentException("User with ID " + userId + " does not have a recommended daily intake");
+        }
+
+        return intakeMapper.toDTO(intake);
     }
 
 }

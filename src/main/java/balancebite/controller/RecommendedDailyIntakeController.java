@@ -47,4 +47,17 @@ public class RecommendedDailyIntakeController {
         return ResponseEntity.noContent().build();
     }
 
+    /**
+     * GET endpoint to retrieve the recommended daily intake for a specific user.
+     *
+     * @param userId The ID of the user whose recommended daily intake will be retrieved.
+     * @return ResponseEntity containing the RecommendedDailyIntakeDTO.
+     */
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<RecommendedDailyIntakeDTO> getRecommendedDailyIntakeForUser(
+            @PathVariable Long userId) {
+
+        RecommendedDailyIntakeDTO intakeDTO = recommendedDailyIntakeService.getRecommendedDailyIntakeForUser(userId);
+        return ResponseEntity.ok(intakeDTO);
+    }
 }

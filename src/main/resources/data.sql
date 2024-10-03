@@ -81,15 +81,3 @@ INSERT INTO meal_ingredients (meal_id, food_item_id, quantity) VALUES (6, 16, 91
 INSERT INTO user_meals (user_id, meal_id) VALUES (2, 4); -- Snack
 INSERT INTO user_meals (user_id, meal_id) VALUES (2, 5); -- Salad
 INSERT INTO user_meals (user_id, meal_id) VALUES (2, 6); -- Dinner Special
-
--- -- Voeg aanbevolen dagelijkse inname toe voor John Doe (user_id = 1)
--- INSERT INTO recommended_daily_intake (id) VALUES (1); -- Maakt de dagelijkse inname voor John Doe
---
--- -- Voeg aanbevolen dagelijkse inname toe voor Jane Smith (user_id = 2)
--- INSERT INTO recommended_daily_intake (id) VALUES (2); -- Maakt de dagelijkse inname voor Jane Smith
---
--- -- Koppel de dagelijkse inname aan John Doe (user_id = 1)
--- UPDATE users SET recommended_daily_intake_id = 1 WHERE id = 1;
---
--- -- Koppel de dagelijkse inname aan Jane Smith (user_id = 2)
--- UPDATE users SET recommended_daily_intake_id = 2 WHERE id = 2;
