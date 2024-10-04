@@ -34,7 +34,7 @@ public class RecommendedDailyIntake {
 
         // Proximates
         addNutrient("Water", 3700.0);
-        addNutrient("Energy kcal", 2500.0);
+        addNutrient("Energy kcal", null);
         addNutrient("Protein", 56.0);
         addNutrient("Total lipid (fat)", 78.0);
         addNutrient("Carbohydrates", 130.0);

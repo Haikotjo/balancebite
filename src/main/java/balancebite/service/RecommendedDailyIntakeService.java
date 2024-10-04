@@ -4,6 +4,7 @@ import balancebite.dto.recommendeddailyintake.RecommendedDailyIntakeDTO;
 import balancebite.mapper.RecommendedDailyIntakeMapper;
 import balancebite.model.RecommendedDailyIntake;
 import balancebite.model.User;
+import balancebite.model.userenums.Gender;
 import balancebite.repository.RecommendedDailyIntakeRepository;
 import balancebite.repository.UserRepository;
 import org.springframework.stereotype.Service;
@@ -45,13 +46,54 @@ public class RecommendedDailyIntakeService {
 
         User user = userOptional.get();
 
-        // Create a new RecommendedDailyIntake which initializes the nutrients with default values
-        RecommendedDailyIntake newIntake = new RecommendedDailyIntake();
-
-        // Ensure the nutrients set is not empty (optional logging can be added here)
-        if (newIntake.getNutrients().isEmpty()) {
-            throw new RuntimeException("RecommendedDailyIntake was not properly initialized with nutrients.");
+        // Check if user has all necessary data (weight, height, age, gender, activity level)
+        if (user.getWeight() == null || user.getHeight() == null || user.getAge() == null ||
+                user.getGender() == null || user.getActivityLevel() == null) {
+            throw new IllegalArgumentException("User must have weight, height, age, gender, and activity level filled in to calculate recommended intake.");
         }
+
+        // Calculate BMR based on gender
+        double bmr;
+        if (user.getGender() == Gender.MALE) {
+            bmr = 88.362 + (13.397 * user.getWeight()) + (4.799 * user.getHeight()) - (5.677 * user.getAge());
+        } else if (user.getGender() == Gender.FEMALE) {
+            bmr = 447.593 + (9.247 * user.getWeight()) + (3.098 * user.getHeight()) - (4.330 * user.getAge());
+        } else {
+            throw new IllegalArgumentException("Unsupported gender");
+        }
+
+        // Adjust BMR based on activity level
+        double activityFactor;
+        switch (user.getActivityLevel()) {
+            case SEDENTARY:
+                activityFactor = 1.2;
+                break;
+            case LIGHT:
+                activityFactor = 1.375;
+                break;
+            case MODERATE:
+                activityFactor = 1.55;
+                break;
+            case ACTIVE:
+                activityFactor = 1.725;
+                break;
+            case VERY_ACTIVE:
+                activityFactor = 1.9;
+                break;
+            default:
+                throw new IllegalArgumentException("Unsupported activity level");
+        }
+
+        // Calculate the total daily energy expenditure
+        double totalEnergyKcal = bmr * activityFactor;
+
+        // Create a new RecommendedDailyIntake and set the calculated energy kcal
+        RecommendedDailyIntake newIntake = new RecommendedDailyIntake();
+        newIntake.getNutrients().forEach(nutrient -> {
+            if (nutrient.getName().equals("Energy kcal")) {
+                nutrient.setValue(totalEnergyKcal);
+            }
+        });
 
         // Assign the new RecommendedDailyIntake to the user
         user.setRecommendedDailyIntake(newIntake);
@@ -62,6 +104,7 @@ public class RecommendedDailyIntakeService {
         // Convert the RecommendedDailyIntake to a DTO and return it
         return intakeMapper.toDTO(newIntake);
     }
+
 
     /**
      * Deletes the RecommendedDailyIntake for a specific user.
