@@ -72,7 +72,7 @@ public class UserService {
 
     /**
      * Updates an existing user in the system based on the provided UserInputDTO.
-     * This can include updating the meals associated with the user.
+     * This can include updating optional fields like weight, age, height, and more.
      *
      * @param id The ID of the user to update.
      * @param userInputDTO The input data for updating the user.
@@ -82,16 +82,43 @@ public class UserService {
         User existingUser = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found with ID " + id));
 
-        // Update the user's information
-        existingUser.setUserName(userInputDTO.getUserName());
-        existingUser.setEmail(userInputDTO.getEmail());
-        existingUser.setPassword(userInputDTO.getPassword());  // Hash the password before saving in the service layer
-        existingUser.setRole(userInputDTO.getRole());
+        // Update only the fields that are present in userInputDTO (if not null)
+        if (userInputDTO.getUserName() != null) {
+            existingUser.setUserName(userInputDTO.getUserName());
+        }
+        if (userInputDTO.getEmail() != null) {
+            existingUser.setEmail(userInputDTO.getEmail());
+        }
+        if (userInputDTO.getPassword() != null) {
+            existingUser.setPassword(userInputDTO.getPassword());  // Make sure to hash the password in the service layer
+        }
+        if (userInputDTO.getRole() != null) {
+            existingUser.setRole(userInputDTO.getRole());
+        }
+        if (userInputDTO.getWeight() != null) {
+            existingUser.setWeight(userInputDTO.getWeight());
+        }
+        if (userInputDTO.getAge() != null) {
+            existingUser.setAge(userInputDTO.getAge());
+        }
+        if (userInputDTO.getHeight() != null) {
+            existingUser.setHeight(userInputDTO.getHeight());
+        }
+        if (userInputDTO.getGender() != null) {
+            existingUser.setGender(userInputDTO.getGender());
+        }
+        if (userInputDTO.getActivityLevel() != null) {
+            existingUser.setActivityLevel(userInputDTO.getActivityLevel());
+        }
+        if (userInputDTO.getGoal() != null) {
+            existingUser.setGoal(userInputDTO.getGoal());
+        }
 
         // Save the updated user
         User updatedUser = userRepository.save(existingUser);
         return userMapper.toDTO(updatedUser);
     }
+
 
     /**
      * Retrieves all users in the system.
