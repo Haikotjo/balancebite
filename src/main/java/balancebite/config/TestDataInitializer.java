@@ -33,13 +33,13 @@ public class TestDataInitializer {
                 updateUserDetails(3L, 95.0, 35, 185.0, "MALE", "SEDENTARY", "WEIGHT_GAIN");
 
                 // Zoek naar de user met ID 4 en voeg gewicht, leeftijd, enz. toe
-                updateUserDetails(4L, 55.0, 28, 170.0, "FEMALE", "LIGHT", "WEIGHT_GAIN");
+                updateUserDetails(4L, 55.0, 28, 170.0, "FEMALE", "LIGHT", "WEIGHT_GAIN_WITH_MUSCLE_FOCUS");
 
                 // Zoek naar de user met ID 5 en voeg gewicht, leeftijd, enz. toe
-                updateUserDetails(5L, 110.0, 41, 185.0, "MALE", "ACTIVE", "MAINTENANCE");
+                updateUserDetails(5L, 110.0, 41, 185.0, "MALE", "ACTIVE", "MAINTENANCE_WITH_MUSCLE_MAINTENANCE");
 
                 // Zoek naar de user met ID 6 en voeg gewicht, leeftijd, enz. toe
-                updateUserDetails(6L, 75.0, 74, 160.0, "FEMALE", "MODERATE", "WEIGHT_LOSS");
+                updateUserDetails(6L, 75.0, 74, 160.0, "FEMALE", "MODERATE", "WEIGHT_LOSS_WITH_MUSCLE_MAINTENANCE");
 
                 System.out.println("Users updated with additional details.");
 
