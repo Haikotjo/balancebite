@@ -120,17 +120,9 @@ public class UserController {
         return ResponseEntity.ok(updatedUser);
     }
 
-
-
-
     @PostMapping("/{userId}/eat-meal/{mealId}")
     public ResponseEntity<Map<String, Double>> eatMeal(@PathVariable Long userId, @PathVariable Long mealId) {
         Map<String, Double> remainingIntakes = userService.eatMeal(userId, mealId);
         return ResponseEntity.ok(remainingIntakes);
     }
-
-
-
-
-
 }

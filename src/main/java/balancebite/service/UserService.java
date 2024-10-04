@@ -83,7 +83,7 @@ public class UserService {
                 .orElseThrow(() -> new RuntimeException("User not found with ID " + id));
 
         // Update the user's information
-        existingUser.setName(userInputDTO.getName());
+        existingUser.setUserName(userInputDTO.getUserName());
         existingUser.setEmail(userInputDTO.getEmail());
         existingUser.setPassword(userInputDTO.getPassword());  // Hash the password before saving in the service layer
         existingUser.setRole(userInputDTO.getRole());
@@ -169,10 +169,6 @@ public class UserService {
         return userMapper.toDTO(updatedUser);
     }
 
-
-
-
-
     /**
      * Processes the consumption of a meal by a user, updating the user's intake of nutrients.
      * The method retrieves the nutrients of the meal, deducts them from the recommended daily intake,
@@ -249,13 +245,6 @@ public class UserService {
         // Return the remaining intake for each nutrient to the client
         return remainingIntakes;
     }
-
-
-
-
-
-
-
 
     /**
      * Normalizes nutrient names by converting them to lowercase, removing units like "g", "mg", and "µg"

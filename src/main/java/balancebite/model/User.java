@@ -1,5 +1,8 @@
 package balancebite.model;
 
+import balancebite.model.userenums.ActivityLevel;
+import balancebite.model.userenums.Gender;
+import balancebite.model.userenums.Goal;
 import jakarta.persistence.*;
 import java.util.HashSet;
 import java.util.Set;
@@ -22,7 +25,8 @@ public class User {
     /**
      * The name of the user.
      */
-    private String name;
+    @Column(name = "user_name")
+    private String userName;
 
     /**
      * The email of the user.
@@ -33,6 +37,39 @@ public class User {
      * The password for the user account.
      */
     private String password;
+
+    /**
+     * The weight of the user in kilograms.
+     */
+    private Double weight;
+
+    /**
+     * The age of the user in years.
+     */
+    private Integer age;
+
+    /**
+     * The height of the user in centimeters.
+     */
+    private Double height;
+
+    /**
+     * The gender of the user.
+     */
+    @Enumerated(EnumType.STRING)
+    private Gender gender;
+
+    /**
+     * The activity level of the user, which defines how active they are.
+     */
+    @Enumerated(EnumType.STRING)
+    private ActivityLevel activityLevel;
+
+    /**
+     * The goal of the user, defining whether they want to lose, gain, or maintain weight.
+     */
+    @Enumerated(EnumType.STRING)
+    private Goal goal;
 
     /**
      * Many-to-Many relationship between users and meals.
@@ -55,10 +92,7 @@ public class User {
 
     /**
      * The recommended daily intake associated with the user.
-     * This represents the daily nutrient intake goals or limits for the user,
-     * including values for macronutrients, vitamins, minerals, and other nutritional components.
      * The relationship is one-to-one, meaning each user has their own personalized daily intake.
-     * The daily intake is automatically persisted and managed when the user is saved or updated.
      */
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "recommended_daily_intake_id", referencedColumnName = "id")
@@ -72,23 +106,20 @@ public class User {
     }
 
     /**
-     * Full constructor for creating a User entity without an ID.
-     * The ID is automatically generated when the entity is persisted.
+     * Full constructor for creating a User entity without mandatory fields for weight, age, height, gender, activityLevel, and goal.
      *
-     * @param name     The name of the user.
+     * This allows for creating a user without requiring all these fields immediately.
+     *
+     * @param userName     The name of the user.
      * @param email    The email of the user.
      * @param password The password for the user account.
-     * @param meals    The set of meals associated with the user.
      * @param role     The role of the user.
-     * @param recommendedDailyIntake The recommended daily intake of the user.
      */
-    public User(String name, String email, String password, Set<Meal> meals, Role role, RecommendedDailyIntake recommendedDailyIntake) {
-        this.name = name;
+    public User(String userName, String email, String password, Role role) {
+        this.userName = userName;
         this.email = email;
         this.password = password;
-        this.meals = meals != null ? meals : new HashSet<>();
         this.role = role;
-        this.recommendedDailyIntake = recommendedDailyIntake;
     }
 
     /**
@@ -105,17 +136,17 @@ public class User {
      *
      * @return The name of the user.
      */
-    public String getName() {
-        return name;
+    public String getUserName() {
+        return userName;
     }
 
     /**
      * Sets the name of the user.
      *
-     * @param name The name to set for the user.
+     * @param userName  The name to set for the user.
      */
-    public void setName(String name) {
-        this.name = name;
+    public void setUserName(String userName) {
+        this.userName = userName;
     }
 
     /**
@@ -152,6 +183,114 @@ public class User {
      */
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    /**
+     * Gets the weight of the user in kilograms.
+     *
+     * @return The weight of the user.
+     */
+    public Double getWeight() {
+        return weight;
+    }
+
+    /**
+     * Sets the weight of the user in kilograms.
+     *
+     * @param weight The weight to set for the user.
+     */
+    public void setWeight(Double weight) {
+        this.weight = weight;
+    }
+
+    /**
+     * Gets the age of the user in years.
+     *
+     * @return The age of the user.
+     */
+    public Integer getAge() {
+        return age;
+    }
+
+    /**
+     * Sets the age of the user in years.
+     *
+     * @param age The age to set for the user.
+     */
+    public void setAge(Integer age) {
+        this.age = age;
+    }
+
+    /**
+     * Gets the height of the user in centimeters.
+     *
+     * @return The height of the user.
+     */
+    public Double getHeight() {
+        return height;
+    }
+
+    /**
+     * Sets the height of the user in centimeters.
+     *
+     * @param height The height to set for the user.
+     */
+    public void setHeight(Double height) {
+        this.height = height;
+    }
+
+    /**
+     * Gets the gender of the user.
+     *
+     * @return The gender of the user.
+     */
+    public Gender getGender() {
+        return gender;
+    }
+
+    /**
+     * Sets the gender of the user.
+     *
+     * @param gender The gender to set for the user.
+     */
+    public void setGender(Gender gender) {
+        this.gender = gender;
+    }
+
+    /**
+     * Gets the activity level of the user.
+     *
+     * @return The activity level of the user.
+     */
+    public ActivityLevel getActivityLevel() {
+        return activityLevel;
+    }
+
+    /**
+     * Sets the activity level of the user.
+     *
+     * @param activityLevel The activity level to set for the user.
+     */
+    public void setActivityLevel(ActivityLevel activityLevel) {
+        this.activityLevel = activityLevel;
+    }
+
+    /**
+     * Gets the goal of the user (weight loss, weight gain, or maintenance).
+     *
+     * @return The goal of the user.
+     */
+    public Goal getGoal() {
+        return goal;
+    }
+
+    /**
+     * Sets the goal of the user.
+     *
+     * @param goal The goal to set for the user.
+     */
+    public void setGoal(Goal goal) {
+        this.goal = goal;
     }
 
     /**
@@ -202,5 +341,4 @@ public class User {
     public void setRecommendedDailyIntake(RecommendedDailyIntake recommendedDailyIntake) {
         this.recommendedDailyIntake = recommendedDailyIntake;
     }
-
 }

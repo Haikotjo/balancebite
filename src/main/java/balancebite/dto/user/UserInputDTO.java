@@ -2,128 +2,159 @@ package balancebite.dto.user;
 
 import balancebite.dto.recommendeddailyintake.RecommendedDailyIntakeDTO;
 import balancebite.model.Role;
+import balancebite.model.userenums.ActivityLevel;
+import balancebite.model.userenums.Gender;
+import balancebite.model.userenums.Goal;
 
 /**
- * Data Transfer Object (DTO) voor het creëren of updaten van een gebruiker.
- * Deze DTO wordt gebruikt om gebruikersgegevens van de client te ontvangen bij het aanmaken of updaten van een gebruiker.
+ * Data Transfer Object (DTO) for creating or updating a user.
+ * This DTO is used to receive user data from the client during user creation or update.
  */
 public class UserInputDTO {
 
     /**
-     * De naam van de gebruiker.
+     * The name of the user.
      */
-    private String name;
+    private String userName;
 
     /**
-     * Het e-mailadres van de gebruiker.
+     * The email of the user.
      */
     private String email;
 
     /**
-     * Het wachtwoord van de gebruiker. Dit moet gehashed worden voordat het in de database wordt opgeslagen.
+     * The password of the user.
+     * This must be hashed before storing in the database.
      */
     private String password;
 
     /**
-     * De rol van de gebruiker (bijvoorbeeld USER of ADMIN).
+     * The weight of the user in kilograms.
+     */
+    private Double weight;
+
+    /**
+     * The age of the user in years.
+     */
+    private Integer age;
+
+    /**
+     * The height of the user in centimeters.
+     */
+    private Double height;
+
+    /**
+     * The gender of the user.
+     */
+    private Gender gender;
+
+    /**
+     * The activity level of the user.
+     */
+    private ActivityLevel activityLevel;
+
+    /**
+     * The goal of the user (weight loss, weight gain, or maintenance).
+     */
+    private Goal goal;
+
+    /**
+     * The role of the user (e.g., USER or ADMIN).
      */
     private Role role;
 
     /**
-     * De aanbevolen dagelijkse inname van de gebruiker.
-     * Dit vertegenwoordigt de gepersonaliseerde voedingsdoelen van de gebruiker,
-     * zoals macronutriënten en micronutriënten die de gebruiker dagelijks moet consumeren.
+     * The recommended daily intake of the user.
+     * This represents the user's personalized nutritional goals, such as macronutrients and micronutrients.
      */
     private RecommendedDailyIntakeDTO recommendedDailyIntake;
 
-    // Getters en setters
+    // Getters and setters
 
-    /**
-     * Haalt de naam van de gebruiker op.
-     *
-     * @return de naam van de gebruiker.
-     */
-    public String getName() {
-        return name;
+    public String getUserName() {
+        return userName;
     }
 
-    /**
-     * Stelt de naam van de gebruiker in.
-     *
-     * @param name de naam om in te stellen.
-     */
-    public void setName(String name) {
-        this.name = name;
+    public void setUserName(String userName) {
+        this.userName = userName;
     }
 
-    /**
-     * Haalt het e-mailadres van de gebruiker op.
-     *
-     * @return het e-mailadres van de gebruiker.
-     */
     public String getEmail() {
         return email;
     }
 
-    /**
-     * Stelt het e-mailadres van de gebruiker in.
-     *
-     * @param email het e-mailadres om in te stellen.
-     */
     public void setEmail(String email) {
         this.email = email;
     }
 
-    /**
-     * Haalt het wachtwoord van de gebruiker op.
-     *
-     * @return het wachtwoord van de gebruiker.
-     */
     public String getPassword() {
         return password;
     }
 
-    /**
-     * Stelt het wachtwoord van de gebruiker in.
-     *
-     * @param password het wachtwoord om in te stellen.
-     */
     public void setPassword(String password) {
         this.password = password;
     }
 
-    /**
-     * Haalt de rol van de gebruiker op.
-     *
-     * @return de rol van de gebruiker.
-     */
+    public Double getWeight() {
+        return weight;
+    }
+
+    public void setWeight(Double weight) {
+        this.weight = weight;
+    }
+
+    public Integer getAge() {
+        return age;
+    }
+
+    public void setAge(Integer age) {
+        this.age = age;
+    }
+
+    public Double getHeight() {
+        return height;
+    }
+
+    public void setHeight(Double height) {
+        this.height = height;
+    }
+
+    public Gender getGender() {
+        return gender;
+    }
+
+    public void setGender(Gender gender) {
+        this.gender = gender;
+    }
+
+    public ActivityLevel getActivityLevel() {
+        return activityLevel;
+    }
+
+    public void setActivityLevel(ActivityLevel activityLevel) {
+        this.activityLevel = activityLevel;
+    }
+
+    public Goal getGoal() {
+        return goal;
+    }
+
+    public void setGoal(Goal goal) {
+        this.goal = goal;
+    }
+
     public Role getRole() {
         return role;
     }
 
-    /**
-     * Stelt de rol van de gebruiker in.
-     *
-     * @param role de rol om in te stellen (bijvoorbeeld USER of ADMIN).
-     */
     public void setRole(Role role) {
         this.role = role;
     }
 
-    /**
-     * Haalt de aanbevolen dagelijkse inname van de gebruiker op.
-     *
-     * @return de aanbevolen dagelijkse inname van de gebruiker.
-     */
     public RecommendedDailyIntakeDTO getRecommendedDailyIntake() {
         return recommendedDailyIntake;
     }
 
-    /**
-     * Stelt de aanbevolen dagelijkse inname voor de gebruiker in.
-     *
-     * @param recommendedDailyIntake de aanbevolen dagelijkse inname om in te stellen.
-     */
     public void setRecommendedDailyIntake(RecommendedDailyIntakeDTO recommendedDailyIntake) {
         this.recommendedDailyIntake = recommendedDailyIntake;
     }

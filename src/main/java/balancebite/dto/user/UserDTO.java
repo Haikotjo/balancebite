@@ -3,6 +3,9 @@ package balancebite.dto.user;
 import balancebite.dto.meal.MealDTO;
 import balancebite.dto.recommendeddailyintake.RecommendedDailyIntakeDTO;
 import balancebite.model.Role;
+import balancebite.model.userenums.ActivityLevel;
+import balancebite.model.userenums.Gender;
+import balancebite.model.userenums.Goal;
 
 import java.util.List;
 
@@ -20,12 +23,42 @@ public class UserDTO {
     /**
      * The name of the user.
      */
-    private String name;
+    private String userName;
 
     /**
      * The email of the user.
      */
     private String email;
+
+    /**
+     * The weight of the user in kilograms.
+     */
+    private Double weight;
+
+    /**
+     * The age of the user in years.
+     */
+    private Integer age;
+
+    /**
+     * The height of the user in centimeters.
+     */
+    private Double height;
+
+    /**
+     * The gender of the user.
+     */
+    private Gender gender;
+
+    /**
+     * The activity level of the user.
+     */
+    private ActivityLevel activityLevel;
+
+    /**
+     * The goal of the user (weight loss, weight gain, or maintenance).
+     */
+    private Goal goal;
 
     /**
      * A list of meals associated with the user.
@@ -55,37 +88,34 @@ public class UserDTO {
     }
 
     /**
-     * Constructor for creating a UserDTO with meals and recommended daily intake.
+     * Constructor for creating a UserDTO with all fields.
      *
-     * @param id the ID of the user.
-     * @param name the name of the user.
-     * @param email the email of the user.
-     * @param meals the list of meals associated with the user.
-     * @param role the role of the user.
+     * @param id                     the ID of the user.
+     * @param userName                   the name of the user.
+     * @param email                  the email of the user.
+     * @param weight                 the weight of the user.
+     * @param age                    the age of the user.
+     * @param height                 the height of the user.
+     * @param gender                 the gender of the user.
+     * @param activityLevel          the activity level of the user.
+     * @param goal                   the goal of the user.
+     * @param meals                  the list of meals associated with the user.
+     * @param role                   the role of the user.
      * @param recommendedDailyIntake the recommended daily intake of the user.
      */
-    public UserDTO(Long id, String name, String email, List<MealDTO> meals, Role role, RecommendedDailyIntakeDTO recommendedDailyIntake) {
+    public UserDTO(Long id, String userName, String email, Double weight, Integer age, Double height, Gender gender,
+                   ActivityLevel activityLevel, Goal goal, List<MealDTO> meals, Role role,
+                   RecommendedDailyIntakeDTO recommendedDailyIntake) {
         this.id = id;
-        this.name = name;
+        this.userName = userName;
         this.email = email;
+        this.weight = weight;
+        this.age = age;
+        this.height = height;
+        this.gender = gender;
+        this.activityLevel = activityLevel;
+        this.goal = goal;
         this.meals = meals;
-        this.role = role;
-        this.recommendedDailyIntake = recommendedDailyIntake;
-    }
-
-    /**
-     * Constructor for creating a UserDTO without the meals.
-     *
-     * @param id the ID of the user.
-     * @param name the name of the user.
-     * @param email the email of the user.
-     * @param role the role of the user.
-     * @param recommendedDailyIntake the recommended daily intake of the user.
-     */
-    public UserDTO(Long id, String name, String email, Role role, RecommendedDailyIntakeDTO recommendedDailyIntake) {
-        this.id = id;
-        this.name = name;
-        this.email = email;
         this.role = role;
         this.recommendedDailyIntake = recommendedDailyIntake;
     }
@@ -96,122 +126,109 @@ public class UserDTO {
      * without requiring the full user details (such as role or recommended daily intake).
      *
      * @param id    The unique identifier of the user.
-     * @param name  The name of the user.
+     * @param userName  The name of the user.
      * @param email The email of the user.
      */
-    public UserDTO(Long id, String name, String email) {
+    public UserDTO(Long id, String userName, String email) {
         this.id = id;
-        this.name = name;
+        this.userName = userName;
         this.email = email;
     }
 
-
     // Getters and setters
 
-    /**
-     * Gets the unique identifier of the user.
-     *
-     * @return the ID of the user.
-     */
     public Long getId() {
         return id;
     }
 
-    /**
-     * Sets the unique identifier of the user.
-     *
-     * @param id the ID to set for the user.
-     */
     public void setId(Long id) {
         this.id = id;
     }
 
-    /**
-     * Gets the name of the user.
-     *
-     * @return the name of the user.
-     */
-    public String getName() {
-        return name;
+    public String getUserName() {
+        return userName;
     }
 
-    /**
-     * Sets the name of the user.
-     *
-     * @param name the name to set for the user.
-     */
-    public void setName(String name) {
-        this.name = name;
+    public void setUserName(String userName) {
+        this.userName = userName;
     }
 
-    /**
-     * Gets the email of the user.
-     *
-     * @return the email of the user.
-     */
     public String getEmail() {
         return email;
     }
 
-    /**
-     * Sets the email of the user.
-     *
-     * @param email the email to set for the user.
-     */
     public void setEmail(String email) {
         this.email = email;
     }
 
-    /**
-     * Gets the list of meals associated with the user.
-     *
-     * @return a list of meal DTOs.
-     */
+    public Double getWeight() {
+        return weight;
+    }
+
+    public void setWeight(Double weight) {
+        this.weight = weight;
+    }
+
+    public Integer getAge() {
+        return age;
+    }
+
+    public void setAge(Integer age) {
+        this.age = age;
+    }
+
+    public Double getHeight() {
+        return height;
+    }
+
+    public void setHeight(Double height) {
+        this.height = height;
+    }
+
+    public Gender getGender() {
+        return gender;
+    }
+
+    public void setGender(Gender gender) {
+        this.gender = gender;
+    }
+
+    public ActivityLevel getActivityLevel() {
+        return activityLevel;
+    }
+
+    public void setActivityLevel(ActivityLevel activityLevel) {
+        this.activityLevel = activityLevel;
+    }
+
+    public Goal getGoal() {
+        return goal;
+    }
+
+    public void setGoal(Goal goal) {
+        this.goal = goal;
+    }
+
     public List<MealDTO> getMeals() {
         return meals;
     }
 
-    /**
-     * Sets the list of meals associated with the user.
-     *
-     * @param meals the list of meals to set.
-     */
     public void setMeals(List<MealDTO> meals) {
         this.meals = meals;
     }
 
-    /**
-     * Gets the role of the user.
-     *
-     * @return the role of the user.
-     */
     public Role getRole() {
         return role;
     }
 
-    /**
-     * Sets the role of the user.
-     *
-     * @param role the role to set for the user.
-     */
     public void setRole(Role role) {
         this.role = role;
     }
 
-    /**
-     * Gets the recommended daily intake associated with the user.
-     *
-     * @return the recommended daily intake DTO.
-     */
     public RecommendedDailyIntakeDTO getRecommendedDailyIntake() {
         return recommendedDailyIntake;
     }
 
-    /**
-     * Sets the recommended daily intake associated with the user.
-     *
-     * @param recommendedDailyIntake the recommended daily intake DTO to set.
-     */
     public void setRecommendedDailyIntake(RecommendedDailyIntakeDTO recommendedDailyIntake) {
         this.recommendedDailyIntake = recommendedDailyIntake;
     }

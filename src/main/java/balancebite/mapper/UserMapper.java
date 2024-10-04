@@ -58,8 +58,14 @@ public class UserMapper {
         // Create and return the UserDTO with all relevant fields
         UserDTO userDTO = new UserDTO();
         userDTO.setId(user.getId());
-        userDTO.setName(user.getName());
+        userDTO.setUserName(user.getUserName());
         userDTO.setEmail(user.getEmail());
+        userDTO.setWeight(user.getWeight());  // Map the weight
+        userDTO.setAge(user.getAge());        // Map the age
+        userDTO.setHeight(user.getHeight());  // Map the height
+        userDTO.setGender(user.getGender());  // Map the gender
+        userDTO.setActivityLevel(user.getActivityLevel());  // Map the activity level
+        userDTO.setGoal(user.getGoal());  // Map the goal
         userDTO.setMeals(mealDTOs);
         userDTO.setRole(user.getRole());
         userDTO.setRecommendedDailyIntake(recommendedDailyIntakeDTO); // Map the recommended daily intake
@@ -81,9 +87,15 @@ public class UserMapper {
 
         // Create a new User entity without ID, as it's auto-generated
         User user = new User();
-        user.setName(userInputDTO.getName());
+        user.setUserName(userInputDTO.getUserName());
         user.setEmail(userInputDTO.getEmail());
         user.setPassword(userInputDTO.getPassword());  // Make sure to hash the password before saving in the service layer
+        user.setWeight(userInputDTO.getWeight());  // Set the weight
+        user.setAge(userInputDTO.getAge());        // Set the age
+        user.setHeight(userInputDTO.getHeight());  // Set the height
+        user.setGender(userInputDTO.getGender());  // Set the gender
+        user.setActivityLevel(userInputDTO.getActivityLevel());  // Set the activity level
+        user.setGoal(userInputDTO.getGoal());  // Set the goal
         user.setRole(userInputDTO.getRole());
 
         // Convert the RecommendedDailyIntakeDTO to the entity, with null-check

@@ -1,9 +1,20 @@
 -- Voeg een nieuwe user toe zonder handmatig een ID in te stellen
-INSERT INTO users (name, email, password) VALUES ('John Doe', 'johndoe@example.com', 'password123');
+INSERT INTO users (user_name, email, password) VALUES ('John Doe', 'johndoe@example.com', 'password123');
 
 -- Voeg een tweede nieuwe user toe
-INSERT INTO users (name, email, password) VALUES ('Jane Smith', 'janesmith@example.com', 'password456');
+INSERT INTO users (user_name, email, password, weight, age, height, gender, activity_level, goal, role)
+VALUES
+    ('Jane Smith', 'janesmith@example.com', 'password456', 65.0, 25, 165.0, 'FEMALE', 'MODERATE', 'WEIGHT_LOSS', 'USER');
 
+-- Voeg een derde nieuwe user toe
+INSERT INTO users (user_name, email, password, weight, age, height, gender, activity_level, goal, role)
+VALUES
+    ('Tom Brown', 'tombrown@example.com', 'password789', 95.0, 35, 185.0, 'MALE', 'SEDENTARY', 'WEIGHT_GAIN', 'USER');
+
+-- Voeg een vierde nieuwe user toe
+INSERT INTO users (user_name, email, password, weight, age, height, gender, activity_level, goal, role)
+VALUES
+    ('Emily White', 'emilywhite@example.com', 'password101', 55.0, 28, 170.0, 'FEMALE', 'LIGHT', 'MAINTENANCE', 'ADMIN');
 -- Voeg de maaltijden toe voor John Doe
 -- Ontbijt (Breakfast)
 INSERT INTO meals (name) VALUES ('Breakfast');
