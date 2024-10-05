@@ -39,7 +39,7 @@ public enum Goal {
      * Users with this goal aim to maintain their muscle mass through adequate protein intake
      * while keeping calorie consumption balanced for weight maintenance.
      */
-    MAINTENANCE_WITH_MUSCLE_MAINTENANCE,
+    MAINTENANCE_WITH_MUSCLE_FOCUS,
 
     /**
      * Represents a goal to gain weight.

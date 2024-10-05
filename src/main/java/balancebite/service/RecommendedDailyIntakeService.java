@@ -115,7 +115,7 @@ public class RecommendedDailyIntakeService {
                 goalAdjustmentFactor = 1.0;
                 totalEnergyKcal *= goalAdjustmentFactor;
                 break;
-            case MAINTENANCE_WITH_MUSCLE_MAINTENANCE:
+            case MAINTENANCE_WITH_MUSCLE_FOCUS:
                 // Maintenance with muscle focus may slightly increase caloric needs (5% increase)
                 goalAdjustmentFactor = 1.05;
                 totalEnergyKcal *= goalAdjustmentFactor;
