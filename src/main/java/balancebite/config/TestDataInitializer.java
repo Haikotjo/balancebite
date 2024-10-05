@@ -39,7 +39,7 @@ public class TestDataInitializer {
                 updateUserDetails(5L, 110.0, 41, 185.0, "MALE", "ACTIVE", "MAINTENANCE_WITH_MUSCLE_FOCUS");
 
                 // Zoek naar de user met ID 6 en voeg gewicht, leeftijd, enz. toe
-                updateUserDetails(6L, 60.0, 76, 164.0, "FEMALE", "MODERATE", "WEIGHT_LOSS_WITH_MUSCLE_MAINTENANCE");
+                updateUserDetails(6L, 80.0, 74, 164.0, "FEMALE", "MODERATE", "WEIGHT_LOSS_WITH_MUSCLE_MAINTENANCE");
 
                 System.out.println("Users updated with additional details.");
 

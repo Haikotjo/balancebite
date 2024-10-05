@@ -7,6 +7,8 @@ import balancebite.model.User;
 import balancebite.model.userenums.Gender;
 import balancebite.repository.RecommendedDailyIntakeRepository;
 import balancebite.repository.UserRepository;
+import balancebite.utils.DailyIntakeCalculator;
+import balancebite.utils.ProteinIntakeCalculator;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -31,18 +33,20 @@ public class RecommendedDailyIntakeService {
         this.userRepository = userRepository;
     }
 
+
     /**
      * Creates a new recommended daily intake for a specific user.
      *
-     * This method calculates the recommended daily intake for a user based on their personal details such as weight, height,
-     * age, gender, activity level, and their goal (weight loss, maintenance, or weight gain). The calculation for total daily
-     * energy expenditure (TDEE) uses the Harris-Benedict formula to estimate the user's basal metabolic rate (BMR), adjusted
-     * by their activity level. Based on the user's goal, the final calorie recommendation is adjusted accordingly.
+     * This method calculates the recommended daily intake based on the user's personal details such as weight,
+     * height, age, gender, activity level, and goal (e.g., weight loss, maintenance, or weight gain). It uses the
+     * Harris-Benedict formula to estimate the user's basal metabolic rate (BMR), adjusts by their activity level,
+     * and further modifies based on the user's specific goal. The method also calculates the recommended daily
+     * protein intake based on the user's weight, activity level, age, and goal.
      *
      * @param userId The ID of the user to assign the recommended daily intake to.
-     * @return The created RecommendedDailyIntakeDTO with the calculated energy intake.
-     * @throws IllegalArgumentException If the user does not have all the necessary information (weight, height, age, gender, activity level)
-     *                                  or if the user ID is not found.
+     * @return The created RecommendedDailyIntakeDTO with the calculated energy and protein intake.
+     * @throws IllegalArgumentException If the user does not have all the necessary information (weight, height, age,
+     *                                  gender, activity level, goal) or if the user ID is not found.
      */
     public RecommendedDailyIntakeDTO createRecommendedDailyIntakeForUser(Long userId) {
         // Fetch the user from the repository
@@ -54,95 +58,29 @@ public class RecommendedDailyIntakeService {
 
         User user = userOptional.get();
 
-        // Check if user has all necessary data (weight, height, age, gender, activity level)
+        // Check if the user has all necessary data (weight, height, age, gender, activity level, goal)
         if (user.getWeight() == null || user.getHeight() == null || user.getAge() == null ||
-                user.getGender() == null || user.getActivityLevel() == null) {
-            throw new IllegalArgumentException("User must have weight, height, age, gender, and activity level filled in to calculate recommended intake.");
+                user.getGender() == null || user.getActivityLevel() == null || user.getGoal() == null) {
+            throw new IllegalArgumentException("User must have weight, height, age, gender, activity level, and goal filled in to calculate recommended intake.");
         }
 
-        // Calculate BMR based on gender
-        double bmr;
-        if (user.getGender() == Gender.MALE) {
-            // Harris-Benedict formula for men
-            bmr = 88.362 + (13.397 * user.getWeight()) + (4.799 * user.getHeight()) - (5.677 * user.getAge());
-        } else if (user.getGender() == Gender.FEMALE) {
-            // Harris-Benedict formula for women
-            bmr = 447.593 + (9.247 * user.getWeight()) + (3.098 * user.getHeight()) - (4.330 * user.getAge());
-        } else {
-            throw new IllegalArgumentException("Unsupported gender");
-        }
+        // Calculate Total Daily Energy Expenditure (TDEE) and adjust it based on the user's goal
+        double tdee = DailyIntakeCalculator.calculateTDEE(user);
+        double totalEnergyKcal = DailyIntakeCalculator.adjustCaloriesForGoal(tdee, user.getGoal());
 
-        // Adjust BMR based on activity level
-        double activityFactor;
-        switch (user.getActivityLevel()) {
-            case SEDENTARY:
-                activityFactor = 1.2;  // Little or no exercise
-                break;
-            case LIGHT:
-                activityFactor = 1.375;  // Light exercise/sports 1-3 days per week
-                break;
-            case MODERATE:
-                activityFactor = 1.55;  // Moderate exercise/sports 3-5 days per week
-                break;
-            case ACTIVE:
-                activityFactor = 1.725;  // Hard exercise/sports 6-7 days per week
-                break;
-            case VERY_ACTIVE:
-                activityFactor = 1.9;  // Very hard exercise or physical job
-                break;
-            default:
-                throw new IllegalArgumentException("Unsupported activity level");
-        }
+        // Calculate protein intake based on user's weight, activity level, age, and goal
+        double proteinIntake = ProteinIntakeCalculator.calculateProteinIntake(user);
 
-        // Calculate total daily energy expenditure (TDEE)
-        double totalEnergyKcal = bmr * activityFactor;
-
-// Adjust total energy based on the user's goal
-        double goalAdjustmentFactor;
-        switch (user.getGoal()) {
-            case WEIGHT_LOSS:
-                // Decrease calories by 15% for weight loss
-                goalAdjustmentFactor = 0.85;
-                totalEnergyKcal *= goalAdjustmentFactor;
-                break;
-            case WEIGHT_LOSS_WITH_MUSCLE_MAINTENANCE:
-                // Moderate calorie deficit for weight loss with muscle preservation (10% reduction)
-                goalAdjustmentFactor = 0.90;
-                totalEnergyKcal *= goalAdjustmentFactor;
-                break;
-            case MAINTENANCE:
-                // No adjustment for maintenance
-                goalAdjustmentFactor = 1.0;
-                totalEnergyKcal *= goalAdjustmentFactor;
-                break;
-            case MAINTENANCE_WITH_MUSCLE_FOCUS:
-                // Maintenance with muscle focus may slightly increase caloric needs (5% increase)
-                goalAdjustmentFactor = 1.05;
-                totalEnergyKcal *= goalAdjustmentFactor;
-                break;
-            case WEIGHT_GAIN:
-                // Increase calories by 15% for weight gain
-                goalAdjustmentFactor = 1.15;
-                totalEnergyKcal *= goalAdjustmentFactor;
-                break;
-            case WEIGHT_GAIN_WITH_MUSCLE_FOCUS:
-                // Higher calorie surplus for muscle gain (20% increase)
-                goalAdjustmentFactor = 1.20;
-                totalEnergyKcal *= goalAdjustmentFactor;
-                break;
-            default:
-                throw new IllegalArgumentException("Unsupported goal");
-        }
-
-
-        // Create a new RecommendedDailyIntake and set the calculated energy kcal
+        // Create a new RecommendedDailyIntake object
         RecommendedDailyIntake newIntake = new RecommendedDailyIntake();
 
         // Assign the calculated kcal value to the "Energy kcal" nutrient
-        final double finalTotalEnergyKcal = totalEnergyKcal;  // Ensure it's effectively final for lambda
+        final double finalTotalEnergyKcal = totalEnergyKcal;  // Ensure it is effectively final for lambda use
         newIntake.getNutrients().forEach(nutrient -> {
             if (nutrient.getName().equals("Energy kcal")) {
                 nutrient.setValue(finalTotalEnergyKcal);
+            } else if (nutrient.getName().equals("Protein")) {
+                nutrient.setValue(proteinIntake);
             }
         });
 
@@ -155,6 +93,7 @@ public class RecommendedDailyIntakeService {
         // Convert the RecommendedDailyIntake to a DTO and return it
         return intakeMapper.toDTO(newIntake);
     }
+
 
     /**
      * Deletes the RecommendedDailyIntake for a specific user.
