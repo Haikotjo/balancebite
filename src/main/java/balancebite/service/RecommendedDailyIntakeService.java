@@ -4,16 +4,14 @@ import balancebite.dto.recommendeddailyintake.RecommendedDailyIntakeDTO;
 import balancebite.mapper.RecommendedDailyIntakeMapper;
 import balancebite.model.RecommendedDailyIntake;
 import balancebite.model.User;
-import balancebite.model.userenums.Gender;
 import balancebite.repository.RecommendedDailyIntakeRepository;
 import balancebite.repository.UserRepository;
-import balancebite.utils.DailyIntakeCalculator;
+import balancebite.utils.FatIntakeCalculator;
+import balancebite.utils.KcalIntakeCalculator;
 import balancebite.utils.ProteinIntakeCalculator;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 /**
  * Service class responsible for managing Recommended Daily Intake logic.
@@ -34,6 +32,7 @@ public class RecommendedDailyIntakeService {
     }
 
 
+    // Calculate Total Daily Energy Expenditure (TDEE) and adjust it based on the user's goal
     /**
      * Creates a new recommended daily intake for a specific user.
      *
@@ -41,10 +40,12 @@ public class RecommendedDailyIntakeService {
      * height, age, gender, activity level, and goal (e.g., weight loss, maintenance, or weight gain). It uses the
      * Harris-Benedict formula to estimate the user's basal metabolic rate (BMR), adjusts by their activity level,
      * and further modifies based on the user's specific goal. The method also calculates the recommended daily
-     * protein intake based on the user's total energy intake, weight, activity level, age, and goal.
+     * protein intake based on the user's total energy intake, weight, activity level, age, and goal. Additionally,
+     * it calculates the recommended daily fat intake based on a percentage of the adjusted energy intake, which
+     * depends on the user's goal.
      *
      * @param userId The ID of the user to assign the recommended daily intake to.
-     * @return The created RecommendedDailyIntakeDTO with the calculated energy and protein intake.
+     * @return The created RecommendedDailyIntakeDTO with the calculated energy, protein, and fat intake.
      * @throws IllegalArgumentException If the user does not have all the necessary information (weight, height, age,
      *                                  gender, activity level, goal) or if the user ID is not found.
      */
@@ -65,23 +66,29 @@ public class RecommendedDailyIntakeService {
         }
 
         // Calculate Total Daily Energy Expenditure (TDEE) and adjust it based on the user's goal
-        double tdee = DailyIntakeCalculator.calculateTDEE(user);
-        double totalEnergyKcal = DailyIntakeCalculator.adjustCaloriesForGoal(tdee, user.getGoal());
+        double tdee = KcalIntakeCalculator.calculateTDEE(user);
+        double totalEnergyKcal = KcalIntakeCalculator.adjustCaloriesForGoal(tdee, user.getGoal());
 
         // Calculate protein intake based on the user's total energy intake, weight, activity level, age, and goal
         double proteinIntake = ProteinIntakeCalculator.calculateProteinIntake(user);
 
+        // Calculate fat intake based on the user's goal and total energy intake
+        double fatIntake = FatIntakeCalculator.calculateFatIntake(user, totalEnergyKcal);
+
         // Create a new RecommendedDailyIntake object
         RecommendedDailyIntake newIntake = new RecommendedDailyIntake();
 
-        // Assign the calculated kcal and protein values to their respective nutrients
+        // Assign the calculated kcal, protein, and fat values to their respective nutrients
         final double finalTotalEnergyKcal = totalEnergyKcal;  // Ensure it is effectively final for lambda use
         final double finalProteinIntake = proteinIntake; // Ensure it is effectively final for lambda use
+        final double finalFatIntake = fatIntake; // Ensure it is effectively final for lambda use
         newIntake.getNutrients().forEach(nutrient -> {
             if (nutrient.getName().equals("Energy kcal")) {
                 nutrient.setValue(finalTotalEnergyKcal);
             } else if (nutrient.getName().equals("Protein")) {
                 nutrient.setValue(finalProteinIntake);
+            } else if (nutrient.getName().equals("Total lipid (fat)")) {
+                nutrient.setValue(finalFatIntake);
             }
         });
 
@@ -94,9 +101,6 @@ public class RecommendedDailyIntakeService {
         // Convert the RecommendedDailyIntake to a DTO and return it
         return intakeMapper.toDTO(newIntake);
     }
-
-
-
     /**
      * Deletes the RecommendedDailyIntake for a specific user.
      *

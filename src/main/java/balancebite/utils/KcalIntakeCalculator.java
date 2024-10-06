@@ -8,7 +8,7 @@ import balancebite.model.userenums.Gender;
 /**
  * Utility class for calculating daily intake values such as BMR and TDEE.
  */
-public class DailyIntakeCalculator {
+public class KcalIntakeCalculator {
 
     /**
      * Calculates the Basal Metabolic Rate (BMR) for the user.
