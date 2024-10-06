@@ -41,7 +41,7 @@ public class RecommendedDailyIntakeService {
      * height, age, gender, activity level, and goal (e.g., weight loss, maintenance, or weight gain). It uses the
      * Harris-Benedict formula to estimate the user's basal metabolic rate (BMR), adjusts by their activity level,
      * and further modifies based on the user's specific goal. The method also calculates the recommended daily
-     * protein intake based on the user's weight, activity level, age, and goal.
+     * protein intake based on the user's total energy intake, weight, activity level, age, and goal.
      *
      * @param userId The ID of the user to assign the recommended daily intake to.
      * @return The created RecommendedDailyIntakeDTO with the calculated energy and protein intake.
@@ -68,19 +68,20 @@ public class RecommendedDailyIntakeService {
         double tdee = DailyIntakeCalculator.calculateTDEE(user);
         double totalEnergyKcal = DailyIntakeCalculator.adjustCaloriesForGoal(tdee, user.getGoal());
 
-        // Calculate protein intake based on user's weight, activity level, age, and goal
+        // Calculate protein intake based on the user's total energy intake, weight, activity level, age, and goal
         double proteinIntake = ProteinIntakeCalculator.calculateProteinIntake(user);
 
         // Create a new RecommendedDailyIntake object
         RecommendedDailyIntake newIntake = new RecommendedDailyIntake();
 
-        // Assign the calculated kcal value to the "Energy kcal" nutrient
+        // Assign the calculated kcal and protein values to their respective nutrients
         final double finalTotalEnergyKcal = totalEnergyKcal;  // Ensure it is effectively final for lambda use
+        final double finalProteinIntake = proteinIntake; // Ensure it is effectively final for lambda use
         newIntake.getNutrients().forEach(nutrient -> {
             if (nutrient.getName().equals("Energy kcal")) {
                 nutrient.setValue(finalTotalEnergyKcal);
             } else if (nutrient.getName().equals("Protein")) {
-                nutrient.setValue(proteinIntake);
+                nutrient.setValue(finalProteinIntake);
             }
         });
 
@@ -93,6 +94,7 @@ public class RecommendedDailyIntakeService {
         // Convert the RecommendedDailyIntake to a DTO and return it
         return intakeMapper.toDTO(newIntake);
     }
+
 
 
     /**
