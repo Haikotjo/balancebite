@@ -6,10 +6,7 @@ import balancebite.model.RecommendedDailyIntake;
 import balancebite.model.User;
 import balancebite.repository.RecommendedDailyIntakeRepository;
 import balancebite.repository.UserRepository;
-import balancebite.utils.FatIntakeCalculator;
-import balancebite.utils.FatTypeDistributionCalculator;
-import balancebite.utils.KcalIntakeCalculator;
-import balancebite.utils.ProteinIntakeCalculator;
+import balancebite.utils.*;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -31,7 +28,6 @@ public class RecommendedDailyIntakeService {
         this.intakeRepository = intakeRepository;
         this.userRepository = userRepository;
     }
-
 
     /**
      * Creates a new recommended daily intake for a specific user.
@@ -78,6 +74,9 @@ public class RecommendedDailyIntakeService {
         // Calculate the distribution of saturated and unsaturated fats
         FatTypeDistributionCalculator.FatTypeDistribution fatDistribution = FatTypeDistributionCalculator.calculateFatDistribution(fatIntake);
 
+        // Calculate carbohydrate intake based on the remaining energy after protein and fat
+        double carbohydrateIntake = CarbohydrateIntakeCalculator.calculateCarbohydrateIntake(totalEnergyKcal, proteinIntake, fatIntake);
+
         // Create a new RecommendedDailyIntake object
         RecommendedDailyIntake newIntake = new RecommendedDailyIntake();
 
@@ -87,6 +86,7 @@ public class RecommendedDailyIntakeService {
         final double finalFatIntake = fatIntake; // Ensure it is effectively final for lambda use
         final double finalSaturatedFat = fatDistribution.getSaturatedFat(); // Ensure it is effectively final for lambda use
         final double finalUnsaturatedFat = fatDistribution.getUnsaturatedFat(); // Ensure it is effectively final for lambda use
+        final double finalCarbohydrateIntake = carbohydrateIntake; // Ensure it is effectively final for lambda use
 
         newIntake.getNutrients().forEach(nutrient -> {
             if (nutrient.getName().equals("Energy kcal")) {
@@ -99,6 +99,8 @@ public class RecommendedDailyIntakeService {
                 nutrient.setValue(finalSaturatedFat);
             } else if (nutrient.getName().equals("Fatty acids, total polyunsaturated")) {
                 nutrient.setValue(finalUnsaturatedFat);
+            } else if (nutrient.getName().equals("Carbohydrate, by difference")) {
+                nutrient.setValue(finalCarbohydrateIntake);
             }
         });
 
