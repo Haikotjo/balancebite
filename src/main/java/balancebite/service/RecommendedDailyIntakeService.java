@@ -7,6 +7,7 @@ import balancebite.model.User;
 import balancebite.repository.RecommendedDailyIntakeRepository;
 import balancebite.repository.UserRepository;
 import balancebite.utils.FatIntakeCalculator;
+import balancebite.utils.FatTypeDistributionCalculator;
 import balancebite.utils.KcalIntakeCalculator;
 import balancebite.utils.ProteinIntakeCalculator;
 import org.springframework.stereotype.Service;
@@ -32,7 +33,6 @@ public class RecommendedDailyIntakeService {
     }
 
 
-    // Calculate Total Daily Energy Expenditure (TDEE) and adjust it based on the user's goal
     /**
      * Creates a new recommended daily intake for a specific user.
      *
@@ -42,10 +42,10 @@ public class RecommendedDailyIntakeService {
      * and further modifies based on the user's specific goal. The method also calculates the recommended daily
      * protein intake based on the user's total energy intake, weight, activity level, age, and goal. Additionally,
      * it calculates the recommended daily fat intake based on a percentage of the adjusted energy intake, which
-     * depends on the user's goal.
+     * depends on the user's goal, and divides the fat into saturated and unsaturated fats.
      *
      * @param userId The ID of the user to assign the recommended daily intake to.
-     * @return The created RecommendedDailyIntakeDTO with the calculated energy, protein, and fat intake.
+     * @return The created RecommendedDailyIntakeDTO with the calculated energy, protein, fat, saturated fat, and unsaturated fat intake.
      * @throws IllegalArgumentException If the user does not have all the necessary information (weight, height, age,
      *                                  gender, activity level, goal) or if the user ID is not found.
      */
@@ -75,13 +75,19 @@ public class RecommendedDailyIntakeService {
         // Calculate fat intake based on the user's goal and total energy intake
         double fatIntake = FatIntakeCalculator.calculateFatIntake(user, totalEnergyKcal);
 
+        // Calculate the distribution of saturated and unsaturated fats
+        FatTypeDistributionCalculator.FatTypeDistribution fatDistribution = FatTypeDistributionCalculator.calculateFatDistribution(fatIntake);
+
         // Create a new RecommendedDailyIntake object
         RecommendedDailyIntake newIntake = new RecommendedDailyIntake();
 
-        // Assign the calculated kcal, protein, and fat values to their respective nutrients
+        // Assign the calculated kcal, protein, fat, saturated fat, and unsaturated fat values to their respective nutrients
         final double finalTotalEnergyKcal = totalEnergyKcal;  // Ensure it is effectively final for lambda use
         final double finalProteinIntake = proteinIntake; // Ensure it is effectively final for lambda use
         final double finalFatIntake = fatIntake; // Ensure it is effectively final for lambda use
+        final double finalSaturatedFat = fatDistribution.getSaturatedFat(); // Ensure it is effectively final for lambda use
+        final double finalUnsaturatedFat = fatDistribution.getUnsaturatedFat(); // Ensure it is effectively final for lambda use
+
         newIntake.getNutrients().forEach(nutrient -> {
             if (nutrient.getName().equals("Energy kcal")) {
                 nutrient.setValue(finalTotalEnergyKcal);
@@ -89,6 +95,10 @@ public class RecommendedDailyIntakeService {
                 nutrient.setValue(finalProteinIntake);
             } else if (nutrient.getName().equals("Total lipid (fat)")) {
                 nutrient.setValue(finalFatIntake);
+            } else if (nutrient.getName().equals("Fatty acids, total saturated")) {
+                nutrient.setValue(finalSaturatedFat);
+            } else if (nutrient.getName().equals("Fatty acids, total polyunsaturated")) {
+                nutrient.setValue(finalUnsaturatedFat);
             }
         });
 
@@ -101,6 +111,7 @@ public class RecommendedDailyIntakeService {
         // Convert the RecommendedDailyIntake to a DTO and return it
         return intakeMapper.toDTO(newIntake);
     }
+
     /**
      * Deletes the RecommendedDailyIntake for a specific user.
      *
