@@ -2,6 +2,8 @@ package balancebite.dto.recommendeddailyintake;
 
 import balancebite.model.Nutrient;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Set;
 
 /**
@@ -17,6 +19,16 @@ public class RecommendedDailyIntakeDTO {
     private Set<Nutrient> nutrients;
 
     /**
+     * The timestamp when the recommended daily intake was created.
+     */
+    private LocalDateTime createdAt;
+
+    /**
+     * The formatted timestamp when the recommended daily intake was created.
+     */
+    private String createdAtFormatted;
+
+    /**
      * Default no-argument constructor for serialization/deserialization purposes.
      * This constructor is used by frameworks like Jackson to map incoming JSON data.
      */
@@ -25,12 +37,15 @@ public class RecommendedDailyIntakeDTO {
     }
 
     /**
-     * Full constructor to create a RecommendedDailyIntakeDTO with a specified set of nutrients.
+     * Full constructor to create a RecommendedDailyIntakeDTO with a specified set of nutrients and creation timestamp.
      *
      * @param nutrients The set of NutrientDTO objects representing nutrient names and their recommended daily intake values.
+     * @param createdAt The timestamp when the recommended daily intake was created.
      */
-    public RecommendedDailyIntakeDTO(Set<Nutrient> nutrients) {
+    public RecommendedDailyIntakeDTO(Set<Nutrient> nutrients, LocalDateTime createdAt) {
         this.nutrients = nutrients;
+        this.createdAt = createdAt;
+        this.createdAtFormatted = createdAt != null ? createdAt.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) : null;
     }
 
     /**
@@ -50,4 +65,33 @@ public class RecommendedDailyIntakeDTO {
     public void setNutrients(Set<Nutrient> nutrients) {
         this.nutrients = nutrients;
     }
+
+    /**
+     * Retrieves the timestamp when the recommended daily intake was created.
+     *
+     * @return The creation timestamp.
+     */
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    /**
+     * Sets the timestamp when the recommended daily intake was created.
+     *
+     * @param createdAt The timestamp to set.
+     */
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+        this.createdAtFormatted = createdAt != null ? createdAt.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) : null;
+    }
+
+    /**
+     * Retrieves the formatted timestamp when the recommended daily intake was created.
+     *
+     * @return The formatted creation timestamp.
+     */
+    public String getCreatedAtFormatted() {
+        return createdAtFormatted;
+    }
 }
+

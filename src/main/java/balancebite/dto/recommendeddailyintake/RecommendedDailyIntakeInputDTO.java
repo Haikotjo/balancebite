@@ -2,6 +2,7 @@ package balancebite.dto.recommendeddailyintake;
 
 import balancebite.model.Nutrient;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -30,6 +31,11 @@ public class RecommendedDailyIntakeInputDTO {
     private List<Nutrient> customNutrients;
 
     /**
+     * The timestamp when the recommended daily intake was created.
+     */
+    private LocalDateTime createdAt;
+
+    /**
      * Default no-argument constructor for serialization/deserialization purposes.
      * Used by frameworks like Jackson to map incoming JSON data.
      */
@@ -38,16 +44,18 @@ public class RecommendedDailyIntakeInputDTO {
     }
 
     /**
-     * Full constructor to create a RecommendedDailyIntakeInputDTO with weight, gender, and custom nutrients.
+     * Full constructor to create a RecommendedDailyIntakeInputDTO with weight, gender, custom nutrients, and creation timestamp.
      *
      * @param weight          The weight of the user in kilograms.
      * @param gender          The gender of the user (e.g., "male", "female").
      * @param customNutrients A list of custom nutrients specified by the user.
+     * @param createdAt       The timestamp when the recommended daily intake was created.
      */
-    public RecommendedDailyIntakeInputDTO(Double weight, String gender, List<Nutrient> customNutrients) {
+    public RecommendedDailyIntakeInputDTO(Double weight, String gender, List<Nutrient> customNutrients, LocalDateTime createdAt) {
         this.weight = weight;
         this.gender = gender;
         this.customNutrients = customNutrients;
+        this.createdAt = createdAt;
     }
 
     /**
@@ -102,5 +110,23 @@ public class RecommendedDailyIntakeInputDTO {
      */
     public void setCustomNutrients(List<Nutrient> customNutrients) {
         this.customNutrients = customNutrients;
+    }
+
+    /**
+     * Gets the timestamp when the recommended daily intake was created.
+     *
+     * @return The creation timestamp.
+     */
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    /**
+     * Sets the timestamp when the recommended daily intake was created.
+     *
+     * @param createdAt The timestamp to set.
+     */
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
     }
 }
