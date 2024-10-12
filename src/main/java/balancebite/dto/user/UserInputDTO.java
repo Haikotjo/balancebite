@@ -63,12 +63,6 @@ public class UserInputDTO {
      */
     private Role role;
 
-    /**
-     * The recommended daily intake of the user.
-     * This represents the user's personalized nutritional goals, such as macronutrients and micronutrients.
-     */
-    private RecommendedDailyIntakeDTO recommendedDailyIntake;
-
     // Getters and setters
 
     public String getUserName() {
@@ -149,13 +143,5 @@ public class UserInputDTO {
 
     public void setRole(Role role) {
         this.role = role;
-    }
-
-    public RecommendedDailyIntakeDTO getRecommendedDailyIntake() {
-        return recommendedDailyIntake;
-    }
-
-    public void setRecommendedDailyIntake(RecommendedDailyIntakeDTO recommendedDailyIntake) {
-        this.recommendedDailyIntake = recommendedDailyIntake;
     }
 }

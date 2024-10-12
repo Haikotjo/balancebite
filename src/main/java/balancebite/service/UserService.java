@@ -16,6 +16,7 @@ import jakarta.persistence.PersistenceContext;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -219,12 +220,10 @@ public class UserService {
         // Retrieve the nutrient values of the meal
         Map<String, NutrientInfoDTO> mealNutrients = mealService.calculateNutrients(mealId);
 
-        // Get the user's existing recommended daily intake
-        RecommendedDailyIntake recommendedDailyIntake = user.getRecommendedDailyIntake();
-
-        if (recommendedDailyIntake == null) {
-            throw new RuntimeException("Recommended daily intake not found for user with ID " + userId);
-        }
+        // Get the user's existing recommended daily intake for today or the latest one
+        RecommendedDailyIntake recommendedDailyIntake = user.getRecommendedDailyIntakes().stream()
+                .max(Comparator.comparing(RecommendedDailyIntake::getCreatedAt))
+                .orElseThrow(() -> new RuntimeException("Recommended daily intake not found for user with ID " + userId));
 
         // Retrieve the recommended daily intake values and normalize the keys
         Map<String, Double> recommendedIntakes = recommendedDailyIntake.getNutrients().stream()

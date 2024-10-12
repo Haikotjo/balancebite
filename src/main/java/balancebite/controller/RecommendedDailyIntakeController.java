@@ -31,7 +31,7 @@ public class RecommendedDailyIntakeController {
             @PathVariable Long userId) {
 
         // Create the recommended daily intake without requiring a request body
-        RecommendedDailyIntakeDTO createdIntake = recommendedDailyIntakeService.createRecommendedDailyIntakeForUser(userId);
+        RecommendedDailyIntakeDTO createdIntake = recommendedDailyIntakeService.getOrCreateDailyIntakeForUser(userId);
         return ResponseEntity.ok(createdIntake);
     }
 
@@ -45,19 +45,5 @@ public class RecommendedDailyIntakeController {
     public ResponseEntity<Void> deleteRecommendedDailyIntakeForUser(@PathVariable Long userId) {
         recommendedDailyIntakeService.deleteRecommendedDailyIntakeForUser(userId);
         return ResponseEntity.noContent().build();
-    }
-
-    /**
-     * GET endpoint to retrieve the recommended daily intake for a specific user.
-     *
-     * @param userId The ID of the user whose recommended daily intake will be retrieved.
-     * @return ResponseEntity containing the RecommendedDailyIntakeDTO.
-     */
-    @GetMapping("/user/{userId}")
-    public ResponseEntity<RecommendedDailyIntakeDTO> getRecommendedDailyIntakeForUser(
-            @PathVariable Long userId) {
-
-        RecommendedDailyIntakeDTO intakeDTO = recommendedDailyIntakeService.getRecommendedDailyIntakeForUser(userId);
-        return ResponseEntity.ok(intakeDTO);
     }
 }

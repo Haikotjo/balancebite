@@ -44,12 +44,12 @@ public class TestDataInitializer {
                 System.out.println("Users updated with additional details.");
 
                 // Voor de users met ID 1 t/m 4 een RecommendedDailyIntake aanmaken
-                recommendedDailyIntakeService.createRecommendedDailyIntakeForUser(1L);
-                recommendedDailyIntakeService.createRecommendedDailyIntakeForUser(2L);
-                recommendedDailyIntakeService.createRecommendedDailyIntakeForUser(3L);
-                recommendedDailyIntakeService.createRecommendedDailyIntakeForUser(4L);
-                recommendedDailyIntakeService.createRecommendedDailyIntakeForUser(5L);
-                recommendedDailyIntakeService.createRecommendedDailyIntakeForUser(6L);
+                recommendedDailyIntakeService.getOrCreateDailyIntakeForUser(1L);
+                recommendedDailyIntakeService.getOrCreateDailyIntakeForUser(2L);
+                recommendedDailyIntakeService.getOrCreateDailyIntakeForUser(3L);
+                recommendedDailyIntakeService.getOrCreateDailyIntakeForUser(4L);
+                recommendedDailyIntakeService.getOrCreateDailyIntakeForUser(5L);
+                recommendedDailyIntakeService.getOrCreateDailyIntakeForUser(6L);
 
                 System.out.println("Recommended daily intake created for users with IDs 1 to 6.");
 

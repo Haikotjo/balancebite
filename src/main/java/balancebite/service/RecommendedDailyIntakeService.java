@@ -9,6 +9,7 @@ import balancebite.repository.UserRepository;
 import balancebite.utils.*;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.Optional;
 
 /**
@@ -30,7 +31,10 @@ public class RecommendedDailyIntakeService {
     }
 
     /**
-     * Creates a new recommended daily intake for a specific user.
+     * Gets or creates a recommended daily intake for a specific user for today.
+     *
+     * This method checks if a recommended daily intake already exists for today. If it exists, it returns that intake.
+     * If it doesn't exist, a new recommended daily intake is created for the user.
      *
      * This method calculates the recommended daily intake based on the user's personal details such as weight,
      * height, age, gender, activity level, and goal (e.g., weight loss, maintenance, or weight gain). It uses the
@@ -41,11 +45,11 @@ public class RecommendedDailyIntakeService {
      * depends on the user's goal, and divides the fat into saturated and unsaturated fats.
      *
      * @param userId The ID of the user to assign the recommended daily intake to.
-     * @return The created RecommendedDailyIntakeDTO with the calculated energy, protein, fat, saturated fat, and unsaturated fat intake.
+     * @return The RecommendedDailyIntakeDTO with the calculated energy, protein, fat, saturated fat, and unsaturated fat intake.
      * @throws IllegalArgumentException If the user does not have all the necessary information (weight, height, age,
      *                                  gender, activity level, goal) or if the user ID is not found.
      */
-    public RecommendedDailyIntakeDTO createRecommendedDailyIntakeForUser(Long userId) {
+    public RecommendedDailyIntakeDTO getOrCreateDailyIntakeForUser(Long userId) {
         // Fetch the user from the repository
         Optional<User> userOptional = userRepository.findById(userId);
 
@@ -55,10 +59,14 @@ public class RecommendedDailyIntakeService {
 
         User user = userOptional.get();
 
-        // Check if the user has all necessary data (weight, height, age, gender, activity level, goal)
-        if (user.getWeight() == null || user.getHeight() == null || user.getAge() == null ||
-                user.getGender() == null || user.getActivityLevel() == null || user.getGoal() == null) {
-            throw new IllegalArgumentException("User must have weight, height, age, gender, activity level, and goal filled in to calculate recommended intake.");
+        // Check if a RecommendedDailyIntake for today already exists
+        Optional<RecommendedDailyIntake> existingIntake = user.getRecommendedDailyIntakes().stream()
+                .filter(intake -> intake.getCreatedAt().toLocalDate().equals(LocalDate.now()))
+                .findFirst();
+
+        if (existingIntake.isPresent()) {
+            // Return the existing intake for today
+            return intakeMapper.toDTO(existingIntake.get());
         }
 
         // Calculate Total Daily Energy Expenditure (TDEE) and adjust it based on the user's goal
@@ -104,13 +112,14 @@ public class RecommendedDailyIntakeService {
             }
         });
 
-        // Assign the new RecommendedDailyIntake to the user
-        user.setRecommendedDailyIntake(newIntake);
+        // Add the new RecommendedDailyIntake to the user's set of intakes
+        newIntake.setUser(user); // Zorg ervoor dat de relatie naar de gebruiker wordt gelegd
+        user.getRecommendedDailyIntakes().add(newIntake);
 
-        // Save the user, which will cascade and save the RecommendedDailyIntake and its nutrients
+// Save the user, which will cascade and save the RecommendedDailyIntake and its nutrients
         userRepository.save(user);
 
-        // Convert the RecommendedDailyIntake to a DTO and return it
+// Convert the RecommendedDailyIntake to a DTO and return it
         return intakeMapper.toDTO(newIntake);
     }
 
@@ -128,36 +137,12 @@ public class RecommendedDailyIntakeService {
 
         User user = userOptional.get();
 
-        if (user.getRecommendedDailyIntake() == null) {
+        if (user.getRecommendedDailyIntakes() == null) {
             throw new IllegalArgumentException("User with ID " + userId + " does not have a recommended daily intake");
         }
 
         // Remove the recommended daily intake
-        user.setRecommendedDailyIntake(null);
+        user.setRecommendedDailyIntakes(null);
         userRepository.save(user);
     }
-
-    /**
-     * Retrieves the recommended daily intake for a specific user by their user ID.
-     *
-     * @param userId The ID of the user.
-     * @return The RecommendedDailyIntakeDTO of the user.
-     */
-    public RecommendedDailyIntakeDTO getRecommendedDailyIntakeForUser(Long userId) {
-        Optional<User> userOptional = userRepository.findById(userId);
-
-        if (userOptional.isEmpty()) {
-            throw new IllegalArgumentException("User with ID " + userId + " not found");
-        }
-
-        User user = userOptional.get();
-
-        RecommendedDailyIntake intake = user.getRecommendedDailyIntake();
-        if (intake == null) {
-            throw new IllegalArgumentException("User with ID " + userId + " does not have a recommended daily intake");
-        }
-
-        return intakeMapper.toDTO(intake);
-    }
-
 }

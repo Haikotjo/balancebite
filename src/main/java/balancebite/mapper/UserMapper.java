@@ -7,9 +7,11 @@ import balancebite.dto.recommendeddailyintake.RecommendedDailyIntakeDTO;
 import balancebite.mapper.MealMapper;
 import balancebite.mapper.RecommendedDailyIntakeMapper;
 import balancebite.model.User;
+import balancebite.model.RecommendedDailyIntake;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -35,7 +37,7 @@ public class UserMapper {
 
     /**
      * Converts a User entity to a UserDTO.
-     * This includes converting meals and recommended daily intake.
+     * This includes converting meals and recommended daily intakes.
      *
      * @param user The User entity to convert.
      * @return The UserDTO object containing user data for client consumption.
@@ -50,9 +52,11 @@ public class UserMapper {
                 .map(mealMapper::toDTO)
                 .collect(Collectors.toList()) : null;
 
-        // Convert the recommended daily intake associated with the user to a DTO, with null-check
-        RecommendedDailyIntakeDTO recommendedDailyIntakeDTO = user.getRecommendedDailyIntake() != null
-                ? recommendedDailyIntakeMapper.toDTO(user.getRecommendedDailyIntake())
+        // Convert the set of recommended daily intakes associated with the user to DTOs
+        List<RecommendedDailyIntakeDTO> recommendedDailyIntakeDTOs = user.getRecommendedDailyIntakes() != null
+                ? user.getRecommendedDailyIntakes().stream()
+                .map(recommendedDailyIntakeMapper::toDTO)
+                .collect(Collectors.toList())
                 : null;
 
         // Create and return the UserDTO with all relevant fields
@@ -68,7 +72,7 @@ public class UserMapper {
         userDTO.setGoal(user.getGoal());  // Map the goal
         userDTO.setMeals(mealDTOs);
         userDTO.setRole(user.getRole());
-        userDTO.setRecommendedDailyIntake(recommendedDailyIntakeDTO); // Map the recommended daily intake
+        userDTO.setRecommendedDailyIntakes(recommendedDailyIntakeDTOs); // Map the recommended daily intakes
 
         return userDTO;
     }
@@ -97,11 +101,6 @@ public class UserMapper {
         user.setActivityLevel(userInputDTO.getActivityLevel());  // Set the activity level
         user.setGoal(userInputDTO.getGoal());  // Set the goal
         user.setRole(userInputDTO.getRole());
-
-        // Convert the RecommendedDailyIntakeDTO to the entity, with null-check
-        if (userInputDTO.getRecommendedDailyIntake() != null) {
-            user.setRecommendedDailyIntake(recommendedDailyIntakeMapper.toEntity(userInputDTO.getRecommendedDailyIntake()));
-        }
 
         return user;
     }

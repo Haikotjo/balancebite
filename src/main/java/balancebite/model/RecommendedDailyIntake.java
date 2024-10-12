@@ -29,6 +29,13 @@ public class RecommendedDailyIntake {
     private Set<Nutrient> nutrients = new HashSet<>();
 
     /**
+     * The user to whom this recommended daily intake belongs.
+     */
+    @ManyToOne
+    @JoinColumn(name = "user_id")
+    private User user;
+
+    /**
      * The timestamp when the recommended daily intake was created.
      */
     private LocalDateTime createdAt;
@@ -184,6 +191,24 @@ public class RecommendedDailyIntake {
      */
     public Set<Nutrient> getNutrients() {
         return nutrients;
+    }
+
+    /**
+     * Sets the user to whom this recommended daily intake belongs.
+     *
+     * @param user The user to associate with this recommended daily intake.
+     */
+    public void setUser(User user) {
+        this.user = user;
+    }
+
+    /**
+     * Retrieves the user associated with this recommended daily intake.
+     *
+     * @return The user associated with this recommended daily intake.
+     */
+    public User getUser() {
+        return user;
     }
 
     /**

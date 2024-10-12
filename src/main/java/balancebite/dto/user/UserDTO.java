@@ -72,10 +72,11 @@ public class UserDTO {
     private Role role;
 
     /**
-     * The recommended daily intake associated with the user.
+     * The recommended daily intakes associated with the user.
      * This represents the user's daily nutrient intake goals or limits.
      */
-    private RecommendedDailyIntakeDTO recommendedDailyIntake;
+    private List<RecommendedDailyIntakeDTO> recommendedDailyIntakes;
+
 
     // Constructors
 
@@ -91,7 +92,7 @@ public class UserDTO {
      * Constructor for creating a UserDTO with all fields.
      *
      * @param id                     the ID of the user.
-     * @param userName                   the name of the user.
+     * @param userName               the name of the user.
      * @param email                  the email of the user.
      * @param weight                 the weight of the user.
      * @param age                    the age of the user.
@@ -101,11 +102,11 @@ public class UserDTO {
      * @param goal                   the goal of the user.
      * @param meals                  the list of meals associated with the user.
      * @param role                   the role of the user.
-     * @param recommendedDailyIntake the recommended daily intake of the user.
+     * @param recommendedDailyIntakes the recommended daily intakes of the user.
      */
     public UserDTO(Long id, String userName, String email, Double weight, Integer age, Double height, Gender gender,
                    ActivityLevel activityLevel, Goal goal, List<MealDTO> meals, Role role,
-                   RecommendedDailyIntakeDTO recommendedDailyIntake) {
+                   List<RecommendedDailyIntakeDTO> recommendedDailyIntakes) {
         this.id = id;
         this.userName = userName;
         this.email = email;
@@ -117,8 +118,9 @@ public class UserDTO {
         this.goal = goal;
         this.meals = meals;
         this.role = role;
-        this.recommendedDailyIntake = recommendedDailyIntake;
+        this.recommendedDailyIntakes = recommendedDailyIntakes;
     }
+
 
     /**
      * Constructor for creating a UserDTO with only basic user information (ID, name, and email).
@@ -225,11 +227,11 @@ public class UserDTO {
         this.role = role;
     }
 
-    public RecommendedDailyIntakeDTO getRecommendedDailyIntake() {
-        return recommendedDailyIntake;
+    public List<RecommendedDailyIntakeDTO> getRecommendedDailyIntakes() {
+        return recommendedDailyIntakes;
     }
 
-    public void setRecommendedDailyIntake(RecommendedDailyIntakeDTO recommendedDailyIntake) {
-        this.recommendedDailyIntake = recommendedDailyIntake;
+    public void setRecommendedDailyIntakes(List<RecommendedDailyIntakeDTO> recommendedDailyIntakes) {
+        this.recommendedDailyIntakes = recommendedDailyIntakes;
     }
 }
