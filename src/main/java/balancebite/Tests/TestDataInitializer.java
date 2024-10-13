@@ -1,13 +1,15 @@
-package balancebite.config;
+package balancebite.Tests;
 
 import balancebite.model.User;
 import balancebite.repository.UserRepository;
 import balancebite.service.RecommendedDailyIntakeService;
+import balancebite.tests.service.TestRecommendedDailyIntakeService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.time.LocalDate;
 import java.util.Optional;
 
 @Configuration
@@ -18,6 +20,9 @@ public class TestDataInitializer {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private TestRecommendedDailyIntakeService testRecommendedDailyIntakeService;
 
     @Bean
     public ApplicationRunner init() {
@@ -43,15 +48,25 @@ public class TestDataInitializer {
 
                 System.out.println("Users updated with additional details.");
 
-                // Voor de users met ID 1 t/m 4 een RecommendedDailyIntake aanmaken
+                // Voor de users met ID 1 t/m 3 een RecommendedDailyIntake aanmaken
                 recommendedDailyIntakeService.getOrCreateDailyIntakeForUser(1L);
                 recommendedDailyIntakeService.getOrCreateDailyIntakeForUser(2L);
                 recommendedDailyIntakeService.getOrCreateDailyIntakeForUser(3L);
-                recommendedDailyIntakeService.getOrCreateDailyIntakeForUser(4L);
-                recommendedDailyIntakeService.getOrCreateDailyIntakeForUser(5L);
-                recommendedDailyIntakeService.getOrCreateDailyIntakeForUser(6L);
 
-                System.out.println("Recommended daily intake created for users with IDs 1 to 6.");
+                // Voor de users met ID 5 en 6 een RecommendedDailyIntake aanmaken voor gisteren, vandaag en morgen
+                LocalDate yesterday = LocalDate.now().minusDays(1);
+                LocalDate today = LocalDate.now();
+                LocalDate tomorrow = LocalDate.now().plusDays(1);
+
+                testRecommendedDailyIntakeService.createRecommendedDailyIntakeForDate(5L, yesterday);
+                testRecommendedDailyIntakeService.createRecommendedDailyIntakeForDate(5L, today);
+                testRecommendedDailyIntakeService.createRecommendedDailyIntakeForDate(5L, tomorrow);
+
+                testRecommendedDailyIntakeService.createRecommendedDailyIntakeForDate(6L, yesterday);
+                testRecommendedDailyIntakeService.createRecommendedDailyIntakeForDate(6L, today);
+                testRecommendedDailyIntakeService.createRecommendedDailyIntakeForDate(6L, tomorrow);
+
+                System.out.println("Recommended daily intake created for users 5 and 6 for yesterday, today, and tomorrow.");
 
             } catch (Exception e) {
                 System.err.println("Error in TestDataInitializer: " + e.getMessage());
