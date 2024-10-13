@@ -1,4 +1,4 @@
-package balancebite.Tests;
+package balancebite.tests;
 
 import balancebite.model.User;
 import balancebite.repository.UserRepository;
