@@ -196,14 +196,14 @@ public class UserService {
     }
 
     /**
-     * Processes the consumption of a meal by a user, updating the user's intake of nutrients.
-     * The method retrieves the nutrients of the meal, deducts them from the recommended daily intake,
+     * Processes the consumption of a meal by a user, updating the user's intake of nutrients for the current day.
+     * The method retrieves the nutrients of the meal, deducts them from the recommended daily intake for today,
      * and updates the remaining intake for each nutrient. The updated intake values are then saved
      * for the user in the RecommendedDailyIntake.
      *
      * @param userId The ID of the user consuming the meal.
      * @param mealId The ID of the meal being consumed.
-     * @return A map containing the remaining daily intake for each nutrient after the meal consumption.
+     * @return A map containing the remaining daily intake for each nutrient after the meal consumption for today.
      */
     @Transactional
     public Map<String, Double> eatMeal(Long userId, Long mealId) {
@@ -218,9 +218,10 @@ public class UserService {
         // Retrieve the nutrient values of the meal
         Map<String, NutrientInfoDTO> mealNutrients = mealService.calculateNutrients(mealId);
 
-        // Get the user's existing recommended daily intake for today or the latest one
+        // Get the user's existing recommended daily intake for today
+        LocalDate today = LocalDate.now();  // Ensure that only today's intake is modified
         Optional<RecommendedDailyIntake> intakeForToday = user.getRecommendedDailyIntakes().stream()
-                .filter(intake -> intake.getCreatedAt().toLocalDate().equals(LocalDate.now()))
+                .filter(intake -> intake.getCreatedAt().toLocalDate().equals(today))  // Filter only for today's intake
                 .findFirst();
 
         if (intakeForToday.isEmpty()) {
@@ -257,13 +258,13 @@ public class UserService {
                 // Update the recommended intake for this nutrient in the Nutrient entity
                 recommendedDailyIntake.getNutrients().forEach(nutrient -> {
                     if (normalizeNutrientName(nutrient.getName()).equals(normalizedNutrientName)) {
-                        nutrient.setValue(remainingIntake);  // Allow negative values here
+                        nutrient.setValue(remainingIntake);  // Update the remaining intake for today
                     }
                 });
             }
         }
 
-        // Save the updated RecommendedDailyIntake (including the nutrient set) and force a flush to the database
+        // Save the updated RecommendedDailyIntake and ensure the changes are flushed to the database
         try {
             recommendedDailyIntakeRepository.save(recommendedDailyIntake);
             entityManager.flush();  // Ensure the changes are flushed to the database immediately
@@ -275,6 +276,7 @@ public class UserService {
         // Return the remaining intake for each nutrient to the client
         return remainingIntakes;
     }
+
 
     /**
      * Normalizes nutrient names by converting them to lowercase, removing units like "g", "mg", and "µg"

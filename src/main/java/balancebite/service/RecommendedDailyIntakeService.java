@@ -10,7 +10,11 @@ import balancebite.utils.*;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * Service class responsible for managing Recommended Daily Intake logic.
@@ -122,6 +126,76 @@ public class RecommendedDailyIntakeService {
 // Convert the RecommendedDailyIntake to a DTO and return it
         return intakeMapper.toDTO(newIntake);
     }
+
+    /**
+     * Retrieves the cumulative recommended nutrient intake for the current week for a specific user.
+     *
+     * This method calculates the total recommended nutrient intake for the current week by multiplying
+     * the recommended daily intake values by the number of remaining days until the upcoming Sunday,
+     * and adjusting for any surplus or deficit from previous days in the week.
+     *
+     * @param userId The ID of the user.
+     * @return A map of nutrient names to cumulative values for the current week.
+     * @throws IllegalArgumentException If the user is not found.
+     */
+    public Map<String, Double> getAdjustedWeeklyIntakeForUser(Long userId) {
+        // Fetch the user from the repository
+        Optional<User> userOptional = userRepository.findById(userId);
+
+        if (userOptional.isEmpty()) {
+            throw new IllegalArgumentException("User with ID " + userId + " not found");
+        }
+
+        User user = userOptional.get();
+
+        // Determine today's date and the upcoming Sunday's date
+        LocalDate today = LocalDate.now();
+        LocalDate startOfWeek = today.with(java.time.DayOfWeek.MONDAY);
+        LocalDate endOfWeek = today.with(java.time.DayOfWeek.SUNDAY);
+
+        // Map to store cumulative nutrient values for the week
+        Map<String, Double> cumulativeIntake = new HashMap<>();
+
+        // Iterate over the days from the beginning of the week until today to account for actual intake
+        user.getRecommendedDailyIntakes().stream()
+                .filter(intake -> !intake.getCreatedAt().toLocalDate().isBefore(startOfWeek)
+                        && !intake.getCreatedAt().toLocalDate().isAfter(today))  // Consider only the current week and today
+                .forEach(intake -> {
+                    intake.getNutrients().forEach(nutrient -> {
+                        String nutrientName = nutrient.getName();
+                        double value = nutrient.getValue() != null ? nutrient.getValue() : 0.0;
+
+                        // Adjust based on whether the user has under or overconsumed
+                        if (value > 0) {
+                            // User has under-consumed, add it to the cumulative intake
+                            cumulativeIntake.merge(nutrientName, value, Double::sum);
+                        } else if (value < 0) {
+                            // User has over-consumed, subtract it from the cumulative intake
+                            cumulativeIntake.merge(nutrientName, value, Double::sum);
+                        }
+                    });
+                });
+
+        // Get the recommended daily intake (at creation time, not adjusted for meals) and multiply for remaining days
+        RecommendedDailyIntake initialDailyIntake = user.getRecommendedDailyIntakes().stream()
+                .filter(intake -> intake.getCreatedAt().toLocalDate().equals(today))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("No recommended daily intake found for today"));
+
+        initialDailyIntake.getNutrients().forEach(nutrient -> {
+            String nutrientName = nutrient.getName();
+            double dailyValue = nutrient.getValue() != null ? nutrient.getValue() : 0.0;
+            // Multiply the original daily intake by the remaining days of the week
+            if (dailyValue > 0) {
+                cumulativeIntake.merge(nutrientName, dailyValue * (endOfWeek.getDayOfYear() - today.getDayOfYear()), Double::sum);
+            }
+        });
+
+        return cumulativeIntake;
+    }
+
+
+
 
     /**
      * Deletes the RecommendedDailyIntake for a specific user.

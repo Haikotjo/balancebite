@@ -6,6 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * REST controller responsible for handling recommended daily intake-related actions.
@@ -45,5 +46,17 @@ public class RecommendedDailyIntakeController {
     public ResponseEntity<Void> deleteRecommendedDailyIntakeForUser(@PathVariable Long userId) {
         recommendedDailyIntakeService.deleteRecommendedDailyIntakeForUser(userId);
         return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * GET endpoint to retrieve the cumulative recommended nutrient intake for the current week for a specific user.
+     *
+     * @param userId The ID of the user to retrieve the recommended daily intake for the current week.
+     * @return ResponseEntity containing the total nutrient values for the remaining days of the current week.
+     */
+    @GetMapping("/user/{userId}/week")
+    public ResponseEntity<Map<String, Double>> getWeeklyRecommendedDailyIntakeForUser(@PathVariable Long userId) {
+        Map<String, Double> weeklyIntake = recommendedDailyIntakeService.getAdjustedWeeklyIntakeForUser(userId);
+        return ResponseEntity.ok(weeklyIntake);
     }
 }

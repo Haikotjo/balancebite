@@ -2,6 +2,7 @@ package balancebite.tests;
 
 import balancebite.model.User;
 import balancebite.repository.UserRepository;
+import balancebite.service.MealConsumptionService;
 import balancebite.service.RecommendedDailyIntakeService;
 import balancebite.tests.service.TestRecommendedDailyIntakeService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +24,9 @@ public class TestDataInitializer {
 
     @Autowired
     private TestRecommendedDailyIntakeService testRecommendedDailyIntakeService;
+
+    @Autowired
+    private MealConsumptionService mealConsumptionService;
 
     @Bean
     public ApplicationRunner init() {
@@ -68,6 +72,12 @@ public class TestDataInitializer {
 
                 System.out.println("Recommended daily intake created for users 5 and 6 for yesterday, today, and tomorrow.");
 
+                // Voeg maaltijden toe aan users 5 en 6 voor gisteren met herhalingen
+                addMealsForYesterday(5L, new Long[]{1L}, new int[]{3}); // User 5 eet maaltijd 1 twee keer en maaltijd 2 drie keer
+                addMealsForYesterday(6L, new Long[]{4L}, new int[]{20}); // User 6 eet maaltijd 4 twintig keer
+
+                System.out.println("Meals added for users 5 and 6 for yesterday.");
+
             } catch (Exception e) {
                 System.err.println("Error in TestDataInitializer: " + e.getMessage());
                 e.printStackTrace();
@@ -90,6 +100,21 @@ public class TestDataInitializer {
             userRepository.save(user);
         } else {
             System.err.println("User with ID " + userId + " not found.");
+        }
+    }
+
+    // Methode om specifieke maaltijden en herhalingen toe te voegen voor gisteren
+    private void addMealsForYesterday(Long userId, Long[] mealIds, int[] repetitions) {
+        LocalDate yesterday = LocalDate.now().minusDays(1);
+
+        if (mealIds.length != repetitions.length) {
+            throw new IllegalArgumentException("Meal IDs and repetitions array must have the same length.");
+        }
+
+        for (int i = 0; i < mealIds.length; i++) {
+            for (int j = 0; j < repetitions[i]; j++) {
+                mealConsumptionService.eatMealForSpecificDate(userId, mealIds[i], yesterday);
+            }
         }
     }
 }
