@@ -77,7 +77,7 @@ public class FoodItemController {
      * @param id The ID of the food item to delete.
      * @return A ResponseEntity indicating the result of the delete operation, either NO_CONTENT (204) if deleted or NOT_FOUND (404) if not found.
      */
-    @DeleteMapping("/id/{id}")
+    @DeleteMapping("/{id}")
     public ResponseEntity<String> deleteFoodItemById(@PathVariable Long id) {
         return foodItemService.deleteFoodItemById(id);
     }
