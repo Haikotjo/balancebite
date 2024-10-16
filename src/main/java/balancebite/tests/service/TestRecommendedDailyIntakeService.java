@@ -41,20 +41,20 @@ public class TestRecommendedDailyIntakeService {
 
             if (!intakeExists) {
                 // Calculate Total Daily Energy Expenditure (TDEE) and adjust it based on the user's goal
-                double tdee = KcalIntakeCalculator.calculateTDEE(user);
-                double totalEnergyKcal = KcalIntakeCalculator.adjustCaloriesForGoal(tdee, user.getGoal());
+                double tdee = KcalIntakeCalculatorUtil.calculateTDEE(user);
+                double totalEnergyKcal = KcalIntakeCalculatorUtil.adjustCaloriesForGoal(tdee, user.getGoal());
 
                 // Calculate protein intake based on the user's total energy intake, weight, activity level, age, and goal
-                double proteinIntake = ProteinIntakeCalculator.calculateProteinIntake(user);
+                double proteinIntake = ProteinIntakeCalculatorUtil.calculateProteinIntake(user);
 
                 // Calculate fat intake based on the user's goal and total energy intake
-                double fatIntake = FatIntakeCalculator.calculateFatIntake(user, totalEnergyKcal);
+                double fatIntake = FatIntakeCalculatorUtil.calculateFatIntake(user, totalEnergyKcal);
 
                 // Calculate the distribution of saturated and unsaturated fats
-                FatTypeDistributionCalculator.FatTypeDistribution fatDistribution = FatTypeDistributionCalculator.calculateFatDistribution(fatIntake);
+                FatTypeDistributionCalculatorUtil.FatTypeDistribution fatDistribution = FatTypeDistributionCalculatorUtil.calculateFatDistribution(fatIntake);
 
                 // Calculate carbohydrate intake based on the remaining energy after protein and fat
-                double carbohydrateIntake = CarbohydrateIntakeCalculator.calculateCarbohydrateIntake(totalEnergyKcal, proteinIntake, fatIntake);
+                double carbohydrateIntake = CarbohydrateIntakeCalculatorUtil.calculateCarbohydrateIntake(totalEnergyKcal, proteinIntake, fatIntake);
 
                 // Create a new RecommendedDailyIntake for the specified date
                 RecommendedDailyIntake newIntake = new RecommendedDailyIntake();

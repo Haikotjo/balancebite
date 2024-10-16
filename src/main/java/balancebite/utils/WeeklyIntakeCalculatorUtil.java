@@ -2,11 +2,6 @@ package balancebite.utils;
 
 import balancebite.model.RecommendedDailyIntake;
 import balancebite.model.User;
-import balancebite.utils.KcalIntakeCalculator;
-import balancebite.utils.ProteinIntakeCalculator;
-import balancebite.utils.FatIntakeCalculator;
-import balancebite.utils.FatTypeDistributionCalculator;
-import balancebite.utils.CarbohydrateIntakeCalculator;
 
 import java.time.LocalDate;
 import java.util.HashMap;
@@ -19,7 +14,7 @@ import java.util.Optional;
  * This class provides a method to adjust and calculate the total recommended nutrient intake based on the user's
  * daily intake history and remaining intake days in the current week.
  */
-public class WeeklyIntakeCalculator {
+public class WeeklyIntakeCalculatorUtil {
 
     /**
      * Calculates the cumulative recommended nutrient intake for the current week for a specific user.

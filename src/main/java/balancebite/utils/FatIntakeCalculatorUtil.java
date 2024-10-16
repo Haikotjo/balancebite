@@ -6,7 +6,7 @@ import balancebite.model.userenums.Goal;
 /**
  * Utility class for calculating the recommended daily fat intake.
  */
-public class FatIntakeCalculator {
+public class FatIntakeCalculatorUtil {
 
     /**
      * Calculates the recommended daily fat intake based on the user's total calorie intake and goal.

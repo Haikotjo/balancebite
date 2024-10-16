@@ -1,13 +1,11 @@
 package balancebite.utils;
 
 import balancebite.model.User;
-import balancebite.model.userenums.Goal;
-import balancebite.model.userenums.ActivityLevel;
 
 /**
  * Utility class for calculating the recommended daily protein intake.
  */
-public class ProteinIntakeCalculator {
+public class ProteinIntakeCalculatorUtil {
 
     /**
      * Calculates the recommended daily protein intake based on the user's weight,

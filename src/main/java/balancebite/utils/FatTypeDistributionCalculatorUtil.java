@@ -3,7 +3,7 @@ package balancebite.utils;
 /**
  * Utility class for distributing the total fat intake into saturated and unsaturated fats.
  */
-public class FatTypeDistributionCalculator {
+public class FatTypeDistributionCalculatorUtil {
 
     /**
      * Calculates the distribution of the total fat intake into saturated and unsaturated fats.

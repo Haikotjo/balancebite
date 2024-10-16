@@ -1,11 +1,9 @@
 package balancebite.utils;
 
-import balancebite.model.User;
-
 /**
  * Utility class for calculating the recommended daily carbohydrate intake.
  */
-public class CarbohydrateIntakeCalculator {
+public class CarbohydrateIntakeCalculatorUtil {
 
     /**
      * Calculates the recommended daily carbohydrate intake based on the user's total energy intake,

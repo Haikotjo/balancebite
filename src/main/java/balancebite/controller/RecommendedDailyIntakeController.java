@@ -59,4 +59,16 @@ public class RecommendedDailyIntakeController {
         Map<String, Double> weeklyIntake = recommendedDailyIntakeService.getAdjustedWeeklyIntakeForUser(userId);
         return ResponseEntity.ok(weeklyIntake);
     }
+
+    /**
+     * GET endpoint to retrieve the cumulative recommended nutrient intake for the current week for a specific user.
+     *
+     * @param userId The ID of the user to retrieve the recommended daily intake for the current week.
+     * @return ResponseEntity containing the total nutrient values for the remaining days of the current week.
+     */
+    @GetMapping("/user/{userId}/month")
+    public ResponseEntity<Map<String, Double>> getMonthlyRecommendedDailyIntakeForUser(@PathVariable Long userId) {
+        Map<String, Double> monthlyIntake = recommendedDailyIntakeService.getAdjustedMonthlyIntakeForUser(userId);
+        return ResponseEntity.ok(monthlyIntake);
+    }
 }

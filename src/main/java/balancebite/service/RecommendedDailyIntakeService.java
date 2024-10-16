@@ -9,12 +9,8 @@ import balancebite.repository.UserRepository;
 import balancebite.utils.*;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 /**
  * Service class responsible for managing Recommended Daily Intake logic.
@@ -83,7 +79,32 @@ public class RecommendedDailyIntakeService {
         User user = userOptional.get();
 
         // Use the new utility class to calculate the intake
-        return WeeklyIntakeCalculator.calculateAdjustedWeeklyIntake(user);
+        return WeeklyIntakeCalculatorUtil.calculateAdjustedWeeklyIntake(user);
+    }
+
+    /**
+     * Retrieves the cumulative recommended nutrient intake for the current week for a specific user.
+     *
+     * This method calculates the total recommended nutrient intake for the current week by multiplying
+     * the recommended daily intake values by the number of remaining days until the upcoming Sunday,
+     * and adjusting for any surplus or deficit from previous days in the week.
+     *
+     * @param userId The ID of the user.
+     * @return A map of nutrient names to cumulative values for the current week.
+     * @throws IllegalArgumentException If the user is not found.
+     */
+    public Map<String, Double> getAdjustedMonthlyIntakeForUser(Long userId) {
+        // Fetch the user from the repository
+        Optional<User> userOptional = userRepository.findById(userId);
+
+        if (userOptional.isEmpty()) {
+            throw new IllegalArgumentException("User with ID " + userId + " not found");
+        }
+
+        User user = userOptional.get();
+
+        // Use the new utility class to calculate the intake
+        return MonthlyIntakeCalculatorUtil.calculateAdjustedMonthlyIntake(user);
     }
 
     /**
