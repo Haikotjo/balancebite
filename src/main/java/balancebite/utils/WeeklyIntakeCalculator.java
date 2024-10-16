@@ -111,49 +111,13 @@ public class WeeklyIntakeCalculator {
     /**
      * Recalculates the original recommended daily intake for the user.
      *
-     * This method recalculates the recommended daily intake using the user's personal details.
+     * This method recalculates the recommended daily intake using the user's personal details,
+     * by invoking the calculateDailyIntake method from DailyIntakeCalculatorUtil.
      *
      * @param user The user for whom the intake is recalculated.
      * @return A new RecommendedDailyIntake object with the calculated values.
      */
     private static RecommendedDailyIntake recalculateOriginalDailyIntake(User user) {
-        // Calculate Total Daily Energy Expenditure (TDEE) and adjust it based on the user's goal
-        double tdee = KcalIntakeCalculator.calculateTDEE(user);
-        double totalEnergyKcal = KcalIntakeCalculator.adjustCaloriesForGoal(tdee, user.getGoal());
-
-        // Calculate protein intake based on the user's total energy intake, weight, activity level, age, and goal
-        double proteinIntake = ProteinIntakeCalculator.calculateProteinIntake(user);
-
-        // Calculate fat intake based on the user's goal and total energy intake
-        double fatIntake = FatIntakeCalculator.calculateFatIntake(user, totalEnergyKcal);
-
-        // Calculate the distribution of saturated and unsaturated fats
-        FatTypeDistributionCalculator.FatTypeDistribution fatDistribution = FatTypeDistributionCalculator.calculateFatDistribution(fatIntake);
-
-        // Calculate carbohydrate intake based on the remaining energy after protein and fat
-        double carbohydrateIntake = CarbohydrateIntakeCalculator.calculateCarbohydrateIntake(totalEnergyKcal, proteinIntake, fatIntake);
-
-        // Create a new RecommendedDailyIntake object
-        RecommendedDailyIntake newIntake = new RecommendedDailyIntake();
-        newIntake.setUser(user);
-
-        // Assign the calculated kcal, protein, fat, saturated fat, and unsaturated fat values to their respective nutrients
-        newIntake.getNutrients().forEach(nutrient -> {
-            if (nutrient.getName().equals("Energy kcal")) {
-                nutrient.setValue(totalEnergyKcal);
-            } else if (nutrient.getName().equals("Protein")) {
-                nutrient.setValue(proteinIntake);
-            } else if (nutrient.getName().equals("Total lipid (fat)")) {
-                nutrient.setValue(fatIntake);
-            } else if (nutrient.getName().equals("Fatty acids, total saturated")) {
-                nutrient.setValue(fatDistribution.getSaturatedFat());
-            } else if (nutrient.getName().equals("Fatty acids, total polyunsaturated")) {
-                nutrient.setValue(fatDistribution.getUnsaturatedFat());
-            } else if (nutrient.getName().equals("Carbohydrate, by difference")) {
-                nutrient.setValue(carbohydrateIntake);
-            }
-        });
-
-        return newIntake;
+        return DailyIntakeCalculatorUtil.calculateDailyIntake(user);
     }
 }
