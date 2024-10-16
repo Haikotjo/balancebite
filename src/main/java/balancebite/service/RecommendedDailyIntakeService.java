@@ -148,54 +148,9 @@ public class RecommendedDailyIntakeService {
 
         User user = userOptional.get();
 
-        // Determine today's date and the upcoming Sunday's date
-        LocalDate today = LocalDate.now();
-        LocalDate startOfWeek = today.with(java.time.DayOfWeek.MONDAY);
-        LocalDate endOfWeek = today.with(java.time.DayOfWeek.SUNDAY);
-
-        // Map to store cumulative nutrient values for the week
-        Map<String, Double> cumulativeIntake = new HashMap<>();
-
-        // Iterate over the days from the beginning of the week until today to account for actual intake
-        user.getRecommendedDailyIntakes().stream()
-                .filter(intake -> !intake.getCreatedAt().toLocalDate().isBefore(startOfWeek)
-                        && !intake.getCreatedAt().toLocalDate().isAfter(today))  // Consider only the current week and today
-                .forEach(intake -> {
-                    intake.getNutrients().forEach(nutrient -> {
-                        String nutrientName = nutrient.getName();
-                        double value = nutrient.getValue() != null ? nutrient.getValue() : 0.0;
-
-                        // Adjust based on whether the user has under or overconsumed
-                        if (value > 0) {
-                            // User has under-consumed, add it to the cumulative intake
-                            cumulativeIntake.merge(nutrientName, value, Double::sum);
-                        } else if (value < 0) {
-                            // User has over-consumed, subtract it from the cumulative intake
-                            cumulativeIntake.merge(nutrientName, value, Double::sum);
-                        }
-                    });
-                });
-
-        // Get the recommended daily intake (at creation time, not adjusted for meals) and multiply for remaining days
-        RecommendedDailyIntake initialDailyIntake = user.getRecommendedDailyIntakes().stream()
-                .filter(intake -> intake.getCreatedAt().toLocalDate().equals(today))
-                .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("No recommended daily intake found for today"));
-
-        initialDailyIntake.getNutrients().forEach(nutrient -> {
-            String nutrientName = nutrient.getName();
-            double dailyValue = nutrient.getValue() != null ? nutrient.getValue() : 0.0;
-            // Multiply the original daily intake by the remaining days of the week
-            if (dailyValue > 0) {
-                cumulativeIntake.merge(nutrientName, dailyValue * (endOfWeek.getDayOfYear() - today.getDayOfYear()), Double::sum);
-            }
-        });
-
-        return cumulativeIntake;
+        // Use the new utility class to calculate the intake
+        return WeeklyIntakeCalculator.calculateAdjustedWeeklyIntake(user);
     }
-
-
-
 
     /**
      * Deletes the RecommendedDailyIntake for a specific user.
