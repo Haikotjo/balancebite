@@ -39,7 +39,7 @@ logs/
 .DS_Store
 Thumbs.db
 
-# Ignore .env and application.properties
+# Ignore .env and application.yml
 .env
-application.properties
+application.yml
 
