@@ -6,6 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * REST controller for managing FoodItem-related operations.
@@ -39,15 +40,21 @@ public class FoodItemController {
 
     /**
      * Endpoint to fetch and save multiple FoodItems by a list of FDC IDs.
-     * Calls the FoodItemService to retrieve and save the food items in a single API call.
+     * Calls the FoodItemService to retrieve and save the food items asynchronously.
+     *
+     * The use of CompletableFuture allows the client to receive a response immediately,
+     * while the processing of fetching and saving the food items continues in the background.
      *
      * @param fdcIds The list of FDC IDs of the food items to fetch.
-     * @return A ResponseEntity with a success or error message, either CREATED (201) or a BAD REQUEST (400) if no items were saved.
+     * @return A CompletableFuture containing a ResponseEntity with a success or error message.
+     *         This ensures non-blocking behavior, enhancing the application's responsiveness.
      */
     @PostMapping("/bulkFetch")
-    public ResponseEntity<String> fetchAllFoodItems(@RequestBody List<String> fdcIds) {
+    public CompletableFuture<ResponseEntity<String>> fetchAllFoodItems(@RequestBody List<String> fdcIds) {
+        // Call the service method to fetch and save all food items asynchronously.
         return foodItemService.fetchAndSaveAllFoodItems(fdcIds);
     }
+
 
     /**
      * Endpoint to retrieve a single FoodItem by its ID from the database.

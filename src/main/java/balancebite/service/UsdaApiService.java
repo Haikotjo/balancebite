@@ -26,13 +26,6 @@ public class UsdaApiService {
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
 
-    /**
-     * Constructor for dependency injection.
-     *
-     * @param apiConfig     Configuration class for API settings such as API key.
-     * @param restTemplate  Spring's RestTemplate for making HTTP requests.
-     * @param objectMapper  ObjectMapper for JSON processing.
-     */
     @Autowired
     public UsdaApiService(ApiConfig apiConfig, RestTemplate restTemplate, ObjectMapper objectMapper) {
         this.apiConfig = apiConfig;
@@ -47,7 +40,7 @@ public class UsdaApiService {
      * @return The complete URL with the API key.
      */
     private String buildUrl(String path) {
-        return "https://api.nal.usda.gov/fdc/v1/" + path + "?api_key=" + apiConfig.getUsdaApiKey();
+        return String.format("https://api.nal.usda.gov/fdc/v1/%s?api_key=%s", path, apiConfig.getUsdaApiKey());
     }
 
     /**
@@ -59,24 +52,18 @@ public class UsdaApiService {
      */
     public UsdaFoodResponseDTO getFoodData(String fdcId) {
         try {
-            // Gebruik de helper-methode voor de URL-opbouw
+            // Construct the URL using the helper method
             String url = buildUrl("food/" + fdcId);
 
-            // Verzend het HTTP GET-verzoek
+            // Send the HTTP GET request
             ResponseEntity<String> responseEntity = restTemplate.getForEntity(url, String.class);
 
-            // Controleer of de HTTP status succesvol is (2xx)
+            // Validate the response status
             if (!responseEntity.getStatusCode().is2xxSuccessful()) {
-                if (responseEntity.getStatusCode().is4xxClientError()) {
-                    throw new UsdaApiException("Client error occurred: " + responseEntity.getStatusCode());
-                } else if (responseEntity.getStatusCode().is5xxServerError()) {
-                    throw new UsdaApiException("Server error occurred: " + responseEntity.getStatusCode());
-                } else {
-                    throw new UsdaApiException("Unexpected error: " + responseEntity.getStatusCode());
-                }
+                throw new UsdaApiException("Error occurred: " + responseEntity.getStatusCode());
             }
 
-            // JSON-antwoord omzetten naar UsdaFoodResponseDTO
+            // Convert JSON response to UsdaFoodResponseDTO
             return objectMapper.readValue(responseEntity.getBody(), UsdaFoodResponseDTO.class);
 
         } catch (RestClientException e) {
@@ -95,26 +82,22 @@ public class UsdaApiService {
      */
     public List<UsdaFoodResponseDTO> getMultipleFoodData(List<String> fdcIds) {
         try {
-            // Gebruik de helper-methode voor de URL-opbouw
+            // Construct the URL using the helper method
             String url = buildUrl("foods");
 
+            // Prepare the request body
             Map<String, Object> requestBody = new HashMap<>();
             requestBody.put("fdcIds", fdcIds);
 
+            // Send the HTTP POST request
             ResponseEntity<String> responseEntity = restTemplate.postForEntity(url, requestBody, String.class);
 
-            // Controleer of de HTTP status succesvol is (2xx)
+            // Validate the response status
             if (!responseEntity.getStatusCode().is2xxSuccessful()) {
-                if (responseEntity.getStatusCode().is4xxClientError()) {
-                    throw new UsdaApiException("Client error occurred: " + responseEntity.getStatusCode());
-                } else if (responseEntity.getStatusCode().is5xxServerError()) {
-                    throw new UsdaApiException("Server error occurred: " + responseEntity.getStatusCode());
-                } else {
-                    throw new UsdaApiException("Unexpected error: " + responseEntity.getStatusCode());
-                }
+                throw new UsdaApiException("Error occurred: " + responseEntity.getStatusCode());
             }
 
-            // JSON-antwoord omzetten naar een lijst van UsdaFoodResponseDTO
+            // Convert JSON response to a list of UsdaFoodResponseDTO
             return Arrays.asList(objectMapper.readValue(responseEntity.getBody(), UsdaFoodResponseDTO[].class));
 
         } catch (RestClientException e) {

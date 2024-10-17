@@ -24,9 +24,6 @@ public class AppConfig {
         // Add support for Java 8 date and time API
         objectMapper.registerModule(new JavaTimeModule());
 
-        // Enable pretty-printing of JSON output
-        objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
-
         // Disable failure on empty beans
         objectMapper.disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
 
