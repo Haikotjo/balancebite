@@ -3,8 +3,8 @@ package balancebite.dto.meal;
 import balancebite.dto.mealingredient.MealIngredientInputDTO;
 import balancebite.dto.user.UserDTO;  // Import UserDTO
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -14,12 +14,14 @@ import java.util.List;
  */
 public class MealInputDTO {
 
-    @NotBlank(message = "Meal name is required")
+    @NotBlank(message = "The name of the meal cannot be blank. Please provide a valid name.")
     private String name;
-    private List<MealIngredientInputDTO> mealIngredients = new ArrayList<>();
+
+    @NotEmpty(message = "The meal must contain at least one ingredient. Please provide ingredients.")
+    private List<MealIngredientInputDTO> mealIngredients;
 
     // List of users to associate with the meal (optional, depending on use case)
-    private List<UserDTO> users = new ArrayList<>();
+    private List<UserDTO> users;
 
     // The user who created this meal (optional)
     private UserDTO createdBy;
