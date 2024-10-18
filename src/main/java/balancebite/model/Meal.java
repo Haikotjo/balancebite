@@ -12,6 +12,11 @@ import java.util.List;
 @Table(name = "meals")
 public class Meal {
 
+    private static final String USER_MEALS_TABLE = "user_meals";
+    private static final String MEAL_ID_COLUMN = "meal_id";
+    private static final String USER_ID_COLUMN = "user_id";
+    private static final String CREATED_BY_USER_ID_COLUMN = "created_by_user_id";
+
     /**
      * Unique identifier for the meal.
      */
@@ -37,9 +42,9 @@ public class Meal {
      */
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
-            name = "user_meals",  // Join table to link users and meals
-            joinColumns = @JoinColumn(name = "meal_id"),  // Foreign key column in user_meals for meal
-            inverseJoinColumns = @JoinColumn(name = "user_id")  // Foreign key column in user_meals for user
+            name = USER_MEALS_TABLE,  // Join table to link users and meals
+            joinColumns = @JoinColumn(name = MEAL_ID_COLUMN),  // Foreign key column in user_meals for meal
+            inverseJoinColumns = @JoinColumn(name = USER_ID_COLUMN)  // Foreign key column in user_meals for user
     )
     private List<User> users = new ArrayList<>();
 
@@ -47,7 +52,7 @@ public class Meal {
      * The user who created this meal.
      */
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "created_by_user_id")
+    @JoinColumn(name = CREATED_BY_USER_ID_COLUMN)
     private User createdBy;
 
     /**
@@ -100,8 +105,11 @@ public class Meal {
         return mealIngredients;
     }
 
+
     /**
      * Adds a meal ingredient to the list and sets the relationship.
+     * This method ensures that the bidirectional relationship between Meal and MealIngredient is maintained.
+     * It adds the given MealIngredient to the list and sets the "meal" property of the MealIngredient to this Meal.
      *
      * @param mealIngredient the meal ingredient to add.
      */
@@ -112,6 +120,8 @@ public class Meal {
 
     /**
      * Adds a list of meal ingredients to the meal and sets the relationship.
+     * This method iterates through the provided list of MealIngredients and uses the addMealIngredient method
+     * to ensure that each ingredient is correctly associated with this meal.
      *
      * @param mealIngredients the list of meal ingredients to add.
      */
@@ -156,5 +166,4 @@ public class Meal {
     public void setCreatedBy(User createdBy) {
         this.createdBy = createdBy;
     }
-
 }

@@ -31,16 +31,15 @@ public class MealDTO {
      * @param users             the list of users associated with the meal.
      * @param createdBy         the user that created the meal.
      */
-
     public MealDTO(Long id, String name, List<MealIngredientDTO> mealIngredients, List<UserDTO> users, UserDTO createdBy) {
         this.id = id;
         this.name = name;
-        this.mealIngredients = mealIngredients;
-        this.users = users;
+        this.mealIngredients = (mealIngredients != null) ? List.copyOf(mealIngredients) : List.of();  // Gebruik een niet-wijzigbare lijst
+        this.users = (users != null) ? List.copyOf(users) : List.of();  // Gebruik een niet-wijzigbare lijst
         this.createdBy = createdBy;
     }
 
-    // Getters
+    // Getters only (no setters)
 
     /**
      * Gets the ID of the meal.
@@ -63,19 +62,19 @@ public class MealDTO {
     /**
      * Gets the list of ingredients in the meal.
      *
-     * @return the list of MealIngredientDTO.
+     * @return an unmodifiable list of MealIngredientDTO.
      */
     public List<MealIngredientDTO> getMealIngredients() {
-        return mealIngredients;
+        return List.copyOf(mealIngredients);  // Zorg ervoor dat de lijst niet gemuteerd kan worden buiten deze DTO
     }
 
     /**
      * Gets the list of users associated with the meal.
      *
-     * @return the list of users.
+     * @return an unmodifiable list of users.
      */
     public List<UserDTO> getUsers() {
-        return users;
+        return List.copyOf(users);  // Zorg ervoor dat de lijst niet gemuteerd kan worden buiten deze DTO
     }
 
     /**
