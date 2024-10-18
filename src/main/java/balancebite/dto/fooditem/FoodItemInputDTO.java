@@ -1,23 +1,28 @@
 package balancebite.dto.fooditem;
 
 import balancebite.dto.NutrientInfoDTO;
+import jakarta.validation.constraints.*;
 
 import java.util.List;
 
 /**
- * Data Transfer Object (DTO) representing the input data for creating a FoodItem.
- * This DTO is used to receive food item data from the client.
+ * Input DTO class for creating or updating a FoodItem.
+ * This DTO is used to transfer input data from client to server.
  */
 public class FoodItemInputDTO {
 
     /**
      * Name of the food item.
+     * Cannot be null or empty.
      */
+    @NotBlank(message = "The name of the food item cannot be blank.")
     private String name;
 
     /**
      * List of nutrients associated with the food item.
+     * Cannot be null.
      */
+    @NotEmpty(message = "Nutrients list must contain at least one nutrient.")
     private List<NutrientInfoDTO> nutrients;
 
     /**
@@ -27,100 +32,46 @@ public class FoodItemInputDTO {
 
     /**
      * The gram weight of the portion.
+     * Must be greater than zero.
      */
-    private double gramWeight;
+    @NotNull(message = "The gram weight must be provided.")
+    @PositiveOrZero(message = "The gram weight must be greater than or equal to zero.")
+    private Double gramWeight;
 
-    /**
-     * No-argument constructor required for deserialization.
-     */
-    public FoodItemInputDTO() {}
+    // Constructor, getters and setters
 
-    /**
-     * Parameterized constructor to create a FoodItemInputDTO.
-     *
-     * @param name The name of the food item.
-     * @param nutrients The list of nutrients associated with the food item.
-     * @param portionDescription The description of the portion.
-     * @param gramWeight The gram weight of the portion.
-     */
-    public FoodItemInputDTO(String name, List<NutrientInfoDTO> nutrients, String portionDescription, double gramWeight) {
-        this.name = name;
-        this.nutrients = nutrients;
-        this.portionDescription = portionDescription;
-        this.gramWeight = gramWeight;
+    public FoodItemInputDTO() {
     }
 
-    // Getters and setters
-
-    /**
-     * Gets the name of the food item.
-     *
-     * @return The name of the food item.
-     */
     public String getName() {
         return name;
     }
 
-    /**
-     * Sets the name of the food item.
-     *
-     * @param name The new name of the food item.
-     */
     public void setName(String name) {
         this.name = name;
     }
 
-    /**
-     * Gets the list of nutrients associated with the food item.
-     *
-     * @return The list of nutrients.
-     */
     public List<NutrientInfoDTO> getNutrients() {
         return nutrients;
     }
 
-    /**
-     * Sets the list of nutrients for the food item.
-     *
-     * @param nutrients The new list of nutrients.
-     */
     public void setNutrients(List<NutrientInfoDTO> nutrients) {
         this.nutrients = nutrients;
     }
 
-    /**
-     * Gets the description of the portion.
-     *
-     * @return The description of the portion.
-     */
     public String getPortionDescription() {
         return portionDescription;
     }
 
-    /**
-     * Sets the description of the portion.
-     *
-     * @param portionDescription The new description of the portion.
-     */
     public void setPortionDescription(String portionDescription) {
         this.portionDescription = portionDescription;
     }
 
-    /**
-     * Gets the gram weight of the portion.
-     *
-     * @return The gram weight of the portion.
-     */
-    public double getGramWeight() {
+    public Double getGramWeight() {
         return gramWeight;
     }
 
-    /**
-     * Sets the gram weight of the portion.
-     *
-     * @param gramWeight The new gram weight of the portion.
-     */
-    public void setGramWeight(double gramWeight) {
+    public void setGramWeight(Double gramWeight) {
         this.gramWeight = gramWeight;
     }
 }

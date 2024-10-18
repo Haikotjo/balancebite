@@ -8,24 +8,19 @@ import java.util.List;
 /**
  * Data Transfer Object (DTO) for transferring Meal data between layers of the application.
  * This class contains the essential fields required for the response when a meal is created
- * or retrieved, along with a message field for success notification.
+ * or retrieved.
  */
 public class MealDTO {
 
-    private Long id;
-    private String name;
-    private List<MealIngredientDTO> mealIngredients;
+    private final Long id;
+    private final String name;
+    private final List<MealIngredientDTO> mealIngredients;
 
     // List of users associated with the meal
-    private List<UserDTO> users;
+    private final List<UserDTO> users;
 
-    // Message for success or additional information
-    private String message;
-
-    /**
-     * Default constructor for MealDTO.
-     */
-    public MealDTO() {}
+    // Creator of the meal
+    private final UserDTO createdBy;
 
     /**
      * Constructor for creating a MealDTO with basic meal information.
@@ -34,14 +29,15 @@ public class MealDTO {
      * @param name              the name of the meal.
      * @param mealIngredients   the list of ingredients in the meal.
      * @param users             the list of users associated with the meal.
-     * @param message           the message indicating the status of meal creation.
+     * @param createdBy         the user that created the meal.
      */
-    public MealDTO(Long id, String name, List<MealIngredientDTO> mealIngredients, List<UserDTO> users, String message) {
+
+    public MealDTO(Long id, String name, List<MealIngredientDTO> mealIngredients, List<UserDTO> users, UserDTO createdBy) {
         this.id = id;
         this.name = name;
         this.mealIngredients = mealIngredients;
         this.users = users;
-        this.message = message;
+        this.createdBy = createdBy;
     }
 
     // Getters
@@ -83,58 +79,11 @@ public class MealDTO {
     }
 
     /**
-     * Gets the message for the meal response.
+     * Gets the user who created the meal.
      *
-     * @return the message indicating the success or status of the meal creation.
+     * @return the user who created the meal.
      */
-    public String getMessage() {
-        return message;
-    }
-
-    // Setters
-
-    /**
-     * Sets the ID of the meal.
-     *
-     * @param id the ID to set.
-     */
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    /**
-     * Sets the name of the meal.
-     *
-     * @param name the name to set.
-     */
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    /**
-     * Sets the list of ingredients for the meal.
-     *
-     * @param mealIngredients the list of ingredients to set.
-     */
-    public void setMealIngredients(List<MealIngredientDTO> mealIngredients) {
-        this.mealIngredients = mealIngredients;
-    }
-
-    /**
-     * Sets the list of users associated with the meal.
-     *
-     * @param users the list of users to set.
-     */
-    public void setUsers(List<UserDTO> users) {
-        this.users = users;
-    }
-
-    /**
-     * Sets the message for the meal response.
-     *
-     * @param message the message to set.
-     */
-    public void setMessage(String message) {
-        this.message = message;
+    public UserDTO getCreatedBy() {
+        return createdBy;
     }
 }

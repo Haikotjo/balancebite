@@ -22,24 +22,17 @@ public class MealMapper {
 
     /**
      * Converts a Meal entity to a MealDTO.
-     * This includes converting the meal's ingredients, associated users,
-     * and generating a success message for meal creation.
+     * This includes converting the meal's ingredients, associated users, and the creator.
      *
      * @param meal the Meal entity to be converted.
-     * @return the created MealDTO with the success message.
+     * @return the created MealDTO.
      */
     public MealDTO toDTO(Meal meal) {
         if (meal == null) {
             return null;
         }
 
-        // Create a success message based on the meal ingredients (for creation)
-        String successMessage = "Meal successfully created with the following ingredients: " +
-                meal.getMealIngredients().stream()
-                        .map(ingredient -> ingredient.getFoodItem().getName() + " (" + ingredient.getQuantity() + "g)")
-                        .collect(Collectors.joining(", "));
-
-        // Convert the Meal entity to a MealDTO, including the associated users
+        // Convert the Meal entity to a MealDTO, including the associated users and createdBy
         return new MealDTO(
                 meal.getId(),
                 meal.getName(),
@@ -53,32 +46,24 @@ public class MealMapper {
                         .collect(Collectors.toList()),
                 meal.getUsers().stream()
                         .map(user -> new UserDTO(user.getId(), user.getUserName(), user.getEmail()))
-                        // Convert users to UserDTO
                         .collect(Collectors.toList()),
-                successMessage
+                meal.getCreatedBy() != null ? new UserDTO(meal.getCreatedBy().getId(), meal.getCreatedBy().getUserName(), meal.getCreatedBy().getEmail()) : null
         );
     }
 
     /**
      * Converts a Meal entity to a MealDTO for the update operation.
-     * This includes converting the meal's ingredients, associated users,
-     * and generating a success message for meal update.
+     * This includes converting the meal's ingredients, associated users, and the creator.
      *
      * @param meal the Meal entity to be converted.
-     * @return the updated MealDTO with the success message.
+     * @return the updated MealDTO.
      */
     public MealDTO toUpdatedDTO(Meal meal) {
         if (meal == null) {
             return null;
         }
 
-        // Create a success message based on the meal ingredients (for update)
-        String successMessage = "Meal successfully updated to include the following ingredients: " +
-                meal.getMealIngredients().stream()
-                        .map(ingredient -> ingredient.getFoodItem().getName() + " (" + ingredient.getQuantity() + "g)")
-                        .collect(Collectors.joining(", "));
-
-        // Convert the Meal entity to a MealDTO, including the associated users
+        // Convert the Meal entity to a MealDTO, including the associated users and createdBy
         return new MealDTO(
                 meal.getId(),
                 meal.getName(),
@@ -92,9 +77,8 @@ public class MealMapper {
                         .collect(Collectors.toList()),
                 meal.getUsers().stream()
                         .map(user -> new UserDTO(user.getId(), user.getUserName(), user.getEmail()))
-                        // Convert users to UserDTO
                         .collect(Collectors.toList()),
-                successMessage
+                meal.getCreatedBy() != null ? new UserDTO(meal.getCreatedBy().getId(), meal.getCreatedBy().getUserName(), meal.getCreatedBy().getEmail()) : null
         );
     }
 

@@ -39,19 +39,26 @@ public class FoodItemUtil {
             gramWeight = portion.getGramWeight();
         }
 
-        // Create and return a FoodItem entity using the data from the response
-        return new FoodItem(
+// Create the FoodItem entity using the data from the response
+        FoodItem foodItem = new FoodItem(
                 response.getDescription(), // The name/description of the food item
-                response.getFoodNutrients().stream()
-                        .map(n -> new NutrientInfo(
-                                n.getNutrient().getName(), // Name of the nutrient
-                                n.getAmount(), // Amount of the nutrient in the food item
-                                n.getUnitName(), // Unit of measurement for the nutrient
-                                n.getNutrient().getNutrientId() // Unique ID of the nutrient
-                        ))
-                        .collect(Collectors.toList()),
                 portionDescription, // Description of the portion size (e.g., "1 cup")
                 gramWeight // Weight of the portion in grams
         );
+
+// Set the nutrients using the setter method
+        List<NutrientInfo> nutrients = response.getFoodNutrients().stream()
+                .map(n -> new NutrientInfo(
+                        n.getNutrient().getName(), // Name of the nutrient
+                        n.getAmount(), // Amount of the nutrient in the food item
+                        n.getUnitName(), // Unit of measurement for the nutrient
+                        n.getNutrient().getNutrientId() // Unique ID of the nutrient
+                ))
+                .collect(Collectors.toList());
+        foodItem.setNutrients(nutrients);
+
+// Return the constructed FoodItem entity
+        return foodItem;
+
     }
 }

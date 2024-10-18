@@ -2,7 +2,9 @@ package balancebite.dto.meal;
 
 import balancebite.dto.mealingredient.MealIngredientInputDTO;
 import balancebite.dto.user.UserDTO;  // Import UserDTO
+import jakarta.validation.constraints.NotBlank;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -12,11 +14,15 @@ import java.util.List;
  */
 public class MealInputDTO {
 
+    @NotBlank(message = "Meal name is required")
     private String name;
-    private List<MealIngredientInputDTO> mealIngredients;
+    private List<MealIngredientInputDTO> mealIngredients = new ArrayList<>();
 
     // List of users to associate with the meal (optional, depending on use case)
-    private List<UserDTO> users;
+    private List<UserDTO> users = new ArrayList<>();
+
+    // The user who created this meal (optional)
+    private UserDTO createdBy;
 
     /**
      * Default constructor for MealInputDTO.
@@ -29,11 +35,13 @@ public class MealInputDTO {
      * @param name             the name of the meal.
      * @param mealIngredients  the list of ingredients that make up the meal.
      * @param users            the list of users associated with the meal (if applicable).
+     * @param createdBy        the user who created the meal (if applicable).
      */
-    public MealInputDTO(String name, List<MealIngredientInputDTO> mealIngredients, List<UserDTO> users) {
+    public MealInputDTO(String name, List<MealIngredientInputDTO> mealIngredients, List<UserDTO> users, UserDTO createdBy) {
         this.name = name;
         this.mealIngredients = mealIngredients;
         this.users = users;
+        this.createdBy = createdBy;
     }
 
     // Getters
@@ -65,6 +73,15 @@ public class MealInputDTO {
         return users;
     }
 
+    /**
+     * Gets the user who created this meal.
+     *
+     * @return the user who created the meal, or null if not specified.
+     */
+    public UserDTO getCreatedBy() {
+        return createdBy;
+    }
+
     // Setters
 
     /**
@@ -92,5 +109,14 @@ public class MealInputDTO {
      */
     public void setUsers(List<UserDTO> users) {
         this.users = users;
+    }
+
+    /**
+     * Sets the user who created this meal.
+     *
+     * @param createdBy the user who created the meal (optional).
+     */
+    public void setCreatedBy(UserDTO createdBy) {
+        this.createdBy = createdBy;
     }
 }

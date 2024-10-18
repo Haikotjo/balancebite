@@ -2,7 +2,7 @@ package balancebite.service;
 
 import balancebite.config.ApiConfig;
 import balancebite.dto.UsdaFoodResponseDTO;
-import balancebite.exception.UsdaApiException;
+import balancebite.exceptions.UsdaApiException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;

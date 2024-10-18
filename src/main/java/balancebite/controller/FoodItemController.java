@@ -33,9 +33,10 @@ public class FoodItemController {
      * @param fdcId The FDC ID of the food item to fetch.
      * @return A ResponseEntity with a success or error message, either CREATED (201) or a CONFLICT (409) if the item already exists.
      */
-    @GetMapping("/{fdcId:[0-9]+}")
+    @GetMapping("/fetch/{fdcId:[0-9]+}")
     public ResponseEntity<String> fetchFoodItem(@PathVariable String fdcId) {
-        return foodItemService.fetchAndSaveFoodItem(fdcId);
+        foodItemService.fetchAndSaveFoodItem(fdcId);
+        return ResponseEntity.ok("Food item fetched and saved successfully");
     }
 
     /**
@@ -49,12 +50,11 @@ public class FoodItemController {
      * @return A CompletableFuture containing a ResponseEntity with a success or error message.
      *         This ensures non-blocking behavior, enhancing the application's responsiveness.
      */
-    @PostMapping("/bulkFetch")
+    @PostMapping("/bulk-fetch-items")
     public CompletableFuture<ResponseEntity<String>> fetchAllFoodItems(@RequestBody List<String> fdcIds) {
-        // Call the service method to fetch and save all food items asynchronously.
-        return foodItemService.fetchAndSaveAllFoodItems(fdcIds);
+        foodItemService.fetchAndSaveAllFoodItems(fdcIds);
+        return CompletableFuture.completedFuture(ResponseEntity.ok("Bulk food items fetched and saved successfully"));
     }
-
 
     /**
      * Endpoint to retrieve a single FoodItem by its ID from the database.
@@ -62,19 +62,21 @@ public class FoodItemController {
      * @param id The ID of the food item to retrieve.
      * @return A ResponseEntity with the corresponding FoodItemDTO or a NOT_FOUND (404) status if not found.
      */
-    @GetMapping("/id/{id}")
+    @GetMapping("/{id}")
     public ResponseEntity<FoodItemDTO> getFoodItemById(@PathVariable Long id) {
-        return foodItemService.getFoodItemById(id);
+        FoodItemDTO foodItem = foodItemService.getFoodItemById(id);
+        return ResponseEntity.ok(foodItem);
     }
 
     /**
      * Endpoint to retrieve all FoodItems from the database.
      *
-     * @return A ResponseEntity with a list of all FoodItemDTOs, or an INTERNAL_SERVER_ERROR (500) status in case of an error.
+     * @return A ResponseEntity with a list of all FoodItemDTOs.
      */
-    @GetMapping("/all")
+    @GetMapping
     public ResponseEntity<List<FoodItemDTO>> getAllFoodItems() {
-        return foodItemService.getAllFoodItems();
+        List<FoodItemDTO> foodItems = foodItemService.getAllFoodItems();
+        return ResponseEntity.ok(foodItems);
     }
 
     /**
@@ -85,7 +87,8 @@ public class FoodItemController {
      * @return A ResponseEntity indicating the result of the delete operation, either NO_CONTENT (204) if deleted or NOT_FOUND (404) if not found.
      */
     @DeleteMapping("/{id}")
-    public ResponseEntity<String> deleteFoodItemById(@PathVariable Long id) {
-        return foodItemService.deleteFoodItemById(id);
+    public ResponseEntity<Void> deleteFoodItemById(@PathVariable Long id) {
+        foodItemService.deleteFoodItemById(id);
+        return ResponseEntity.noContent().build();
     }
 }

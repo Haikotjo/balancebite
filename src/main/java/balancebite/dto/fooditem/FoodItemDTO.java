@@ -13,32 +13,27 @@ public class FoodItemDTO {
     /**
      * Unique identifier for the food item.
      */
-    private Long id;
+    private final Long id;
 
     /**
      * Name of the food item.
      */
-    private String name;
+    private final String name;
 
     /**
      * List of nutrients associated with the food item.
      */
-    private List<NutrientInfoDTO> nutrients;
+    private final List<NutrientInfoDTO> nutrients;
 
     /**
      * Description of the portion, such as "1 medium banana".
      */
-    private String portionDescription;
+    private final String portionDescription;
 
     /**
      * The gram weight of the portion.
      */
-    private double gramWeight;
-
-    /**
-     * No-argument constructor required for deserialization.
-     */
-    public FoodItemDTO() {}
+    private final double gramWeight;
 
     /**
      * Parameterized constructor to create a FoodItemDTO.
@@ -52,12 +47,12 @@ public class FoodItemDTO {
     public FoodItemDTO(Long id, String name, List<NutrientInfoDTO> nutrients, String portionDescription, double gramWeight) {
         this.id = id;
         this.name = name;
-        this.nutrients = nutrients;
+        this.nutrients = (nutrients != null) ? List.copyOf(nutrients) : List.of();  // Gebruik een niet-wijzigbare lijst
         this.portionDescription = portionDescription;
         this.gramWeight = gramWeight;
     }
 
-    // Getters and setters
+    // Getters only (no setters)
 
     /**
      * Gets the unique identifier of the food item.
@@ -66,15 +61,6 @@ public class FoodItemDTO {
      */
     public Long getId() {
         return id;
-    }
-
-    /**
-     * Sets the unique identifier of the food item.
-     *
-     * @param id The new ID of the food item.
-     */
-    public void setId(Long id) {
-        this.id = id;
     }
 
     /**
@@ -87,30 +73,12 @@ public class FoodItemDTO {
     }
 
     /**
-     * Sets the name of the food item.
-     *
-     * @param name The new name of the food item.
-     */
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    /**
      * Gets the list of nutrients associated with the food item.
      *
-     * @return The list of nutrients.
+     * @return An unmodifiable list of nutrients.
      */
     public List<NutrientInfoDTO> getNutrients() {
-        return nutrients;
-    }
-
-    /**
-     * Sets the list of nutrients for the food item.
-     *
-     * @param nutrients The new list of nutrients.
-     */
-    public void setNutrients(List<NutrientInfoDTO> nutrients) {
-        this.nutrients = nutrients;
+        return List.copyOf(nutrients);  // Zorg ervoor dat de lijst niet gemuteerd kan worden buiten deze DTO
     }
 
     /**
@@ -123,29 +91,11 @@ public class FoodItemDTO {
     }
 
     /**
-     * Sets the description of the portion.
-     *
-     * @param portionDescription The new description of the portion.
-     */
-    public void setPortionDescription(String portionDescription) {
-        this.portionDescription = portionDescription;
-    }
-
-    /**
      * Gets the gram weight of the portion.
      *
      * @return The gram weight of the portion.
      */
     public double getGramWeight() {
         return gramWeight;
-    }
-
-    /**
-     * Sets the gram weight of the portion.
-     *
-     * @param gramWeight The new gram weight of the portion.
-     */
-    public void setGramWeight(double gramWeight) {
-        this.gramWeight = gramWeight;
     }
 }

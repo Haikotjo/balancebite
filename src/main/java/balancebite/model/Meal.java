@@ -28,7 +28,7 @@ public class Meal {
      * List of meal ingredients associated with the meal.
      * Each ingredient corresponds to a food item with a specified quantity.
      */
-    @OneToMany(mappedBy = "meal", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "meal", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<MealIngredient> mealIngredients = new ArrayList<>();
 
     /**
@@ -43,6 +43,12 @@ public class Meal {
     )
     private List<User> users = new ArrayList<>();
 
+    /**
+     * The user who created this meal.
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "created_by_user_id")
+    private User createdBy;
 
     /**
      * No-argument constructor required by JPA.
@@ -132,4 +138,23 @@ public class Meal {
     public void setUsers(List<User> users) {
         this.users = users;
     }
+
+    /**
+     * Gets the user who created this meal.
+     *
+     * @return the user who created this meal.
+     */
+    public User getCreatedBy() {
+        return createdBy;
+    }
+
+    /**
+     * Sets the user who created this meal.
+     *
+     * @param createdBy the user who created the meal.
+     */
+    public void setCreatedBy(User createdBy) {
+        this.createdBy = createdBy;
+    }
+
 }

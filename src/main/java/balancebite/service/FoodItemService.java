@@ -2,23 +2,20 @@ package balancebite.service;
 
 import balancebite.dto.fooditem.FoodItemDTO;
 import balancebite.dto.UsdaFoodResponseDTO;
-import balancebite.errorHandling.ErrorResponseUtil;
-import balancebite.exception.UsdaApiException;
+import balancebite.exceptions.EntityAlreadyExistsException;
+import balancebite.exceptions.UsdaApiException;
 import balancebite.mapper.FoodItemMapper;
 import balancebite.model.FoodItem;
 import balancebite.repository.FoodItemRepository;
+import jakarta.persistence.EntityNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
@@ -34,9 +31,6 @@ public class FoodItemService {
     private final FoodItemRepository foodItemRepository;
     private final UsdaApiService usdaApiService;
     private final FoodItemMapper foodItemMapper;
-
-    private static final String UNEXPECTED_ERROR = "Unexpected error occurred: ";
-    private static final String ITEM_NOT_FOUND = "Food item with ID %d not found.";
 
     /**
      * Constructor for dependency injection.
@@ -56,37 +50,27 @@ public class FoodItemService {
      * If the food item already exists in the database, it will not be added again.
      *
      * @param fdcId The FDC ID of the food item to fetch.
-     * @return A ResponseEntity with a success or error message.
      */
     @Cacheable(value = "foodItemCache", key = "#fdcId")
-    public ResponseEntity<String> fetchAndSaveFoodItem(String fdcId) {
-        try {
-            UsdaFoodResponseDTO response = usdaApiService.getFoodData(fdcId);
+    public void fetchAndSaveFoodItem(String fdcId) {
+        UsdaFoodResponseDTO response = usdaApiService.getFoodData(fdcId);
 
-            if (response != null && response.getFoodNutrients() != null) {
-                String description = response.getDescription();
+        if (response != null && response.getFoodNutrients() != null) {
+            String description = response.getDescription();
 
-                if (description != null && !description.isEmpty()) {
-                    if (foodItemRepository.existsByName(description)) {
-                        return ErrorResponseUtil.createErrorResponse(logger, "Food item already exists", HttpStatus.CONFLICT);
-                    }
-
-                    FoodItem foodItem = balancebite.utils.FoodItemUtil.convertToFoodItem(response);
-                    foodItemRepository.save(foodItem);
-                    return ResponseEntity.status(HttpStatus.CREATED).body("Food item saved successfully: " + description);
+            if (description != null && !description.isEmpty()) {
+                if (foodItemRepository.existsByName(description)) {
+                    throw new EntityAlreadyExistsException("Food item already exists with name: " + description);
                 }
+
+                FoodItem foodItem = balancebite.utils.FoodItemUtil.convertToFoodItem(response);
+                foodItemRepository.save(foodItem);
+            } else {
+                throw new IllegalArgumentException("Invalid food description received from USDA API");
             }
-        } catch (UsdaApiException e) {
-            logger.error("Error fetching food data from USDA API", e);
-            return ErrorResponseUtil.createErrorResponse(logger, "Error fetching food data from USDA API: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
-        } catch (IllegalArgumentException e) {
-            logger.error("Invalid data received from USDA API", e);
-            return ErrorResponseUtil.createErrorResponse(logger, "Invalid data received from USDA API: " + e.getMessage(), HttpStatus.BAD_REQUEST);
-        } catch (Exception e) {
-            logger.error(UNEXPECTED_ERROR, e);
-            return ErrorResponseUtil.createErrorResponse(logger, UNEXPECTED_ERROR + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        } else {
+            throw new IllegalArgumentException("Invalid response received from USDA API");
         }
-        return ErrorResponseUtil.createErrorResponse(logger, "Failure to save food item", HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     /**
@@ -94,95 +78,63 @@ public class FoodItemService {
      * If a food item already exists in the database, it will not be added again.
      *
      * @param fdcIds List of FDC IDs for the food items to fetch.
-     * @return A ResponseEntity with a list of descriptions of the food items that were successfully saved or an error message.
+     * @return A CompletableFuture with the result message.
      */
     @Async
-    public CompletableFuture<ResponseEntity<String>> fetchAndSaveAllFoodItems(List<String> fdcIds) {
+    public CompletableFuture<Void> fetchAndSaveAllFoodItems(List<String> fdcIds) {
         List<String> successfullySavedIds = new ArrayList<>();
-        try {
-            List<UsdaFoodResponseDTO> responses = usdaApiService.getMultipleFoodData(fdcIds);
+        List<UsdaFoodResponseDTO> responses = usdaApiService.getMultipleFoodData(fdcIds);
 
-            responses.stream()
-                    .filter(response -> response.getFoodNutrients() != null && response.getDescription() != null && !response.getDescription().isEmpty())
-                    .forEach(response -> {
-                        if (!foodItemRepository.existsByName(response.getDescription())) {
-                            FoodItem foodItem = balancebite.utils.FoodItemUtil.convertToFoodItem(response);
-                            foodItemRepository.save(foodItem);
-                            successfullySavedIds.add(response.getDescription());
-                        }
-                    });
-        } catch (UsdaApiException e) {
-            logger.error("Error fetching food data from USDA API", e);
-            return CompletableFuture.completedFuture(ErrorResponseUtil.createErrorResponse(logger, "Error fetching food data from USDA API: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR));
-        } catch (Exception e) {
-            logger.error(UNEXPECTED_ERROR, e);
-            return CompletableFuture.completedFuture(ErrorResponseUtil.createErrorResponse(logger, UNEXPECTED_ERROR + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR));
-        }
+        responses.stream()
+                .filter(response -> response.getFoodNutrients() != null && response.getDescription() != null && !response.getDescription().isEmpty())
+                .forEach(response -> {
+                    if (!foodItemRepository.existsByName(response.getDescription())) {
+                        FoodItem foodItem = balancebite.utils.FoodItemUtil.convertToFoodItem(response);
+                        foodItemRepository.save(foodItem);
+                        successfullySavedIds.add(response.getDescription());
+                    }
+                });
 
         if (successfullySavedIds.isEmpty()) {
-            return CompletableFuture.completedFuture(ErrorResponseUtil.createErrorResponse(logger, "No food items were fetched and saved. Please check the provided FDC IDs.", HttpStatus.BAD_REQUEST));
-        } else {
-            return CompletableFuture.completedFuture(ResponseEntity.status(HttpStatus.CREATED).body("Food items for the following FDC IDs were fetched and saved successfully: " + String.join(", ", successfullySavedIds)));
+            throw new IllegalArgumentException("No food items were fetched and saved. Please check the provided FDC IDs.");
         }
-    }
 
+        return CompletableFuture.completedFuture(null);
+    }
 
     /**
      * Retrieves a single FoodItem by its ID from the database.
      *
      * @param id The ID of the food item to retrieve.
-     * @return The corresponding FoodItemDTO wrapped in a ResponseEntity, or a NOT_FOUND status if not found.
-     *         In case of an unexpected error, an INTERNAL_SERVER_ERROR status is returned.
+     * @return The corresponding FoodItemDTO.
      */
-    public ResponseEntity<FoodItemDTO> getFoodItemById(Long id) {
-        try {
-            return foodItemRepository.findById(id)
-                    .map(foodItemMapper::toDTO)
-                    .map(ResponseEntity::ok)
-                    .orElseGet(() -> ErrorResponseUtil.createErrorResponse(logger,
-                            String.format(ITEM_NOT_FOUND, id), HttpStatus.NOT_FOUND));
-        } catch (Exception e) {
-            logger.error(UNEXPECTED_ERROR, e);
-            return ErrorResponseUtil.createErrorResponse(logger,
-                    UNEXPECTED_ERROR + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+    public FoodItemDTO getFoodItemById(Long id) {
+        return foodItemRepository.findById(id)
+                .map(foodItemMapper::toDTO)
+                .orElseThrow(() -> new EntityNotFoundException("Food item with ID " + id + " not found."));
     }
 
     /**
      * Retrieves all FoodItems from the database.
      *
-     * @return A ResponseEntity with a list of all FoodItemDTOs, or an INTERNAL_SERVER_ERROR status in case of an error.
+     * @return A list of all FoodItemDTOs.
      */
-    public ResponseEntity<List<FoodItemDTO>> getAllFoodItems() {
-        try {
-            List<FoodItemDTO> foodItemDTOs = foodItemRepository.findAll().stream()
-                    .map(foodItemMapper::toDTO)
-                    .collect(Collectors.toList());
-            return ResponseEntity.ok(foodItemDTOs);
-        } catch (Exception e) {
-            logger.error(UNEXPECTED_ERROR, e);
-            return ErrorResponseUtil.createErrorResponse(logger,
-                    UNEXPECTED_ERROR + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+    public List<FoodItemDTO> getAllFoodItems() {
+        return foodItemRepository.findAll().stream()
+                .map(foodItemMapper::toDTO)
+                .collect(Collectors.toList());
     }
 
     /**
      * Deletes a FoodItem by its ID from the database.
      *
      * @param id The ID of the food item to delete.
-     * @return A ResponseEntity indicating the result of the delete operation.
      */
-    public ResponseEntity<String> deleteFoodItemById(Long id) {
-        try {
-            if (foodItemRepository.existsById(id)) {
-                foodItemRepository.deleteById(id);
-                return ResponseEntity.noContent().build();
-            } else {
-                return ErrorResponseUtil.createErrorResponse(logger, String.format(ITEM_NOT_FOUND, id), HttpStatus.NOT_FOUND);
-            }
-        } catch (Exception e) {
-            logger.error(UNEXPECTED_ERROR, e);
-            return ErrorResponseUtil.createErrorResponse(logger, UNEXPECTED_ERROR + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+    public void deleteFoodItemById(Long id) {
+        if (foodItemRepository.existsById(id)) {
+            foodItemRepository.deleteById(id);
+        } else {
+            throw new EntityNotFoundException("Food item with ID " + id + " not found.");
         }
     }
 }

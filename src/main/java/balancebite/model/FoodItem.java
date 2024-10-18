@@ -28,9 +28,9 @@ public class FoodItem {
      * List of nutrients associated with the food item.
      * This list is stored in the "food_item_nutrients" table with a foreign key reference to this FoodItem.
      */
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.LAZY)
     @CollectionTable(name = "food_item_nutrients", joinColumns = @JoinColumn(name = "food_item_id"))
-    private List<NutrientInfo> nutrients;
+    private List<NutrientInfo> nutrients = new ArrayList<>();
 
     /**
      * Description of the portion, such as "1 medium banana".
@@ -46,7 +46,7 @@ public class FoodItem {
      * List of meal ingredients associated with this food item.
      * This relationship is managed by the MealIngredient entity.
      */
-    @OneToMany(mappedBy = "foodItem", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "foodItem", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<MealIngredient> mealIngredients = new ArrayList<>();
 
     /**
@@ -58,13 +58,11 @@ public class FoodItem {
      * Constructor to initialize a FoodItem with a name, list of nutrients, portion description, and gram weight.
      *
      * @param name The name of the food item.
-     * @param nutrients The list of nutrients associated with the food item.
      * @param portionDescription The description of the portion.
      * @param gramWeight The gram weight of the portion.
      */
-    public FoodItem(String name, List<NutrientInfo> nutrients, String portionDescription, double gramWeight) {
+    public FoodItem(String name, String portionDescription, double gramWeight) {
         this.name = name;
-        this.nutrients = nutrients;
         this.portionDescription = portionDescription;
         this.gramWeight = gramWeight;
     }
