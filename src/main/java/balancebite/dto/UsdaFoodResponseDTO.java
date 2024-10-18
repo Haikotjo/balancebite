@@ -35,7 +35,7 @@ public class UsdaFoodResponseDTO {
      * @return The description of the food item.
      */
     public String getDescription() {
-        return description;
+        return description != null ? description : "";
     }
 
     /**
@@ -53,7 +53,7 @@ public class UsdaFoodResponseDTO {
      * @return The list of FoodNutrientDTO representing the nutrients.
      */
     public List<FoodNutrientDTO> getFoodNutrients() {
-        return foodNutrients;
+        return foodNutrients != null ? foodNutrients : List.of();
     }
 
     /**
@@ -71,7 +71,7 @@ public class UsdaFoodResponseDTO {
      * @return The list of FoodPortionDTO representing the portion options.
      */
     public List<FoodPortionDTO> getFoodPortions() {
-        return foodPortions;
+        return foodPortions != null ? foodPortions : List.of();
     }
 
     /**
@@ -103,7 +103,7 @@ public class UsdaFoodResponseDTO {
          * @return The NutrientDTO representing the nutrient details.
          */
         public NutrientDTO getNutrient() {
-            return nutrient;
+            return nutrient != null ? nutrient : new NutrientDTO();
         }
 
         /**
@@ -139,7 +139,7 @@ public class UsdaFoodResponseDTO {
          * @return The unit name of the nutrient.
          */
         public String getUnitName() {
-            return nutrient != null ? nutrient.getUnitName() : null;
+            return nutrient != null ? nutrient.getUnitName() : "";
         }
     }
 
@@ -166,7 +166,7 @@ public class UsdaFoodResponseDTO {
          * @return The nutrient ID.
          */
         public Long getNutrientId() {
-            return nutrientId;
+            return nutrientId != null ? nutrientId : 0L;
         }
 
         /**
@@ -184,7 +184,7 @@ public class UsdaFoodResponseDTO {
          * @return The name of the nutrient.
          */
         public String getName() {
-            return name;
+            return name != null ? name : "";
         }
 
         /**
@@ -202,7 +202,7 @@ public class UsdaFoodResponseDTO {
          * @return The unit name of the nutrient.
          */
         public String getUnitName() {
-            return unitName;
+            return unitName != null ? unitName : "";
         }
 
         /**
@@ -277,7 +277,7 @@ public class UsdaFoodResponseDTO {
          * @return The MeasureUnitDTO representing the measure unit details.
          */
         public MeasureUnitDTO getMeasureUnit() {
-            return measureUnit;
+            return measureUnit != null ? measureUnit : new MeasureUnitDTO();
         }
 
         /**
@@ -295,7 +295,7 @@ public class UsdaFoodResponseDTO {
          * @return The modifier for the portion.
          */
         public String getModifier() {
-            return modifier;
+            return modifier != null ? modifier : "";
         }
 
         /**
@@ -325,8 +325,14 @@ public class UsdaFoodResponseDTO {
          * @return The name of the measurement unit.
          */
         public String getName() {
-            return name;
+            return name != null ? name : "";
         }
+
+        /**
+         * Sets the name of the measurement unit.
+         *
+         * @param name The name
+
 
         /**
          * Sets the name of the measurement unit.
