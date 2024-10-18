@@ -3,6 +3,7 @@ package balancebite.service;
 import balancebite.dto.meal.MealDTO;
 import balancebite.dto.meal.MealInputDTO;
 import balancebite.dto.NutrientInfoDTO;
+import balancebite.exceptions.InvalidFoodItemException;
 import balancebite.mapper.MealMapper;
 import balancebite.model.FoodItem;
 import balancebite.model.Meal;
@@ -12,6 +13,7 @@ import balancebite.repository.FoodItemRepository;
 import balancebite.repository.MealRepository;
 import balancebite.repository.UserRepository;
 import balancebite.utils.NutrientCalculatorUtil;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -45,33 +47,32 @@ public class MealService {
     }
 
     /**
-     * Creates a new Meal entity from the provided MealInputDTO.
-     * This method calculates the nutrients based on the food items and quantities provided.
+     * Creates a new Meal entity based on the provided MealInputDTO.
+     * This method converts the input DTO to a Meal entity, persists it, and then converts the result back to a DTO.
      *
      * @param mealInputDTO the DTO containing the input data for creating a Meal.
-     * @return the created MealDTO with a success message and calculated nutrients.
+     * @return the created MealDTO with the persisted meal information.
+     * @throws InvalidFoodItemException if any food item in the input is invalid.
+     * @throws EntityNotFoundException if the meal cannot be found after saving.
      */
     @Transactional
     public MealDTO createMeal(MealInputDTO mealInputDTO) {
-        Meal meal = new Meal();
-        meal.setName(mealInputDTO.getName());
+        try {
+            // Convert the input DTO to a Meal entity using the mapper
+            Meal meal = mealMapper.toEntity(mealInputDTO);
 
-        List<MealIngredient> mealIngredients = mealInputDTO.getMealIngredients().stream().map(inputDTO -> {
-            FoodItem foodItem = foodItemRepository.findById(inputDTO.getFoodItemId())
-                    .orElseThrow(() -> new IllegalArgumentException("Invalid food item ID: " + inputDTO.getFoodItemId()));
-            double quantity = inputDTO.getQuantity() == null || inputDTO.getQuantity() == 0.0
-                    ? foodItem.getGramWeight()
-                    : inputDTO.getQuantity();
-            return new MealIngredient(meal, foodItem, quantity);
-        }).toList();
+            // Save the meal to the database
+            Meal savedMeal = mealRepository.save(meal);
 
-        meal.addMealIngredients(mealIngredients);
-
-        // Save the meal to the database
-        Meal savedMeal = mealRepository.save(meal);
-
-        return mealMapper.toDTO(savedMeal);  // Use mapper
+            // Convert the saved Meal entity back to a DTO and return
+            return mealMapper.toDTO(savedMeal);
+        } catch (InvalidFoodItemException e) {
+            throw new InvalidFoodItemException("Invalid food item provided: " + e.getMessage());
+        } catch (Exception e) {
+            throw new EntityNotFoundException("Meal could not be created: " + e.getMessage());
+        }
     }
+
 
     /**
      * Creates a new Meal entity for a specific user based on the provided MealInputDTO.
@@ -164,7 +165,7 @@ public class MealService {
         Meal savedMeal = mealRepository.save(existingMeal);
 
         // Convert the updated meal to a DTO and return it with a success message for the update
-        return mealMapper.toUpdatedDTO(savedMeal);
+        return mealMapper.toDTO (savedMeal);
     }
 
     /**

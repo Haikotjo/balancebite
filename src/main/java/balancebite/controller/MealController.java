@@ -4,6 +4,7 @@ import balancebite.dto.meal.MealDTO;
 import balancebite.dto.meal.MealInputDTO;
 import balancebite.dto.NutrientInfoDTO;
 import balancebite.service.MealService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -37,7 +38,7 @@ public class MealController {
      * @return ResponseEntity containing the created MealDTO object and status.
      */
     @PostMapping
-    public ResponseEntity<MealDTO> createMeal(@RequestBody MealInputDTO mealInputDTO) {
+    public ResponseEntity<MealDTO> createMeal(@Valid @RequestBody MealInputDTO mealInputDTO) {
         MealDTO createdMeal = mealService.createMeal(mealInputDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdMeal);
     }

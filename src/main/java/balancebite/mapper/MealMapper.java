@@ -1,15 +1,21 @@
 package balancebite.mapper;
 
 import balancebite.dto.meal.MealDTO;
+import balancebite.dto.meal.MealInputDTO;
 import balancebite.dto.mealingredient.MealIngredientDTO;
+import balancebite.dto.mealingredient.MealIngredientInputDTO;
 import balancebite.dto.user.UserDTO;
+import balancebite.exceptions.InvalidFoodItemException;
+import balancebite.model.FoodItem;
 import balancebite.model.Meal;
 import balancebite.model.MealIngredient;
-import balancebite.model.NutrientInfo;
 import balancebite.model.User;
+import balancebite.repository.FoodItemRepository;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -19,6 +25,11 @@ import java.util.stream.Collectors;
  */
 @Component
 public class MealMapper {
+    private final FoodItemRepository foodItemRepository;
+
+    public MealMapper(FoodItemRepository foodItemRepository) {
+        this.foodItemRepository = foodItemRepository;
+    }
 
     /**
      * Converts a Meal entity to a MealDTO.
@@ -32,68 +43,104 @@ public class MealMapper {
             return null;
         }
 
-        // Convert the Meal entity to a MealDTO, including the associated users and createdBy
         return new MealDTO(
                 meal.getId(),
                 meal.getName(),
                 meal.getMealIngredients().stream()
-                        .map(ingredient -> new MealIngredientDTO(
-                                ingredient.getId(),
-                                meal.getId(),
-                                ingredient.getFoodItem() != null ? ingredient.getFoodItem().getId() : null,
-                                ingredient.getQuantity()
-                        ))
+                        .map(this::toMealIngredientDTO)
                         .collect(Collectors.toList()),
                 meal.getUsers().stream()
-                        .map(user -> new UserDTO(user.getId(), user.getUserName(), user.getEmail()))
+                        .map(this::toUserDTO)
                         .collect(Collectors.toList()),
-                meal.getCreatedBy() != null ? new UserDTO(meal.getCreatedBy().getId(), meal.getCreatedBy().getUserName(), meal.getCreatedBy().getEmail()) : null
+                meal.getCreatedBy() != null ? toUserDTO(meal.getCreatedBy()) : null
         );
     }
 
     /**
-     * Converts a Meal entity to a MealDTO for the update operation.
-     * This includes converting the meal's ingredients, associated users, and the creator.
+     * Converts a MealInputDTO to a Meal entity.
+     * Used for creating or updating a Meal entity.
      *
-     * @param meal the Meal entity to be converted.
-     * @return the updated MealDTO.
+     * @param mealInputDTO the MealInputDTO containing the meal data.
+     * @return the Meal entity created from the input DTO.
      */
-    public MealDTO toUpdatedDTO(Meal meal) {
-        if (meal == null) {
-            return null;
-        }
+    public Meal toEntity(MealInputDTO mealInputDTO) {
+        return Optional.ofNullable(mealInputDTO)
+                .map(dto -> {
+                    Meal meal = new Meal();
+                    meal.setName(dto.getName());
+                    List<MealIngredient> mealIngredients = dto.getMealIngredients().stream()
+                            .map(this::toMealIngredientEntity)
+                            .collect(Collectors.toList());
+                    mealIngredients.forEach(ingredient -> ingredient.setMeal(meal));
+                    meal.addMealIngredients(mealIngredients);
+                    meal.setUsers(dto.getUsers() != null ? dto.getUsers().stream()
+                            .map(this::toUserEntity)
+                            .collect(Collectors.toList()) : new ArrayList<>());
 
-        // Convert the Meal entity to a MealDTO, including the associated users and createdBy
-        return new MealDTO(
-                meal.getId(),
-                meal.getName(),
-                meal.getMealIngredients().stream()
-                        .map(ingredient -> new MealIngredientDTO(
-                                ingredient.getId(),
-                                meal.getId(),
-                                ingredient.getFoodItem() != null ? ingredient.getFoodItem().getId() : null,
-                                ingredient.getQuantity()
-                        ))
-                        .collect(Collectors.toList()),
-                meal.getUsers().stream()
-                        .map(user -> new UserDTO(user.getId(), user.getUserName(), user.getEmail()))
-                        .collect(Collectors.toList()),
-                meal.getCreatedBy() != null ? new UserDTO(meal.getCreatedBy().getId(), meal.getCreatedBy().getUserName(), meal.getCreatedBy().getEmail()) : null
+                    meal.setCreatedBy(dto.getCreatedBy() != null ? toUserEntity(dto.getCreatedBy()) : null);
+                    return meal;
+                })
+                .orElse(null);
+    }
+
+    /**
+     * Converts a MealIngredient entity to a MealIngredientDTO.
+     *
+     * @param mealIngredient the MealIngredient entity to be converted.
+     * @return the MealIngredientDTO created from the entity.
+     */
+    private MealIngredientDTO toMealIngredientDTO(MealIngredient mealIngredient) {
+        return new MealIngredientDTO(
+                mealIngredient.getId(),
+                mealIngredient.getMeal().getId(),
+                mealIngredient.getFoodItem() != null ? mealIngredient.getFoodItem().getId() : null,
+                mealIngredient.getQuantity()
         );
     }
 
     /**
-     * (Optional) Method for calculating nutrients dynamically based on the meal ingredients.
-     * This method is currently not implemented and can be expanded as needed.
+     * Converts a MealIngredientInputDTO to a MealIngredient entity.
      *
-     * @param mealIngredients the list of ingredients in the meal.
+     * @param inputDTO the MealIngredientInputDTO containing the ingredient data.
+     * @return the MealIngredient entity created from the input DTO.
      */
-    private void calculateNutrients(List<MealIngredient> mealIngredients) {
-        // Loop through each ingredient and process nutrients dynamically
-        for (MealIngredient ingredient : mealIngredients) {
-            for (NutrientInfo nutrient : ingredient.getFoodItem().getNutrients()) {
-                // Dynamic nutrient calculation logic can be implemented here if needed
-            }
-        }
+    private MealIngredient toMealIngredientEntity(MealIngredientInputDTO inputDTO) {
+        MealIngredient ingredient = new MealIngredient();
+        ingredient.setQuantity(inputDTO.getQuantity());
+
+        // Voeg deze regel toe om de FoodItem te koppelen aan het MealIngredient
+        FoodItem foodItem = foodItemRepository.findById(inputDTO.getFoodItemId())
+                .orElseThrow(() -> new InvalidFoodItemException("Invalid food item ID: " + inputDTO.getFoodItemId()));
+        ingredient.setFoodItem(foodItem);
+
+        return ingredient;
+    }
+
+
+    /**
+     * Converts a User entity to a UserDTO.
+     *
+     * @param user the User entity to be converted.
+     * @return the UserDTO created from the entity.
+     */
+    private UserDTO toUserDTO(User user) {
+        return new UserDTO(user.getId(), user.getUserName(), user.getEmail());
+    }
+
+    /**
+     * Converts a UserDTO to a User entity.
+     *
+     * @param userDTO the UserDTO containing the user data.
+     * @return the User entity created from the DTO.
+     */
+    private User toUserEntity(UserDTO userDTO) {
+        return Optional.ofNullable(userDTO)
+                .map(dto -> {
+                    User user = new User();
+                    user.setUserName(dto.getUserName());
+                    user.setEmail(dto.getEmail());
+                    return user;
+                })
+                .orElse(null);
     }
 }
