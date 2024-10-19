@@ -73,57 +73,65 @@ public class MealService {
         }
     }
 
-
     /**
      * Creates a new Meal entity for a specific user based on the provided MealInputDTO.
-     * The meal is associated with the user, and the meal ingredients are also processed.
+     * This method converts the input DTO to a Meal entity, associates it with a user, persists it, and then converts the result back to a DTO.
      *
      * @param mealInputDTO The DTO containing the input data for creating a Meal.
      * @param userId The ID of the user to whom the meal will be associated.
-     * @return The created MealDTO with a success message and calculated nutrients.
-     * @throws RuntimeException If the user is not found.
-     * @throws IllegalArgumentException If any of the food item IDs are invalid.
+     * @return The created MealDTO with the persisted meal information.
+     * @throws InvalidFoodItemException if any food item in the input is invalid.
+     * @throws RuntimeException if the user cannot be found.
      */
     @Transactional
     public MealDTO createMealForUser(MealInputDTO mealInputDTO, Long userId) {
-        // Create a new Meal entity
-        Meal meal = new Meal();
-        meal.setName(mealInputDTO.getName());
+        try {
+            // Convert the input DTO to a Meal entity using the mapper
+            Meal meal = mealMapper.toEntity(mealInputDTO);
 
-        // Associate the meal with the user
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+            // Associate the meal with the user
+            User user = userRepository.findById(userId)
+                    .orElseThrow(() -> new RuntimeException("User not found"));
 
-        // Create a set or list of users and add the user to it
-        List<User> users = new ArrayList<>();
-        users.add(user);
-        meal.setUsers(users);  // Link the meal to the user
+            // Link the meal to the user
+            meal.setCreatedBy(user);
+            meal.getUsers().add(user);
 
-        // Process and map the meal ingredients
-        List<MealIngredient> mealIngredients = mealInputDTO.getMealIngredients().stream().map(inputDTO -> {
-            FoodItem foodItem = foodItemRepository.findById(inputDTO.getFoodItemId())
-                    .orElseThrow(() -> new IllegalArgumentException("Invalid food item ID: " + inputDTO.getFoodItemId()));
+            // Save the meal to the database
+            Meal savedMeal = mealRepository.save(meal);
 
-            // Calculate quantity (use foodItem's gram weight if quantity is not provided)
-            double quantity = inputDTO.getQuantity() == null || inputDTO.getQuantity() == 0.0
-                    ? foodItem.getGramWeight()
-                    : inputDTO.getQuantity();
-
-            // Create a new MealIngredient and associate it with the meal
-            return new MealIngredient(meal, foodItem, quantity);
-        }).toList();
-
-        // Add the ingredients to the meal
-        meal.addMealIngredients(mealIngredients);
-
-        // Save the meal to the database
-        Meal savedMeal = mealRepository.save(meal);
-
-        // Convert the saved Meal entity to a DTO and return it
-        return mealMapper.toDTO(savedMeal);
-
-        // !!! DEZE METHODE SAMENVOEGEN MET ADMIN LOGICA IN EEN ENKELE METHOD MET ROLCONTROLE LATER !!!
+            // Convert the saved Meal entity back to a DTO and return
+            return mealMapper.toDTO(savedMeal);
+        } catch (InvalidFoodItemException e) {
+            throw new InvalidFoodItemException("Invalid food item provided: " + e.getMessage());
+        } catch (Exception e) {
+            throw new RuntimeException("Meal could not be created: " + e.getMessage());
+        }
     }
+
+    /**
+     * Adds an existing meal to the list of meals for a specific user.
+     * This method associates the specified meal with the user but does not allow modifications to the meal.
+     *
+     * @param mealId The ID of the meal to be added.
+     * @param userId The ID of the user who wants to add the meal.
+     * @throws EntityNotFoundException if the meal or user is not found.
+     */
+    @Transactional
+    public void addMealToUser(Long mealId, Long userId) {
+        // Retrieve the meal by ID
+        Meal meal = mealRepository.findById(mealId)
+                .orElseThrow(() -> new EntityNotFoundException("Meal not found with ID: " + mealId));
+
+        // Retrieve the user by ID
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("User not found with ID: " + userId));
+
+        // Add meal to user's meals list and save the user
+        user.getMeals().add(meal);
+        userRepository.save(user);
+    }
+
 
     /**
      * Updates an existing Meal entity with new information.

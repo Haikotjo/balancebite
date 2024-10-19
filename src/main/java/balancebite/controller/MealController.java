@@ -4,6 +4,7 @@ import balancebite.dto.meal.MealDTO;
 import balancebite.dto.meal.MealInputDTO;
 import balancebite.dto.NutrientInfoDTO;
 import balancebite.service.MealService;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -55,6 +56,27 @@ public class MealController {
         MealDTO createdMeal = mealService.createMealForUser(mealInputDTO, userId);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdMeal);
     }
+
+    /**
+     * Adds an existing meal to the list of meals for a specific user.
+     * This method associates the specified meal with the user but does not allow modifications to the meal.
+     *
+     * @param mealId The ID of the meal to be added.
+     * @param userId The ID of the user who wants to add the meal.
+     * @return ResponseEntity containing the status of the operation.
+     */
+    @PostMapping("/{mealId}/add-to-user/{userId}")
+    public ResponseEntity<String> addMealToUser(@PathVariable Long mealId, @PathVariable Long userId) {
+        try {
+            mealService.addMealToUser(mealId, userId);
+            return ResponseEntity.status(HttpStatus.CREATED).body("Meal successfully added to user's list of meals.");
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred while adding the meal to the user.");
+        }
+    }
+
 
     /**
      * Updates an existing meal by ID.
