@@ -136,11 +136,11 @@ public class MealService {
     /**
      * Updates an existing Meal entity with new information.
      * This method updates the meal's name and ingredients based on the provided MealInputDTO.
-     * After updating the meal, a success message is generated to indicate the changes.
+     * The user relationship remains unchanged during this update.
      *
      * @param id the ID of the meal to be updated
      * @param mealInputDTO the DTO containing the updated meal information
-     * @return the updated MealDTO containing the new meal data with a success message
+     * @return the updated MealDTO containing the new meal data
      * @throws RuntimeException if the meal with the given ID is not found
      * @throws IllegalArgumentException if any food item ID in the ingredients is invalid
      */
@@ -172,8 +172,8 @@ public class MealService {
         // Save the updated meal in the database
         Meal savedMeal = mealRepository.save(existingMeal);
 
-        // Convert the updated meal to a DTO and return it with a success message for the update
-        return mealMapper.toDTO (savedMeal);
+        // Convert the updated meal to a DTO and return it
+        return mealMapper.toDTO(savedMeal);
     }
 
     /**

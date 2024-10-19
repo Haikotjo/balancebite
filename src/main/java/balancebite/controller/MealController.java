@@ -77,9 +77,9 @@ public class MealController {
         }
     }
 
-
     /**
      * Updates an existing meal by ID.
+     * This method allows updating meal details but not its associated users.
      *
      * @param id the ID of the meal to be updated
      * @param mealInputDTO the new details of the meal
@@ -90,8 +90,10 @@ public class MealController {
         try {
             MealDTO updatedMeal = mealService.updateMeal(id, mealInputDTO);
             return ResponseEntity.ok(updatedMeal);
-        } catch (Exception e) {
+        } catch (EntityNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
     }
 
