@@ -17,6 +17,7 @@ import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.nio.file.AccessDeniedException;
 import java.util.*;
 
 /**
@@ -53,24 +54,12 @@ public class MealService {
      * @param mealInputDTO the DTO containing the input data for creating a Meal.
      * @return the created MealDTO with the persisted meal information.
      * @throws InvalidFoodItemException if any food item in the input is invalid.
-     * @throws EntityNotFoundException if the meal cannot be found after saving.
      */
     @Transactional
     public MealDTO createMeal(MealInputDTO mealInputDTO) {
-        try {
-            // Convert the input DTO to a Meal entity using the mapper
-            Meal meal = mealMapper.toEntity(mealInputDTO);
-
-            // Save the meal to the database
-            Meal savedMeal = mealRepository.save(meal);
-
-            // Convert the saved Meal entity back to a DTO and return
-            return mealMapper.toDTO(savedMeal);
-        } catch (InvalidFoodItemException e) {
-            throw new InvalidFoodItemException("Invalid food item provided: " + e.getMessage());
-        } catch (Exception e) {
-            throw new EntityNotFoundException("Meal could not be created: " + e.getMessage());
-        }
+        Meal meal = mealMapper.toEntity(mealInputDTO);
+        Meal savedMeal = mealRepository.save(meal);
+        return mealMapper.toDTO(savedMeal);
     }
 
     /**
@@ -81,32 +70,17 @@ public class MealService {
      * @param userId The ID of the user to whom the meal will be associated.
      * @return The created MealDTO with the persisted meal information.
      * @throws InvalidFoodItemException if any food item in the input is invalid.
-     * @throws RuntimeException if the user cannot be found.
+     * @throws EntityNotFoundException if the user cannot be found.
      */
     @Transactional
     public MealDTO createMealForUser(MealInputDTO mealInputDTO, Long userId) {
-        try {
-            // Convert the input DTO to a Meal entity using the mapper
-            Meal meal = mealMapper.toEntity(mealInputDTO);
-
-            // Associate the meal with the user
-            User user = userRepository.findById(userId)
-                    .orElseThrow(() -> new RuntimeException("User not found"));
-
-            // Link the meal to the user
-            meal.setCreatedBy(user);
-            meal.getUsers().add(user);
-
-            // Save the meal to the database
-            Meal savedMeal = mealRepository.save(meal);
-
-            // Convert the saved Meal entity back to a DTO and return
-            return mealMapper.toDTO(savedMeal);
-        } catch (InvalidFoodItemException e) {
-            throw new InvalidFoodItemException("Invalid food item provided: " + e.getMessage());
-        } catch (Exception e) {
-            throw new RuntimeException("Meal could not be created: " + e.getMessage());
-        }
+        Meal meal = mealMapper.toEntity(mealInputDTO);
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("User not found with ID: " + userId));
+        meal.setCreatedBy(user);
+        meal.getUsers().add(user);
+        Meal savedMeal = mealRepository.save(meal);
+        return mealMapper.toDTO(savedMeal);
     }
 
     /**
@@ -119,19 +93,13 @@ public class MealService {
      */
     @Transactional
     public void addMealToUser(Long mealId, Long userId) {
-        // Retrieve the meal by ID
         Meal meal = mealRepository.findById(mealId)
                 .orElseThrow(() -> new EntityNotFoundException("Meal not found with ID: " + mealId));
-
-        // Retrieve the user by ID
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("User not found with ID: " + userId));
-
-        // Add meal to user's meals list and save the user
         user.getMeals().add(meal);
         userRepository.save(user);
     }
-
 
     /**
      * Updates an existing Meal entity with new information.
@@ -141,38 +109,25 @@ public class MealService {
      * @param id the ID of the meal to be updated
      * @param mealInputDTO the DTO containing the updated meal information
      * @return the updated MealDTO containing the new meal data
-     * @throws RuntimeException if the meal with the given ID is not found
-     * @throws IllegalArgumentException if any food item ID in the ingredients is invalid
+     * @throws EntityNotFoundException if the meal with the given ID is not found
+     * @throws InvalidFoodItemException if any food item ID in the ingredients is invalid
      */
     @Transactional
     public MealDTO updateMeal(Long id, MealInputDTO mealInputDTO) {
-        // Fetch the existing meal by ID
         Meal existingMeal = mealRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Meal not found with id " + id));
-
-        // Update the meal's name
+                .orElseThrow(() -> new EntityNotFoundException("Meal not found with ID: " + id));
         existingMeal.setName(mealInputDTO.getName());
-
-        // Clear the current meal ingredients so we can update them
         existingMeal.getMealIngredients().clear();
-
-        // Map the updated meal ingredients from the input DTO
         List<MealIngredient> updatedIngredients = mealInputDTO.getMealIngredients().stream().map(inputDTO -> {
             FoodItem foodItem = foodItemRepository.findById(inputDTO.getFoodItemId())
-                    .orElseThrow(() -> new IllegalArgumentException("Invalid food item ID: " + inputDTO.getFoodItemId()));
+                    .orElseThrow(() -> new InvalidFoodItemException("Invalid food item ID: " + inputDTO.getFoodItemId()));
             double quantity = inputDTO.getQuantity() == null || inputDTO.getQuantity() == 0.0
                     ? foodItem.getGramWeight()
                     : inputDTO.getQuantity();
             return new MealIngredient(existingMeal, foodItem, quantity);
         }).toList();
-
-        // Add the new or updated ingredients to the meal
         existingMeal.addMealIngredients(updatedIngredients);
-
-        // Save the updated meal in the database
         Meal savedMeal = mealRepository.save(existingMeal);
-
-        // Convert the updated meal to a DTO and return it
         return mealMapper.toDTO(savedMeal);
     }
 
@@ -181,9 +136,10 @@ public class MealService {
      *
      * @return a list of MealDTOs.
      */
+    @Transactional(readOnly = true)
     public List<MealDTO> getAllMeals() {
         List<Meal> meals = mealRepository.findAll();
-        return meals.stream().map(mealMapper::toDTO).toList();  // Use mapper
+        return meals.stream().map(mealMapper::toDTO).toList();
     }
 
     /**
@@ -191,138 +147,76 @@ public class MealService {
      *
      * @param id the ID of the Meal.
      * @return the MealDTO.
+     * @throws EntityNotFoundException if the meal with the given ID is not found.
      */
+    @Transactional(readOnly = true)
     public MealDTO getMealById(Long id) {
         Meal meal = mealRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Invalid meal ID: " + id));
-        return mealMapper.toDTO(meal);  // Use mapper
+                .orElseThrow(() -> new EntityNotFoundException("Meal not found with ID: " + id));
+        return mealMapper.toDTO(meal);
     }
 
     /**
-     * Retrieves only the macronutrients (such as proteins, carbohydrates, fats, and energy)
-     * for a given Meal by its ID. This includes total fats as well as specific types of fatty acids.
+     * Deletes a specific meal from a user's list.
+     * This method checks if the meal exists, if the user exists, and if the user has permission to delete the meal.
      *
-     * @param mealId the ID of the Meal.
-     * @return a map of macronutrient names and their corresponding values for the meal,
-     * with fats grouped into a separate section.
+     * @param userId The ID of the user requesting the deletion.
+     * @param mealId The ID of the meal to be deleted from the user's list.
+     * @throws EntityNotFoundException if the user or meal is not found.
      */
-    public Map<String, Object> getMacronutrients(Long mealId) {
+    @Transactional
+    public void deleteUserMeal(Long userId, Long mealId) {
+        // Retrieve the meal by its ID, throw exception if not found
         Meal meal = mealRepository.findById(mealId)
-                .orElseThrow(() -> new IllegalArgumentException("Invalid meal ID: " + mealId));
+                .orElseThrow(() -> new EntityNotFoundException("Meal not found with ID: " + mealId));
 
-        // Calculate all nutrients for the meal
-        Map<String, NutrientInfoDTO> allNutrients = NutrientCalculatorUtil.calculateTotalNutrients(meal.getMealIngredients());
+        // Retrieve the user by their ID, throw exception if not found
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("User not found with ID: " + userId));
 
-        // Define macronutrient names (energy, protein, carbohydrates, and fats)
-        String[] macronutrientNames = {
-                "Energy kcal",
-                "Protein g",
-                "Carbohydrate, by difference g"
-        };
-
-        // Define fat-related nutrient names
-        String[] fatNames = {
-                "Total lipid (fat) g",  // Total fats
-                "Fatty acids, total saturated g",  // Saturated fats
-                "Fatty acids, total monounsaturated g",  // Monounsaturated fats
-                "Fatty acids, total polyunsaturated g"  // Polyunsaturated fats
-        };
-
-        // Initialize the map to store the macronutrients
-        Map<String, Object> macronutrients = new HashMap<>();
-
-        // Add the main macronutrients (excluding fats)
-        for (String macro : macronutrientNames) {
-            if (allNutrients.containsKey(macro)) {
-                macronutrients.put(macro, allNutrients.get(macro).getValue());
-            }
+        // Check if the meal belongs to the user
+        // Commenting out AccessDeniedException until proper authorization mechanism is implemented.
+        // Uncomment this once access validation has been properly set up, e.g. using Spring Security.
+        /*
+        if (!meal.getUsers().contains(user)) {
+            throw new AccessDeniedException("User does not have permission to delete this meal.");
         }
+        */
 
-        // Add the fat-related nutrients into a separate section within the response
-        Map<String, Double> fatSection = new HashMap<>();
-        for (String fat : fatNames) {
-            if (allNutrients.containsKey(fat)) {
-                fatSection.put(fat, allNutrients.get(fat).getValue());
-            }
-        }
-
-        // Add the fat section to the macronutrients map
-        macronutrients.put("Fat", fatSection);
-
-        return macronutrients;
+        // Remove the meal from the user's list and save the changes to the repository
+        user.getMeals().remove(meal);
+        userRepository.save(user);
     }
+
 
     /**
-     * Retrieves only the macronutrients (such as proteins, carbohydrates, fats, and energy)
-     * for each food item in a given Meal by its ID.
+     * Deletes a specific meal from the repository.
+     * This operation should be restricted to administrative users only.
      *
-     * @param mealId the ID of the Meal.
-     * @return a map where the key is the food item ID, and the value is a map of macronutrient names and their corresponding values.
+     * @param mealId The ID of the meal to be deleted.
+     * @throws EntityNotFoundException if the meal with the given ID is not found.
      */
-    public Map<Long, Map<String, Object>> getMacronutrientsPerFoodItem(Long mealId) {
+    @Transactional
+    public void deleteMeal(Long mealId) {
+        // Retrieve the meal by its ID, throw exception if not found
         Meal meal = mealRepository.findById(mealId)
-                .orElseThrow(() -> new IllegalArgumentException("Invalid meal ID: " + mealId));
+                .orElseThrow(() -> new EntityNotFoundException("Meal not found with ID: " + mealId));
 
-        // Retrieve all nutrients per food item
-        Map<Long, Map<String, NutrientInfoDTO>> allNutrientsPerFoodItem = NutrientCalculatorUtil.calculateNutrientsPerFoodItem(meal.getMealIngredients());
-
-        // Define macronutrient names (energy, protein, carbohydrates, and fats)
-        String[] macronutrientNames = {
-                "Energy kcal",
-                "Protein g",
-                "Carbohydrate, by difference g"
-        };
-
-        // Define fat-related nutrient names
-        String[] fatNames = {
-                "Total lipid (fat) g",  // Total fats
-                "Fatty acids, total saturated g",  // Saturated fats
-                "Fatty acids, total monounsaturated g",  // Monounsaturated fats
-                "Fatty acids, total polyunsaturated g"  // Polyunsaturated fats
-        };
-
-        // Initialize the map to store macronutrients per food item
-        Map<Long, Map<String, Object>> macronutrientsPerFoodItem = new HashMap<>();
-
-        // Loop over each food item and filter macronutrients
-        for (Map.Entry<Long, Map<String, NutrientInfoDTO>> entry : allNutrientsPerFoodItem.entrySet()) {
-            Long foodItemId = entry.getKey();
-            Map<String, NutrientInfoDTO> nutrients = entry.getValue();
-
-            Map<String, Object> macronutrients = new HashMap<>();
-            Map<String, Double> fatSection = new HashMap<>();
-
-            // Filter and add main macronutrients (excluding fats)
-            for (String macro : macronutrientNames) {
-                if (nutrients.containsKey(macro)) {
-                    macronutrients.put(macro, nutrients.get(macro).getValue());
-                }
-            }
-
-            // Filter and add fat-related nutrients into a separate section
-            for (String fat : fatNames) {
-                if (nutrients.containsKey(fat)) {
-                    fatSection.put(fat, nutrients.get(fat).getValue());
-                }
-            }
-
-            macronutrients.put("Fat", fatSection);
-            macronutrientsPerFoodItem.put(foodItemId, macronutrients);
-        }
-
-        return macronutrientsPerFoodItem;
+        // Delete the meal from the repository
+        mealRepository.delete(meal);
     }
+
 
     /**
      * Retrieves the total nutrients for a given Meal by its ID.
      *
      * @param mealId the ID of the Meal.
      * @return a map of nutrient names and their corresponding total values for the meal.
+     * @throws EntityNotFoundException if the meal with the given ID is not found.
      */
     public Map<String, NutrientInfoDTO> calculateNutrients(Long mealId) {
         Meal meal = mealRepository.findById(mealId)
-                .orElseThrow(() -> new IllegalArgumentException("Invalid meal ID: " + mealId));
-
+                .orElseThrow(() -> new EntityNotFoundException("Meal not found with ID: " + mealId));
         return NutrientCalculatorUtil.calculateTotalNutrients(meal.getMealIngredients());
     }
 
@@ -330,12 +224,12 @@ public class MealService {
      * Retrieves the nutrients per food item for a given Meal by its ID.
      *
      * @param mealId the ID of the Meal.
-     * @return a map where the key is the food item ID, and the value is the map of nutrient names and their corresponding total values.
+     * @return a map of food item IDs to nutrient maps, where each map contains nutrient names and their values.
+     * @throws EntityNotFoundException if the meal with the given ID is not found.
      */
     public Map<Long, Map<String, NutrientInfoDTO>> calculateNutrientsPerFoodItem(Long mealId) {
         Meal meal = mealRepository.findById(mealId)
-                .orElseThrow(() -> new IllegalArgumentException("Invalid meal ID: " + mealId));
-
+                .orElseThrow(() -> new EntityNotFoundException("Meal not found with ID: " + mealId));
         return NutrientCalculatorUtil.calculateNutrientsPerFoodItem(meal.getMealIngredients());
     }
 }

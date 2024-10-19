@@ -3,6 +3,7 @@ package balancebite.controller;
 import balancebite.dto.meal.MealDTO;
 import balancebite.dto.meal.MealInputDTO;
 import balancebite.dto.NutrientInfoDTO;
+import balancebite.exceptions.InvalidFoodItemException;
 import balancebite.service.MealService;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
@@ -10,6 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.nio.file.AccessDeniedException;
 import java.util.List;
 import java.util.Map;
 
@@ -40,8 +42,14 @@ public class MealController {
      */
     @PostMapping
     public ResponseEntity<MealDTO> createMeal(@Valid @RequestBody MealInputDTO mealInputDTO) {
-        MealDTO createdMeal = mealService.createMeal(mealInputDTO);
-        return ResponseEntity.status(HttpStatus.CREATED).body(createdMeal);
+        try {
+            MealDTO createdMeal = mealService.createMeal(mealInputDTO);
+            return ResponseEntity.status(HttpStatus.CREATED).body(createdMeal);
+        } catch (InvalidFoodItemException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
     }
 
     /**
@@ -53,8 +61,16 @@ public class MealController {
      */
     @PostMapping("/user/{userId}")
     public ResponseEntity<MealDTO> createMealForUser(@RequestBody MealInputDTO mealInputDTO, @PathVariable Long userId) {
-        MealDTO createdMeal = mealService.createMealForUser(mealInputDTO, userId);
-        return ResponseEntity.status(HttpStatus.CREATED).body(createdMeal);
+        try {
+            MealDTO createdMeal = mealService.createMealForUser(mealInputDTO, userId);
+            return ResponseEntity.status(HttpStatus.CREATED).body(createdMeal);
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        } catch (InvalidFoodItemException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
     }
 
     /**
@@ -92,6 +108,8 @@ public class MealController {
             return ResponseEntity.ok(updatedMeal);
         } catch (EntityNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        } catch (InvalidFoodItemException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
@@ -100,12 +118,16 @@ public class MealController {
     /**
      * Retrieves all meals from the repository.
      *
-     * @return ResponseEntity containing a list of MealDTO objects representing all meals.
+     * @return ResponseEntity containing a list of MealDTO objects representing all meals, or an appropriate error message.
      */
-    @GetMapping()
-    public ResponseEntity<List<MealDTO>> getAllMeals() {
-        List<MealDTO> mealDTOs = mealService.getAllMeals();
-        return ResponseEntity.ok(mealDTOs);
+    @GetMapping
+    public ResponseEntity<?> getAllMeals() {
+        try {
+            List<MealDTO> mealDTOs = mealService.getAllMeals();
+            return ResponseEntity.ok(mealDTOs);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred while retrieving meals.");
+        }
     }
 
     /**
@@ -115,12 +137,76 @@ public class MealController {
      * @return ResponseEntity containing the corresponding MealDTO object, or an error if not found.
      */
     @GetMapping("/{id}")
-    public ResponseEntity<MealDTO> getMealById(@PathVariable Long id) {
+    public ResponseEntity<?> getMealById(@PathVariable Long id) {
         try {
             MealDTO mealDTO = mealService.getMealById(id);
             return ResponseEntity.ok(mealDTO);
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred while retrieving the meal.");
+        }
+    }
+
+    /**
+     * Deletes a specific meal from a user's list.
+     * The user can only delete meals that they have added to their own list.
+     *
+     * @param userId The ID of the user requesting the deletion.
+     * @param mealId The ID of the meal to be deleted from the user's list.
+     * @return ResponseEntity containing a status message indicating the result of the operation.
+     */
+    @DeleteMapping("/user/{userId}/meal/{mealId}")
+    public ResponseEntity<String> deleteUserMeal(@PathVariable Long userId, @PathVariable Long mealId) {
+        try {
+            mealService.deleteUserMeal(userId, mealId);
+            return ResponseEntity.ok("Meal successfully deleted from user's list.");
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        }
+        // Commenting out AccessDeniedException handling until proper authorization mechanism is implemented.
+        // Uncomment this once access validation has been properly set up, e.g. using Spring Security.
+        /*
+        catch (AccessDeniedException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
+        }
+        */
+    }
+
+
+    /**
+     * Deletes a specific meal.
+     * This operation is intended for administrators who can delete any meal from the repository.
+     *
+     * @param mealId The ID of the meal to be deleted.
+     * @return ResponseEntity containing a status message indicating the result of the operation.
+     */
+    @DeleteMapping("/meal/{mealId}")
+    public ResponseEntity<String> deleteMeal(@PathVariable Long mealId) {
+        try {
+            mealService.deleteMeal(mealId);
+            return ResponseEntity.ok("Meal successfully deleted.");
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        }
+    }
+
+
+    /**
+     * Retrieves the nutrients per food item for a given Meal by its ID.
+     *
+     * @param id the ID of the meal.
+     * @return ResponseEntity containing a map of food item IDs to nutrient maps, or an error if not found.
+     */
+    @GetMapping("/nutrients-per-food-item/{id}")
+    public ResponseEntity<?> calculateNutrientsPerFoodItem(@PathVariable Long id) {
+        try {
+            Map<Long, Map<String, NutrientInfoDTO>> nutrientsPerFoodItem = mealService.calculateNutrientsPerFoodItem(id);
+            return ResponseEntity.ok(nutrientsPerFoodItem);
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred while calculating nutrients per food item.");
         }
     }
 
@@ -131,64 +217,14 @@ public class MealController {
      * @return ResponseEntity containing a map of nutrient names and their corresponding total values, or an error if not found.
      */
     @GetMapping("/nutrients/{id}")
-    public ResponseEntity<Map<String, NutrientInfoDTO>> calculateNutrients(@PathVariable Long id) {
+    public ResponseEntity<?> calculateNutrients(@PathVariable Long id) {
         try {
             Map<String, NutrientInfoDTO> nutrients = mealService.calculateNutrients(id);
             return ResponseEntity.ok(nutrients);
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
-        }
-    }
-
-    /**
-     * Retrieves the nutrients per food item for a given Meal by its ID.
-     *
-     * @param id the ID of the meal.
-     * @return ResponseEntity containing a map of food item IDs to nutrient maps, or an error if not found.
-     */
-    @GetMapping("/nutrients-per-food-item/{id}")
-    public ResponseEntity<Map<Long, Map<String, NutrientInfoDTO>>> calculateNutrientsPerFoodItem(@PathVariable Long id) {
-        try {
-            Map<Long, Map<String, NutrientInfoDTO>> nutrientsPerFoodItem = mealService.calculateNutrientsPerFoodItem(id);
-            return ResponseEntity.ok(nutrientsPerFoodItem);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
-        }
-    }
-
-    /**
-     * Retrieves only the macronutrients for a given Meal by its ID.
-     * This includes values such as Energy (kcal), Protein, Carbohydrates, and Fats,
-     * where fats are grouped into a separate section.
-     *
-     * @param id the ID of the meal.
-     * @return ResponseEntity containing a map of macronutrient names and their corresponding values, or an error if not found.
-     */
-    @GetMapping("/macronutrients/{id}")
-    public ResponseEntity<Map<String, Object>> getMacronutrients(@PathVariable Long id) {
-        try {
-            Map<String, Object> macronutrients = mealService.getMacronutrients(id);
-            return ResponseEntity.ok(macronutrients);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
-        }
-    }
-
-    /**
-     * Retrieves only the macronutrients for each food item in a given meal by its ID.
-     * This includes values such as Energy (kcal), Protein, Carbohydrates, and Fats,
-     * where fats are grouped into a separate section.
-     *
-     * @param mealId the ID of the meal.
-     * @return ResponseEntity containing a map where the key is the food item ID, and the value is a map of macronutrient names and their corresponding values, or an error if not found.
-     */
-    @GetMapping("/macronutrients-per-food-item/{mealId}")
-    public ResponseEntity<Map<Long, Map<String, Object>>> getMacronutrientsPerFoodItem(@PathVariable Long mealId) {
-        try {
-            Map<Long, Map<String, Object>> macronutrientsPerFoodItem = mealService.getMacronutrientsPerFoodItem(mealId);
-            return ResponseEntity.ok(macronutrientsPerFoodItem);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred while calculating nutrients.");
         }
     }
 }
