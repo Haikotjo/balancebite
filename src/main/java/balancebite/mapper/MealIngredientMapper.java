@@ -56,6 +56,7 @@ public class MealIngredientMapper {
                 mealIngredient.getId(),
                 mealIngredient.getMeal().getId(),
                 mealIngredient.getFoodItem().getId(),
+                mealIngredient.getFoodItem().getName(),
                 mealIngredient.getQuantity()
         );
     }

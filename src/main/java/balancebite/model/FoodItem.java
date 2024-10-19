@@ -167,4 +167,14 @@ public class FoodItem {
     public void setMealIngredients(List<MealIngredient> mealIngredients) {
         this.mealIngredients = mealIngredients;
     }
+
+    /**
+     * Gets the name of the food item for display purposes.
+     * This is used in conjunction with MealIngredient entities.
+     *
+     * @return The name of the food item.
+     */
+    public String getDisplayName() {
+        return this.name;
+    }
 }

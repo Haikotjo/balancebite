@@ -94,6 +94,7 @@ public class MealMapper {
                 mealIngredient.getId(),
                 mealIngredient.getMeal().getId(),
                 mealIngredient.getFoodItem() != null ? mealIngredient.getFoodItem().getId() : null,
+                mealIngredient.getFoodItemName() != null ? mealIngredient.getFoodItemName() : null,
                 mealIngredient.getQuantity()
         );
     }

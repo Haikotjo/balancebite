@@ -21,6 +21,8 @@ public class MealIngredient {
     @JoinColumn(name = "food_item_id", nullable = false)
     private FoodItem foodItem;
 
+    private String foodItemName;
+
     private double quantity;
 
     /**
@@ -38,6 +40,7 @@ public class MealIngredient {
     public MealIngredient(Meal meal, FoodItem foodItem, double quantity) {
         this.meal = meal;
         this.foodItem = foodItem;
+        this.foodItemName = foodItem.getName();
         this.quantity = quantity;
     }
 
@@ -86,6 +89,25 @@ public class MealIngredient {
      */
     public void setFoodItem(FoodItem foodItem) {
         this.foodItem = foodItem;
+        this.foodItemName = foodItem.getName();
+    }
+
+    /**
+     * Gets the name of the food item.
+     *
+     * @return the name of the food item.
+     */
+    public String getFoodItemName() {
+        return foodItemName;
+    }
+
+    /**
+     * Sets the name of the food item.
+     *
+     * @param foodItemName the name to set for the food item.
+     */
+    public void setFoodItemName(String foodItemName) {
+        this.foodItemName = foodItemName;
     }
 
     /**

@@ -6,17 +6,13 @@ package balancebite.dto.mealingredient;
  */
 public class MealIngredientDTO {
 
-    private Long id;
-    private Long mealId;
-    private Long foodItemId;
-    private double quantity;
+    private final Long id;
+    private final Long mealId;
+    private final Long foodItemId;
+    private final String foodItemName;
+    private final double quantity;
 
-    // Constructors
-
-    /**
-     * Default constructor for MealIngredientDTO.
-     */
-    public MealIngredientDTO() {}
+    // Constructor
 
     /**
      * Parameterized constructor for MealIngredientDTO.
@@ -24,12 +20,14 @@ public class MealIngredientDTO {
      * @param id the ID of the meal ingredient.
      * @param mealId the ID of the meal associated with this ingredient.
      * @param foodItemId the ID of the food item associated with this ingredient.
+     * @param foodItemName the name of the food item associated with this ingredient.
      * @param quantity the quantity of the food item in this meal.
      */
-    public MealIngredientDTO(Long id, Long mealId, Long foodItemId, double quantity) {
+    public MealIngredientDTO(Long id, Long mealId, Long foodItemId, String foodItemName, double quantity) {
         this.id = id;
         this.mealId = mealId;
         this.foodItemId = foodItemId;
+        this.foodItemName = foodItemName;
         this.quantity = quantity;
     }
 
@@ -63,49 +61,20 @@ public class MealIngredientDTO {
     }
 
     /**
+     * Gets the name of the food item associated with this ingredient.
+     *
+     * @return the name of the food item.
+     */
+    public String getFoodItemName() {
+        return foodItemName;
+    }
+
+    /**
      * Gets the quantity of the food item in this meal.
      *
      * @return the quantity of the food item.
      */
     public double getQuantity() {
         return quantity;
-    }
-
-    // Setters
-
-    /**
-     * Sets the ID of the meal ingredient.
-     *
-     * @param id the ID to set.
-     */
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    /**
-     * Sets the ID of the meal associated with this ingredient.
-     *
-     * @param mealId the ID of the meal to set.
-     */
-    public void setMealId(Long mealId) {
-        this.mealId = mealId;
-    }
-
-    /**
-     * Sets the ID of the food item associated with this ingredient.
-     *
-     * @param foodItemId the ID of the food item to set.
-     */
-    public void setFoodItemId(Long foodItemId) {
-        this.foodItemId = foodItemId;
-    }
-
-    /**
-     * Sets the quantity of the food item in this meal.
-     *
-     * @param quantity the quantity to set.
-     */
-    public void setQuantity(double quantity) {
-        this.quantity = quantity;
     }
 }
