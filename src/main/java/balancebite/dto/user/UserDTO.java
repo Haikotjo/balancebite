@@ -8,6 +8,7 @@ import balancebite.model.userenums.Gender;
 import balancebite.model.userenums.Goal;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * Data Transfer Object (DTO) for User.
@@ -15,78 +16,18 @@ import java.util.List;
  */
 public class UserDTO {
 
-    /**
-     * The unique identifier of the user.
-     */
-    private Long id;
-
-    /**
-     * The name of the user.
-     */
-    private String userName;
-
-    /**
-     * The email of the user.
-     */
-    private String email;
-
-    /**
-     * The weight of the user in kilograms.
-     */
-    private Double weight;
-
-    /**
-     * The age of the user in years.
-     */
-    private Integer age;
-
-    /**
-     * The height of the user in centimeters.
-     */
-    private Double height;
-
-    /**
-     * The gender of the user.
-     */
-    private Gender gender;
-
-    /**
-     * The activity level of the user.
-     */
-    private ActivityLevel activityLevel;
-
-    /**
-     * The goal of the user (weight loss, weight gain, or maintenance).
-     */
-    private Goal goal;
-
-    /**
-     * A list of meals associated with the user.
-     * This contains basic meal information (e.g., ID and name).
-     */
-    private List<MealDTO> meals;
-
-    /**
-     * The role of the user.
-     */
-    private Role role;
-
-    /**
-     * The recommended daily intakes associated with the user.
-     * This represents the user's daily nutrient intake goals or limits.
-     */
-    private List<RecommendedDailyIntakeDTO> recommendedDailyIntakes;
-
-
-    // Constructors
-
-    /**
-     * Default no-argument constructor for UserDTO.
-     * Used by frameworks like Hibernate or Jackson.
-     */
-    public UserDTO() {
-        // Default constructor
-    }
+    private final Long id;
+    private final String userName;
+    private final String email;
+    private final Double weight;
+    private final Integer age;
+    private final Double height;
+    private final Gender gender;
+    private final ActivityLevel activityLevel;
+    private final Goal goal;
+    private final List<MealDTO> meals;
+    private final Role role;
+    private final List<RecommendedDailyIntakeDTO> recommendedDailyIntakes;
 
     /**
      * Constructor for creating a UserDTO with all fields.
@@ -116,11 +57,10 @@ public class UserDTO {
         this.gender = gender;
         this.activityLevel = activityLevel;
         this.goal = goal;
-        this.meals = meals;
+        this.meals = (meals != null) ? List.copyOf(meals) : List.of(); // Gebruik een niet-wijzigbare lijst
         this.role = role;
-        this.recommendedDailyIntakes = recommendedDailyIntakes;
+        this.recommendedDailyIntakes = (recommendedDailyIntakes != null) ? List.copyOf(recommendedDailyIntakes) : List.of(); // Gebruik een niet-wijzigbare lijst
     }
-
 
     /**
      * Constructor for creating a UserDTO with only basic user information (ID, name, and email).
@@ -132,106 +72,56 @@ public class UserDTO {
      * @param email The email of the user.
      */
     public UserDTO(Long id, String userName, String email) {
-        this.id = id;
-        this.userName = userName;
-        this.email = email;
+        this(id, userName, email, null, null, null, null, null, null, List.of(), null, List.of());
     }
 
-    // Getters and setters
+    // Getters only (no setters)
 
     public Long getId() {
         return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
     }
 
     public String getUserName() {
         return userName;
     }
 
-    public void setUserName(String userName) {
-        this.userName = userName;
-    }
-
     public String getEmail() {
         return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
     }
 
     public Double getWeight() {
         return weight;
     }
 
-    public void setWeight(Double weight) {
-        this.weight = weight;
-    }
-
     public Integer getAge() {
         return age;
-    }
-
-    public void setAge(Integer age) {
-        this.age = age;
     }
 
     public Double getHeight() {
         return height;
     }
 
-    public void setHeight(Double height) {
-        this.height = height;
-    }
-
     public Gender getGender() {
         return gender;
-    }
-
-    public void setGender(Gender gender) {
-        this.gender = gender;
     }
 
     public ActivityLevel getActivityLevel() {
         return activityLevel;
     }
 
-    public void setActivityLevel(ActivityLevel activityLevel) {
-        this.activityLevel = activityLevel;
-    }
-
     public Goal getGoal() {
         return goal;
     }
 
-    public void setGoal(Goal goal) {
-        this.goal = goal;
-    }
-
-    public List<MealDTO> getMeals() {
-        return meals;
-    }
-
-    public void setMeals(List<MealDTO> meals) {
-        this.meals = meals;
+    public Set<MealDTO> getMeals() {
+        return Set.copyOf(meals);  // Zorg ervoor dat de set niet gemuteerd kan worden buiten deze DTO
     }
 
     public Role getRole() {
         return role;
     }
 
-    public void setRole(Role role) {
-        this.role = role;
-    }
-
-    public List<RecommendedDailyIntakeDTO> getRecommendedDailyIntakes() {
-        return recommendedDailyIntakes;
-    }
-
-    public void setRecommendedDailyIntakes(List<RecommendedDailyIntakeDTO> recommendedDailyIntakes) {
-        this.recommendedDailyIntakes = recommendedDailyIntakes;
+    public Set<RecommendedDailyIntakeDTO> getRecommendedDailyIntakes() {
+        return Set.copyOf(recommendedDailyIntakes);  // Zorg ervoor dat de set niet gemuteerd kan worden buiten deze DTO
     }
 }

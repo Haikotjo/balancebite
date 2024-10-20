@@ -5,6 +5,9 @@ import balancebite.dto.user.UserInputDTO;
 import balancebite.model.RecommendedDailyIntake;
 import balancebite.service.RecommendedDailyIntakeService;
 import balancebite.service.UserService;
+import jakarta.persistence.EntityExistsException;
+import jakarta.validation.ConstraintViolationException;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -41,9 +44,15 @@ public class UserController {
      * @return The created UserDTO and 201 status code.
      */
     @PostMapping
-    public ResponseEntity<UserDTO> createUser(@RequestBody UserInputDTO userInputDTO) {
-        UserDTO createdUser = userService.createUser(userInputDTO);
-        return new ResponseEntity<>(createdUser, HttpStatus.CREATED);
+    public ResponseEntity<?> createUserEndpoint(@Valid @RequestBody UserInputDTO userInputDTO) {
+        try {
+            UserDTO createdUser = userService.createUser(userInputDTO);
+            return ResponseEntity.status(HttpStatus.CREATED).body(createdUser);
+        } catch (EntityExistsException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An unexpected error occurred.");
+        }
     }
 
     /**

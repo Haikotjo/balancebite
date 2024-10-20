@@ -11,8 +11,10 @@ import balancebite.model.User;
 import balancebite.repository.MealRepository;
 import balancebite.repository.RecommendedDailyIntakeRepository;
 import balancebite.repository.UserRepository;
+import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -53,8 +55,6 @@ public class UserService {
         this.recommendedDailyIntakeRepository = recommendedDailyIntakeRepository;
     }
 
-
-
     /**
      * Creates a new user in the system based on the provided UserInputDTO.
      * Meals are not added at the time of creation.
@@ -65,9 +65,14 @@ public class UserService {
     public UserDTO createUser(UserInputDTO userInputDTO) {
         User user = userMapper.toEntity(userInputDTO);
         user.setMeals(null);  // No meals added at this point
-        User savedUser = userRepository.save(user);
-        return userMapper.toDTO(savedUser);
+        try {
+            User savedUser = userRepository.save(user);
+            return userMapper.toDTO(savedUser);
+        } catch (DataIntegrityViolationException e) {
+            throw new EntityExistsException("User with email " + user.getEmail() + " already exists.");
+        }
     }
+
 
     /**
      * Updates an existing user in the system based on the provided UserInputDTO.

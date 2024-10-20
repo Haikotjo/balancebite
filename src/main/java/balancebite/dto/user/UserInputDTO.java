@@ -5,6 +5,13 @@ import balancebite.model.Role;
 import balancebite.model.userenums.ActivityLevel;
 import balancebite.model.userenums.Gender;
 import balancebite.model.userenums.Goal;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+
+import java.util.List;
 
 /**
  * Data Transfer Object (DTO) for creating or updating a user.
@@ -12,56 +19,64 @@ import balancebite.model.userenums.Goal;
  */
 public class UserInputDTO {
 
-    /**
-     * The name of the user.
-     */
+    @NotBlank(message = "The user name cannot be blank. Please provide a valid name.")
+    @Size(min = 2, max = 50, message = "User name must be between 2 and 50 characters.")
     private String userName;
 
-    /**
-     * The email of the user.
-     */
+    @NotBlank(message = "The email cannot be blank. Please provide a valid email address.")
+    @Email(message = "Please provide a valid email address.")
     private String email;
 
-    /**
-     * The password of the user.
-     * This must be hashed before storing in the database.
-     */
+    @NotBlank(message = "The password cannot be blank. Please provide a valid password.")
+    @Size(min = 4, message = "Password must be at least 4 characters long.")
     private String password;
 
-    /**
-     * The weight of the user in kilograms.
-     */
+    @NotNull(message = "Weight must be provided.")
     private Double weight;
 
-    /**
-     * The age of the user in years.
-     */
+    @NotNull(message = "Age must be provided.")
     private Integer age;
 
-    /**
-     * The height of the user in centimeters.
-     */
+    @NotNull(message = "Height must be provided.")
     private Double height;
 
-    /**
-     * The gender of the user.
-     */
+    @NotNull(message = "Gender must be provided.")
     private Gender gender;
 
-    /**
-     * The activity level of the user.
-     */
+    @NotNull(message = "Activity level must be provided.")
     private ActivityLevel activityLevel;
 
-    /**
-     * The goal of the user (weight loss, weight gain, or maintenance).
-     */
+    @NotNull(message = "Goal must be provided.")
     private Goal goal;
 
-    /**
-     * The role of the user (e.g., USER or ADMIN).
-     */
+    @NotNull(message = "Role must be provided.")
     private Role role;
+
+    // Default constructor
+    public UserInputDTO() {}
+
+    // Constructor for creating user with only basic information
+    public UserInputDTO(String userName, String email, String password, Role role) {
+        this.userName = userName;
+        this.email = email;
+        this.password = password;
+        this.role = role;
+    }
+
+    // Full constructor
+    public UserInputDTO(String userName, String email, String password, Double weight, Integer age, Double height,
+                        Gender gender, ActivityLevel activityLevel, Goal goal, Role role) {
+        this.userName = userName;
+        this.email = email;
+        this.password = password;
+        this.weight = weight;
+        this.age = age;
+        this.height = height;
+        this.gender = gender;
+        this.activityLevel = activityLevel;
+        this.goal = goal;
+        this.role = role;
+    }
 
     // Getters and setters
 

@@ -18,7 +18,6 @@ public class MealInputDTO {
     @NotBlank(message = "The name of the meal cannot be blank. Please provide a valid name.")
     private String name;
 
-    @NotEmpty(message = "The meal must contain at least one ingredient. Please provide ingredients.")
     private List<MealIngredientInputDTO> mealIngredients;
 
     // List of users to associate with the meal (optional, depending on use case)
