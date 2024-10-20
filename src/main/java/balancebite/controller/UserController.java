@@ -6,6 +6,7 @@ import balancebite.model.RecommendedDailyIntake;
 import balancebite.service.RecommendedDailyIntakeService;
 import balancebite.service.UserService;
 import jakarta.persistence.EntityExistsException;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -57,16 +58,24 @@ public class UserController {
 
     /**
      * Endpoint to update an existing user.
+     * Fields not provided in the UserInputDTO will remain unchanged.
      *
      * @param id The ID of the user to update.
-     * @param userInputDTO The input data for updating the user.
-     * @return The updated UserDTO and 200 status code.
+     * @param userInputDTO The input data for updating the user, containing optional fields.
+     * @return The updated UserDTO with a 200 status code if successful, or appropriate error codes otherwise.
      */
     @PutMapping("/{id}")
-    public ResponseEntity<UserDTO> updateUser(@PathVariable Long id, @RequestBody UserInputDTO userInputDTO) {
-        UserDTO updatedUser = userService.updateUser(id, userInputDTO);
-        return ResponseEntity.ok(updatedUser);
+    public ResponseEntity<UserDTO> updateUser(@PathVariable Long id, @Valid @RequestBody UserInputDTO userInputDTO) {
+        try {
+            UserDTO updatedUser = userService.updateUser(id, userInputDTO);
+            return ResponseEntity.ok(updatedUser);
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
     }
+
 
     /**
      * Endpoint to retrieve all users.

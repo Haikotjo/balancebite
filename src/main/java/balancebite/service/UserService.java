@@ -13,6 +13,7 @@ import balancebite.repository.RecommendedDailyIntakeRepository;
 import balancebite.repository.UserRepository;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.PersistenceContext;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
@@ -73,28 +74,29 @@ public class UserService {
         }
     }
 
-
     /**
      * Updates an existing user in the system based on the provided UserInputDTO.
      * This can include updating optional fields like weight, age, height, and more.
+     * Fields that are not provided in the UserInputDTO will remain unchanged.
      *
      * @param id The ID of the user to update.
      * @param userInputDTO The input data for updating the user.
      * @return The updated UserDTO.
      */
     public UserDTO updateUser(Long id, UserInputDTO userInputDTO) {
+        // Retrieve the existing user
         User existingUser = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found with ID " + id));
+                .orElseThrow(() -> new EntityNotFoundException("User not found with ID " + id));
 
-        // Update only the fields that are present in userInputDTO (if not null)
-        if (userInputDTO.getUserName() != null) {
+        // Update fields that are not null in the inputDTO
+        if (userInputDTO.getUserName() != null && !userInputDTO.getUserName().isBlank()) {
             existingUser.setUserName(userInputDTO.getUserName());
         }
-        if (userInputDTO.getEmail() != null) {
+        if (userInputDTO.getEmail() != null && !userInputDTO.getEmail().isBlank()) {
             existingUser.setEmail(userInputDTO.getEmail());
         }
-        if (userInputDTO.getPassword() != null) {
-            existingUser.setPassword(userInputDTO.getPassword());  // Make sure to hash the password in the service layer
+        if (userInputDTO.getPassword() != null && !userInputDTO.getPassword().isBlank()) {
+            existingUser.setPassword(userInputDTO.getPassword());  // Password should be hashed
         }
         if (userInputDTO.getRole() != null) {
             existingUser.setRole(userInputDTO.getRole());
@@ -118,7 +120,7 @@ public class UserService {
             existingUser.setGoal(userInputDTO.getGoal());
         }
 
-        // Save the updated user
+        // Save the user and return the updated data as a DTO
         User updatedUser = userRepository.save(existingUser);
         return userMapper.toDTO(updatedUser);
     }
