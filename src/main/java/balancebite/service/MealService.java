@@ -4,6 +4,7 @@ import balancebite.dto.meal.MealDTO;
 import balancebite.dto.meal.MealInputDTO;
 import balancebite.dto.NutrientInfoDTO;
 import balancebite.exceptions.InvalidFoodItemException;
+import balancebite.mapper.MealIngredientMapper;
 import balancebite.mapper.MealMapper;
 import balancebite.model.FoodItem;
 import balancebite.model.Meal;
@@ -31,6 +32,7 @@ public class MealService {
     private final FoodItemRepository foodItemRepository;
     private final UserRepository userRepository;
     private final MealMapper mealMapper;
+    private final MealIngredientMapper mealIngredientMapper;
 
     /**
      * Constructor for MealService, using constructor injection.
@@ -40,11 +42,12 @@ public class MealService {
      * @param userRepository     the repository for managing User entities.
      * @param mealMapper         the mapper for converting Meal entities to DTOs.
      */
-    public MealService(MealRepository mealRepository, FoodItemRepository foodItemRepository, UserRepository userRepository, MealMapper mealMapper) {
+    public MealService(MealRepository mealRepository, FoodItemRepository foodItemRepository, UserRepository userRepository, MealMapper mealMapper, MealIngredientMapper mealIngredientMapper) {
         this.mealRepository = mealRepository;
         this.foodItemRepository = foodItemRepository;
         this.userRepository = userRepository;
         this.mealMapper = mealMapper;
+        this.mealIngredientMapper = mealIngredientMapper;
     }
 
     /**
@@ -118,14 +121,9 @@ public class MealService {
                 .orElseThrow(() -> new EntityNotFoundException("Meal not found with ID: " + id));
         existingMeal.setName(mealInputDTO.getName());
         existingMeal.getMealIngredients().clear();
-        List<MealIngredient> updatedIngredients = mealInputDTO.getMealIngredients().stream().map(inputDTO -> {
-            FoodItem foodItem = foodItemRepository.findById(inputDTO.getFoodItemId())
-                    .orElseThrow(() -> new InvalidFoodItemException("Invalid food item ID: " + inputDTO.getFoodItemId()));
-            double quantity = inputDTO.getQuantity() == null || inputDTO.getQuantity() == 0.0
-                    ? foodItem.getGramWeight()
-                    : inputDTO.getQuantity();
-            return new MealIngredient(existingMeal, foodItem, quantity);
-        }).toList();
+        List<MealIngredient> updatedIngredients = mealInputDTO.getMealIngredients().stream()
+                .map(inputDTO -> mealIngredientMapper.toEntity(inputDTO, existingMeal))
+                .toList();
         existingMeal.addMealIngredients(updatedIngredients);
         Meal savedMeal = mealRepository.save(existingMeal);
         return mealMapper.toDTO(savedMeal);

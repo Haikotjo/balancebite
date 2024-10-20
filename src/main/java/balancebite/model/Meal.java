@@ -105,7 +105,6 @@ public class Meal {
         return mealIngredients;
     }
 
-
     /**
      * Adds a meal ingredient to the list and sets the relationship.
      * This method ensures that the bidirectional relationship between Meal and MealIngredient is maintained.

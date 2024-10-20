@@ -1,5 +1,8 @@
 package balancebite.dto.mealingredient;
 
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
+
 /**
  * Data Transfer Object (DTO) for capturing input data related to a Meal Ingredient.
  * This class is used for receiving data from the client-side when creating or updating
@@ -7,6 +10,8 @@ package balancebite.dto.mealingredient;
  */
 public class MealIngredientInputDTO {
 
+    @NotNull(message = "Please provide a valid food item ID")
+    @Min(value = 1, message = "Food item ID must be greater than zero")
     private Long foodItemId;
     private Double quantity;
 

@@ -26,9 +26,11 @@ import java.util.stream.Collectors;
 @Component
 public class MealMapper {
     private final FoodItemRepository foodItemRepository;
+    private final MealIngredientMapper mealIngredientMapper;
 
-    public MealMapper(FoodItemRepository foodItemRepository) {
+    public MealMapper(FoodItemRepository foodItemRepository, MealIngredientMapper mealIngredientMapper) {
         this.foodItemRepository = foodItemRepository;
+        this.mealIngredientMapper = mealIngredientMapper;
     }
 
     /**
@@ -69,7 +71,7 @@ public class MealMapper {
                     Meal meal = new Meal();
                     meal.setName(dto.getName());
                     List<MealIngredient> mealIngredients = dto.getMealIngredients().stream()
-                            .map(this::toMealIngredientEntity)
+                            .map(input -> mealIngredientMapper.toEntity(input, meal))
                             .collect(Collectors.toList());
                     mealIngredients.forEach(ingredient -> ingredient.setMeal(meal));
                     meal.addMealIngredients(mealIngredients);

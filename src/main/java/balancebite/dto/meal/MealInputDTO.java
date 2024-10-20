@@ -2,6 +2,7 @@ package balancebite.dto.meal;
 
 import balancebite.dto.mealingredient.MealIngredientInputDTO;
 import balancebite.dto.user.UserDTO;  // Import UserDTO
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 
@@ -100,6 +101,8 @@ public class MealInputDTO {
      *
      * @param mealIngredients the list of meal ingredients to set.
      */
+    @NotEmpty(message = "The meal must contain at least one ingredient. Please provide ingredients.")
+    @Valid
     public void setMealIngredients(List<MealIngredientInputDTO> mealIngredients) {
         this.mealIngredients = mealIngredients;
     }

@@ -37,10 +37,14 @@ public class MealIngredientMapper {
         FoodItem foodItem = foodItemRepository.findById(inputDTO.getFoodItemId())
                 .orElseThrow(() -> new IllegalArgumentException("Invalid food item ID: " + inputDTO.getFoodItemId()));
 
-        // If quantity is null or 0, use the gramWeight from FoodItem, otherwise use the provided quantity.
-        double quantity = (inputDTO.getQuantity() == null || inputDTO.getQuantity() == 0.0)
-                ? foodItem.getGramWeight()
-                : inputDTO.getQuantity();
+        double quantity;
+        if (inputDTO.getQuantity() == null || inputDTO.getQuantity() <= 0) {
+            quantity = foodItem.getGramWeight();
+            System.out.println("Quantity is null or <= 0, using gramWeight from FoodItem: " + quantity);
+        } else {
+            quantity = inputDTO.getQuantity();
+            System.out.println("Using quantity from inputDTO: " + quantity);
+        }
 
         return new MealIngredient(meal, foodItem, quantity);
     }

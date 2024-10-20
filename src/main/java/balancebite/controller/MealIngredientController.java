@@ -2,6 +2,7 @@ package balancebite.controller;
 
 import balancebite.dto.mealingredient.MealIngredientInputDTO;
 import balancebite.service.MealIngredientService;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -30,7 +31,7 @@ public class MealIngredientController {
      * @param inputDTO the DTO containing the data of the meal ingredient to be added.
      */
     @PostMapping("/add/{mealId}")
-    public void addMealIngredient(@PathVariable Long mealId, @RequestBody MealIngredientInputDTO inputDTO) {
+    public void addMealIngredient(@PathVariable Long mealId, @RequestBody @Valid MealIngredientInputDTO inputDTO) {
         mealIngredientService.addMealIngredient(mealId, inputDTO);
     }
 }
