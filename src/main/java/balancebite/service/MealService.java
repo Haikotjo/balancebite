@@ -87,24 +87,6 @@ public class MealService {
     }
 
     /**
-     * Adds an existing meal to the list of meals for a specific user.
-     * This method associates the specified meal with the user but does not allow modifications to the meal.
-     *
-     * @param mealId The ID of the meal to be added.
-     * @param userId The ID of the user who wants to add the meal.
-     * @throws EntityNotFoundException if the meal or user is not found.
-     */
-    @Transactional
-    public void addMealToUser(Long mealId, Long userId) {
-        Meal meal = mealRepository.findById(mealId)
-                .orElseThrow(() -> new EntityNotFoundException("Meal not found with ID: " + mealId));
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new EntityNotFoundException("User not found with ID: " + userId));
-        user.getMeals().add(meal);
-        userRepository.save(user);
-    }
-
-    /**
      * Updates an existing Meal entity with new information.
      * This method updates the meal's name and ingredients based on the provided MealInputDTO.
      * The user relationship remains unchanged during this update.

@@ -74,26 +74,6 @@ public class MealController {
     }
 
     /**
-     * Adds an existing meal to the list of meals for a specific user.
-     * This method associates the specified meal with the user but does not allow modifications to the meal.
-     *
-     * @param mealId The ID of the meal to be added.
-     * @param userId The ID of the user who wants to add the meal.
-     * @return ResponseEntity containing the status of the operation.
-     */
-    @PostMapping("/{mealId}/add-to-user/{userId}")
-    public ResponseEntity<String> addMealToUser(@PathVariable Long mealId, @PathVariable Long userId) {
-        try {
-            mealService.addMealToUser(mealId, userId);
-            return ResponseEntity.status(HttpStatus.CREATED).body("Meal successfully added to user's list of meals.");
-        } catch (EntityNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred while adding the meal to the user.");
-        }
-    }
-
-    /**
      * Updates an existing meal by ID.
      * This method allows updating meal details but not its associated users.
      *
@@ -121,14 +101,11 @@ public class MealController {
      * @return ResponseEntity containing a list of MealDTO objects representing all meals, or an appropriate error message.
      */
     @GetMapping
-    public ResponseEntity<?> getAllMeals() {
-        try {
-            List<MealDTO> mealDTOs = mealService.getAllMeals();
-            return ResponseEntity.ok(mealDTOs);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred while retrieving meals.");
-        }
+    public ResponseEntity<List<MealDTO>> getAllMeals() {
+        List<MealDTO> mealDTOs = mealService.getAllMeals();
+        return ResponseEntity.ok(mealDTOs);
     }
+
 
     /**
      * Retrieves a Meal entity by its ID.

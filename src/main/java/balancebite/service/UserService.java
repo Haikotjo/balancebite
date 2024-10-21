@@ -165,20 +165,24 @@ public class UserService {
     /**
      * Adds an existing meal to the user's list of meals.
      *
-     * @param userId The ID of the user.
+     * @param userId The ID of the user to whom the meal is to be added.
      * @param mealId The ID of the meal to be added.
-     * @return The updated UserDTO with the new meal included.
+     * @return The updated UserDTO with the newly added meal.
+     * @throws EntityNotFoundException if the user or meal is not found.
      */
+    @Transactional
     public UserDTO addMealToUser(Long userId, Long mealId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found with ID " + userId));
+                .orElseThrow(() -> new EntityNotFoundException("User not found with ID: " + userId));
 
         Meal meal = mealRepository.findById(mealId)
-                .orElseThrow(() -> new RuntimeException("Meal not found with ID " + mealId));
+                .orElseThrow(() -> new EntityNotFoundException("Meal not found with ID: " + mealId));
 
-        user.getMeals().add(meal); // Add the meal to the user's meals
+        // Voeg de maaltijd toe aan de lijst met maaltijden van de gebruiker.
+        user.getMeals().add(meal);
+
+        // Sla de gebruiker met de nieuwe maaltijd op en retourneer de UserDTO.
         User updatedUser = userRepository.save(user);
-
         return userMapper.toDTO(updatedUser);
     }
 

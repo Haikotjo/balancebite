@@ -58,4 +58,17 @@ public class GlobalExceptionHandler {
         // Returns a ResponseEntity with INTERNAL_SERVER_ERROR status and a generic error message
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred: " + e.getMessage());
     }
+
+    /**
+     * Handles cases where an entity already exists in the database.
+     *
+     * @param e The thrown {@link EntityAlreadyExistsException}.
+     * @return A ResponseEntity indicating that the entity already exists, with a BAD_REQUEST status.
+     */
+    @ExceptionHandler(EntityAlreadyExistsException.class)
+    public ResponseEntity<String> handleEntityAlreadyExistsException(EntityAlreadyExistsException e) {
+        // Returns a ResponseEntity with BAD_REQUEST status and the message from EntityAlreadyExistsException
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+    }
+
 }

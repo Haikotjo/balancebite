@@ -142,16 +142,22 @@ public class UserController {
     }
 
     /**
-     * Endpoint to add a meal to the user's list of meals.
+     * Endpoint to add an existing meal to a user's list of meals.
      *
-     * @param userId The ID of the user.
-     * @param mealId The ID of the meal to add.
-     * @return A 200 OK status code if the meal was added successfully.
+     * @param userId The ID of the user to whom the meal will be added.
+     * @param mealId The ID of the meal to be added.
+     * @return The updated UserDTO and a 200 status code if successful.
      */
-    @PostMapping("/{userId}/meals/{mealId}")
-    public ResponseEntity<UserDTO> addMealToUser(@PathVariable Long userId, @PathVariable Long mealId) {
-        UserDTO updatedUser = userService.addMealToUser(userId, mealId);
-        return ResponseEntity.ok(updatedUser);
+    @PatchMapping("/{userId}/meals/{mealId}")
+    public ResponseEntity<UserDTO> addMealToUserEndpoint(@PathVariable Long userId, @PathVariable Long mealId) {
+        try {
+            UserDTO user = userService.addMealToUser(userId, mealId);
+            return ResponseEntity.ok(user);
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
     }
 
     /**
