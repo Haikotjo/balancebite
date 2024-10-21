@@ -122,7 +122,6 @@ public class UserService {
         return userMapper.toDTO(updatedUser);
     }
 
-
     /**
      * Retrieves all users in the system.
      *
@@ -130,6 +129,10 @@ public class UserService {
      */
     public List<UserDTO> getAllUsers() {
         List<User> users = userRepository.findAll();
+        if (users.isEmpty()) {
+            // Log that no users were found (optional but useful for debugging)
+            System.out.println("No users found in the system.");
+        }
         return users.stream()
                 .map(userMapper::toDTO)
                 .collect(Collectors.toList());
@@ -143,7 +146,7 @@ public class UserService {
      */
     public UserDTO getUserById(Long id) {
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found with ID " + id));
+                .orElseThrow(() -> new EntityNotFoundException("User not found with ID " + id));
         return userMapper.toDTO(user);
     }
 
