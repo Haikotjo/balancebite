@@ -5,7 +5,7 @@ import balancebite.dto.meal.MealInputDTO;
 import balancebite.dto.mealingredient.MealIngredientDTO;
 import balancebite.dto.mealingredient.MealIngredientInputDTO;
 import balancebite.dto.user.UserDTO;
-import balancebite.exceptions.InvalidFoodItemException;
+import balancebite.errorHandling.InvalidFoodItemException;
 import balancebite.model.FoodItem;
 import balancebite.model.Meal;
 import balancebite.model.MealIngredient;

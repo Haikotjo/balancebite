@@ -3,13 +3,12 @@ package balancebite.controller;
 import balancebite.dto.user.UserBasicInfoInputDTO;
 import balancebite.dto.user.UserDTO;
 import balancebite.dto.user.UserDetailsInputDTO;
-import balancebite.exceptions.EntityAlreadyExistsException;
-import balancebite.model.RecommendedDailyIntake;
+import balancebite.errorHandling.EntityAlreadyExistsException;
+import balancebite.errorHandling.MealNotFoundException;
+import balancebite.errorHandling.UserNotFoundException;
 import balancebite.service.RecommendedDailyIntakeService;
 import balancebite.service.UserService;
-import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
-import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,7 +17,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * REST controller responsible for managing user-related actions.
@@ -26,6 +24,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/users")
 public class UserController {
+
     private static final Logger log = LoggerFactory.getLogger(UserService.class);
 
     private final UserService userService;
@@ -73,7 +72,7 @@ public class UserController {
         try {
             UserDTO updatedUser = userService.updateUserBasicInfo(id, userBasicInfoInputDTO);
             return ResponseEntity.ok(updatedUser);
-        } catch (EntityNotFoundException e) {
+        } catch (UserNotFoundException  e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         } catch (Exception e) {
             // Log the exception for debugging purposes
@@ -94,9 +93,11 @@ public class UserController {
         try {
             UserDTO updatedUser = userService.updateUserDetails(id, userDetailsInputDTO);
             return ResponseEntity.ok(updatedUser);
-        } catch (EntityNotFoundException e) {
+        } catch (UserNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         } catch (Exception e) {
+            // Log the exception for debugging purposes
+            log.error("Unexpected error occurred while updating user details: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An unexpected error occurred.");
         }
     }
@@ -110,9 +111,13 @@ public class UserController {
     public ResponseEntity<?> getAllUsersEndpoint() {
         try {
             List<UserDTO> users = userService.getAllUsers();
+            if (users.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NO_CONTENT).build(); // Retourneer 204 als er geen gebruikers zijn
+            }
             return ResponseEntity.ok(users);
         } catch (Exception e) {
-            // Handle any unexpected errors
+            // Log the unexpected error
+            log.error("Unexpected error occurred while retrieving all users: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An unexpected error occurred.");
         }
     }
@@ -128,9 +133,11 @@ public class UserController {
         try {
             UserDTO user = userService.getUserById(id);
             return ResponseEntity.ok(user);
-        } catch (EntityNotFoundException e) {
+        } catch (UserNotFoundException e) {
+            log.error("User not found: {}", e.getMessage()); // Log de fout voor debugging
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         } catch (Exception e) {
+            log.error("Unexpected error occurred while retrieving user by ID: {}", e.getMessage()); // Log de fout voor debugging
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An unexpected error occurred.");
         }
     }
@@ -143,8 +150,16 @@ public class UserController {
      */
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
-        userService.deleteUser(id);
-        return ResponseEntity.noContent().build();
+        try {
+            userService.deleteUser(id);
+            return ResponseEntity.noContent().build();
+        } catch (UserNotFoundException e) {
+            log.error("User not found while attempting to delete: {}", e.getMessage()); // Log de fout voor debugging
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        } catch (Exception e) {
+            log.error("Unexpected error occurred while deleting user: {}", e.getMessage()); // Log de onverwachte fout
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 
     /**
@@ -159,9 +174,14 @@ public class UserController {
         try {
             UserDTO user = userService.addMealToUser(userId, mealId);
             return ResponseEntity.ok(user);
-        } catch (EntityNotFoundException e) {
+        } catch (UserNotFoundException e) {
+            log.error("User not found: {}", e.getMessage()); // Log de fout voor debugging
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        } catch (MealNotFoundException e) {
+            log.error("Meal not found: {}", e.getMessage()); // Log de fout voor debugging
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         } catch (Exception e) {
+            log.error("Unexpected error occurred while adding meal to user: {}", e.getMessage()); // Log onverwachte fouten
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
     }
@@ -179,9 +199,14 @@ public class UserController {
         try {
             UserDTO updatedUser = userService.removeMealFromUser(userId, mealId);
             return ResponseEntity.ok(updatedUser);
-        } catch (EntityNotFoundException e) {
+        } catch (UserNotFoundException e) {
+            log.error("User not found: {}", e.getMessage()); // Log de fout voor debugging
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (MealNotFoundException e) {
+            log.error("Meal not found: {}", e.getMessage()); // Log de fout voor debugging
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         } catch (Exception e) {
+            log.error("Unexpected error occurred while removing meal from user: {}", e.getMessage()); // Log onverwachte fouten
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An unexpected error occurred.");
         }
     }

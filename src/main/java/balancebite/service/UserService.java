@@ -4,19 +4,21 @@ import balancebite.dto.NutrientInfoDTO;
 import balancebite.dto.user.UserBasicInfoInputDTO;
 import balancebite.dto.user.UserDTO;
 import balancebite.dto.user.UserDetailsInputDTO;
-import balancebite.exceptions.EntityAlreadyExistsException;
+import balancebite.errorHandling.EntityAlreadyExistsException;
+import balancebite.errorHandling.MealNotFoundException;
+import balancebite.errorHandling.UserNotFoundException;
 import balancebite.mapper.UserMapper;
 import balancebite.model.Meal;
-import balancebite.model.Nutrient;
 import balancebite.model.RecommendedDailyIntake;
 import balancebite.model.User;
 import balancebite.repository.MealRepository;
 import balancebite.repository.RecommendedDailyIntakeRepository;
 import balancebite.repository.UserRepository;
-import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.PersistenceContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,6 +33,8 @@ import java.util.stream.Collectors;
 @Service
 @Transactional
 public class UserService {
+
+    private static final Logger log = LoggerFactory.getLogger(UserService.class);
 
     private final UserRepository userRepository;
     private final MealRepository mealRepository;
@@ -87,22 +91,14 @@ public class UserService {
     public UserDTO updateUserBasicInfo(Long id, UserBasicInfoInputDTO userBasicInfoInputDTO) {
         // Retrieve the existing user
         User existingUser = userRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("User not found with ID " + id));
+                .orElseThrow(() -> new UserNotFoundException("User not found with ID " + id));
 
-        // Use values from DTO to update the User object only if they are not null/blank
-        if (userBasicInfoInputDTO.getUserName() != null && !userBasicInfoInputDTO.getUserName().isBlank()) {
-            existingUser.setUserName(userBasicInfoInputDTO.getUserName());
-        }
-        if (userBasicInfoInputDTO.getEmail() != null && !userBasicInfoInputDTO.getEmail().isBlank()) {
-            existingUser.setEmail(userBasicInfoInputDTO.getEmail());
-        }
-        if (userBasicInfoInputDTO.getPassword() != null) {
-            // TODO: Hash the password before setting it here
-            existingUser.setPassword(userBasicInfoInputDTO.getPassword());
-        }
-        if (userBasicInfoInputDTO.getRole() != null) {
-            existingUser.setRole(userBasicInfoInputDTO.getRole());
-        }
+        // Directly update the fields without rechecking for null or blank
+        existingUser.setUserName(userBasicInfoInputDTO.getUserName());
+        existingUser.setEmail(userBasicInfoInputDTO.getEmail());
+        // TODO: Hash the password before setting it here
+        existingUser.setPassword(userBasicInfoInputDTO.getPassword());
+        existingUser.setRole(userBasicInfoInputDTO.getRole());
 
         // Save and return updated user information
         User updatedUser = userRepository.save(existingUser);
@@ -117,11 +113,14 @@ public class UserService {
      * @return The updated UserDTO.
      */
     public UserDTO updateUserDetails(Long id, UserDetailsInputDTO userDetailsInputDTO) {
+        // Retrieve the existing user, throw custom UserNotFoundException if not found
         User existingUser = userRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("User not found with ID " + id));
+                .orElseThrow(() -> new UserNotFoundException(id));
 
+        // Update the user entity with the details provided in the DTO
         userMapper.updateEntityWithDetails(existingUser, userDetailsInputDTO);
 
+        // Save and return the updated user
         User updatedUser = userRepository.save(existingUser);
         return userMapper.toDTO(updatedUser);
     }
@@ -134,8 +133,7 @@ public class UserService {
     public List<UserDTO> getAllUsers() {
         List<User> users = userRepository.findAll();
         if (users.isEmpty()) {
-            // Log that no users were found (optional but useful for debugging)
-            System.out.println("No users found in the system.");
+            log.info("No users found in the system.");
         }
         return users.stream()
                 .map(userMapper::toDTO)
@@ -147,10 +145,11 @@ public class UserService {
      *
      * @param id The ID of the user to retrieve.
      * @return The UserDTO representing the user.
+     * @throws UserNotFoundException if the user is not found in the database.
      */
     public UserDTO getUserById(Long id) {
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("User not found with ID " + id));
+                .orElseThrow(() -> new UserNotFoundException("User not found with ID " + id));
         return userMapper.toDTO(user);
     }
 
@@ -158,10 +157,12 @@ public class UserService {
      * Deletes a user by their ID.
      *
      * @param id The ID of the user to delete.
+     * @throws UserNotFoundException if the user is not found in the database.
      */
     public void deleteUser(Long id) {
         if (!userRepository.existsById(id)) {
-            throw new RuntimeException("User not found with ID " + id);
+            log.warn("Attempted to delete non-existing user with ID: {}", id); // Log een waarschuwing
+            throw new UserNotFoundException("User not found with ID " + id);
         }
         userRepository.deleteById(id);
     }
@@ -172,20 +173,21 @@ public class UserService {
      * @param userId The ID of the user to whom the meal is to be added.
      * @param mealId The ID of the meal to be added.
      * @return The updated UserDTO with the newly added meal.
-     * @throws EntityNotFoundException if the user or meal is not found.
+     * @throws UserNotFoundException if the user is not found.
+     * @throws MealNotFoundException if the meal is not found.
      */
     @Transactional
     public UserDTO addMealToUser(Long userId, Long mealId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new EntityNotFoundException("User not found with ID: " + userId));
+                .orElseThrow(() -> new UserNotFoundException("User not found with ID: " + userId));
 
         Meal meal = mealRepository.findById(mealId)
-                .orElseThrow(() -> new EntityNotFoundException("Meal not found with ID: " + mealId));
+                .orElseThrow(() -> new MealNotFoundException(mealId));
 
-        // Voeg de maaltijd toe aan de lijst met maaltijden van de gebruiker.
+        // Add the meal to the user's list of meals.
         user.getMeals().add(meal);
 
-        // Sla de gebruiker met de nieuwe maaltijd op en retourneer de UserDTO.
+        // Save the user with the new meal and return the UserDTO.
         User updatedUser = userRepository.save(user);
         return userMapper.toDTO(updatedUser);
     }
@@ -197,18 +199,20 @@ public class UserService {
      * @param userId The ID of the user.
      * @param mealId The ID of the meal to be removed.
      * @return The updated UserDTO without the removed meal.
+     * @throws UserNotFoundException if the user is not found.
+     * @throws MealNotFoundException if the meal is not found in the user's meal list.
      */
     @Transactional
     public UserDTO removeMealFromUser(Long userId, Long mealId) {
-        // Retrieve the user by their ID, throw exception if not found
+        // Retrieve the user by their ID, throw UserNotFoundException if not found
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new EntityNotFoundException("User not found with ID: " + userId));
+                .orElseThrow(() -> new UserNotFoundException("User not found with ID: " + userId));
 
-        // Check if the meal belongs to the user
+        // Check if the meal belongs to the user, throw MealNotFoundException if not found
         Meal meal = user.getMeals().stream()
                 .filter(m -> m.getId().equals(mealId))
                 .findFirst()
-                .orElseThrow(() -> new EntityNotFoundException("The meal with ID " + mealId + " is not part of the user's meal list."));
+                .orElseThrow(() -> new MealNotFoundException("The meal with ID " + mealId + " is not part of the user's meal list."));
 
         // Remove the meal from the user's list and save the changes to the repository
         user.getMeals().remove(meal);
@@ -216,7 +220,6 @@ public class UserService {
 
         return userMapper.toDTO(updatedUser);
     }
-
 
     /**
      * Processes the consumption of a meal by a user, updating the user's intake of nutrients for the current day.

@@ -1,6 +1,5 @@
-package balancebite.exceptions;
+package balancebite.errorHandling;
 
-import jakarta.persistence.EntityNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -59,4 +58,27 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
     }
 
+    /**
+     * Handles cases where a meal is not found in the database.
+     *
+     * @param e The thrown {@link MealNotFoundException}.
+     * @return A ResponseEntity indicating that the meal was not found, with a NOT_FOUND status.
+     */
+    @ExceptionHandler(MealNotFoundException.class)
+    public ResponseEntity<String> handleMealNotFoundException(MealNotFoundException e) {
+        // Returns a ResponseEntity with NOT_FOUND status and the message from MealNotFoundException
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+    }
+
+    /**
+     * Handles cases where a user is not found in the database.
+     *
+     * @param e The thrown {@link UserNotFoundException}.
+     * @return A ResponseEntity indicating that the user was not found, with a NOT_FOUND status.
+     */
+    @ExceptionHandler(UserNotFoundException.class)
+    public ResponseEntity<String> handleUserNotFoundException(UserNotFoundException e) {
+        // Returns a ResponseEntity with NOT_FOUND status and the message from UserNotFoundException
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+    }
 }

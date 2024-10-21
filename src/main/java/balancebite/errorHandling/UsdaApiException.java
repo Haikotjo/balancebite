@@ -1,4 +1,4 @@
-package balancebite.exceptions;
+package balancebite.errorHandling;
 
 /**
  * Custom exception class to handle errors related to the USDA API.

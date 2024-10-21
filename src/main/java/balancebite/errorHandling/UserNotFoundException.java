@@ -1,4 +1,4 @@
-package balancebite.exceptions;
+package balancebite.errorHandling;
 
 /**
  * Exception thrown when a User entity cannot be found in the system.

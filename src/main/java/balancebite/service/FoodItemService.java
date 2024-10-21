@@ -2,8 +2,7 @@ package balancebite.service;
 
 import balancebite.dto.fooditem.FoodItemDTO;
 import balancebite.dto.UsdaFoodResponseDTO;
-import balancebite.exceptions.EntityAlreadyExistsException;
-import balancebite.exceptions.UsdaApiException;
+import balancebite.errorHandling.EntityAlreadyExistsException;
 import balancebite.mapper.FoodItemMapper;
 import balancebite.model.FoodItem;
 import balancebite.repository.FoodItemRepository;

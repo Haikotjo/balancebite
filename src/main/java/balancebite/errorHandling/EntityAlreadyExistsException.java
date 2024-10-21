@@ -1,4 +1,4 @@
-package balancebite.exceptions;
+package balancebite.errorHandling;
 
 /**
  * Custom exception to be thrown when an entity already exists in the database.

@@ -3,10 +3,9 @@ package balancebite.service;
 import balancebite.dto.meal.MealDTO;
 import balancebite.dto.meal.MealInputDTO;
 import balancebite.dto.NutrientInfoDTO;
-import balancebite.exceptions.InvalidFoodItemException;
+import balancebite.errorHandling.InvalidFoodItemException;
 import balancebite.mapper.MealIngredientMapper;
 import balancebite.mapper.MealMapper;
-import balancebite.model.FoodItem;
 import balancebite.model.Meal;
 import balancebite.model.MealIngredient;
 import balancebite.model.User;
@@ -18,7 +17,6 @@ import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.nio.file.AccessDeniedException;
 import java.util.*;
 
 /**
