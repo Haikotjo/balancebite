@@ -1,8 +1,9 @@
 package balancebite.service;
 
 import balancebite.dto.NutrientInfoDTO;
+import balancebite.dto.user.UserBasicInfoInputDTO;
 import balancebite.dto.user.UserDTO;
-import balancebite.dto.user.UserInputDTO;
+import balancebite.dto.user.UserDetailsInputDTO;
 import balancebite.mapper.UserMapper;
 import balancebite.model.Meal;
 import balancebite.model.Nutrient;
@@ -57,70 +58,66 @@ public class UserService {
     }
 
     /**
-     * Creates a new user in the system based on the provided UserInputDTO.
+     * Creates a new user in the system based on the provided UserBasicInfoInputDTO.
      * Meals are not added at the time of creation.
      *
-     * @param userInputDTO The input data for creating the user.
+     * @param userBasicInfoInputDTO The input data for creating the user.
      * @return The created UserDTO.
      */
-    public UserDTO createUser(UserInputDTO userInputDTO) {
-        User user = userMapper.toEntity(userInputDTO);
-        user.setMeals(null);  // No meals added at this point
+    public UserDTO createUser(UserBasicInfoInputDTO userBasicInfoInputDTO) {
         try {
-            User savedUser = userRepository.save(user);
+            User savedUser = userRepository.save(userMapper.toEntity(userBasicInfoInputDTO));
             return userMapper.toDTO(savedUser);
         } catch (DataIntegrityViolationException e) {
-            throw new EntityExistsException("User with email " + user.getEmail() + " already exists.");
+            throw new EntityExistsException("User with email " + userBasicInfoInputDTO.getEmail() + " already exists.");
         }
     }
 
     /**
-     * Updates an existing user in the system based on the provided UserInputDTO.
-     * This can include updating optional fields like weight, age, height, and more.
-     * Fields that are not provided in the UserInputDTO will remain unchanged.
+     * Updates the basic information of an existing user in the system based on the provided UserBasicInfoInputDTO.
      *
      * @param id The ID of the user to update.
-     * @param userInputDTO The input data for updating the user.
+     * @param userBasicInfoInputDTO The input data for updating the user.
      * @return The updated UserDTO.
      */
-    public UserDTO updateUser(Long id, UserInputDTO userInputDTO) {
+    public UserDTO updateUserBasicInfo(Long id, UserBasicInfoInputDTO userBasicInfoInputDTO) {
         // Retrieve the existing user
         User existingUser = userRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("User not found with ID " + id));
 
-        // Update fields that are not null in the inputDTO
-        if (userInputDTO.getUserName() != null && !userInputDTO.getUserName().isBlank()) {
-            existingUser.setUserName(userInputDTO.getUserName());
+        // Use values from DTO to update the User object only if they are not null/blank
+        if (userBasicInfoInputDTO.getUserName() != null) {
+            existingUser.setUserName(userBasicInfoInputDTO.getUserName());
         }
-        if (userInputDTO.getEmail() != null && !userInputDTO.getEmail().isBlank()) {
-            existingUser.setEmail(userInputDTO.getEmail());
+        if (userBasicInfoInputDTO.getEmail() != null) {
+            existingUser.setEmail(userBasicInfoInputDTO.getEmail());
         }
-        if (userInputDTO.getPassword() != null && !userInputDTO.getPassword().isBlank()) {
-            existingUser.setPassword(userInputDTO.getPassword());  // Password should be hashed
+        if (userBasicInfoInputDTO.getPassword() != null) {
+            // TODO: Hash the password before setting it here
+            existingUser.setPassword(userBasicInfoInputDTO.getPassword());
         }
-        if (userInputDTO.getRole() != null) {
-            existingUser.setRole(userInputDTO.getRole());
-        }
-        if (userInputDTO.getWeight() != null) {
-            existingUser.setWeight(userInputDTO.getWeight());
-        }
-        if (userInputDTO.getAge() != null) {
-            existingUser.setAge(userInputDTO.getAge());
-        }
-        if (userInputDTO.getHeight() != null) {
-            existingUser.setHeight(userInputDTO.getHeight());
-        }
-        if (userInputDTO.getGender() != null) {
-            existingUser.setGender(userInputDTO.getGender());
-        }
-        if (userInputDTO.getActivityLevel() != null) {
-            existingUser.setActivityLevel(userInputDTO.getActivityLevel());
-        }
-        if (userInputDTO.getGoal() != null) {
-            existingUser.setGoal(userInputDTO.getGoal());
+        if (userBasicInfoInputDTO.getRole() != null) {
+            existingUser.setRole(userBasicInfoInputDTO.getRole());
         }
 
-        // Save the user and return the updated data as a DTO
+        // Save and return updated user information
+        User updatedUser = userRepository.save(existingUser);
+        return userMapper.toDTO(updatedUser);
+    }
+
+    /**
+     * Updates the detailed information of an existing user in the system based on the provided UserDetailsInputDTO.
+     *
+     * @param id The ID of the user to update.
+     * @param userDetailsInputDTO The input data for updating the user's detailed information.
+     * @return The updated UserDTO.
+     */
+    public UserDTO updateUserDetails(Long id, UserDetailsInputDTO userDetailsInputDTO) {
+        User existingUser = userRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("User not found with ID " + id));
+
+        userMapper.updateEntityWithDetails(existingUser, userDetailsInputDTO);
+
         User updatedUser = userRepository.save(existingUser);
         return userMapper.toDTO(updatedUser);
     }

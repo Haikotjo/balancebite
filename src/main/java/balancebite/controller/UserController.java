@@ -1,7 +1,8 @@
 package balancebite.controller;
 
+import balancebite.dto.user.UserBasicInfoInputDTO;
 import balancebite.dto.user.UserDTO;
-import balancebite.dto.user.UserInputDTO;
+import balancebite.dto.user.UserDetailsInputDTO;
 import balancebite.model.RecommendedDailyIntake;
 import balancebite.service.RecommendedDailyIntakeService;
 import balancebite.service.UserService;
@@ -41,13 +42,13 @@ public class UserController {
      * Endpoint to create a new user.
      * Meals are not added during user creation.
      *
-     * @param userInputDTO The input data for creating the user.
+     * @param userBasicInfoInputDTO The input data for creating the user.
      * @return The created UserDTO and 201 status code.
      */
     @PostMapping
-    public ResponseEntity<?> createUserEndpoint(@Valid @RequestBody UserInputDTO userInputDTO) {
+    public ResponseEntity<?> createUser(@Valid @RequestBody UserBasicInfoInputDTO userBasicInfoInputDTO) {
         try {
-            UserDTO createdUser = userService.createUser(userInputDTO);
+            UserDTO createdUser = userService.createUser(userBasicInfoInputDTO);
             return ResponseEntity.status(HttpStatus.CREATED).body(createdUser);
         } catch (EntityExistsException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
@@ -57,22 +58,40 @@ public class UserController {
     }
 
     /**
-     * Endpoint to update an existing user.
-     * Fields not provided in the UserInputDTO will remain unchanged.
+     * Endpoint to update the basic information of an existing user.
      *
      * @param id The ID of the user to update.
-     * @param userInputDTO The input data for updating the user, containing optional fields.
-     * @return The updated UserDTO with a 200 status code if successful, or appropriate error codes otherwise.
+     * @param userBasicInfoInputDTO The input data for updating the user.
+     * @return The updated UserDTO and 200 status code if successful.
      */
-    @PutMapping("/{id}")
-    public ResponseEntity<UserDTO> updateUser(@PathVariable Long id, @Valid @RequestBody UserInputDTO userInputDTO) {
+    @PatchMapping("/{id}/basic-info")
+    public ResponseEntity<?> updateUserBasicInfoEndpoint(@PathVariable Long id, @Valid @RequestBody UserBasicInfoInputDTO userBasicInfoInputDTO) {
         try {
-            UserDTO updatedUser = userService.updateUser(id, userInputDTO);
+            UserDTO updatedUser = userService.updateUserBasicInfo(id, userBasicInfoInputDTO);
             return ResponseEntity.ok(updatedUser);
         } catch (EntityNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An unexpected error occurred.");
+        }
+    }
+
+    /**
+     * Endpoint to update the detailed information of an existing user.
+     *
+     * @param id The ID of the user to update.
+     * @param userDetailsInputDTO The input data for updating the user's detailed information.
+     * @return The updated UserDTO and 200 status code if successful.
+     */
+    @PutMapping("/{id}/details")
+    public ResponseEntity<?> updateUserDetailsEndpoint(@PathVariable Long id, @Valid @RequestBody UserDetailsInputDTO userDetailsInputDTO) {
+        try {
+            UserDTO updatedUser = userService.updateUserDetails(id, userDetailsInputDTO);
+            return ResponseEntity.ok(updatedUser);
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An unexpected error occurred.");
         }
     }
 
