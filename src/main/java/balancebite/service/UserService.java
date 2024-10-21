@@ -4,6 +4,7 @@ import balancebite.dto.NutrientInfoDTO;
 import balancebite.dto.user.UserBasicInfoInputDTO;
 import balancebite.dto.user.UserDTO;
 import balancebite.dto.user.UserDetailsInputDTO;
+import balancebite.exceptions.EntityAlreadyExistsException;
 import balancebite.mapper.UserMapper;
 import balancebite.model.Meal;
 import balancebite.model.Nutrient;
@@ -65,11 +66,14 @@ public class UserService {
      * @return The created UserDTO.
      */
     public UserDTO createUser(UserBasicInfoInputDTO userBasicInfoInputDTO) {
+        if (userRepository.existsByEmail(userBasicInfoInputDTO.getEmail())) {
+            throw new EntityAlreadyExistsException("User with email " + userBasicInfoInputDTO.getEmail() + " already exists.");
+        }
         try {
             User savedUser = userRepository.save(userMapper.toEntity(userBasicInfoInputDTO));
             return userMapper.toDTO(savedUser);
         } catch (DataIntegrityViolationException e) {
-            throw new EntityExistsException("User with email " + userBasicInfoInputDTO.getEmail() + " already exists.");
+            throw new EntityAlreadyExistsException("User with email " + userBasicInfoInputDTO.getEmail() + " already exists.");
         }
     }
 
@@ -86,10 +90,10 @@ public class UserService {
                 .orElseThrow(() -> new EntityNotFoundException("User not found with ID " + id));
 
         // Use values from DTO to update the User object only if they are not null/blank
-        if (userBasicInfoInputDTO.getUserName() != null) {
+        if (userBasicInfoInputDTO.getUserName() != null && !userBasicInfoInputDTO.getUserName().isBlank()) {
             existingUser.setUserName(userBasicInfoInputDTO.getUserName());
         }
-        if (userBasicInfoInputDTO.getEmail() != null) {
+        if (userBasicInfoInputDTO.getEmail() != null && !userBasicInfoInputDTO.getEmail().isBlank()) {
             existingUser.setEmail(userBasicInfoInputDTO.getEmail());
         }
         if (userBasicInfoInputDTO.getPassword() != null) {
@@ -188,23 +192,31 @@ public class UserService {
 
     /**
      * Removes a meal from the user's list of meals.
+     * This method checks if the user exists, and if the meal is associated with the user.
      *
      * @param userId The ID of the user.
      * @param mealId The ID of the meal to be removed.
      * @return The updated UserDTO without the removed meal.
      */
+    @Transactional
     public UserDTO removeMealFromUser(Long userId, Long mealId) {
+        // Retrieve the user by their ID, throw exception if not found
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found with ID " + userId));
+                .orElseThrow(() -> new EntityNotFoundException("User not found with ID: " + userId));
 
-        Meal meal = mealRepository.findById(mealId)
-                .orElseThrow(() -> new RuntimeException("Meal not found with ID " + mealId));
+        // Check if the meal belongs to the user
+        Meal meal = user.getMeals().stream()
+                .filter(m -> m.getId().equals(mealId))
+                .findFirst()
+                .orElseThrow(() -> new EntityNotFoundException("The meal with ID " + mealId + " is not part of the user's meal list."));
 
-        user.getMeals().remove(meal); // Remove the meal from the user's meals
+        // Remove the meal from the user's list and save the changes to the repository
+        user.getMeals().remove(meal);
         User updatedUser = userRepository.save(user);
 
         return userMapper.toDTO(updatedUser);
     }
+
 
     /**
      * Processes the consumption of a meal by a user, updating the user's intake of nutrients for the current day.

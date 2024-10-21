@@ -137,39 +137,6 @@ public class MealService {
     }
 
     /**
-     * Deletes a specific meal from a user's list.
-     * This method checks if the meal exists, if the user exists, and if the user has permission to delete the meal.
-     *
-     * @param userId The ID of the user requesting the deletion.
-     * @param mealId The ID of the meal to be deleted from the user's list.
-     * @throws EntityNotFoundException if the user or meal is not found.
-     */
-    @Transactional
-    public void deleteUserMeal(Long userId, Long mealId) {
-        // Retrieve the meal by its ID, throw exception if not found
-        Meal meal = mealRepository.findById(mealId)
-                .orElseThrow(() -> new EntityNotFoundException("Meal not found with ID: " + mealId));
-
-        // Retrieve the user by their ID, throw exception if not found
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new EntityNotFoundException("User not found with ID: " + userId));
-
-        // Check if the meal belongs to the user
-        // Commenting out AccessDeniedException until proper authorization mechanism is implemented.
-        // Uncomment this once access validation has been properly set up, e.g. using Spring Security.
-        /*
-        if (!meal.getUsers().contains(user)) {
-            throw new AccessDeniedException("User does not have permission to delete this meal.");
-        }
-        */
-
-        // Remove the meal from the user's list and save the changes to the repository
-        user.getMeals().remove(meal);
-        userRepository.save(user);
-    }
-
-
-    /**
      * Deletes a specific meal from the repository.
      * This operation should be restricted to administrative users only.
      *

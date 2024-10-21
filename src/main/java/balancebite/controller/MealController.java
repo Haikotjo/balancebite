@@ -106,7 +106,6 @@ public class MealController {
         return ResponseEntity.ok(mealDTOs);
     }
 
-
     /**
      * Retrieves a Meal entity by its ID.
      *
@@ -124,32 +123,6 @@ public class MealController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred while retrieving the meal.");
         }
     }
-
-    /**
-     * Deletes a specific meal from a user's list.
-     * The user can only delete meals that they have added to their own list.
-     *
-     * @param userId The ID of the user requesting the deletion.
-     * @param mealId The ID of the meal to be deleted from the user's list.
-     * @return ResponseEntity containing a status message indicating the result of the operation.
-     */
-    @DeleteMapping("/user/{userId}/meal/{mealId}")
-    public ResponseEntity<String> deleteUserMeal(@PathVariable Long userId, @PathVariable Long mealId) {
-        try {
-            mealService.deleteUserMeal(userId, mealId);
-            return ResponseEntity.ok("Meal successfully deleted from user's list.");
-        } catch (EntityNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-        }
-        // Commenting out AccessDeniedException handling until proper authorization mechanism is implemented.
-        // Uncomment this once access validation has been properly set up, e.g. using Spring Security.
-        /*
-        catch (AccessDeniedException e) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
-        }
-        */
-    }
-
 
     /**
      * Deletes a specific meal.

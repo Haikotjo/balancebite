@@ -3,6 +3,7 @@ package balancebite.controller;
 import balancebite.dto.user.UserBasicInfoInputDTO;
 import balancebite.dto.user.UserDTO;
 import balancebite.dto.user.UserDetailsInputDTO;
+import balancebite.exceptions.EntityAlreadyExistsException;
 import balancebite.model.RecommendedDailyIntake;
 import balancebite.service.RecommendedDailyIntakeService;
 import balancebite.service.UserService;
@@ -10,6 +11,8 @@ import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Valid;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -23,6 +26,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/users")
 public class UserController {
+    private static final Logger log = LoggerFactory.getLogger(UserService.class);
 
     private final UserService userService;
     private final RecommendedDailyIntakeService recommendedDailyIntakeService;  // Injecteer RecommendedDailyIntakeService
@@ -50,8 +54,8 @@ public class UserController {
         try {
             UserDTO createdUser = userService.createUser(userBasicInfoInputDTO);
             return ResponseEntity.status(HttpStatus.CREATED).body(createdUser);
-        } catch (EntityExistsException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        } catch (EntityAlreadyExistsException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());  // 409 Conflict voor bestaande resource
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An unexpected error occurred.");
         }
@@ -65,13 +69,15 @@ public class UserController {
      * @return The updated UserDTO and 200 status code if successful.
      */
     @PatchMapping("/{id}/basic-info")
-    public ResponseEntity<?> updateUserBasicInfoEndpoint(@PathVariable Long id, @Valid @RequestBody UserBasicInfoInputDTO userBasicInfoInputDTO) {
+    public ResponseEntity<?> updateUserBasicInfo(@PathVariable Long id, @Valid @RequestBody UserBasicInfoInputDTO userBasicInfoInputDTO) {
         try {
             UserDTO updatedUser = userService.updateUserBasicInfo(id, userBasicInfoInputDTO);
             return ResponseEntity.ok(updatedUser);
         } catch (EntityNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         } catch (Exception e) {
+            // Log the exception for debugging purposes
+            log.error("Unexpected error occurred while updating user information: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An unexpected error occurred.");
         }
     }
@@ -84,7 +90,7 @@ public class UserController {
      * @return The updated UserDTO and 200 status code if successful.
      */
     @PutMapping("/{id}/details")
-    public ResponseEntity<?> updateUserDetailsEndpoint(@PathVariable Long id, @Valid @RequestBody UserDetailsInputDTO userDetailsInputDTO) {
+    public ResponseEntity<?> updateUserDetails(@PathVariable Long id, @Valid @RequestBody UserDetailsInputDTO userDetailsInputDTO) {
         try {
             UserDTO updatedUser = userService.updateUserDetails(id, userDetailsInputDTO);
             return ResponseEntity.ok(updatedUser);
@@ -149,7 +155,7 @@ public class UserController {
      * @return The updated UserDTO and a 200 status code if successful.
      */
     @PatchMapping("/{userId}/meals/{mealId}")
-    public ResponseEntity<UserDTO> addMealToUserEndpoint(@PathVariable Long userId, @PathVariable Long mealId) {
+    public ResponseEntity<UserDTO> addMealToUser(@PathVariable Long userId, @PathVariable Long mealId) {
         try {
             UserDTO user = userService.addMealToUser(userId, mealId);
             return ResponseEntity.ok(user);
@@ -162,20 +168,21 @@ public class UserController {
 
     /**
      * Endpoint to remove a meal from the user's list of meals.
+     * The user can only delete meals that they have added to their own list.
      *
-     * @param userId The ID of the user.
-     * @param mealId The ID of the meal to remove.
-     * @return A 200 OK status code if the meal was removed successfully.
+     * @param userId The ID of the user requesting the deletion.
+     * @param mealId The ID of the meal to be deleted from the user's list.
+     * @return ResponseEntity containing a status message indicating the result of the operation.
      */
     @DeleteMapping("/{userId}/meals/{mealId}")
-    public ResponseEntity<UserDTO> removeMealFromUser(@PathVariable Long userId, @PathVariable Long mealId) {
-        UserDTO updatedUser = userService.removeMealFromUser(userId, mealId);
-        return ResponseEntity.ok(updatedUser);
-    }
-
-    @PostMapping("/{userId}/eat-meal/{mealId}")
-    public ResponseEntity<Map<String, Double>> eatMeal(@PathVariable Long userId, @PathVariable Long mealId) {
-        Map<String, Double> remainingIntakes = userService.eatMeal(userId, mealId);
-        return ResponseEntity.ok(remainingIntakes);
+    public ResponseEntity<?> removeMealFromUser(@PathVariable Long userId, @PathVariable Long mealId) {
+        try {
+            UserDTO updatedUser = userService.removeMealFromUser(userId, mealId);
+            return ResponseEntity.ok(updatedUser);
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An unexpected error occurred.");
+        }
     }
 }
