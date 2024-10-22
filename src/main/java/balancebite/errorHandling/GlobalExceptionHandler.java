@@ -5,6 +5,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.context.request.WebRequest;
 import org.springframework.validation.FieldError;
 
 import java.util.HashMap;
@@ -80,5 +81,33 @@ public class GlobalExceptionHandler {
     public ResponseEntity<String> handleUserNotFoundException(UserNotFoundException e) {
         // Returns a ResponseEntity with NOT_FOUND status and the message from UserNotFoundException
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+    }
+
+    /**
+     * Handles cases where a daily intake record for the user cannot be found.
+     *
+     * @param ex The thrown {@link DailyIntakeNotFoundException}.
+     * @param request The web request that resulted in the exception.
+     * @return A ResponseEntity indicating that the daily intake was not found, with a NOT_FOUND status.
+     */
+    @ExceptionHandler(DailyIntakeNotFoundException.class)
+    public ResponseEntity<Map<String, String>> handleDailyIntakeNotFoundException(DailyIntakeNotFoundException ex, WebRequest request) {
+        // Returns a ResponseEntity with NOT_FOUND status and the message from DailyIntakeNotFoundException
+        String errorMessage = ex.getMessage();
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", errorMessage));
+    }
+
+    /**
+     * Handles cases where updating the daily intake record fails.
+     *
+     * @param ex The thrown {@link DailyIntakeUpdateException}.
+     * @param request The web request that resulted in the exception.
+     * @return A ResponseEntity indicating that updating the daily intake failed, with an INTERNAL_SERVER_ERROR status.
+     */
+    @ExceptionHandler(DailyIntakeUpdateException.class)
+    public ResponseEntity<Map<String, String>> handleDailyIntakeUpdateException(DailyIntakeUpdateException ex, WebRequest request) {
+        // Returns a ResponseEntity with INTERNAL_SERVER_ERROR status and the message from DailyIntakeUpdateException
+        String errorMessage = ex.getMessage();
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", errorMessage));
     }
 }

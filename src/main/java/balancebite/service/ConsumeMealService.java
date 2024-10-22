@@ -1,6 +1,8 @@
 package balancebite.service;
 
 import balancebite.dto.NutrientInfoDTO;
+import balancebite.errorHandling.DailyIntakeNotFoundException;
+import balancebite.errorHandling.DailyIntakeUpdateException;
 import balancebite.errorHandling.MealNotFoundException;
 import balancebite.errorHandling.UserNotFoundException;
 import balancebite.model.Meal;
@@ -10,8 +12,10 @@ import balancebite.model.User;
 import balancebite.repository.MealRepository;
 import balancebite.repository.RecommendedDailyIntakeRepository;
 import balancebite.repository.UserRepository;
+import balancebite.utils.HelperMethods;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
+import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.slf4j.Logger;
@@ -21,6 +25,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static balancebite.utils.HelperMethods.normalizeNutrientName;
 
 /**
  * Service class responsible for handling the consumption of meals by users.
@@ -86,12 +92,12 @@ public class ConsumeMealService implements IConsumeMealService {
 
         RecommendedDailyIntake recommendedDailyIntake = recommendedDailyIntakeRepository
                 .findByUser_IdAndCreatedAt(userId, startOfToday)
-                .orElseThrow(() -> new RuntimeException("Recommended daily intake for today not found for user with ID " + userId));
+                .orElseThrow(() -> new DailyIntakeNotFoundException("Recommended daily intake for today not found for user with ID " + userId));
 
         // Retrieve the recommended daily intake values and normalize the keys
         Map<String, Nutrient> nutrientMap = recommendedDailyIntake.getNutrients().stream()
                 .collect(Collectors.toMap(
-                        nutrient -> normalizeNutrientName(nutrient.getName()),
+                        nutrient -> normalizeNutrientName(nutrient.getName()),  // Use helper method
                         nutrient -> nutrient
                 ));
 
@@ -106,9 +112,9 @@ public class ConsumeMealService implements IConsumeMealService {
             if (nutrientMap.containsKey(normalizedNutrientName)) {
                 Nutrient nutrient = nutrientMap.get(normalizedNutrientName);
 
-                // Handle null nutrient value
-                double currentValue = nutrient.getValue() != null ? nutrient.getValue() : 0.0;
-                double nutrientValue = nutrientInfo.getValue() != null ? nutrientInfo.getValue() : 0.0;
+                // Use helper method for null value handling
+                double currentValue = HelperMethods.getValueOrDefault(nutrient.getValue());
+                double nutrientValue = HelperMethods.getValueOrDefault(nutrientInfo.getValue());
 
                 // Subtract the nutrient value from the daily intake
                 double remainingIntake = currentValue - nutrientValue;
@@ -116,14 +122,13 @@ public class ConsumeMealService implements IConsumeMealService {
             }
         }
 
-        // Save the updated RecommendedDailyIntake and ensure the changes are flushed to the database
         try {
             recommendedDailyIntakeRepository.save(recommendedDailyIntake);
             entityManager.flush();
             log.info("Successfully saved updated recommended daily intake for user with ID: {}", userId);
-        } catch (Exception e) {
-            log.error("Error saving RecommendedDailyIntake: {}", e.getMessage(), e);
-            throw new RuntimeException("Failed to update recommended daily intake for user with ID " + userId);
+        } catch (DataAccessException e) {
+            log.error("Database error occurred while saving RecommendedDailyIntake: {}", e.getMessage(), e);
+            throw new DailyIntakeUpdateException("Failed to update recommended daily intake for user with ID " + userId, e);
         }
 
         // Return the remaining intake for each nutrient to the client
@@ -131,16 +136,4 @@ public class ConsumeMealService implements IConsumeMealService {
                 .collect(Collectors.toMap(Nutrient::getName, nutrient -> nutrient.getValue() != null ? nutrient.getValue() : 0.0));
     }
 
-    /**
-     * Normalizes nutrient names by converting them to lowercase, removing units like "g", "mg", and "µg"
-     * only at the end of the string, and then removing all spaces.
-     *
-     * @param nutrientName The nutrient name to normalize.
-     * @return The normalized nutrient name without units at the end and without spaces.
-     */
-    private String normalizeNutrientName(String nutrientName) {
-        return nutrientName.toLowerCase()
-                .replaceAll("\\s(g|mg|µg)$", "")  // Remove " g", " mg", " µg" at the end
-                .replace(" ", "");  // Remove all remaining spaces
-    }
 }
