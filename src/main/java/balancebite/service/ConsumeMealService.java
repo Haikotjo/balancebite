@@ -76,23 +76,29 @@ public class ConsumeMealService implements IConsumeMealService {
     @Override
     @Transactional
     public Map<String, Double> consumeMeal(Long userId, Long mealId) {
+        log.debug("Start consuming meal process for user ID: {} and meal ID: {}", userId, mealId);
+
         // Retrieve the user by their ID, throw UserNotFoundException if not found
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("User not found with ID " + userId));
+        log.debug("Retrieved user with ID: {}", userId);
 
         // Retrieve the meal by its ID, throw MealNotFoundException if not found
         Meal meal = mealRepository.findById(mealId)
                 .orElseThrow(() -> new MealNotFoundException("Meal not found with ID " + mealId));
+        log.debug("Retrieved meal with ID: {}", mealId);
 
         // Retrieve the nutrient values of the meal using mealService
         Map<String, NutrientInfoDTO> mealNutrients = mealService.calculateNutrients(mealId);
+        log.debug("Calculated nutrient values for meal with ID: {}", mealId);
 
         // Get the user's existing recommended daily intake for today
         LocalDateTime startOfToday = LocalDate.now().atStartOfDay();
-
         RecommendedDailyIntake recommendedDailyIntake = recommendedDailyIntakeRepository
                 .findByUser_IdAndCreatedAt(userId, startOfToday)
                 .orElseThrow(() -> new DailyIntakeNotFoundException("Recommended daily intake for today not found for user with ID " + userId));
+        log.debug("Retrieved recommended daily intake for user ID: {} for date: {}", userId, startOfToday);
+
 
         // Retrieve the recommended daily intake values and normalize the keys
         Map<String, Nutrient> nutrientMap = recommendedDailyIntake.getNutrients().stream()
@@ -100,6 +106,7 @@ public class ConsumeMealService implements IConsumeMealService {
                         nutrient -> normalizeNutrientName(nutrient.getName()),  // Use helper method
                         nutrient -> nutrient
                 ));
+        log.debug("Mapped nutrients for recommended daily intake for user ID: {}", userId);
 
         // Subtract the nutrients from the meal from the recommended daily intake
         for (Map.Entry<String, NutrientInfoDTO> entry : mealNutrients.entrySet()) {
@@ -119,6 +126,9 @@ public class ConsumeMealService implements IConsumeMealService {
                 // Subtract the nutrient value from the daily intake
                 double remainingIntake = currentValue - nutrientValue;
                 nutrient.setValue(remainingIntake);
+                log.debug("Updated remaining intake for nutrient: {} to value: {}", normalizedNutrientName, remainingIntake);
+            } else {
+                log.debug("Nutrient {} not found in recommended daily intake for user ID: {}", originalNutrientName, userId);
             }
         }
 
@@ -126,7 +136,7 @@ public class ConsumeMealService implements IConsumeMealService {
             recommendedDailyIntakeRepository.save(recommendedDailyIntake);
             entityManager.flush();
             log.info("Successfully saved updated recommended daily intake for user with ID: {}", userId);
-        } catch (DataAccessException e) {
+        }  catch (DataAccessException e) {
             log.error("Database error occurred while saving RecommendedDailyIntake: {}", e.getMessage(), e);
             throw new DailyIntakeUpdateException("Failed to update recommended daily intake for user with ID " + userId, e);
         }
