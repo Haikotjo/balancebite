@@ -6,6 +6,7 @@ import balancebite.dto.user.UserDetailsInputDTO;
 import balancebite.errorHandling.EntityAlreadyExistsException;
 import balancebite.errorHandling.MealNotFoundException;
 import balancebite.errorHandling.UserNotFoundException;
+import balancebite.service.ConsumeMealService;
 import balancebite.service.RecommendedDailyIntakeService;
 import balancebite.service.UserService;
 import jakarta.persistence.EntityNotFoundException;
@@ -16,7 +17,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 /**
  * REST controller responsible for managing user-related actions.
@@ -28,6 +31,7 @@ public class UserController {
     private static final Logger log = LoggerFactory.getLogger(UserService.class);
 
     private final UserService userService;
+    private final ConsumeMealService consumeMealService;
     private final RecommendedDailyIntakeService recommendedDailyIntakeService;  // Injecteer RecommendedDailyIntakeService
 
     /**
@@ -36,8 +40,9 @@ public class UserController {
      * @param userService The service responsible for user-related business logic.
      * @param recommendedDailyIntakeService The service responsible for recommended daily intake logic.
      */
-    public UserController(UserService userService, RecommendedDailyIntakeService recommendedDailyIntakeService) {
+    public UserController(UserService userService, RecommendedDailyIntakeService recommendedDailyIntakeService, ConsumeMealService consumeMealService) {
         this.userService = userService;
+        this.consumeMealService = consumeMealService;
         this.recommendedDailyIntakeService = recommendedDailyIntakeService;  // Constructor injectie voor RecommendedDailyIntakeService
     }
 
@@ -54,7 +59,7 @@ public class UserController {
             UserDTO createdUser = userService.createUser(userBasicInfoInputDTO);
             return ResponseEntity.status(HttpStatus.CREATED).body(createdUser);
         } catch (EntityAlreadyExistsException e) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());  // 409 Conflict voor bestaande resource
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());  // Return 409 Conflict for existing resource
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An unexpected error occurred.");
         }
@@ -112,7 +117,7 @@ public class UserController {
         try {
             List<UserDTO> users = userService.getAllUsers();
             if (users.isEmpty()) {
-                return ResponseEntity.status(HttpStatus.NO_CONTENT).build(); // Retourneer 204 als er geen gebruikers zijn
+                return ResponseEntity.status(HttpStatus.NO_CONTENT).build(); // Return 204 if no users are found
             }
             return ResponseEntity.ok(users);
         } catch (Exception e) {
@@ -134,10 +139,10 @@ public class UserController {
             UserDTO user = userService.getUserById(id);
             return ResponseEntity.ok(user);
         } catch (UserNotFoundException e) {
-            log.error("User not found: {}", e.getMessage()); // Log de fout voor debugging
+            log.error("User not found: {}", e.getMessage()); // Log the error for debugging
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         } catch (Exception e) {
-            log.error("Unexpected error occurred while retrieving user by ID: {}", e.getMessage()); // Log de fout voor debugging
+            log.error("Unexpected error occurred while retrieving user by ID: {}", e.getMessage()); // Log the unexpected error
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An unexpected error occurred.");
         }
     }
@@ -154,10 +159,10 @@ public class UserController {
             userService.deleteUser(id);
             return ResponseEntity.noContent().build();
         } catch (UserNotFoundException e) {
-            log.error("User not found while attempting to delete: {}", e.getMessage()); // Log de fout voor debugging
+            log.error("User not found while attempting to delete: {}", e.getMessage()); // Log the error for debugging
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         } catch (Exception e) {
-            log.error("Unexpected error occurred while deleting user: {}", e.getMessage()); // Log de onverwachte fout
+            log.error("Unexpected error occurred while deleting user: {}", e.getMessage()); // Log the unexpected error
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
@@ -175,13 +180,13 @@ public class UserController {
             UserDTO user = userService.addMealToUser(userId, mealId);
             return ResponseEntity.ok(user);
         } catch (UserNotFoundException e) {
-            log.error("User not found: {}", e.getMessage()); // Log de fout voor debugging
+            log.error("User not found: {}", e.getMessage()); // Log the error for debugging
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         } catch (MealNotFoundException e) {
-            log.error("Meal not found: {}", e.getMessage()); // Log de fout voor debugging
+            log.error("Meal not found: {}", e.getMessage()); // Log the error for debugging
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         } catch (Exception e) {
-            log.error("Unexpected error occurred while adding meal to user: {}", e.getMessage()); // Log onverwachte fouten
+            log.error("Unexpected error occurred while adding meal to user: {}", e.getMessage()); // Log unexpected errors
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
     }
@@ -200,14 +205,36 @@ public class UserController {
             UserDTO updatedUser = userService.removeMealFromUser(userId, mealId);
             return ResponseEntity.ok(updatedUser);
         } catch (UserNotFoundException e) {
-            log.error("User not found: {}", e.getMessage()); // Log de fout voor debugging
+            log.error("User not found: {}", e.getMessage()); // Log the error for debugging
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         } catch (MealNotFoundException e) {
-            log.error("Meal not found: {}", e.getMessage()); // Log de fout voor debugging
+            log.error("Meal not found: {}", e.getMessage()); // Log the error for debugging
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         } catch (Exception e) {
-            log.error("Unexpected error occurred while removing meal from user: {}", e.getMessage()); // Log onverwachte fouten
+            log.error("Unexpected error occurred while removing meal from user: {}", e.getMessage()); // Log unexpected errors
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An unexpected error occurred.");
+        }
+    }
+
+    /**
+     * Endpoint for processing the consumption of a meal by a user.
+     * This method will call the "eatMeal" function from the ConsumeMealService.
+     *
+     * @param userId The ID of the user consuming the meal.
+     * @param mealId The ID of the meal being consumed.
+     * @return A ResponseEntity containing the remaining daily intake for each nutrient after meal consumption.
+     */
+    @PostMapping("/{userId}/consume-meal/{mealId}")
+    public ResponseEntity<Map<String, Double>> consumeMeal(@PathVariable Long userId, @PathVariable Long mealId) {
+        try {
+            Map<String, Double> remainingIntakes = consumeMealService.consumeMeal(userId, mealId);
+            return ResponseEntity.ok(remainingIntakes);
+        } catch (UserNotFoundException | MealNotFoundException e) {
+            log.error("Error occurred while processing meal consumption: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        } catch (Exception e) {
+            log.error("Unexpected error occurred: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 }

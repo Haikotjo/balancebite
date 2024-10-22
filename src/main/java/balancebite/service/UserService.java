@@ -161,7 +161,7 @@ public class UserService {
      */
     public void deleteUser(Long id) {
         if (!userRepository.existsById(id)) {
-            log.warn("Attempted to delete non-existing user with ID: {}", id); // Log een waarschuwing
+            log.warn("Attempted to delete non-existing user with ID: {}", id); // Log a warning
             throw new UserNotFoundException("User not found with ID " + id);
         }
         userRepository.deleteById(id);
@@ -302,7 +302,6 @@ public class UserService {
         // Return the remaining intake for each nutrient to the client
         return remainingIntakes;
     }
-
 
     /**
      * Normalizes nutrient names by converting them to lowercase, removing units like "g", "mg", and "µg"
