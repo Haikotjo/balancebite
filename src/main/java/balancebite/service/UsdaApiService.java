@@ -26,7 +26,7 @@ import java.util.Map;
  * Provides methods to fetch food data by FDC ID and handle HTTP responses.
  */
 @Service
-public class UsdaApiService implements UsdaApiServiceInterface {
+public class UsdaApiService implements IUsdaApiServiceInterface {
 
     private static final Logger logger = LoggerFactory.getLogger(UsdaApiService.class);
     private static final String BASE_API_URL = "https://api.nal.usda.gov/fdc/v1/";

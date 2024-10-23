@@ -16,7 +16,7 @@ import java.util.Optional;
  * Service class responsible for managing Recommended Daily Intake logic.
  */
 @Service
-public class RecommendedDailyIntakeService {
+public class RecommendedDailyIntakeService implements IRecommendedDailyIntakeService {
 
     private final RecommendedDailyIntakeMapper intakeMapper;
     private final RecommendedDailyIntakeRepository intakeRepository;
