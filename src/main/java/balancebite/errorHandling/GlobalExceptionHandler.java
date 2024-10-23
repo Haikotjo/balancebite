@@ -110,4 +110,19 @@ public class GlobalExceptionHandler {
         String errorMessage = ex.getMessage();
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", errorMessage));
     }
+
+    /**
+     * Handles cases where the user information required for the daily intake calculation is incomplete.
+     *
+     * @param ex The thrown {@link MissingUserInformationException}.
+     * @param request The web request that resulted in the exception.
+     * @return A ResponseEntity indicating that the user information is incomplete, with a BAD_REQUEST status.
+     */
+    @ExceptionHandler(MissingUserInformationException.class)
+    public ResponseEntity<Map<String, String>> handleMissingUserInformationException(MissingUserInformationException ex, WebRequest request) {
+        // Returns a ResponseEntity with BAD_REQUEST status and the message from MissingUserInformationException
+        String errorMessage = ex.getMessage();
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", errorMessage));
+    }
+
 }

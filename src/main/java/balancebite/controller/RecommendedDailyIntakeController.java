@@ -31,7 +31,7 @@ public class RecommendedDailyIntakeController {
     public ResponseEntity<RecommendedDailyIntakeDTO> createRecommendedDailyIntakeForUser(
             @PathVariable Long userId) {
 
-        // Create the recommended daily intake without requiring a request body
+        // Delegate logic to service
         RecommendedDailyIntakeDTO createdIntake = recommendedDailyIntakeService.getOrCreateDailyIntakeForUser(userId);
         return ResponseEntity.ok(createdIntake);
     }

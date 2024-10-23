@@ -1,6 +1,7 @@
 package balancebite.service;
 
 import balancebite.dto.recommendeddailyintake.RecommendedDailyIntakeDTO;
+import balancebite.errorHandling.MissingUserInformationException;
 import balancebite.mapper.RecommendedDailyIntakeMapper;
 import balancebite.model.RecommendedDailyIntake;
 import balancebite.model.User;
@@ -33,29 +34,40 @@ public class RecommendedDailyIntakeService implements IRecommendedDailyIntakeSer
     /**
      * Gets or creates a recommended daily intake for a specific user for today.
      *
-     * This method uses the utility class to fetch or create the daily intake for the given user.
+     * This method fetches the user details and checks if all necessary information
+     * (weight, height, age, gender, activity level, and goal) is provided.
+     * If any required information is missing, a {@link MissingUserInformationException}
+     * is thrown, prompting the user to update their profile.
+     *
+     * If all data is present, the method calculates or retrieves the recommended daily intake
+     * for the user and converts it to a DTO for the response.
      *
      * @param userId The ID of the user to assign the recommended daily intake to.
-     * @return The RecommendedDailyIntakeDTO with the calculated energy, protein, fat, saturated fat, and unsaturated fat intake.
-     * @throws IllegalArgumentException If the user does not have all the necessary information (weight, height, age,
-     *                                  gender, activity level, goal) or if the user ID is not found.
+     * @return The {@code RecommendedDailyIntakeDTO} with the calculated energy, protein,
+     *         fat, saturated fat, and unsaturated fat intake.
+     * @throws MissingUserInformationException If the user does not have all the necessary
+     *                                         information (weight, height, age, gender, activity level, goal).
+     * @throws IllegalArgumentException If the user with the specified ID is not found.
      */
     public RecommendedDailyIntakeDTO getOrCreateDailyIntakeForUser(Long userId) {
         // Fetch the user from the repository
-        Optional<User> userOptional = userRepository.findById(userId);
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User with ID " + userId + " not found"));
 
-        if (userOptional.isEmpty()) {
-            throw new IllegalArgumentException("User with ID " + userId + " not found");
+        // Check if all necessary fields for calculation are provided
+        if (user.getWeight() == null || user.getHeight() == null || user.getAge() == null ||
+                user.getGender() == null || user.getActivityLevel() == null || user.getGoal() == null) {
+
+            throw new MissingUserInformationException("User must provide all required information: weight, height, age, gender, activity level, and goal. Please update profile.");
         }
 
-        User user = userOptional.get();
-
-        // Use the utility class to get or create the daily intake
+        // Directly use the static method from the utility class
         RecommendedDailyIntake recommendedIntake = DailyIntakeCalculatorUtil.getOrCreateDailyIntakeForUser(user);
 
         // Convert to DTO and return
         return intakeMapper.toDTO(recommendedIntake);
     }
+
 
     /**
      * Retrieves the cumulative recommended nutrient intake for the current week for a specific user.
