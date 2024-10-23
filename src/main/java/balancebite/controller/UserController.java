@@ -226,19 +226,22 @@ public class UserController {
      * @return A ResponseEntity containing the remaining daily intake for each nutrient after meal consumption.
      */
     @PostMapping("/{userId}/consume-meal/{mealId}")
-    public ResponseEntity<Map<String, Double>> consumeMeal(@PathVariable Long userId, @PathVariable Long mealId) {
+    public ResponseEntity<Object> consumeMeal(@PathVariable Long userId, @PathVariable Long mealId) {
         try {
             Map<String, Double> remainingIntakes = consumeMealService.consumeMeal(userId, mealId);
             return ResponseEntity.ok(remainingIntakes);
         } catch (UserNotFoundException | MealNotFoundException e) {
             log.error("Error occurred while processing meal consumption: {}", e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Collections.emptyMap());
+            Map<String, String> errorResponse = Map.of("error", e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
         } catch (DailyIntakeNotFoundException e) {
             log.error("Daily intake not found for user ID: {}, message: {}", userId, e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Collections.emptyMap());
+            Map<String, String> errorResponse = Map.of("error", e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
         } catch (Exception e) {
             log.error("Unexpected error occurred: {}", e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Collections.emptyMap());
+            Map<String, String> errorResponse = Map.of("error", "An unexpected error occurred. Please try again later.");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
         }
     }
 }

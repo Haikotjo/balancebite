@@ -145,5 +145,4 @@ public class ConsumeMealService implements IConsumeMealService {
         return recommendedDailyIntake.getNutrients().stream()
                 .collect(Collectors.toMap(Nutrient::getName, nutrient -> nutrient.getValue() != null ? nutrient.getValue() : 0.0));
     }
-
 }
