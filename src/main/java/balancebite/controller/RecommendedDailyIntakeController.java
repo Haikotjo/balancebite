@@ -1,7 +1,13 @@
 package balancebite.controller;
 
 import balancebite.dto.recommendeddailyintake.RecommendedDailyIntakeDTO;
+import balancebite.errorHandling.MissingUserInformationException;
+import balancebite.errorHandling.UserNotFoundException;
 import balancebite.service.RecommendedDailyIntakeService;
+import balancebite.service.UserService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,6 +21,8 @@ import java.util.Map;
 @RequestMapping("/daily-intake")
 public class RecommendedDailyIntakeController {
 
+    private static final Logger log = LoggerFactory.getLogger(UserService.class);
+
     private final RecommendedDailyIntakeService recommendedDailyIntakeService;
 
     public RecommendedDailyIntakeController(RecommendedDailyIntakeService recommendedDailyIntakeService) {
@@ -22,18 +30,34 @@ public class RecommendedDailyIntakeController {
     }
 
     /**
-     * POST endpoint to create a new recommended daily intake for a specific user.
+     * POST endpoint to create or retrieve the recommended daily intake for a specific user.
+     *
+     * This endpoint uses the service to fetch or create the recommended daily intake.
+     * If any required user information is missing, a proper error response is returned.
      *
      * @param userId The ID of the user to assign the recommended daily intake to.
-     * @return ResponseEntity containing the created RecommendedDailyIntakeDTO.
+     * @return ResponseEntity containing the created or retrieved RecommendedDailyIntakeDTO,
+     *         or an error response if user information is missing.
      */
-    @PostMapping("/user/{userId}")
-    public ResponseEntity<RecommendedDailyIntakeDTO> createRecommendedDailyIntakeForUser(
-            @PathVariable Long userId) {
-
-        // Delegate logic to service
-        RecommendedDailyIntakeDTO createdIntake = recommendedDailyIntakeService.getOrCreateDailyIntakeForUser(userId);
-        return ResponseEntity.ok(createdIntake);
+    @PostMapping("/user/{userId}/daily-intake")
+    public ResponseEntity<Object> createRecommendedDailyIntakeForUser(@PathVariable Long userId) {
+        try {
+            // Delegate logic to service
+            RecommendedDailyIntakeDTO createdIntake = recommendedDailyIntakeService.getOrCreateDailyIntakeForUser(userId);
+            return ResponseEntity.ok(createdIntake);
+        } catch (MissingUserInformationException e) {
+            log.error("User information missing for user ID: {}, message: {}", userId, e.getMessage(), e);
+            Map<String, String> errorResponse = Map.of("error", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+        } catch (UserNotFoundException e) {
+            log.error("User not found: {}, message: {}", userId, e.getMessage(), e);
+            Map<String, String> errorResponse = Map.of("error", e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
+        } catch (Exception e) {
+            log.error("Unexpected error occurred while creating daily intake for user ID: {}, message: {}", userId, e.getMessage(), e);
+            Map<String, String> errorResponse = Map.of("error", "An unexpected error occurred. Please try again later.");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+        }
     }
 
     /**

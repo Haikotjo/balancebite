@@ -38,7 +38,6 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final MealRepository mealRepository;
-
     private final RecommendedDailyIntakeRepository recommendedDailyIntakeRepository;
     private final UserMapper userMapper;
     private final MealService mealService;  // Add MealService
