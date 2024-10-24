@@ -80,7 +80,6 @@ public class RecommendedDailyIntakeService implements IRecommendedDailyIntakeSer
         return recommendedDailyIntakeMapper.toDTO(recommendedDailyIntake);
     }
 
-
     /**
      * Retrieves the cumulative recommended nutrient intake for the current week for a specific user.
      *

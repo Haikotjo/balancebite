@@ -50,11 +50,6 @@ public class TestDataInitializer {
                 // Zoek naar de user met ID 6 en voeg gewicht, leeftijd, enz. toe
                 updateUserDetails(6L, 80.0, 74, 164.0, "FEMALE", "MODERATE", "WEIGHT_LOSS_WITH_MUSCLE_MAINTENANCE");
 
-                // Voor de users met ID 1 t/m 3 een RecommendedDailyIntake aanmaken
-                recommendedDailyIntakeService.getOrCreateDailyIntakeForUser(1L);
-                recommendedDailyIntakeService.getOrCreateDailyIntakeForUser(2L);
-                recommendedDailyIntakeService.getOrCreateDailyIntakeForUser(3L);
-
                 // Create or retrieve RecommendedDailyIntake for user 5 and 6 for multiple days
                 LocalDate threeDaysAgo = LocalDate.now().minusDays(3);
                 LocalDate twoDaysAgo = LocalDate.now().minusDays(2);
@@ -62,6 +57,11 @@ public class TestDataInitializer {
                 LocalDate today = LocalDate.now();
                 LocalDate tomorrow = LocalDate.now().plusDays(1);
                 LocalDate dayAfterTomorrow = LocalDate.now().plusDays(2);
+
+                // Voor de users met ID 1 t/m 3 een RecommendedDailyIntake aanmaken
+                testRecommendedDailyIntakeService.createOrRetrieveRecommendedDailyIntakeForDate(1L, today);
+                testRecommendedDailyIntakeService.createOrRetrieveRecommendedDailyIntakeForDate(2L, today);
+                testRecommendedDailyIntakeService.createOrRetrieveRecommendedDailyIntakeForDate(3L, today);
 
                 // For user 5
                 testRecommendedDailyIntakeService.createOrRetrieveRecommendedDailyIntakeForDate(5L, threeDaysAgo);
@@ -71,14 +71,12 @@ public class TestDataInitializer {
                 testRecommendedDailyIntakeService.createOrRetrieveRecommendedDailyIntakeForDate(5L, dayAfterTomorrow);
                 testRecommendedDailyIntakeService.createOrRetrieveRecommendedDailyIntakeForDate(5L, today); // Always add 'today' as the last entry to ensure correct processing
 
-
                 // For user 6
                 testRecommendedDailyIntakeService.createOrRetrieveRecommendedDailyIntakeForDate(6L, threeDaysAgo);
                 testRecommendedDailyIntakeService.createOrRetrieveRecommendedDailyIntakeForDate(6L, twoDaysAgo);
                 testRecommendedDailyIntakeService.createOrRetrieveRecommendedDailyIntakeForDate(6L, yesterday);
-                testRecommendedDailyIntakeService.createOrRetrieveRecommendedDailyIntakeForDate(6L, tomorrow);
-                testRecommendedDailyIntakeService.createOrRetrieveRecommendedDailyIntakeForDate(5L, today); // Always add 'today' as the last entry to ensure correct processing
-
+//                testRecommendedDailyIntakeService.createOrRetrieveRecommendedDailyIntakeForDate(6L, tomorrow);
+                testRecommendedDailyIntakeService.createOrRetrieveRecommendedDailyIntakeForDate(6L, today); // Always add 'today' as the last entry to ensure correct processing
 
                 System.out.println("Recommended daily intake created for users 5 and 6 for the specified days.");
 
