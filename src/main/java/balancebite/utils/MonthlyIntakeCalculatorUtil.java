@@ -2,7 +2,7 @@ package balancebite.utils;
 
 import balancebite.model.RecommendedDailyIntake;
 import balancebite.model.User;
-import balancebite.utils.DailyIntakeCalculatorUtil;
+
 import java.time.LocalDate;
 import java.time.temporal.TemporalAdjusters;
 import java.util.HashMap;
@@ -19,7 +19,7 @@ public class MonthlyIntakeCalculatorUtil {
 
     /**
      * Calculates the cumulative recommended nutrient intake for the current month for a specific user.
-     * <p>
+     *
      * This method calculates the total recommended nutrient intake for the current month by adjusting the intake
      * for each nutrient based on the user's actual intake from past days. It also considers the recommended daily
      * intake for the remaining days in the current month.
@@ -33,75 +33,112 @@ public class MonthlyIntakeCalculatorUtil {
         LocalDate startOfMonth = today.with(TemporalAdjusters.firstDayOfMonth());
         LocalDate endOfMonth = today.with(TemporalAdjusters.lastDayOfMonth());
 
-        // Map to store cumulative nutrient values for the month
+        // Map to store the cumulative nutrient values for the month
         Map<String, Double> cumulativeIntake = new HashMap<>();
+        Map<String, Double> previousDaysAdjustment = new HashMap<>(); // Store adjustments for previous days
 
-        // Iterate over the days from the beginning of the month until yesterday to account for actual intake
+        // Process all days from the start of the month up to yesterday (excluding today)
         user.getRecommendedDailyIntakes().stream()
                 .filter(intake -> !intake.getCreatedAt().toLocalDate().isBefore(startOfMonth)
-                        && intake.getCreatedAt().toLocalDate().isBefore(today))  // Consider only the current month until yesterday
+                        && intake.getCreatedAt().toLocalDate().isBefore(today))  // All days from the start of the month to yesterday
                 .forEach(intake -> {
                     intake.getNutrients().forEach(nutrient -> {
                         String nutrientName = nutrient.getName();
                         double value = nutrient.getValue() != null ? nutrient.getValue() : 0.0;
 
-                        // Add the actual intake for previous days to the cumulative intake
-                        cumulativeIntake.merge(nutrientName, value, Double::sum);
+                        // Add adjustments for previous days
+                        previousDaysAdjustment.merge(nutrientName, value, Double::sum);
+
+                        // Logging kcal, protein, carbohydrates, and fat for previous days
+                        if (nutrientName.equals("Energy kcal")) {
+                            System.out.println("Kcal from previous day (" + intake.getCreatedAt() + "): " + value);
+                        }
+                        if (nutrientName.equals("Protein")) {
+                            System.out.println("Protein from previous day (" + intake.getCreatedAt() + "): " + value);
+                        }
+                        if (nutrientName.equals("Carbohydrates")) {
+                            System.out.println("Carbohydrates from previous day (" + intake.getCreatedAt() + "): " + value);
+                        }
+                        if (nutrientName.equals("Total lipid (fat)")) {
+                            System.out.println("Fat from previous day (" + intake.getCreatedAt() + "): " + value);
+                        }
                     });
                 });
 
-        // Get the original recommended daily intake (at creation time, not adjusted for meals) and multiply for remaining days
-        RecommendedDailyIntake originalIntake = getOriginalDailyIntake(user);
-        if (originalIntake == null) {
-            // Recalculate the original intake if not found using the utility method
-            originalIntake = DailyIntakeCalculatorUtil.calculateDailyIntake(user);
-        }
+        // Process today's intake separately (because it can change throughout the day)
+        user.getRecommendedDailyIntakes().stream()
+                .filter(intake -> intake.getCreatedAt().toLocalDate().equals(today))  // Add today's intake
+                .findFirst().ifPresent(todayIntake -> {
+                    todayIntake.getNutrients().forEach(nutrient -> {
+                        String nutrientName = nutrient.getName();
+                        double dailyValue = nutrient.getValue() != null ? nutrient.getValue() : 0.0;
+                        previousDaysAdjustment.merge(nutrientName, dailyValue, Double::sum);  // Add today's intake to adjustments
+
+                        // Logging kcal, protein, carbohydrates, and fat for today
+                        if (nutrientName.equals("Energy kcal")) {
+                            System.out.println("Kcal from today: " + dailyValue);
+                        }
+                        if (nutrientName.equals("Protein")) {
+                            System.out.println("Protein from today: " + dailyValue);
+                        }
+                        if (nutrientName.equals("Carbohydrates")) {
+                            System.out.println("Carbohydrates from today: " + dailyValue);
+                        }
+                        if (nutrientName.equals("Total lipid (fat)")) {
+                            System.out.println("Fat from today: " + dailyValue);
+                        }
+                    });
+                });
+
+        // Always recalculate the daily intake to ensure it's up-to-date
+        RecommendedDailyIntake originalIntake = recalculateOriginalDailyIntake(user);
 
         if (originalIntake != null) {
+            // Calculate remaining days in the month, including today
+            int remainingDays = endOfMonth.getDayOfMonth() - today.getDayOfMonth();
             originalIntake.getNutrients().forEach(nutrient -> {
                 String nutrientName = nutrient.getName();
                 double dailyValue = nutrient.getValue() != null ? nutrient.getValue() : 0.0;
-                // Multiply the original daily intake by the remaining days of the month (excluding today)
-                int remainingDays = endOfMonth.getDayOfMonth() - today.getDayOfMonth();
-                if (remainingDays > 0) {
-                    cumulativeIntake.merge(nutrientName, dailyValue * remainingDays, Double::sum);
+
+                // Apply the adjustment for the previous days (positive or negative)
+                cumulativeIntake.put(nutrientName, previousDaysAdjustment.getOrDefault(nutrientName, 0.0));
+
+                // Add the remaining days based on the original daily intake
+                cumulativeIntake.merge(nutrientName, dailyValue * remainingDays, Double::sum);
+
+                // Logging kcal, protein, carbohydrates, and fat for remaining days
+                if (nutrientName.equals("Energy kcal")) {
+                    System.out.println("Remaining days (" + remainingDays + ") kcal added: " + (dailyValue * remainingDays));
+                }
+                if (nutrientName.equals("Protein")) {
+                    System.out.println("Remaining days (" + remainingDays + ") protein added: " + (dailyValue * remainingDays));
+                }
+                if (nutrientName.equals("Carbohydrates")) {
+                    System.out.println("Remaining days (" + remainingDays + ") carbohydrates added: " + (dailyValue * remainingDays));
+                }
+                if (nutrientName.equals("Total lipid (fat)")) {
+                    System.out.println("Remaining days (" + remainingDays + ") fat added: " + (dailyValue * remainingDays));
                 }
             });
         }
 
-        // Finally, add today's original intake (unadjusted) to the cumulative intake
-        Optional<RecommendedDailyIntake> todayIntakeOptional = user.getRecommendedDailyIntakes().stream()
-                .filter(intake -> intake.getCreatedAt().toLocalDate().equals(today))
-                .findFirst();
-
-        if (todayIntakeOptional.isPresent()) {
-            RecommendedDailyIntake todayIntake = todayIntakeOptional.get();
-            todayIntake.getNutrients().forEach(nutrient -> {
-                String nutrientName = nutrient.getName();
-                double dailyValue = nutrient.getValue() != null ? nutrient.getValue() : 0.0;
-                if (dailyValue > 0) {
-                    cumulativeIntake.merge(nutrientName, dailyValue, Double::sum);
-                }
-            });
-        }
+        // Final cumulative values logging
+        System.out.println("Final cumulative kcal value: " + cumulativeIntake.getOrDefault("Energy kcal", 0.0));
+        System.out.println("Final cumulative protein value: " + cumulativeIntake.getOrDefault("Protein", 0.0));
+        System.out.println("Final cumulative carbohydrates value: " + cumulativeIntake.getOrDefault("Carbohydrates", 0.0));
+        System.out.println("Final cumulative fat value: " + cumulativeIntake.getOrDefault("Total lipid (fat)", 0.0));
 
         return cumulativeIntake;
     }
 
     /**
-     * Retrieves the original recommended daily intake for the start of the month.
-     * <p>
-     * This method returns the recommended daily intake that was originally calculated, without any adjustments
-     * made for meals consumed.
+     * Recalculates the original recommended daily intake for the user to ensure it's accurate and up-to-date.
      *
-     * @param user The user for whom the original intake is retrieved.
-     * @return The original RecommendedDailyIntake object or null if not found.
+     * @param user The user for whom the intake is calculated.
+     * @return The recalculated RecommendedDailyIntake object.
      */
-    private static RecommendedDailyIntake getOriginalDailyIntake(User user) {
-        LocalDate startOfMonth = LocalDate.now().with(TemporalAdjusters.firstDayOfMonth());
-        return user.getRecommendedDailyIntakes().stream()
-                .filter(intake -> intake.getCreatedAt().toLocalDate().equals(startOfMonth))
-                .findFirst()
-                .orElse(null);
+    private static RecommendedDailyIntake recalculateOriginalDailyIntake(User user) {
+        // Calculate the intake based on the user's data
+        return DailyIntakeCalculatorUtil.calculateDailyIntake(user);
     }
 }
