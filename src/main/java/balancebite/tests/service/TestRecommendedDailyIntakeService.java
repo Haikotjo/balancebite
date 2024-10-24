@@ -4,12 +4,16 @@ import balancebite.model.User;
 import balancebite.model.RecommendedDailyIntake;
 import balancebite.repository.UserRepository;
 import balancebite.repository.RecommendedDailyIntakeRepository;
+import balancebite.service.UserService;
 import balancebite.utils.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * Test service for creating recommended daily intakes for specific dates.
@@ -17,6 +21,7 @@ import java.util.Optional;
  */
 @Service
 public class TestRecommendedDailyIntakeService {
+    private static final Logger log = LoggerFactory.getLogger(UserService.class);
 
     @Autowired
     private UserRepository userRepository;
@@ -25,74 +30,57 @@ public class TestRecommendedDailyIntakeService {
     private RecommendedDailyIntakeRepository intakeRepository;
 
     /**
-     * Creates a recommended daily intake for a given user and date with calculated values.
+     * Creates or retrieves a recommended daily intake for a given user and date with calculated values.
      *
-     * @param userId The ID of the user.
+     * This method fetches the user details and checks if all necessary information
+     * (weight, height, age, gender, activity level, and goal) is provided.
+     * If any required information is missing, an {@link IllegalArgumentException} is thrown,
+     * prompting the user to update their profile.
+     *
+     * If all data is present, the method calculates or retrieves the recommended daily intake
+     * for the user and adds it for the given date.
+     *
+     * @param userId The ID of the user to assign the recommended daily intake to.
      * @param date   The date for which the recommended daily intake should be created.
+     * @throws IllegalArgumentException If the user with the specified ID is not found or if necessary
+     *                                  information is missing to calculate the intake.
      */
-    public void createRecommendedDailyIntakeForDate(Long userId, LocalDate date) {
-        Optional<User> userOptional = userRepository.findById(userId);
-        if (userOptional.isPresent()) {
-            User user = userOptional.get();
+    public void createOrRetrieveRecommendedDailyIntakeForDate(Long userId, LocalDate date) {
+        // Fetch the user from the repository
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User with ID " + userId + " not found"));
 
-            // Check if an intake for the given date already exists
-            boolean intakeExists = user.getRecommendedDailyIntakes().stream()
-                    .anyMatch(intake -> intake.getCreatedAt().toLocalDate().equals(date));
+        // Check if all necessary fields for calculation are provided
+        if (user.getWeight() == null || user.getHeight() == null || user.getAge() == null ||
+                user.getGender() == null || user.getActivityLevel() == null || user.getGoal() == null) {
+            throw new IllegalArgumentException("User must provide all required information: weight, height, age, gender, activity level, and goal. Please update profile.");
+        }
 
-            if (!intakeExists) {
-                // Calculate Total Daily Energy Expenditure (TDEE) and adjust it based on the user's goal
-                double tdee = KcalIntakeCalculatorUtil.calculateTDEE(user);
-                double totalEnergyKcal = KcalIntakeCalculatorUtil.adjustCaloriesForGoal(tdee, user.getGoal());
+        // Check if an intake for the given date already exists
+        boolean intakeExists = user.getRecommendedDailyIntakes().stream()
+                .anyMatch(intake -> intake.getCreatedAt().toLocalDate().equals(date));
 
-                // Calculate protein intake based on the user's total energy intake, weight, activity level, age, and goal
-                double proteinIntake = ProteinIntakeCalculatorUtil.calculateProteinIntake(user);
+        log.info("Checking if intake exists for user ID {} on date {}. Current intakes: {}", userId, date,
+                user.getRecommendedDailyIntakes().stream()
+                        .map(intake -> intake.getCreatedAt().toLocalDate())
+                        .collect(Collectors.toList()));
 
-                // Calculate fat intake based on the user's goal and total energy intake
-                double fatIntake = FatIntakeCalculatorUtil.calculateFatIntake(user, totalEnergyKcal);
+        if (!intakeExists) {
+            // Directly use the static method from the utility class to calculate or retrieve intake
+            RecommendedDailyIntake newIntake = DailyIntakeCalculatorUtil.getOrCreateDailyIntakeForUser(user);
+            newIntake.setCreatedAt(date.atStartOfDay());
 
-                // Calculate the distribution of saturated and unsaturated fats
-                FatTypeDistributionCalculatorUtil.FatTypeDistribution fatDistribution = FatTypeDistributionCalculatorUtil.calculateFatDistribution(fatIntake);
+            // Add the new intake to the user's set of intakes
+            user.getRecommendedDailyIntakes().forEach(intake -> {
+                log.info("Checking intake for date: {}, createdAt: {}", intake.getCreatedAt().toLocalDate(), intake.getCreatedAt());
+            });
 
-                // Calculate carbohydrate intake based on the remaining energy after protein and fat
-                double carbohydrateIntake = CarbohydrateIntakeCalculatorUtil.calculateCarbohydrateIntake(totalEnergyKcal, proteinIntake, fatIntake);
+            log.info("Checking if intake exists for user ID {} on date {}: {}", userId, date, intakeExists);
 
-                // Create a new RecommendedDailyIntake for the specified date
-                RecommendedDailyIntake newIntake = new RecommendedDailyIntake();
-                newIntake.setCreatedAt(date.atStartOfDay());
-                newIntake.setUser(user);
 
-                // Assign the calculated kcal, protein, fat, saturated fat, and unsaturated fat values to their respective nutrients
-                final double finalTotalEnergyKcal = totalEnergyKcal;  // Ensure it is effectively final for lambda use
-                final double finalProteinIntake = proteinIntake; // Ensure it is effectively final for lambda use
-                final double finalFatIntake = fatIntake; // Ensure it is effectively final for lambda use
-                final double finalSaturatedFat = fatDistribution.getSaturatedFat(); // Ensure it is effectively final for lambda use
-                final double finalUnsaturatedFat = fatDistribution.getUnsaturatedFat(); // Ensure it is effectively final for lambda use
-                final double finalCarbohydrateIntake = carbohydrateIntake; // Ensure it is effectively final for lambda use
 
-                newIntake.getNutrients().forEach(nutrient -> {
-                    if (nutrient.getName().equals("Energy kcal")) {
-                        nutrient.setValue(finalTotalEnergyKcal);
-                    } else if (nutrient.getName().equals("Protein")) {
-                        nutrient.setValue(finalProteinIntake);
-                    } else if (nutrient.getName().equals("Total lipid (fat)")) {
-                        nutrient.setValue(finalFatIntake);
-                    } else if (nutrient.getName().equals("Fatty acids, total saturated")) {
-                        nutrient.setValue(finalSaturatedFat);
-                    } else if (nutrient.getName().equals("Fatty acids, total polyunsaturated")) {
-                        nutrient.setValue(finalUnsaturatedFat);
-                    } else if (nutrient.getName().equals("Carbohydrate, by difference")) {
-                        nutrient.setValue(finalCarbohydrateIntake);
-                    }
-                });
-
-                // Add the new intake to the user's set of intakes
-                user.getRecommendedDailyIntakes().add(newIntake);
-
-                // Save the updated user (cascading saves the intake as well)
-                userRepository.save(user);
-            }
-        } else {
-            System.err.println("User with ID " + userId + " not found.");
+            // Save the updated user (cascading saves the intake as well)
+            userRepository.save(user);
         }
     }
 }

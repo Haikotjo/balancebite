@@ -8,8 +8,11 @@ import balancebite.model.User;
 import balancebite.repository.RecommendedDailyIntakeRepository;
 import balancebite.repository.UserRepository;
 import balancebite.utils.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.Map;
 import java.util.Optional;
 
@@ -18,17 +21,20 @@ import java.util.Optional;
  */
 @Service
 public class RecommendedDailyIntakeService implements IRecommendedDailyIntakeService {
+    private static final Logger log = LoggerFactory.getLogger(UserService.class);
 
-    private final RecommendedDailyIntakeMapper intakeMapper;
-    private final RecommendedDailyIntakeRepository intakeRepository;
+    private final RecommendedDailyIntakeMapper RecommendedDailyIntakeMapper;
+    private final RecommendedDailyIntakeRepository recommendedDailyIntakeRepository;
     private final UserRepository userRepository;
+    private final RecommendedDailyIntakeMapper recommendedDailyIntakeMapper;
 
-    public RecommendedDailyIntakeService(RecommendedDailyIntakeMapper intakeMapper,
-                                         RecommendedDailyIntakeRepository intakeRepository,
-                                         UserRepository userRepository) {
-        this.intakeMapper = intakeMapper;
-        this.intakeRepository = intakeRepository;
+    public RecommendedDailyIntakeService(RecommendedDailyIntakeMapper RecommendedDailyIntakeMapper,
+                                         RecommendedDailyIntakeRepository recommendedDailyIntakeRepository,
+                                         UserRepository userRepository, RecommendedDailyIntakeMapper recommendedDailyIntakeMapper) {
+        this.RecommendedDailyIntakeMapper = RecommendedDailyIntakeMapper;
+        this.recommendedDailyIntakeRepository = recommendedDailyIntakeRepository;
         this.userRepository = userRepository;
+        this.recommendedDailyIntakeMapper = recommendedDailyIntakeMapper;
     }
 
     /**
@@ -62,10 +68,16 @@ public class RecommendedDailyIntakeService implements IRecommendedDailyIntakeSer
         }
 
         // Directly use the static method from the utility class
-        RecommendedDailyIntake recommendedIntake = DailyIntakeCalculatorUtil.getOrCreateDailyIntakeForUser(user);
+        RecommendedDailyIntake recommendedDailyIntake = DailyIntakeCalculatorUtil.getOrCreateDailyIntakeForUser(user);
+        log.info("Attempting to save RecommendedDailyIntake for user ID {} on date {}", userId, recommendedDailyIntake.getCreatedAt());
+
+        // Save the recommended daily intake to the database
+        recommendedDailyIntakeRepository.save(recommendedDailyIntake);
+
+        log.info("RecommendedDailyIntake for user ID {} successfully created or retrieved for date {}", userId, LocalDate.now());
 
         // Convert to DTO and return
-        return intakeMapper.toDTO(recommendedIntake);
+        return recommendedDailyIntakeMapper.toDTO(recommendedDailyIntake);
     }
 
 

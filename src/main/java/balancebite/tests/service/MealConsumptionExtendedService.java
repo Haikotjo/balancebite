@@ -7,9 +7,13 @@ import balancebite.repository.MealRepository;
 import balancebite.repository.RecommendedDailyIntakeRepository;
 import balancebite.repository.UserRepository;
 import balancebite.dto.NutrientInfoDTO;
+import balancebite.utils.HelperMethods;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.LocalDate;
 import java.util.HashMap;
@@ -17,8 +21,12 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import static balancebite.utils.HelperMethods.normalizeNutrientName;
+
 @Service
-public class MealConsumptionService {
+public class MealConsumptionExtendedService implements IConsumeMealService {
+
+    private static final Logger log = LoggerFactory.getLogger(MealConsumptionExtendedService.class);
 
     @Autowired
     private UserRepository userRepository;
@@ -44,71 +52,87 @@ public class MealConsumptionService {
      * @return A map containing the remaining daily intake for each nutrient after the meal consumption on the specific date.
      */
     @Transactional
+    @Override
+    public Map<String, Double> consumeMeal(Long userId, Long mealId) {
+        return eatMealForSpecificDate(userId, mealId, LocalDate.now());
+    }
+
+    @Transactional
     public Map<String, Double> eatMealForSpecificDate(Long userId, Long mealId, LocalDate date) {
-        // Retrieve the user by their ID
+        log.debug("Start consuming meal process for user ID: {} and meal ID: {} on date: {}", userId, mealId, date);
+
+        // Retrieve the user by their ID, throw UserNotFoundException if not found
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found with ID " + userId));
+        log.debug("Retrieved user with ID: {}", userId);
 
-        // Retrieve the meal by its ID
+        // Retrieve the meal by its ID, throw MealNotFoundException if not found
         Meal meal = mealRepository.findById(mealId)
                 .orElseThrow(() -> new RuntimeException("Meal not found with ID " + mealId));
+        log.debug("Retrieved meal with ID: {}", mealId);
 
-        // Retrieve the nutrient values of the meal
+        // Retrieve the nutrient values of the meal using mealService
         Map<String, NutrientInfoDTO> mealNutrients = mealService.calculateNutrients(mealId);
+        log.debug("Calculated nutrient values for meal with ID: {}", mealId);
 
         // Get the user's recommended daily intake for the given date
-        Optional<RecommendedDailyIntake> intakeForSpecificDate = user.getRecommendedDailyIntakes().stream()
-                .filter(intake -> intake.getCreatedAt().toLocalDate().equals(date))
-                .findFirst();
+        Optional<RecommendedDailyIntake> intakeForSpecificDate = recommendedDailyIntakeRepository
+                .findByUser_IdAndCreatedAt(userId, date.atStartOfDay());
 
         if (intakeForSpecificDate.isEmpty()) {
             throw new RuntimeException("Recommended daily intake for the given date not found for user with ID " + userId);
         }
 
         RecommendedDailyIntake recommendedDailyIntake = intakeForSpecificDate.get();
+        log.debug("Retrieved recommended daily intake for user ID: {} for date: {}", userId, date);
 
         // Retrieve the recommended daily intake values and normalize the keys
         Map<String, Double> recommendedIntakes = recommendedDailyIntake.getNutrients().stream()
                 .collect(Collectors.toMap(
-                        nutrient -> normalizeNutrientName(nutrient.getName()),  // Normalize the nutrient names
-                        nutrient -> nutrient.getValue() != null ? nutrient.getValue() : 0.0  // Handle null values
+                        nutrient -> normalizeNutrientName(nutrient.getName()),
+                        nutrient -> HelperMethods.getValueOrDefault(nutrient.getValue())
                 ));
+        log.debug("Mapped nutrients for recommended daily intake for user ID: {}", userId);
 
         // Map to store the remaining intake for each nutrient
         Map<String, Double> remainingIntakes = new HashMap<>(recommendedIntakes);
 
         // Subtract the nutrients from the meal from the recommended daily intake
         for (Map.Entry<String, NutrientInfoDTO> entry : mealNutrients.entrySet()) {
-            String originalNutrientName = entry.getKey();  // Original nutrient name from meal
-            String normalizedNutrientName = normalizeNutrientName(originalNutrientName);  // Normalized version of the meal nutrient name
+            String originalNutrientName = entry.getKey();
+            String normalizedNutrientName = normalizeNutrientName(originalNutrientName);
 
             NutrientInfoDTO nutrientInfo = entry.getValue();
 
             // Check if the normalized nutrient exists in the recommended intake
             if (remainingIntakes.containsKey(normalizedNutrientName)) {
-                // Check if nutrient value is not null before subtracting
-                double nutrientValue = nutrientInfo.getValue() != null ? nutrientInfo.getValue() : 0.0;
+                double currentValue = remainingIntakes.get(normalizedNutrientName);
+                double nutrientValue = HelperMethods.getValueOrDefault(nutrientInfo.getValue());
+
                 // Subtract the nutrient value from the daily intake
-                double remainingIntake = remainingIntakes.get(normalizedNutrientName) - nutrientValue;
-                remainingIntakes.put(normalizedNutrientName, remainingIntake);  // Update remaining intake
+                double remainingIntake = currentValue - nutrientValue;
+                remainingIntakes.put(normalizedNutrientName, remainingIntake);
+                log.debug("Updated remaining intake for nutrient: {} to value: {}", normalizedNutrientName, remainingIntake);
 
                 // Update the recommended intake for this nutrient in the Nutrient entity
                 recommendedDailyIntake.getNutrients().forEach(nutrient -> {
                     if (normalizeNutrientName(nutrient.getName()).equals(normalizedNutrientName)) {
-                        nutrient.setValue(remainingIntake);  // Allow negative values here
+                        nutrient.setValue(remainingIntake);
                     }
                 });
+            } else {
+                log.debug("Nutrient {} not found in recommended daily intake for user ID: {}", originalNutrientName, userId);
             }
         }
 
-        // Save the updated RecommendedDailyIntake back to the database
-        recommendedDailyIntakeRepository.save(recommendedDailyIntake);
+        try {
+            recommendedDailyIntakeRepository.save(recommendedDailyIntake);
+            log.info("Successfully saved updated recommended daily intake for user with ID: {}", userId);
+        } catch (DataAccessException e) {
+            log.error("Database error occurred while saving RecommendedDailyIntake: {}", e.getMessage(), e);
+            throw new RuntimeException("Failed to update recommended daily intake for user with ID " + userId, e);
+        }
 
         return remainingIntakes;
-    }
-
-    // Helper method to normalize nutrient names (you can adjust this logic as needed)
-    private String normalizeNutrientName(String nutrientName) {
-        return nutrientName.trim().toLowerCase().replaceAll("\\s+", "_");
     }
 }
