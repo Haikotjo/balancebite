@@ -14,6 +14,8 @@ import balancebite.repository.MealRepository;
 import balancebite.repository.UserRepository;
 import balancebite.utils.NutrientCalculatorUtil;
 import jakarta.persistence.EntityNotFoundException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,10 +23,12 @@ import java.util.*;
 
 /**
  * Service class for managing Meal entities.
- * Handles the creation, retrieval, and processing of Meal entities and their related data.
+ * Handles the creation, retrieval, updating, and processing of Meal entities and their related data.
  */
 @Service
 public class MealService {
+
+    private static final Logger log = LoggerFactory.getLogger(MealService.class);
 
     private final MealRepository mealRepository;
     private final FoodItemRepository foodItemRepository;
@@ -58,9 +62,19 @@ public class MealService {
      */
     @Transactional
     public MealDTO createMeal(MealInputDTO mealInputDTO) {
-        Meal meal = mealMapper.toEntity(mealInputDTO);
-        Meal savedMeal = mealRepository.save(meal);
-        return mealMapper.toDTO(savedMeal);
+        log.info("Attempting to create a new meal with name: {}", mealInputDTO.getName());
+        try {
+            Meal meal = mealMapper.toEntity(mealInputDTO);
+            Meal savedMeal = mealRepository.save(meal);
+            log.info("Successfully created a new meal with ID: {}", savedMeal.getId());
+            return mealMapper.toDTO(savedMeal);
+        } catch (InvalidFoodItemException e) {
+            log.error("Failed to create meal due to invalid food item: {}", e.getMessage());
+            throw e;
+        } catch (Exception e) {
+            log.error("Unexpected error during meal creation: {}", e.getMessage(), e);
+            throw new RuntimeException("An unexpected error occurred while creating the meal.");
+        }
     }
 
     /**
@@ -68,20 +82,33 @@ public class MealService {
      * This method converts the input DTO to a Meal entity, associates it with a user, persists it, and then converts the result back to a DTO.
      *
      * @param mealInputDTO The DTO containing the input data for creating a Meal.
-     * @param userId The ID of the user to whom the meal will be associated.
+     * @param userId       The ID of the user to whom the meal will be associated.
      * @return The created MealDTO with the persisted meal information.
      * @throws InvalidFoodItemException if any food item in the input is invalid.
-     * @throws EntityNotFoundException if the user cannot be found.
+     * @throws EntityNotFoundException  if the user cannot be found.
      */
     @Transactional
     public MealDTO createMealForUser(MealInputDTO mealInputDTO, Long userId) {
-        Meal meal = mealMapper.toEntity(mealInputDTO);
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new EntityNotFoundException("User not found with ID: " + userId));
-        meal.setCreatedBy(user);
-        meal.getUsers().add(user);
-        Meal savedMeal = mealRepository.save(meal);
-        return mealMapper.toDTO(savedMeal);
+        log.info("Attempting to create a new meal for user ID: {}", userId);
+        try {
+            Meal meal = mealMapper.toEntity(mealInputDTO);
+            User user = userRepository.findById(userId)
+                    .orElseThrow(() -> new EntityNotFoundException("User not found with ID: " + userId));
+            meal.setCreatedBy(user);
+            meal.getUsers().add(user);
+            Meal savedMeal = mealRepository.save(meal);
+            log.info("Successfully created a new meal for user with ID: {}", userId);
+            return mealMapper.toDTO(savedMeal);
+        } catch (InvalidFoodItemException e) {
+            log.error("Failed to create meal due to invalid food item: {}", e.getMessage());
+            throw e;
+        } catch (EntityNotFoundException e) {
+            log.error("User not found while creating meal for user ID {}: {}", userId, e.getMessage());
+            throw e;
+        } catch (Exception e) {
+            log.error("Unexpected error during meal creation for user ID {}: {}", userId, e.getMessage(), e);
+            throw new RuntimeException("An unexpected error occurred while creating the meal for user.");
+        }
     }
 
     /**
@@ -89,34 +116,44 @@ public class MealService {
      * This method updates the meal's name and ingredients based on the provided MealInputDTO.
      * The user relationship remains unchanged during this update.
      *
-     * @param id the ID of the meal to be updated
-     * @param mealInputDTO the DTO containing the updated meal information
-     * @return the updated MealDTO containing the new meal data
-     * @throws EntityNotFoundException if the meal with the given ID is not found
-     * @throws InvalidFoodItemException if any food item ID in the ingredients is invalid
+     * @param id           the ID of the meal to be updated.
+     * @param mealInputDTO the DTO containing the updated meal information.
+     * @return the updated MealDTO containing the new meal data.
+     * @throws EntityNotFoundException if the meal with the given ID is not found.
+     * @throws InvalidFoodItemException if any food item ID in the ingredients is invalid.
      */
     @Transactional
     public MealDTO updateMeal(Long id, MealInputDTO mealInputDTO) {
+        log.info("Updating meal with ID: {}", id);
         Meal existingMeal = mealRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Meal not found with ID: " + id));
+
         existingMeal.setName(mealInputDTO.getName());
         existingMeal.getMealIngredients().clear();
         List<MealIngredient> updatedIngredients = mealInputDTO.getMealIngredients().stream()
                 .map(inputDTO -> mealIngredientMapper.toEntity(inputDTO, existingMeal))
                 .toList();
         existingMeal.addMealIngredients(updatedIngredients);
+
         Meal savedMeal = mealRepository.save(existingMeal);
+        log.info("Successfully updated meal with ID: {}", id);
         return mealMapper.toDTO(savedMeal);
     }
 
     /**
      * Retrieves all Meals from the repository.
      *
-     * @return a list of MealDTOs.
+     * @return a list of MealDTOs, or an empty list if no meals are found.
      */
     @Transactional(readOnly = true)
     public List<MealDTO> getAllMeals() {
+        log.info("Retrieving all meals from the system.");
         List<Meal> meals = mealRepository.findAll();
+        if (meals.isEmpty()) {
+            log.info("No meals found in the system.");
+        } else {
+            log.info("Found {} meals in the system.", meals.size());
+        }
         return meals.stream().map(mealMapper::toDTO).toList();
     }
 
@@ -129,28 +166,28 @@ public class MealService {
      */
     @Transactional(readOnly = true)
     public MealDTO getMealById(Long id) {
+        log.info("Retrieving meal with ID: {}", id);
         Meal meal = mealRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Meal not found with ID: " + id));
+        log.info("Successfully retrieved meal with ID: {}", id);
         return mealMapper.toDTO(meal);
     }
 
     /**
      * Deletes a specific meal from the repository.
-     * This operation should be restricted to administrative users only.
      *
      * @param mealId The ID of the meal to be deleted.
      * @throws EntityNotFoundException if the meal with the given ID is not found.
      */
     @Transactional
     public void deleteMeal(Long mealId) {
-        // Retrieve the meal by its ID, throw exception if not found
+        log.info("Attempting to delete meal with ID: {}", mealId);
         Meal meal = mealRepository.findById(mealId)
                 .orElseThrow(() -> new EntityNotFoundException("Meal not found with ID: " + mealId));
 
-        // Delete the meal from the repository
         mealRepository.delete(meal);
+        log.info("Successfully deleted meal with ID: {}", mealId);
     }
-
 
     /**
      * Retrieves the total nutrients for a given Meal by its ID.
@@ -160,6 +197,7 @@ public class MealService {
      * @throws EntityNotFoundException if the meal with the given ID is not found.
      */
     public Map<String, NutrientInfoDTO> calculateNutrients(Long mealId) {
+        log.info("Calculating total nutrients for meal with ID: {}", mealId);
         Meal meal = mealRepository.findById(mealId)
                 .orElseThrow(() -> new EntityNotFoundException("Meal not found with ID: " + mealId));
         return NutrientCalculatorUtil.calculateTotalNutrients(meal.getMealIngredients());
@@ -173,6 +211,7 @@ public class MealService {
      * @throws EntityNotFoundException if the meal with the given ID is not found.
      */
     public Map<Long, Map<String, NutrientInfoDTO>> calculateNutrientsPerFoodItem(Long mealId) {
+        log.info("Calculating nutrients per food item for meal with ID: {}", mealId);
         Meal meal = mealRepository.findById(mealId)
                 .orElseThrow(() -> new EntityNotFoundException("Meal not found with ID: " + mealId));
         return NutrientCalculatorUtil.calculateNutrientsPerFoodItem(meal.getMealIngredients());
