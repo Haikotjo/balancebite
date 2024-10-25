@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service;
  * Service class responsible for managing meal ingredients.
  */
 @Service
-public class MealIngredientService {
+public class MealIngredientService implements IMealIngredientService {
 
     private final MealIngredientRepository mealIngredientRepository;
     private final MealRepository mealRepository;
@@ -40,6 +40,7 @@ public class MealIngredientService {
      * @param mealId the ID of the meal to which the ingredient should be added.
      * @param inputDTO the DTO containing the data of the meal ingredient to be added.
      */
+    @Override
     public void addMealIngredient(Long mealId, MealIngredientInputDTO inputDTO) {
         Meal meal = mealRepository.findById(mealId)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid meal ID: " + mealId));

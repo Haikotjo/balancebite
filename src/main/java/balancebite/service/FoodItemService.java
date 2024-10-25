@@ -23,9 +23,9 @@ import java.util.stream.Collectors;
  * This service interacts with the USDA API to fetch food data and store it in the repository.
  */
 @Service
-public class FoodItemService {
+public class FoodItemService implements IFoodItemService {
 
-    private static final Logger logger = LoggerFactory.getLogger(FoodItemService.class);
+    private static final Logger log = LoggerFactory.getLogger(FoodItemService.class);
 
     private final FoodItemRepository foodItemRepository;
     private final UsdaApiService usdaApiService;
@@ -50,8 +50,10 @@ public class FoodItemService {
      *
      * @param fdcId The FDC ID of the food item to fetch.
      */
+    @Override
     @Cacheable(value = "foodItemCache", key = "#fdcId")
     public void fetchAndSaveFoodItem(String fdcId) {
+        log.info("Fetching food item with FDC ID: {}", fdcId);
         UsdaFoodResponseDTO response = usdaApiService.getFoodData(fdcId);
 
         if (response != null && response.getFoodNutrients() != null) {
@@ -59,15 +61,19 @@ public class FoodItemService {
 
             if (description != null && !description.isEmpty()) {
                 if (foodItemRepository.existsByName(description)) {
+                    log.warn("Food item already exists with name: {}", description);
                     throw new EntityAlreadyExistsException("Food item already exists with name: " + description);
                 }
 
                 FoodItem foodItem = balancebite.utils.FoodItemUtil.convertToFoodItem(response);
                 foodItemRepository.save(foodItem);
+                log.info("Successfully saved food item with name: {}", description);
             } else {
+                log.error("Invalid food description received from USDA API");
                 throw new IllegalArgumentException("Invalid food description received from USDA API");
             }
         } else {
+            log.error("Invalid response received from USDA API for FDC ID: {}", fdcId);
             throw new IllegalArgumentException("Invalid response received from USDA API");
         }
     }
@@ -79,8 +85,10 @@ public class FoodItemService {
      * @param fdcIds List of FDC IDs for the food items to fetch.
      * @return A CompletableFuture with the result message.
      */
+    @Override
     @Async
     public CompletableFuture<Void> fetchAndSaveAllFoodItems(List<String> fdcIds) {
+        log.info("Fetching multiple food items with FDC IDs: {}", fdcIds);
         List<String> successfullySavedIds = new ArrayList<>();
         List<UsdaFoodResponseDTO> responses = usdaApiService.getMultipleFoodData(fdcIds);
 
@@ -91,13 +99,18 @@ public class FoodItemService {
                         FoodItem foodItem = balancebite.utils.FoodItemUtil.convertToFoodItem(response);
                         foodItemRepository.save(foodItem);
                         successfullySavedIds.add(response.getDescription());
+                        log.info("Successfully saved food item with name: {}", response.getDescription());
+                    } else {
+                        log.warn("Food item with name {} already exists, skipping save.", response.getDescription());
                     }
                 });
 
         if (successfullySavedIds.isEmpty()) {
+            log.error("No food items were fetched and saved.");
             throw new IllegalArgumentException("No food items were fetched and saved. Please check the provided FDC IDs.");
         }
 
+        log.info("Successfully fetched and saved multiple food items.");
         return CompletableFuture.completedFuture(null);
     }
 
@@ -107,7 +120,9 @@ public class FoodItemService {
      * @param id The ID of the food item to retrieve.
      * @return The corresponding FoodItemDTO.
      */
+    @Override
     public FoodItemDTO getFoodItemById(Long id) {
+        log.info("Retrieving food item with ID: {}", id);
         return foodItemRepository.findById(id)
                 .map(foodItemMapper::toDTO)
                 .orElseThrow(() -> new EntityNotFoundException("Food item with ID " + id + " not found."));
@@ -118,7 +133,9 @@ public class FoodItemService {
      *
      * @return A list of all FoodItemDTOs.
      */
+    @Override
     public List<FoodItemDTO> getAllFoodItems() {
+        log.info("Retrieving all food items from the database.");
         return foodItemRepository.findAll().stream()
                 .map(foodItemMapper::toDTO)
                 .collect(Collectors.toList());
@@ -129,10 +146,14 @@ public class FoodItemService {
      *
      * @param id The ID of the food item to delete.
      */
+    @Override
     public void deleteFoodItemById(Long id) {
+        log.info("Deleting food item with ID: {}", id);
         if (foodItemRepository.existsById(id)) {
             foodItemRepository.deleteById(id);
+            log.info("Successfully deleted food item with ID: {}", id);
         } else {
+            log.error("Food item with ID {} not found", id);
             throw new EntityNotFoundException("Food item with ID " + id + " not found.");
         }
     }
