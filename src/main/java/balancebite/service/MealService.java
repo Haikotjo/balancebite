@@ -26,7 +26,7 @@ import java.util.*;
  * Handles the creation, retrieval, updating, and processing of Meal entities and their related data.
  */
 @Service
-public class MealService {
+public class MealService implements IMealServiceInterface {
 
     private static final Logger log = LoggerFactory.getLogger(MealService.class);
 
@@ -60,6 +60,7 @@ public class MealService {
      * @return the created MealDTO with the persisted meal information.
      * @throws InvalidFoodItemException if any food item in the input is invalid.
      */
+    @Override
     @Transactional
     public MealDTO createMeal(MealInputDTO mealInputDTO) {
         log.info("Attempting to create a new meal with name: {}", mealInputDTO.getName());
@@ -87,6 +88,7 @@ public class MealService {
      * @throws InvalidFoodItemException if any food item in the input is invalid.
      * @throws EntityNotFoundException  if the user cannot be found.
      */
+    @Override
     @Transactional
     public MealDTO createMealForUser(MealInputDTO mealInputDTO, Long userId) {
         log.info("Attempting to create a new meal for user ID: {}", userId);
@@ -122,6 +124,7 @@ public class MealService {
      * @throws EntityNotFoundException if the meal with the given ID is not found.
      * @throws InvalidFoodItemException if any food item ID in the ingredients is invalid.
      */
+    @Override
     @Transactional
     public MealDTO updateMeal(Long id, MealInputDTO mealInputDTO) {
         log.info("Updating meal with ID: {}", id);
@@ -145,6 +148,7 @@ public class MealService {
      *
      * @return a list of MealDTOs, or an empty list if no meals are found.
      */
+    @Override
     @Transactional(readOnly = true)
     public List<MealDTO> getAllMeals() {
         log.info("Retrieving all meals from the system.");
@@ -164,6 +168,7 @@ public class MealService {
      * @return the MealDTO.
      * @throws EntityNotFoundException if the meal with the given ID is not found.
      */
+    @Override
     @Transactional(readOnly = true)
     public MealDTO getMealById(Long id) {
         log.info("Retrieving meal with ID: {}", id);
@@ -179,6 +184,7 @@ public class MealService {
      * @param mealId The ID of the meal to be deleted.
      * @throws EntityNotFoundException if the meal with the given ID is not found.
      */
+    @Override
     @Transactional
     public void deleteMeal(Long mealId) {
         log.info("Attempting to delete meal with ID: {}", mealId);
@@ -196,6 +202,7 @@ public class MealService {
      * @return a map of nutrient names and their corresponding total values for the meal.
      * @throws EntityNotFoundException if the meal with the given ID is not found.
      */
+    @Override
     public Map<String, NutrientInfoDTO> calculateNutrients(Long mealId) {
         log.info("Calculating total nutrients for meal with ID: {}", mealId);
         Meal meal = mealRepository.findById(mealId)
@@ -210,6 +217,7 @@ public class MealService {
      * @return a map of food item IDs to nutrient maps, where each map contains nutrient names and their values.
      * @throws EntityNotFoundException if the meal with the given ID is not found.
      */
+    @Override
     public Map<Long, Map<String, NutrientInfoDTO>> calculateNutrientsPerFoodItem(Long mealId) {
         log.info("Calculating nutrients per food item for meal with ID: {}", mealId);
         Meal meal = mealRepository.findById(mealId)
