@@ -6,6 +6,7 @@ import balancebite.errorHandling.EntityAlreadyExistsException;
 import balancebite.mapper.FoodItemMapper;
 import balancebite.model.FoodItem;
 import balancebite.repository.FoodItemRepository;
+import balancebite.service.interfaces.IFoodItemService;
 import jakarta.persistence.EntityNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

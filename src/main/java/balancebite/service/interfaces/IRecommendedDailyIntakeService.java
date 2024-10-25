@@ -1,4 +1,4 @@
-package balancebite.service;
+package balancebite.service.interfaces;
 
 import balancebite.dto.recommendeddailyintake.RecommendedDailyIntakeDTO;
 import balancebite.errorHandling.MissingUserInformationException;

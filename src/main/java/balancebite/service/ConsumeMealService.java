@@ -12,6 +12,7 @@ import balancebite.model.User;
 import balancebite.repository.MealRepository;
 import balancebite.repository.RecommendedDailyIntakeRepository;
 import balancebite.repository.UserRepository;
+import balancebite.service.interfaces.IConsumeMealService;
 import balancebite.utils.HelperMethods;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;

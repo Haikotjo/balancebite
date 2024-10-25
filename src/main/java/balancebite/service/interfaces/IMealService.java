@@ -1,4 +1,4 @@
-package balancebite.service;
+package balancebite.service.interfaces;
 
 import balancebite.dto.meal.MealDTO;
 import balancebite.dto.meal.MealInputDTO;

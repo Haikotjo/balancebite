@@ -1,7 +1,6 @@
-package balancebite.service;
+package balancebite.service.interfaces;
 
 import balancebite.dto.fooditem.FoodItemDTO;
-import balancebite.dto.UsdaFoodResponseDTO;
 import balancebite.errorHandling.EntityAlreadyExistsException;
 import jakarta.persistence.EntityNotFoundException;
 

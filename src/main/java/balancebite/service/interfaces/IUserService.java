@@ -1,6 +1,5 @@
-package balancebite.service;
+package balancebite.service.interfaces;
 
-import balancebite.dto.NutrientInfoDTO;
 import balancebite.dto.user.UserBasicInfoInputDTO;
 import balancebite.dto.user.UserDTO;
 import balancebite.dto.user.UserDetailsInputDTO;

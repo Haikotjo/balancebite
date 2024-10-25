@@ -7,6 +7,7 @@ import balancebite.repository.MealRepository;
 import balancebite.repository.RecommendedDailyIntakeRepository;
 import balancebite.repository.UserRepository;
 import balancebite.dto.NutrientInfoDTO;
+import balancebite.service.interfaces.IConsumeMealService;
 import balancebite.utils.HelperMethods;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;

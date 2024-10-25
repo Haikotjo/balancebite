@@ -3,6 +3,7 @@ package balancebite.service;
 import balancebite.config.ApiConfig;
 import balancebite.dto.UsdaFoodResponseDTO;
 import balancebite.errorHandling.UsdaApiException;
+import balancebite.service.interfaces.IUsdaApiService;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;

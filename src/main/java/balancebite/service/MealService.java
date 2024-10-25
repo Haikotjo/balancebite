@@ -12,6 +12,7 @@ import balancebite.model.User;
 import balancebite.repository.FoodItemRepository;
 import balancebite.repository.MealRepository;
 import balancebite.repository.UserRepository;
+import balancebite.service.interfaces.IMealService;
 import balancebite.utils.NutrientCalculatorUtil;
 import jakarta.persistence.EntityNotFoundException;
 import org.slf4j.Logger;

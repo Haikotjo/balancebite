@@ -7,6 +7,7 @@ import balancebite.model.RecommendedDailyIntake;
 import balancebite.model.User;
 import balancebite.repository.RecommendedDailyIntakeRepository;
 import balancebite.repository.UserRepository;
+import balancebite.service.interfaces.IRecommendedDailyIntakeService;
 import balancebite.utils.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,7 +15,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.Map;
-import java.util.Optional;
 
 /**
  * Service class responsible for managing Recommended Daily Intake logic.
