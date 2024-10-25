@@ -135,7 +135,7 @@ public class RecommendedDailyIntakeService implements IRecommendedDailyIntakeSer
         User user = findUserById(userId);
 
         if (user.getRecommendedDailyIntakes() == null) {
-            log.error("User with ID {} not found", userId);
+            log.error("No RecommendedDailyIntake found for user with ID {}", userId);
             throw new IllegalArgumentException("User with ID " + userId + " does not have a recommended daily intake");
         }
 
