@@ -38,24 +38,25 @@ public class RecommendedDailyIntakeService implements IRecommendedDailyIntakeSer
     }
 
     /**
-     * Gets or creates a recommended daily intake for a specific user for today.
+     * Retrieves or creates the recommended daily intake for a specific user for the current date.
      *
-     * This method fetches the user details and checks if all necessary information
-     * (weight, height, age, gender, activity level, and goal) is provided.
-     * If any required information is missing, a {@link MissingUserInformationException}
-     * is thrown, prompting the user to update their profile.
+     * This method checks if the user has provided all the required information:
+     * weight, height, age, gender, activity level, and goal. If any of this information is missing,
+     * a {@link MissingUserInformationException} is thrown to prompt the user to update their profile.
      *
-     * If all data is present, the method calculates or retrieves the recommended daily intake
-     * for the user and converts it to a DTO for the response.
+     * If the user has all the necessary details, the method either retrieves an existing recommended
+     * daily intake for the current date or creates a new one based on the user's profile.
      *
-     * @param userId The ID of the user to assign the recommended daily intake to.
-     * @return The {@code RecommendedDailyIntakeDTO} with the calculated energy, protein,
-     *         fat, saturated fat, and unsaturated fat intake.
-     * @throws MissingUserInformationException If the user does not have all the necessary
-     *                                         information (weight, height, age, gender, activity level, goal).
-     * @throws IllegalArgumentException If the user with the specified ID is not found.
+     * @param userId The ID of the user for whom the recommended daily intake is retrieved or created.
+     * @return The {@code RecommendedDailyIntakeDTO} containing the calculated intake values for energy,
+     *         protein, fat, saturated fat, and unsaturated fat.
+     * @throws MissingUserInformationException If the user has not provided all the required information
+     *         (weight, height, age, gender, activity level, goal).
+     * @throws IllegalArgumentException If the user with the given ID does not exist in the system.
      */
     public RecommendedDailyIntakeDTO getOrCreateDailyIntakeForUser(Long userId) {
+        log.info("Fetching user with ID {}", userId);
+
         // Fetch the user from the repository
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("User with ID " + userId + " not found"));
@@ -64,10 +65,12 @@ public class RecommendedDailyIntakeService implements IRecommendedDailyIntakeSer
         if (user.getWeight() == null || user.getHeight() == null || user.getAge() == null ||
                 user.getGender() == null || user.getActivityLevel() == null || user.getGoal() == null) {
 
+            log.warn("User with ID {} is missing necessary information", userId);
             throw new MissingUserInformationException("User must provide all required information: weight, height, age, gender, activity level, and goal. Please update profile.");
         }
 
         // Directly use the static method from the utility class
+        log.info("Calculating recommended daily intake for user with ID: {}", userId);
         RecommendedDailyIntake recommendedDailyIntake = DailyIntakeCalculatorUtil.getOrCreateDailyIntakeForUser(user);
         log.info("Attempting to save RecommendedDailyIntake for user ID {} on date {}", userId, recommendedDailyIntake.getCreatedAt());
 
@@ -81,61 +84,78 @@ public class RecommendedDailyIntakeService implements IRecommendedDailyIntakeSer
     }
 
     /**
-     * Retrieves the cumulative recommended nutrient intake for the current week for a specific user.
+     * Calculates and retrieves the cumulative recommended nutrient intake for the current week for a specific user.
      *
-     * This method calculates the total recommended nutrient intake for the current week by multiplying
-     * the recommended daily intake values by the number of remaining days until the upcoming Sunday,
-     * and adjusting for any surplus or deficit from previous days in the week.
+     * This method multiplies the recommended daily intake values by the number of remaining days until the end of the week
+     * (Sunday) and adjusts for any surplus or deficit from the previous days of the current week.
      *
-     * @param userId The ID of the user.
-     * @return A map of nutrient names to cumulative values for the current week.
-     * @throws IllegalArgumentException If the user is not found.
+     * The method returns a map where the keys are nutrient names (e.g., protein, fat, carbohydrates) and the values are
+     * the cumulative recommended intake for the remainder of the week.
+     *
+     * @param userId The ID of the user whose cumulative weekly intake is being retrieved.
+     * @return A map of nutrient names to cumulative values representing the user's weekly recommended intake.
+     * @throws IllegalArgumentException If the user with the given ID is not found in the system.
      */
     public Map<String, Double> getAdjustedWeeklyIntakeForUser(Long userId) {
+        log.info("Fetching user with ID {}", userId);
         // Fetch the user from the repository
         Optional<User> userOptional = userRepository.findById(userId);
 
         if (userOptional.isEmpty()) {
+            log.error("User with ID {} not found", userId);
             throw new IllegalArgumentException("User with ID " + userId + " not found");
         }
 
         User user = userOptional.get();
+        log.info("Calculating weekly intake for user with ID: {}", userId);
 
         // Use the new utility class to calculate the intake
         return WeeklyIntakeCalculatorUtil.calculateAdjustedWeeklyIntake(user);
     }
 
     /**
-     * Retrieves the cumulative recommended nutrient intake for the current week for a specific user.
+     * Calculates and retrieves the cumulative recommended nutrient intake for the current month for a specific user.
      *
-     * This method calculates the total recommended nutrient intake for the current week by multiplying
-     * the recommended daily intake values by the number of remaining days until the upcoming Sunday,
-     * and adjusting for any surplus or deficit from previous days in the week.
+     * This method calculates the user's total recommended nutrient intake for the month by multiplying the recommended
+     * daily intake values by the number of remaining days in the month and adjusting for any surplus or deficit from
+     * previous days.
      *
-     * @param userId The ID of the user.
-     * @return A map of nutrient names to cumulative values for the current week.
-     * @throws IllegalArgumentException If the user is not found.
+     * The method returns a map where the keys are nutrient names (e.g., protein, fat, carbohydrates) and the values are
+     * the cumulative recommended intake for the remainder of the month.
+     *
+     * @param userId The ID of the user whose cumulative monthly intake is being retrieved.
+     * @return A map of nutrient names to cumulative values representing the user's monthly recommended intake.
+     * @throws IllegalArgumentException If the user with the given ID is not found in the system.
      */
     public Map<String, Double> getAdjustedMonthlyIntakeForUser(Long userId) {
+        log.info("Fetching user with ID: {}", userId);
         // Fetch the user from the repository
         Optional<User> userOptional = userRepository.findById(userId);
 
         if (userOptional.isEmpty()) {
+            log.error("User with ID {} not found", userId);
             throw new IllegalArgumentException("User with ID " + userId + " not found");
         }
 
         User user = userOptional.get();
+        log.info("Calculating monthly intake for user with ID: {}", userId);
 
         // Use the new utility class to calculate the intake
         return MonthlyIntakeCalculatorUtil.calculateAdjustedMonthlyIntake(user);
     }
 
     /**
-     * Deletes the RecommendedDailyIntake for a specific user.
+     * Deletes the recommended daily intake record for a specific user.
      *
-     * @param userId The ID of the user whose intake will be deleted.
+     * This method removes the recommended daily intake associated with the user for all dates. If the user does not
+     * have a recommended daily intake record, an exception is thrown.
+     *
+     * @param userId The ID of the user whose recommended daily intake will be deleted.
+     * @throws IllegalArgumentException If the user with the specified ID does not exist or does not have any recommended daily intake records.
      */
     public void deleteRecommendedDailyIntakeForUser(Long userId) {
+        log.info("Fetching user with ID: {}", userId);
+
         Optional<User> userOptional = userRepository.findById(userId);
 
         if (userOptional.isEmpty()) {
@@ -143,13 +163,17 @@ public class RecommendedDailyIntakeService implements IRecommendedDailyIntakeSer
         }
 
         User user = userOptional.get();
-
         if (user.getRecommendedDailyIntakes() == null) {
+            log.error("User with ID {} not found", userId);
             throw new IllegalArgumentException("User with ID " + userId + " does not have a recommended daily intake");
         }
+
+        log.info("Deleting recommended daily intake for user with ID: {}", userId);
 
         // Remove the recommended daily intake
         user.setRecommendedDailyIntakes(null);
         userRepository.save(user);
+
+        log.info("Successfully deleted recommended daily intake for user with ID: {}", userId);
     }
 }

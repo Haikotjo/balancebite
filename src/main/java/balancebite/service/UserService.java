@@ -69,14 +69,17 @@ public class UserService {
      * @return The created UserDTO.
      */
     public UserDTO createUser(UserBasicInfoInputDTO userBasicInfoInputDTO) {
-        if (userRepository.existsByEmail(userBasicInfoInputDTO.getEmail())) {
-            throw new EntityAlreadyExistsException("User with email " + userBasicInfoInputDTO.getEmail() + " already exists.");
-        }
+        log.info("Attempting to create a new user with email: {}", userBasicInfoInputDTO.getEmail());
         try {
             User savedUser = userRepository.save(userMapper.toEntity(userBasicInfoInputDTO));
+            log.info("Successfully created a new user with ID: {}", savedUser.getId());
             return userMapper.toDTO(savedUser);
         } catch (DataIntegrityViolationException e) {
+            log.error("Failed to create user due to data integrity violation: {}", e.getMessage());
             throw new EntityAlreadyExistsException("User with email " + userBasicInfoInputDTO.getEmail() + " already exists.");
+        } catch (Exception e) {
+            log.error("Unexpected error during user creation: {}", e.getMessage(), e);
+            throw e;
         }
     }
 
@@ -88,6 +91,7 @@ public class UserService {
      * @return The updated UserDTO.
      */
     public UserDTO updateUserBasicInfo(Long id, UserBasicInfoInputDTO userBasicInfoInputDTO) {
+        log.info("Updating basic info for user with ID: {}", id);
         // Retrieve the existing user
         User existingUser = userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException("User not found with ID " + id));
@@ -101,6 +105,7 @@ public class UserService {
 
         // Save and return updated user information
         User updatedUser = userRepository.save(existingUser);
+        log.info("Successfully updated basic info for user with ID: {}", id);
         return userMapper.toDTO(updatedUser);
     }
 
@@ -112,6 +117,7 @@ public class UserService {
      * @return The updated UserDTO.
      */
     public UserDTO updateUserDetails(Long id, UserDetailsInputDTO userDetailsInputDTO) {
+        log.info("Updating details for user with ID: {}", id);
         // Retrieve the existing user, throw custom UserNotFoundException if not found
         User existingUser = userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException(id));
@@ -121,6 +127,7 @@ public class UserService {
 
         // Save and return the updated user
         User updatedUser = userRepository.save(existingUser);
+        log.info("Successfully updated detailed info for user with ID: {}", id);
         return userMapper.toDTO(updatedUser);
     }
 
@@ -130,9 +137,12 @@ public class UserService {
      * @return A list of UserDTOs representing all users.
      */
     public List<UserDTO> getAllUsers() {
+        log.info("Retrieving all users from the system.");
         List<User> users = userRepository.findAll();
         if (users.isEmpty()) {
             log.info("No users found in the system.");
+        } else {
+            log.info("Found {} users in the system.", users.size());
         }
         return users.stream()
                 .map(userMapper::toDTO)
@@ -147,8 +157,10 @@ public class UserService {
      * @throws UserNotFoundException if the user is not found in the database.
      */
     public UserDTO getUserById(Long id) {
+        log.info("Retrieving user with ID: {}", id);
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException("User not found with ID " + id));
+        log.info("Successfully retrieved user with ID: {}", id);
         return userMapper.toDTO(user);
     }
 
@@ -159,11 +171,13 @@ public class UserService {
      * @throws UserNotFoundException if the user is not found in the database.
      */
     public void deleteUser(Long id) {
+        log.info("Deleting user with ID: {}", id);
         if (!userRepository.existsById(id)) {
             log.warn("Attempted to delete non-existing user with ID: {}", id); // Log a warning
             throw new UserNotFoundException("User not found with ID " + id);
         }
         userRepository.deleteById(id);
+        log.info("Successfully deleted user with ID: {}", id);
     }
 
     /**
@@ -177,6 +191,7 @@ public class UserService {
      */
     @Transactional
     public UserDTO addMealToUser(Long userId, Long mealId) {
+        log.info("Attempting to add meal to user with ID: {}", userId);
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("User not found with ID: " + userId));
 
@@ -188,6 +203,7 @@ public class UserService {
 
         // Save the user with the new meal and return the UserDTO.
         User updatedUser = userRepository.save(user);
+        log.info("Successfully added meal to user with ID: {}", userId);
         return userMapper.toDTO(updatedUser);
     }
 
@@ -203,6 +219,7 @@ public class UserService {
      */
     @Transactional
     public UserDTO removeMealFromUser(Long userId, Long mealId) {
+        log.info("Attempting to remove meal from user with ID: {}", userId);
         // Retrieve the user by their ID, throw UserNotFoundException if not found
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("User not found with ID: " + userId));
@@ -217,6 +234,7 @@ public class UserService {
         user.getMeals().remove(meal);
         User updatedUser = userRepository.save(user);
 
+        log.info("Successfully removed meal from user with ID: {}", userId);
         return userMapper.toDTO(updatedUser);
     }
 }

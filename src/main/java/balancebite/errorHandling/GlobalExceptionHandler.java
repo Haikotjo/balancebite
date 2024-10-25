@@ -1,5 +1,8 @@
 package balancebite.errorHandling;
 
+import balancebite.service.UserService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -19,6 +22,7 @@ import java.util.Map;
  */
 @ControllerAdvice
 public class GlobalExceptionHandler {
+    private static final Logger log = LoggerFactory.getLogger(UserService.class);
 
     /**
      * Handles validation errors when using @Valid in controllers.
@@ -125,4 +129,17 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", errorMessage));
     }
 
+    /**
+     * Handles all other general exceptions.
+     *
+     * @param ex The thrown {@link Exception}.
+     * @return A ResponseEntity indicating that a general error occurred, with an INTERNAL_SERVER_ERROR status.
+     */
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<String> handleGlobalException(Exception ex) {
+        // Log het exacte type fout voor debugging
+        log.error("Unexpected error occurred: {}", ex.getMessage(), ex); // Geeft een stacktrace in de logs
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body("An unexpected error occurred. Please try again later.");
+    }
 }
