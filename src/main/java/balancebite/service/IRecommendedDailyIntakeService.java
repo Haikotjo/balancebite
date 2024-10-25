@@ -1,55 +1,59 @@
 package balancebite.service;
 
 import balancebite.dto.recommendeddailyintake.RecommendedDailyIntakeDTO;
+import balancebite.errorHandling.MissingUserInformationException;
+
 import java.util.Map;
 
 /**
- * Service interface for managing Recommended Daily Intake logic.
- * This interface defines the methods to handle operations related to the recommended daily intake of nutrients for users.
+ * Interface defining the methods for managing Recommended Daily Intake calculations and adjustments for users.
+ * This interface outlines methods for retrieving, creating, updating, and deleting recommended daily intake
+ * data for users, as well as adjusting intake based on weekly and monthly requirements.
  */
 public interface IRecommendedDailyIntakeService {
+
     /**
-     * Gets or creates a recommended daily intake for a specific user for today.
+     * Retrieves or creates the recommended daily intake for a specific user for the current date.
+     * Ensures that the user has provided all necessary information for calculation, including
+     * weight, height, age, gender, activity level, and goal.
      *
-     * This method uses the user's information to fetch or create the daily intake.
-     *
-     * @param userId The ID of the user to assign the recommended daily intake to.
-     * @return The RecommendedDailyIntakeDTO with the calculated values for energy, protein, fat, saturated fat, and unsaturated fat intake.
-     * @throws IllegalArgumentException If the user does not have all the necessary information (weight, height, age,
-     *                                  gender, activity level, goal) or if the user ID is not found.
+     * @param userId The ID of the user for whom the recommended daily intake is retrieved or created.
+     * @return The {@link RecommendedDailyIntakeDTO} containing the calculated intake values for energy,
+     *         protein, fat, saturated fat, and unsaturated fat.
+     * @throws MissingUserInformationException If the user has not provided all the required information
+     *         (weight, height, age, gender, activity level, goal).
+     * @throws IllegalArgumentException If the user with the given ID does not exist in the system.
      */
     RecommendedDailyIntakeDTO getOrCreateDailyIntakeForUser(Long userId);
 
     /**
-     * Retrieves the cumulative recommended nutrient intake for the current week for a specific user.
+     * Calculates and retrieves the cumulative recommended nutrient intake for the current week for a specific user.
+     * The method adjusts intake based on the user's profile and any intake surplus or deficit from earlier in the week.
      *
-     * This method calculates the total recommended nutrient intake for the current week by multiplying
-     * the recommended daily intake values by the number of remaining days until the upcoming Sunday,
-     * and adjusting for any surplus or deficit from previous days in the week.
-     *
-     * @param userId The ID of the user.
-     * @return A map of nutrient names to cumulative values for the current week.
-     * @throws IllegalArgumentException If the user is not found.
+     * @param userId The ID of the user whose cumulative weekly intake is being retrieved.
+     * @return A map of nutrient names to cumulative values representing the user's weekly recommended intake.
+     * @throws IllegalArgumentException If the user with the given ID is not found in the system.
      */
     Map<String, Double> getAdjustedWeeklyIntakeForUser(Long userId);
 
     /**
-     * Retrieves the cumulative recommended nutrient intake for the current month for a specific user.
+     * Calculates and retrieves the cumulative recommended nutrient intake for the current month for a specific user.
+     * Adjusts intake for the number of days remaining in the month, factoring in any intake surplus or deficit.
      *
-     * This method calculates the total recommended nutrient intake for the current month by adjusting
-     * for any surplus or deficit from previous days in the month.
-     *
-     * @param userId The ID of the user.
-     * @return A map of nutrient names to cumulative values for the current month.
-     * @throws IllegalArgumentException If the user is not found.
+     * @param userId The ID of the user whose cumulative monthly intake is being retrieved.
+     * @return A map of nutrient names to cumulative values representing the user's monthly recommended intake.
+     * @throws IllegalArgumentException If the user with the given ID is not found in the system.
      */
     Map<String, Double> getAdjustedMonthlyIntakeForUser(Long userId);
 
     /**
-     * Deletes the Recommended Daily Intake for a specific user.
+     * Deletes the recommended daily intake record for a specific user.
+     * Removes all daily intake records associated with the user. If the user has no intake record,
+     * an exception is thrown.
      *
-     * @param userId The ID of the user whose intake will be deleted.
-     * @throws IllegalArgumentException If the user is not found.
+     * @param userId The ID of the user whose recommended daily intake will be deleted.
+     * @throws IllegalArgumentException If the user with the specified ID does not exist or does not have any
+     *                                  recommended daily intake records.
      */
     void deleteRecommendedDailyIntakeForUser(Long userId);
 }

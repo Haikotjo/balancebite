@@ -54,6 +54,7 @@ public class RecommendedDailyIntakeService implements IRecommendedDailyIntakeSer
      *         (weight, height, age, gender, activity level, goal).
      * @throws IllegalArgumentException If the user with the given ID does not exist in the system.
      */
+    @Override
     public RecommendedDailyIntakeDTO getOrCreateDailyIntakeForUser(Long userId) {
         User user = findUserById(userId);
 
@@ -92,6 +93,7 @@ public class RecommendedDailyIntakeService implements IRecommendedDailyIntakeSer
      * @return A map of nutrient names to cumulative values representing the user's weekly recommended intake.
      * @throws IllegalArgumentException If the user with the given ID is not found in the system.
      */
+    @Override
     public Map<String, Double> getAdjustedWeeklyIntakeForUser(Long userId) {
         User user = findUserById(userId);
         log.info("Calculating weekly intake for user with ID: {}", userId);
@@ -114,6 +116,7 @@ public class RecommendedDailyIntakeService implements IRecommendedDailyIntakeSer
      * @return A map of nutrient names to cumulative values representing the user's monthly recommended intake.
      * @throws IllegalArgumentException If the user with the given ID is not found in the system.
      */
+    @Override
     public Map<String, Double> getAdjustedMonthlyIntakeForUser(Long userId) {
         User user = findUserById(userId);
         log.info("Calculating monthly intake for user with ID: {}", userId);
@@ -131,6 +134,7 @@ public class RecommendedDailyIntakeService implements IRecommendedDailyIntakeSer
      * @param userId The ID of the user whose recommended daily intake will be deleted.
      * @throws IllegalArgumentException If the user with the specified ID does not exist or does not have any recommended daily intake records.
      */
+    @Override
     public void deleteRecommendedDailyIntakeForUser(Long userId) {
         User user = findUserById(userId);
 
