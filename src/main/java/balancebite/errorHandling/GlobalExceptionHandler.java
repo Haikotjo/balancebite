@@ -128,18 +128,4 @@ public class GlobalExceptionHandler {
         String errorMessage = ex.getMessage();
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", errorMessage));
     }
-
-    /**
-     * Handles all other general exceptions.
-     *
-     * @param ex The thrown {@link Exception}.
-     * @return A ResponseEntity indicating that a general error occurred, with an INTERNAL_SERVER_ERROR status.
-     */
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<String> handleGlobalException(Exception ex) {
-        // Log het exacte type fout voor debugging
-        log.error("Unexpected error occurred: {}", ex.getMessage(), ex); // Geeft een stacktrace in de logs
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body("An unexpected error occurred. Please try again later.");
-    }
 }

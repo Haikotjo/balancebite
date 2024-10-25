@@ -55,11 +55,7 @@ public class RecommendedDailyIntakeService implements IRecommendedDailyIntakeSer
      * @throws IllegalArgumentException If the user with the given ID does not exist in the system.
      */
     public RecommendedDailyIntakeDTO getOrCreateDailyIntakeForUser(Long userId) {
-        log.info("Fetching user with ID {}", userId);
-
-        // Fetch the user from the repository
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User with ID " + userId + " not found"));
+        User user = findUserById(userId);
 
         // Check if all necessary fields for calculation are provided
         if (user.getWeight() == null || user.getHeight() == null || user.getAge() == null ||
@@ -97,16 +93,7 @@ public class RecommendedDailyIntakeService implements IRecommendedDailyIntakeSer
      * @throws IllegalArgumentException If the user with the given ID is not found in the system.
      */
     public Map<String, Double> getAdjustedWeeklyIntakeForUser(Long userId) {
-        log.info("Fetching user with ID {}", userId);
-        // Fetch the user from the repository
-        Optional<User> userOptional = userRepository.findById(userId);
-
-        if (userOptional.isEmpty()) {
-            log.error("User with ID {} not found", userId);
-            throw new IllegalArgumentException("User with ID " + userId + " not found");
-        }
-
-        User user = userOptional.get();
+        User user = findUserById(userId);
         log.info("Calculating weekly intake for user with ID: {}", userId);
 
         // Use the new utility class to calculate the intake
@@ -128,16 +115,7 @@ public class RecommendedDailyIntakeService implements IRecommendedDailyIntakeSer
      * @throws IllegalArgumentException If the user with the given ID is not found in the system.
      */
     public Map<String, Double> getAdjustedMonthlyIntakeForUser(Long userId) {
-        log.info("Fetching user with ID: {}", userId);
-        // Fetch the user from the repository
-        Optional<User> userOptional = userRepository.findById(userId);
-
-        if (userOptional.isEmpty()) {
-            log.error("User with ID {} not found", userId);
-            throw new IllegalArgumentException("User with ID " + userId + " not found");
-        }
-
-        User user = userOptional.get();
+        User user = findUserById(userId);
         log.info("Calculating monthly intake for user with ID: {}", userId);
 
         // Use the new utility class to calculate the intake
@@ -154,15 +132,8 @@ public class RecommendedDailyIntakeService implements IRecommendedDailyIntakeSer
      * @throws IllegalArgumentException If the user with the specified ID does not exist or does not have any recommended daily intake records.
      */
     public void deleteRecommendedDailyIntakeForUser(Long userId) {
-        log.info("Fetching user with ID: {}", userId);
+        User user = findUserById(userId);
 
-        Optional<User> userOptional = userRepository.findById(userId);
-
-        if (userOptional.isEmpty()) {
-            throw new IllegalArgumentException("User with ID " + userId + " not found");
-        }
-
-        User user = userOptional.get();
         if (user.getRecommendedDailyIntakes() == null) {
             log.error("User with ID {} not found", userId);
             throw new IllegalArgumentException("User with ID " + userId + " does not have a recommended daily intake");
@@ -176,4 +147,14 @@ public class RecommendedDailyIntakeService implements IRecommendedDailyIntakeSer
 
         log.info("Successfully deleted recommended daily intake for user with ID: {}", userId);
     }
+
+    private User findUserById(Long userId) {
+        log.info("Fetching user with ID: {}", userId);
+        return userRepository.findById(userId)
+                .orElseThrow(() -> {
+                    log.error("User with ID {} not found", userId);
+                    return new IllegalArgumentException("User with ID " + userId + " not found");
+                });
+    }
+
 }
