@@ -32,7 +32,7 @@ import java.util.stream.Collectors;
  */
 @Service
 @Transactional
-public class UserService {
+public class UserService implements IUserService {
 
     private static final Logger log = LoggerFactory.getLogger(UserService.class);
 
@@ -68,6 +68,7 @@ public class UserService {
      * @param userBasicInfoInputDTO The input data for creating the user.
      * @return The created UserDTO.
      */
+    @Override
     public UserDTO createUser(UserBasicInfoInputDTO userBasicInfoInputDTO) {
         log.info("Attempting to create a new user with email: {}", userBasicInfoInputDTO.getEmail());
         try {
@@ -90,6 +91,7 @@ public class UserService {
      * @param userBasicInfoInputDTO The input data for updating the user.
      * @return The updated UserDTO.
      */
+    @Override
     public UserDTO updateUserBasicInfo(Long id, UserBasicInfoInputDTO userBasicInfoInputDTO) {
         log.info("Updating basic info for user with ID: {}", id);
         // Retrieve the existing user
@@ -116,6 +118,7 @@ public class UserService {
      * @param userDetailsInputDTO The input data for updating the user's detailed information.
      * @return The updated UserDTO.
      */
+    @Override
     public UserDTO updateUserDetails(Long id, UserDetailsInputDTO userDetailsInputDTO) {
         log.info("Updating details for user with ID: {}", id);
         // Retrieve the existing user, throw custom UserNotFoundException if not found
@@ -136,6 +139,7 @@ public class UserService {
      *
      * @return A list of UserDTOs representing all users.
      */
+    @Override
     public List<UserDTO> getAllUsers() {
         log.info("Retrieving all users from the system.");
         List<User> users = userRepository.findAll();
@@ -156,6 +160,7 @@ public class UserService {
      * @return The UserDTO representing the user.
      * @throws UserNotFoundException if the user is not found in the database.
      */
+    @Override
     public UserDTO getUserById(Long id) {
         log.info("Retrieving user with ID: {}", id);
         User user = userRepository.findById(id)
@@ -170,6 +175,7 @@ public class UserService {
      * @param id The ID of the user to delete.
      * @throws UserNotFoundException if the user is not found in the database.
      */
+    @Override
     public void deleteUser(Long id) {
         log.info("Deleting user with ID: {}", id);
         if (!userRepository.existsById(id)) {
@@ -189,6 +195,7 @@ public class UserService {
      * @throws UserNotFoundException if the user is not found.
      * @throws MealNotFoundException if the meal is not found.
      */
+    @Override
     @Transactional
     public UserDTO addMealToUser(Long userId, Long mealId) {
         log.info("Attempting to add meal to user with ID: {}", userId);
