@@ -14,7 +14,7 @@ import java.util.Map;
  * Defines methods for creating, updating, retrieving, and deleting Meal entities,
  * as well as calculating nutrient information.
  */
-public interface IMealServiceInterface {
+public interface IMealService {
 
     /**
      * Creates a new Meal entity based on the provided MealInputDTO.

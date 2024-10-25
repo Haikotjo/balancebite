@@ -26,7 +26,7 @@ import java.util.Map;
  * Provides methods to fetch food data by FDC ID and handle HTTP responses.
  */
 @Service
-public class UsdaApiService implements IUsdaApiServiceInterface {
+public class UsdaApiService implements IUsdaApiService {
 
     private static final Logger logger = LoggerFactory.getLogger(UsdaApiService.class);
     private static final String BASE_API_URL = "https://api.nal.usda.gov/fdc/v1/";
@@ -42,15 +42,15 @@ public class UsdaApiService implements IUsdaApiServiceInterface {
         this.apiConfig = apiConfig;
         this.restTemplate = restTemplate;
         this.objectMapper = objectMapper;
-        this.objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL); // Configures ObjectMapper to ignore null values during serialization/deserialization
+        this.objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
         logger.info("UsdaApiService initialized with API key and configurations.");
     }
 
     /**
-     * Helper method to build the URL dynamically.
+     * Helper method to build the URL dynamically based on the given path.
      *
      * @param path The specific API path to append to the base URL.
-     * @return The complete URL with the API key.
+     * @return The complete URL including the API key.
      */
     private String buildUrl(String path) {
         return String.format(BASE_API_URL + "%s?api_key=%s", path, apiConfig.getUsdaApiKey());
@@ -59,11 +59,11 @@ public class UsdaApiService implements IUsdaApiServiceInterface {
     /**
      * Helper method to parse JSON response using ObjectMapper.
      *
-     * @param responseBody The response body to parse.
+     * @param responseBody The JSON response body to parse.
      * @param valueType The class type to parse the response into.
      * @param <T> The type of the parsed object.
      * @return Parsed object of type T.
-     * @throws IOException if the parsing fails.
+     * @throws IOException if parsing fails.
      */
     private <T> T parseResponse(String responseBody, Class<T> valueType) throws IOException {
         return objectMapper.readValue(responseBody, valueType);
@@ -76,23 +76,19 @@ public class UsdaApiService implements IUsdaApiServiceInterface {
      * @return The UsdaFoodResponseDTO containing the food data.
      * @throws UsdaApiException if the HTTP request fails or the response is invalid.
      */
+    @Override
     @Retryable(value = {RestClientException.class}, maxAttempts = 3, backoff = @Backoff(delay = 20000))
     public UsdaFoodResponseDTO getFoodData(String fdcId) {
         logger.info("Fetching food data for FDC ID: {}", fdcId);
         try {
-            // Construct the URL using the helper method
             String url = buildUrl(FOOD_PATH + fdcId);
-
-            // Send the HTTP GET request
             ResponseEntity<String> responseEntity = restTemplate.getForEntity(url, String.class);
 
-            // Validate the response status
             if (!responseEntity.getStatusCode().is2xxSuccessful()) {
-                logger.error("Error occurred: {}", responseEntity.getStatusCode());
+                logger.error("Received non-success status code {} for FDC ID {}", responseEntity.getStatusCode(), fdcId);
                 throw new UsdaApiException("Error occurred: " + responseEntity.getStatusCode());
             }
 
-            // Convert JSON response to UsdaFoodResponseDTO
             if (responseEntity.getBody() == null) {
                 logger.error("Response body is null for FDC ID: {}", fdcId);
                 throw new UsdaApiException("Response body is null for FDC ID: " + fdcId);
@@ -102,6 +98,9 @@ public class UsdaApiService implements IUsdaApiServiceInterface {
         } catch (RestClientException e) {
             logger.error("HTTP request failed for FDC ID: {}", fdcId, e);
             throw new UsdaApiException("Failed to fetch food data from USDA API for FDC ID: " + fdcId, e);
+        } catch (IOException e) {
+            logger.error("Failed to parse JSON response for FDC ID: {}", fdcId, e);
+            throw new UsdaApiException("Error parsing USDA API response for FDC ID: " + fdcId, e);
         } catch (Exception e) {
             logger.error("Unexpected error occurred while processing response for FDC ID: {}", fdcId, e);
             throw new UsdaApiException("An unexpected error occurred while processing USDA API response", e);
@@ -115,27 +114,21 @@ public class UsdaApiService implements IUsdaApiServiceInterface {
      * @return A list of UsdaFoodResponseDTO objects containing the food data.
      * @throws UsdaApiException if the HTTP request fails or the response is invalid.
      */
+    @Override
     @Retryable(value = {RestClientException.class}, maxAttempts = 3, backoff = @Backoff(delay = 20000))
     public List<UsdaFoodResponseDTO> getMultipleFoodData(List<String> fdcIds) {
         logger.info("Fetching food data for multiple FDC IDs: {}", fdcIds);
         try {
-            // Construct the URL using the helper method
             String url = buildUrl(FOODS_PATH);
-
-            // Prepare the request body
             Map<String, Object> requestBody = new HashMap<>();
             requestBody.put("fdcIds", fdcIds);
-
-            // Send the HTTP POST request
             ResponseEntity<String> responseEntity = restTemplate.postForEntity(url, requestBody, String.class);
 
-            // Validate the response status
             if (!responseEntity.getStatusCode().is2xxSuccessful()) {
-                logger.error("Error occurred: {}", responseEntity.getStatusCode());
+                logger.error("Received non-success status code {} for multiple FDC IDs", responseEntity.getStatusCode());
                 throw new UsdaApiException("Error occurred: " + responseEntity.getStatusCode());
             }
 
-            // Convert JSON response to a list of UsdaFoodResponseDTO
             if (responseEntity.getBody() == null) {
                 logger.error("Response body is null for multiple FDC IDs: {}", fdcIds);
                 throw new UsdaApiException("Response body is null for multiple FDC IDs: " + fdcIds);
@@ -145,6 +138,9 @@ public class UsdaApiService implements IUsdaApiServiceInterface {
         } catch (RestClientException e) {
             logger.error("HTTP request failed for multiple FDC IDs: {}", fdcIds, e);
             throw new UsdaApiException("Failed to fetch multiple food data from USDA API", e);
+        } catch (IOException e) {
+            logger.error("Failed to parse JSON response for multiple FDC IDs: {}", fdcIds, e);
+            throw new UsdaApiException("Error parsing USDA API response for multiple FDC IDs", e);
         } catch (Exception e) {
             logger.error("Unexpected error occurred while processing response for multiple FDC IDs: {}", fdcIds, e);
             throw new UsdaApiException("An unexpected error occurred while processing USDA API response", e);

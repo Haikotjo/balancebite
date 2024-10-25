@@ -26,7 +26,7 @@ import java.util.*;
  * Handles the creation, retrieval, updating, and processing of Meal entities and their related data.
  */
 @Service
-public class MealService implements IMealServiceInterface {
+public class MealService implements IMealService {
 
     private static final Logger log = LoggerFactory.getLogger(MealService.class);
 
