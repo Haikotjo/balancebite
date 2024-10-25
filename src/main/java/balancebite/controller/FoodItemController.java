@@ -1,11 +1,17 @@
 package balancebite.controller;
 
 import balancebite.dto.fooditem.FoodItemDTO;
+import balancebite.errorHandling.EntityAlreadyExistsException;
+import balancebite.errorHandling.EntityNotFoundException;
 import balancebite.service.FoodItemService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -15,6 +21,7 @@ import java.util.concurrent.CompletableFuture;
 @RequestMapping("/fooditems")
 public class FoodItemController {
 
+    private static final Logger log = LoggerFactory.getLogger(FoodItemController.class);
     private final FoodItemService foodItemService;
 
     /**
@@ -31,29 +38,45 @@ public class FoodItemController {
      * Calls the FoodItemService to retrieve and save the food item.
      *
      * @param fdcId The FDC ID of the food item to fetch.
-     * @return A ResponseEntity with a success or error message, either CREATED (201) or a CONFLICT (409) if the item already exists.
+     * @return A ResponseEntity with a success or error message, either CREATED (201) or CONFLICT (409) if the item already exists.
      */
     @GetMapping("/fetch/{fdcId:[0-9]+}")
-    public ResponseEntity<String> fetchFoodItem(@PathVariable String fdcId) {
-        foodItemService.fetchAndSaveFoodItem(fdcId);
-        return ResponseEntity.ok("Food item fetched and saved successfully");
+    public ResponseEntity<?> fetchFoodItem(@PathVariable String fdcId) {
+        log.info("Fetching food item with FDC ID: {}", fdcId);
+        try {
+            foodItemService.fetchAndSaveFoodItem(fdcId);
+            log.info("Successfully fetched and saved food item with FDC ID: {}", fdcId);
+            return ResponseEntity.status(HttpStatus.CREATED).body("Food item fetched and saved successfully");
+        } catch (EntityAlreadyExistsException e) {
+            log.warn("Food item already exists with FDC ID: {}", fdcId);
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            log.error("Unexpected error during fetch and save for FDC ID: {}", fdcId, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "An unexpected error occurred."));
+        }
     }
 
     /**
      * Endpoint to fetch and save multiple FoodItems by a list of FDC IDs.
      * Calls the FoodItemService to retrieve and save the food items asynchronously.
      *
-     * The use of CompletableFuture allows the client to receive a response immediately,
-     * while the processing of fetching and saving the food items continues in the background.
-     *
      * @param fdcIds The list of FDC IDs of the food items to fetch.
      * @return A CompletableFuture containing a ResponseEntity with a success or error message.
-     *         This ensures non-blocking behavior, enhancing the application's responsiveness.
      */
     @PostMapping("/bulk-fetch-items")
-    public CompletableFuture<ResponseEntity<String>> fetchAllFoodItems(@RequestBody List<String> fdcIds) {
-        foodItemService.fetchAndSaveAllFoodItems(fdcIds);
-        return CompletableFuture.completedFuture(ResponseEntity.ok("Bulk food items fetched and saved successfully"));
+    public CompletableFuture<ResponseEntity<Map<String, String>>> fetchAllFoodItems(@RequestBody List<String> fdcIds) {
+        log.info("Fetching multiple food items with FDC IDs: {}", fdcIds);
+        return foodItemService.fetchAndSaveAllFoodItems(fdcIds)
+                .thenApply(voidResult -> {
+                    log.info("Bulk fetch and save completed for food items.");
+                    return ResponseEntity.status(HttpStatus.CREATED)
+                            .body(Map.of("message", "Bulk food items fetched and saved successfully"));
+                })
+                .exceptionally(e -> {
+                    log.error("Error during bulk fetch and save: {}", e.getMessage(), e);
+                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                            .body(Map.of("error", "An unexpected error occurred during bulk fetch."));
+                });
     }
 
     /**
@@ -63,19 +86,33 @@ public class FoodItemController {
      * @return A ResponseEntity with the corresponding FoodItemDTO or a NOT_FOUND (404) status if not found.
      */
     @GetMapping("/{id}")
-    public ResponseEntity<FoodItemDTO> getFoodItemById(@PathVariable Long id) {
-        FoodItemDTO foodItem = foodItemService.getFoodItemById(id);
-        return ResponseEntity.ok(foodItem);
+    public ResponseEntity<?> getFoodItemById(@PathVariable Long id) {
+        log.info("Retrieving food item with ID: {}", id);
+        try {
+            FoodItemDTO foodItem = foodItemService.getFoodItemById(id);
+            return ResponseEntity.ok(foodItem);
+        } catch (EntityNotFoundException e) {
+            log.warn("Food item not found with ID: {}", id);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            log.error("Unexpected error during retrieval for food item ID: {}", id, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "An unexpected error occurred."));
+        }
     }
 
     /**
      * Endpoint to retrieve all FoodItems from the database.
      *
-     * @return A ResponseEntity with a list of all FoodItemDTOs.
+     * @return A ResponseEntity with a list of all FoodItemDTOs or NO_CONTENT (204) status if none found.
      */
     @GetMapping
-    public ResponseEntity<List<FoodItemDTO>> getAllFoodItems() {
+    public ResponseEntity<?> getAllFoodItems() {
+        log.info("Retrieving all food items from the database.");
         List<FoodItemDTO> foodItems = foodItemService.getAllFoodItems();
+        if (foodItems.isEmpty()) {
+            log.info("No food items found.");
+            return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+        }
         return ResponseEntity.ok(foodItems);
     }
 
@@ -88,7 +125,16 @@ public class FoodItemController {
      */
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteFoodItemById(@PathVariable Long id) {
-        foodItemService.deleteFoodItemById(id);
-        return ResponseEntity.noContent().build();
+        log.info("Deleting food item with ID: {}", id);
+        try {
+            foodItemService.deleteFoodItemById(id);
+            return ResponseEntity.noContent().build();
+        } catch (EntityNotFoundException e) {
+            log.warn("Food item not found for deletion with ID: {}", id);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        } catch (Exception e) {
+            log.error("Unexpected error during deletion for food item ID: {}", id, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 }

@@ -128,4 +128,18 @@ public class GlobalExceptionHandler {
         String errorMessage = ex.getMessage();
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", errorMessage));
     }
+
+    /**
+     * Handles cases where a requested entity is not found in the database.
+     *
+     * @param ex The thrown {@link EntityNotFoundException}.
+     * @param request The web request that resulted in the exception.
+     * @return A ResponseEntity indicating that the entity was not found, with a NOT_FOUND status.
+     */
+    @ExceptionHandler(EntityNotFoundException.class)
+    public ResponseEntity<Map<String, String>> handleEntityNotFoundException(EntityNotFoundException ex, WebRequest request) {
+        String errorMessage = ex.getMessage();
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", errorMessage));
+    }
+
 }
