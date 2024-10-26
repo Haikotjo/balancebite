@@ -1,4 +1,4 @@
-package balancebite.controller;
+package balancebite.controller.usercontroller;
 
 import balancebite.dto.user.UserBasicInfoInputDTO;
 import balancebite.dto.user.UserDTO;
@@ -7,9 +7,9 @@ import balancebite.errorHandling.DailyIntakeNotFoundException;
 import balancebite.errorHandling.EntityAlreadyExistsException;
 import balancebite.errorHandling.MealNotFoundException;
 import balancebite.errorHandling.UserNotFoundException;
-import balancebite.service.ConsumeMealService;
+import balancebite.service.user.ConsumeMealService;
 import balancebite.service.RecommendedDailyIntakeService;
-import balancebite.service.UserService;
+import balancebite.service.user.UserService;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -174,69 +174,69 @@ public class UserController {
         }
     }
 
-    /**
-     * Endpoint to add an existing meal to a user's list of meals.
-     *
-     * @param userId The ID of the user to whom the meal will be added.
-     * @param mealId The ID of the meal to be added.
-     * @return The updated UserDTO with 200 status code, or a 404 status code if the user or meal is not found.
-     */
-    @PatchMapping("/{userId}/meals/{mealId}")
-    public ResponseEntity<?> addMealToUser(@PathVariable Long userId, @PathVariable Long mealId) {
-        try {
-            log.info("Adding meal ID {} to user ID {}", mealId, userId);
-            UserDTO user = userService.addMealToUser(userId, mealId);
-            return ResponseEntity.ok(user);
-        } catch (UserNotFoundException | MealNotFoundException e) {
-            log.warn("Error occurred during meal addition: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
-        } catch (Exception e) {
-            log.error("Unexpected error during meal addition: {}", e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "An unexpected error occurred."));
-        }
-    }
-
-    /**
-     * Endpoint to remove a meal from the user's list of meals.
-     *
-     * @param userId The ID of the user.
-     * @param mealId The ID of the meal to remove.
-     * @return The updated UserDTO with 200 status code, or a 404 status code if the user or meal is not found.
-     */
-    @DeleteMapping("/{userId}/meals/{mealId}")
-    public ResponseEntity<?> removeMealFromUser(@PathVariable Long userId, @PathVariable Long mealId) {
-        try {
-            log.info("Removing meal ID {} from user ID {}", mealId, userId);
-            UserDTO updatedUser = userService.removeMealFromUser(userId, mealId);
-            return ResponseEntity.ok(updatedUser);
-        } catch (UserNotFoundException | MealNotFoundException e) {
-            log.warn("Error occurred during meal removal: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
-        } catch (Exception e) {
-            log.error("Unexpected error during meal removal: {}", e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "An unexpected error occurred."));
-        }
-    }
-
-    /**
-     * Endpoint for processing the consumption of a meal by a user.
-     *
-     * @param userId The ID of the user consuming the meal.
-     * @param mealId The ID of the meal being consumed.
-     * @return A ResponseEntity containing the remaining daily intake for each nutrient after meal consumption.
-     */
-    @PostMapping("/{userId}/consume-meal/{mealId}")
-    public ResponseEntity<?> consumeMeal(@PathVariable Long userId, @PathVariable Long mealId) {
-        try {
-            log.info("Processing meal consumption for user ID {} and meal ID {}", userId, mealId);
-            Map<String, Double> remainingIntakes = consumeMealService.consumeMeal(userId, mealId);
-            return ResponseEntity.ok(remainingIntakes);
-        } catch (UserNotFoundException | MealNotFoundException | DailyIntakeNotFoundException e) {
-            log.warn("Error occurred during meal consumption: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
-        } catch (Exception e) {
-            log.error("Unexpected error during meal consumption: {}", e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "An unexpected error occurred."));
-        }
-    }
+//    /**
+//     * Endpoint to add an existing meal to a user's list of meals.
+//     *
+//     * @param userId The ID of the user to whom the meal will be added.
+//     * @param mealId The ID of the meal to be added.
+//     * @return The updated UserDTO with 200 status code, or a 404 status code if the user or meal is not found.
+//     */
+//    @PatchMapping("/{userId}/meals/{mealId}")
+//    public ResponseEntity<?> addMealToUser(@PathVariable Long userId, @PathVariable Long mealId) {
+//        try {
+//            log.info("Adding meal ID {} to user ID {}", mealId, userId);
+//            UserDTO user = userService.addMealToUser(userId, mealId);
+//            return ResponseEntity.ok(user);
+//        } catch (UserNotFoundException | MealNotFoundException e) {
+//            log.warn("Error occurred during meal addition: {}", e.getMessage());
+//            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+//        } catch (Exception e) {
+//            log.error("Unexpected error during meal addition: {}", e.getMessage(), e);
+//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "An unexpected error occurred."));
+//        }
+//    }
+//
+//    /**
+//     * Endpoint to remove a meal from the user's list of meals.
+//     *
+//     * @param userId The ID of the user.
+//     * @param mealId The ID of the meal to remove.
+//     * @return The updated UserDTO with 200 status code, or a 404 status code if the user or meal is not found.
+//     */
+//    @DeleteMapping("/{userId}/meals/{mealId}")
+//    public ResponseEntity<?> removeMealFromUser(@PathVariable Long userId, @PathVariable Long mealId) {
+//        try {
+//            log.info("Removing meal ID {} from user ID {}", mealId, userId);
+//            UserDTO updatedUser = userService.removeMealFromUser(userId, mealId);
+//            return ResponseEntity.ok(updatedUser);
+//        } catch (UserNotFoundException | MealNotFoundException e) {
+//            log.warn("Error occurred during meal removal: {}", e.getMessage());
+//            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+//        } catch (Exception e) {
+//            log.error("Unexpected error during meal removal: {}", e.getMessage(), e);
+//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "An unexpected error occurred."));
+//        }
+//    }
+//
+//    /**
+//     * Endpoint for processing the consumption of a meal by a user.
+//     *
+//     * @param userId The ID of the user consuming the meal.
+//     * @param mealId The ID of the meal being consumed.
+//     * @return A ResponseEntity containing the remaining daily intake for each nutrient after meal consumption.
+//     */
+//    @PostMapping("/{userId}/consume-meal/{mealId}")
+//    public ResponseEntity<?> consumeMeal(@PathVariable Long userId, @PathVariable Long mealId) {
+//        try {
+//            log.info("Processing meal consumption for user ID {} and meal ID {}", userId, mealId);
+//            Map<String, Double> remainingIntakes = consumeMealService.consumeMeal(userId, mealId);
+//            return ResponseEntity.ok(remainingIntakes);
+//        } catch (UserNotFoundException | MealNotFoundException | DailyIntakeNotFoundException e) {
+//            log.warn("Error occurred during meal consumption: {}", e.getMessage());
+//            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+//        } catch (Exception e) {
+//            log.error("Unexpected error during meal consumption: {}", e.getMessage(), e);
+//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "An unexpected error occurred."));
+//        }
+//    }
 }

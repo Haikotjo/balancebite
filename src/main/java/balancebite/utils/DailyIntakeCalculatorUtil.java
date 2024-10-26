@@ -34,7 +34,7 @@ public class DailyIntakeCalculatorUtil {
     public static RecommendedDailyIntake getOrCreateDailyIntakeForUser(User user) {
         // Check if a RecommendedDailyIntake for today already exists
         Optional<RecommendedDailyIntake> existingIntake = user.getRecommendedDailyIntakes().stream()
-                .filter(intake -> intake.getCreatedAt().toLocalDate().equals(LocalDate.now()))
+                .filter(intake -> intake.getCreatedAt().equals(LocalDate.now()))
                 .findFirst();
 
         if (existingIntake.isPresent()) {

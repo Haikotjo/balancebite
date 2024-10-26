@@ -78,7 +78,7 @@ public class MealConsumptionExtendedService implements IConsumeMealService {
 
         // Get the user's recommended daily intake for the given date
         Optional<RecommendedDailyIntake> intakeForSpecificDate = recommendedDailyIntakeRepository
-                .findByUser_IdAndCreatedAt(userId, date.atStartOfDay());
+                .findByUser_IdAndCreatedAt(userId, date);
 
         if (intakeForSpecificDate.isEmpty()) {
             throw new RuntimeException("Recommended daily intake for the given date not found for user with ID " + userId);

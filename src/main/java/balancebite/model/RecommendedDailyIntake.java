@@ -2,7 +2,7 @@ package balancebite.model;
 
 import jakarta.persistence.*;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -38,14 +38,14 @@ public class RecommendedDailyIntake {
     /**
      * The timestamp when the recommended daily intake was created.
      */
-    private LocalDateTime createdAt;
+    private LocalDate createdAt;
 
     /**
      * Default constructor for creating a RecommendedDailyIntake entity.
      * Initializes the recommended daily intake map with default values for various nutrients.
      */
     public RecommendedDailyIntake() {
-        this.createdAt = LocalDateTime.now();
+        this.createdAt = LocalDate.now();
 
         // Proximates
 //        addNutrient("Water", 3700.0);
@@ -216,7 +216,7 @@ public class RecommendedDailyIntake {
      *
      * @return The timestamp when this recommended daily intake was created.
      */
-    public LocalDateTime getCreatedAt() {
+    public LocalDate getCreatedAt() {
         return createdAt;
     }
 
@@ -225,7 +225,7 @@ public class RecommendedDailyIntake {
      *
      * @param createdAt The timestamp to set for the recommended daily intake.
      */
-    public void setCreatedAt(LocalDateTime createdAt) {
+    public void setCreatedAt(LocalDate createdAt) {
         this.createdAt = createdAt;
     }
 }

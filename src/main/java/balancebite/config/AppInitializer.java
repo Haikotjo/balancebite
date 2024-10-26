@@ -1,6 +1,8 @@
 package balancebite.config;
 
 import balancebite.service.FoodItemService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 
@@ -12,6 +14,8 @@ import java.util.List;
  */
 @Configuration
 public class AppInitializer {
+
+    private static final Logger log = LoggerFactory.getLogger(AppInitializer.class);
 
     private final FoodItemService foodItemService;
     private final FoodConfig foodConfig;
@@ -33,17 +37,22 @@ public class AppInitializer {
      */
     @PostConstruct
     public void init() {
+        log.info("Starting application initialization with food items.");
+
         try {
             List<String> fdcIds = foodConfig.getFdcIds(); // Get the list from configuration (e.g., YAML)
 
-            if (fdcIds != null && !fdcIds.isEmpty()) {
-                foodItemService.fetchAndSaveAllFoodItems(fdcIds);
-            } else {
-                System.err.println("No FDC IDs found for initialization.");
+            if (fdcIds == null || fdcIds.isEmpty()) {
+                log.warn("No FDC IDs found in configuration for initialization.");
+                return;
             }
+
+            log.info("Found {} FDC IDs to initialize food items.", fdcIds.size());
+            foodItemService.fetchAndSaveAllFoodItems(fdcIds);
+            log.info("Successfully initialized food items with FDC IDs.");
+
         } catch (Exception e) {
-            System.err.println("Error in AppInitializer: " + e.getMessage());
-            e.printStackTrace();
+            log.error("Error during application initialization: {}", e.getMessage(), e);
         }
     }
 }

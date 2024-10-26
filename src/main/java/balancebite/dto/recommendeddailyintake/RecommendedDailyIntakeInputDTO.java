@@ -2,7 +2,7 @@ package balancebite.dto.recommendeddailyintake;
 
 import balancebite.model.Nutrient;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.List;
 
 /**
@@ -33,7 +33,7 @@ public class RecommendedDailyIntakeInputDTO {
     /**
      * The timestamp when the recommended daily intake was created.
      */
-    private LocalDateTime createdAt;
+    private LocalDate createdAt;
 
     /**
      * Default no-argument constructor for serialization/deserialization purposes.
@@ -51,7 +51,7 @@ public class RecommendedDailyIntakeInputDTO {
      * @param customNutrients A list of custom nutrients specified by the user.
      * @param createdAt       The timestamp when the recommended daily intake was created.
      */
-    public RecommendedDailyIntakeInputDTO(Double weight, String gender, List<Nutrient> customNutrients, LocalDateTime createdAt) {
+    public RecommendedDailyIntakeInputDTO(Double weight, String gender, List<Nutrient> customNutrients, LocalDate createdAt) {
         this.weight = weight;
         this.gender = gender;
         this.customNutrients = customNutrients;
@@ -117,7 +117,7 @@ public class RecommendedDailyIntakeInputDTO {
      *
      * @return The creation timestamp.
      */
-    public LocalDateTime getCreatedAt() {
+    public LocalDate getCreatedAt() {
         return createdAt;
     }
 
@@ -126,7 +126,7 @@ public class RecommendedDailyIntakeInputDTO {
      *
      * @param createdAt The timestamp to set.
      */
-    public void setCreatedAt(LocalDateTime createdAt) {
+    public void setCreatedAt(LocalDate createdAt) {
         this.createdAt = createdAt;
     }
 }

@@ -2,7 +2,7 @@ package balancebite.dto.recommendeddailyintake;
 
 import balancebite.model.Nutrient;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Set;
 
@@ -21,7 +21,7 @@ public class RecommendedDailyIntakeDTO {
     /**
      * The timestamp when the recommended daily intake was created.
      */
-    private LocalDateTime createdAt;
+    private LocalDate createdAt;
 
     /**
      * The formatted timestamp when the recommended daily intake was created.
@@ -42,7 +42,7 @@ public class RecommendedDailyIntakeDTO {
      * @param nutrients The set of NutrientDTO objects representing nutrient names and their recommended daily intake values.
      * @param createdAt The timestamp when the recommended daily intake was created.
      */
-    public RecommendedDailyIntakeDTO(Set<Nutrient> nutrients, LocalDateTime createdAt) {
+    public RecommendedDailyIntakeDTO(Set<Nutrient> nutrients, LocalDate createdAt) {
         this.nutrients = nutrients;
         this.createdAt = createdAt;
         this.createdAtFormatted = createdAt != null ? createdAt.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) : null;
@@ -71,7 +71,7 @@ public class RecommendedDailyIntakeDTO {
      *
      * @return The creation timestamp.
      */
-    public LocalDateTime getCreatedAt() {
+    public LocalDate getCreatedAt() {
         return createdAt;
     }
 
@@ -80,7 +80,7 @@ public class RecommendedDailyIntakeDTO {
      *
      * @param createdAt The timestamp to set.
      */
-    public void setCreatedAt(LocalDateTime createdAt) {
+    public void setCreatedAt(LocalDate createdAt) {
         this.createdAt = createdAt;
         this.createdAtFormatted = createdAt != null ? createdAt.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) : null;
     }

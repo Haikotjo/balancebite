@@ -4,7 +4,7 @@ import balancebite.model.User;
 import balancebite.model.RecommendedDailyIntake;
 import balancebite.repository.UserRepository;
 import balancebite.repository.RecommendedDailyIntakeRepository;
-import balancebite.service.UserService;
+import balancebite.service.user.UserService;
 import balancebite.utils.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,7 +12,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -58,21 +57,21 @@ public class TestRecommendedDailyIntakeService {
 
         // Check if an intake for the given date already exists
         boolean intakeExists = user.getRecommendedDailyIntakes().stream()
-                .anyMatch(intake -> intake.getCreatedAt().toLocalDate().equals(date));
+                .anyMatch(intake -> intake.getCreatedAt().equals(date));
 
         log.info("Checking if intake exists for user ID {} on date {}. Current intakes: {}", userId, date,
                 user.getRecommendedDailyIntakes().stream()
-                        .map(intake -> intake.getCreatedAt().toLocalDate())
+                        .map(intake -> intake.getCreatedAt())
                         .collect(Collectors.toList()));
 
         if (!intakeExists) {
             // Directly use the static method from the utility class to calculate or retrieve intake
             RecommendedDailyIntake newIntake = DailyIntakeCalculatorUtil.getOrCreateDailyIntakeForUser(user);
-            newIntake.setCreatedAt(date.atStartOfDay());
+            newIntake.setCreatedAt(date);
 
             // Add the new intake to the user's set of intakes
             user.getRecommendedDailyIntakes().forEach(intake -> {
-                log.info("Checking intake for date: {}, createdAt: {}", intake.getCreatedAt().toLocalDate(), intake.getCreatedAt());
+                log.info("Checking intake for date: {}, createdAt: {}", intake.getCreatedAt(), intake.getCreatedAt());
             });
 
             log.info("Checking if intake exists for user ID {} on date {}: {}", userId, date, intakeExists);

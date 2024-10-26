@@ -4,7 +4,6 @@ import balancebite.model.RecommendedDailyIntake;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.Optional;
 
 /**
@@ -21,5 +20,5 @@ public interface RecommendedDailyIntakeRepository extends JpaRepository<Recommen
      * @param createdAt The date for which the RecommendedDailyIntake is being retrieved.
      * @return An Optional containing the RecommendedDailyIntake if found, or empty if not found.
      */
-    Optional<RecommendedDailyIntake> findByUser_IdAndCreatedAt(Long userId, LocalDateTime createdAt);
+    Optional<RecommendedDailyIntake> findByUser_IdAndCreatedAt(Long userId, LocalDate createdAt);
 }

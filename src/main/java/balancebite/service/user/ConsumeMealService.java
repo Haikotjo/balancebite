@@ -1,4 +1,4 @@
-package balancebite.service;
+package balancebite.service.user;
 
 import balancebite.dto.NutrientInfoDTO;
 import balancebite.errorHandling.DailyIntakeNotFoundException;
@@ -12,6 +12,7 @@ import balancebite.model.User;
 import balancebite.repository.MealRepository;
 import balancebite.repository.RecommendedDailyIntakeRepository;
 import balancebite.repository.UserRepository;
+import balancebite.service.MealService;
 import balancebite.service.interfaces.IConsumeMealService;
 import balancebite.utils.HelperMethods;
 import jakarta.persistence.EntityManager;
@@ -23,7 +24,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -100,7 +100,7 @@ public class ConsumeMealService implements IConsumeMealService {
         Map<String, NutrientInfoDTO> mealNutrients = mealService.calculateNutrients(mealId);
         log.debug("Nutrient values for meal with ID: {} calculated", mealId);
 
-        LocalDateTime startOfToday = LocalDate.now().atStartOfDay();
+        LocalDate startOfToday = LocalDate.now();
         RecommendedDailyIntake dailyIntake = recommendedDailyIntakeRepository
                 .findByUser_IdAndCreatedAt(userId, startOfToday)
                 .orElseThrow(() -> {

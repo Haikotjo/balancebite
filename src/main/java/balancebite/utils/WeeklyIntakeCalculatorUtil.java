@@ -40,8 +40,8 @@ public class WeeklyIntakeCalculatorUtil {
 
         // Process all days from start of the week to yesterday
         user.getRecommendedDailyIntakes().stream()
-                .filter(intake -> !intake.getCreatedAt().toLocalDate().isBefore(startOfWeek)
-                        && intake.getCreatedAt().toLocalDate().isBefore(today))
+                .filter(intake -> !intake.getCreatedAt().isBefore(startOfWeek)
+                        && intake.getCreatedAt().isBefore(today))
                 .forEach(intake -> intake.getNutrients().forEach(nutrient -> {
                     String nutrientName = nutrient.getName();
                     double value = nutrient.getValue() != null ? nutrient.getValue() : 0.0;
@@ -51,7 +51,7 @@ public class WeeklyIntakeCalculatorUtil {
 
         // Process today's intake separately
         user.getRecommendedDailyIntakes().stream()
-                .filter(intake -> intake.getCreatedAt().toLocalDate().equals(today))
+                .filter(intake -> intake.getCreatedAt().equals(today))
                 .findFirst()
                 .ifPresent(todayIntake -> todayIntake.getNutrients().forEach(nutrient -> {
                     String nutrientName = nutrient.getName();

@@ -8,6 +8,7 @@ import balancebite.model.User;
 import balancebite.repository.RecommendedDailyIntakeRepository;
 import balancebite.repository.UserRepository;
 import balancebite.service.interfaces.IRecommendedDailyIntakeService;
+import balancebite.service.user.UserService;
 import balancebite.utils.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

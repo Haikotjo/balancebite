@@ -1,4 +1,4 @@
-package balancebite.service;
+package balancebite.service.user;
 
 import balancebite.dto.user.UserBasicInfoInputDTO;
 import balancebite.dto.user.UserDTO;
@@ -12,6 +12,8 @@ import balancebite.model.User;
 import balancebite.repository.MealRepository;
 import balancebite.repository.RecommendedDailyIntakeRepository;
 import balancebite.repository.UserRepository;
+import balancebite.service.MealService;
+import balancebite.service.RecommendedDailyIntakeService;
 import balancebite.service.interfaces.IUserService;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -34,10 +36,9 @@ public class UserService implements IUserService {
     private static final Logger log = LoggerFactory.getLogger(UserService.class);
 
     private final UserRepository userRepository;
-    private final MealRepository mealRepository;
     private final RecommendedDailyIntakeRepository recommendedDailyIntakeRepository;
     private final UserMapper userMapper;
-    private final MealService mealService;  // Add MealService
+    private final RecommendedDailyIntakeService recommendedDailyIntakeService;
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -46,17 +47,20 @@ public class UserService implements IUserService {
      * Constructor that initializes the UserService with the required repositories, mappers, and services.
      *
      * @param userRepository Repository to interact with the User data in the database.
-     * @param mealRepository Repository to interact with the Meal data in the database.
      * @param userMapper Mapper to convert between User entities and DTOs.
-     * @param mealService Service to interact with Meal-related operations.
+     * @param recommendedDailyIntakeRepository Repository to interact with RecommendedDailyIntake data.
+     * @param recommendedDailyIntakeService Service for managing recommended daily intake calculations.
      */
-    public UserService(UserRepository userRepository, MealRepository mealRepository, UserMapper userMapper, MealService mealService, RecommendedDailyIntakeRepository recommendedDailyIntakeRepository) {
+    public UserService(UserRepository userRepository,
+                       UserMapper userMapper,
+                       RecommendedDailyIntakeRepository recommendedDailyIntakeRepository,
+                       RecommendedDailyIntakeService recommendedDailyIntakeService) {
         this.userRepository = userRepository;
-        this.mealRepository = mealRepository;
         this.userMapper = userMapper;
-        this.mealService = mealService;
         this.recommendedDailyIntakeRepository = recommendedDailyIntakeRepository;
+        this.recommendedDailyIntakeService = recommendedDailyIntakeService;
     }
+
 
     /**
      * Creates a new user in the system based on the provided UserBasicInfoInputDTO.
@@ -128,6 +132,11 @@ public class UserService implements IUserService {
         // Save and return the updated user
         User updatedUser = userRepository.save(existingUser);
         log.info("Successfully updated detailed info for user with ID: {}", id);
+
+        // Generate or update the recommended daily intake for the user
+        log.info("Generating or updating recommended daily intake for user ID: {}", id);
+        recommendedDailyIntakeService.getOrCreateDailyIntakeForUser(id);
+
         return userMapper.toDTO(updatedUser);
     }
 
@@ -183,62 +192,62 @@ public class UserService implements IUserService {
         log.info("Successfully deleted user with ID: {}", id);
     }
 
-    /**
-     * Adds an existing meal to the user's list of meals.
-     *
-     * @param userId The ID of the user to whom the meal is to be added.
-     * @param mealId The ID of the meal to be added.
-     * @return The updated UserDTO with the newly added meal.
-     * @throws UserNotFoundException if the user is not found.
-     * @throws MealNotFoundException if the meal is not found.
-     */
-    @Override
-    @Transactional
-    public UserDTO addMealToUser(Long userId, Long mealId) {
-        log.info("Attempting to add meal to user with ID: {}", userId);
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException("User not found with ID: " + userId));
-
-        Meal meal = mealRepository.findById(mealId)
-                .orElseThrow(() -> new MealNotFoundException(mealId));
-
-        // Add the meal to the user's list of meals.
-        user.getMeals().add(meal);
-
-        // Save the user with the new meal and return the UserDTO.
-        User updatedUser = userRepository.save(user);
-        log.info("Successfully added meal to user with ID: {}", userId);
-        return userMapper.toDTO(updatedUser);
-    }
-
-    /**
-     * Removes a meal from the user's list of meals.
-     * This method checks if the user exists, and if the meal is associated with the user.
-     *
-     * @param userId The ID of the user.
-     * @param mealId The ID of the meal to be removed.
-     * @return The updated UserDTO without the removed meal.
-     * @throws UserNotFoundException if the user is not found.
-     * @throws MealNotFoundException if the meal is not found in the user's meal list.
-     */
-    @Transactional
-    public UserDTO removeMealFromUser(Long userId, Long mealId) {
-        log.info("Attempting to remove meal from user with ID: {}", userId);
-        // Retrieve the user by their ID, throw UserNotFoundException if not found
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException("User not found with ID: " + userId));
-
-        // Check if the meal belongs to the user, throw MealNotFoundException if not found
-        Meal meal = user.getMeals().stream()
-                .filter(m -> m.getId().equals(mealId))
-                .findFirst()
-                .orElseThrow(() -> new MealNotFoundException("The meal with ID " + mealId + " is not part of the user's meal list."));
-
-        // Remove the meal from the user's list and save the changes to the repository
-        user.getMeals().remove(meal);
-        User updatedUser = userRepository.save(user);
-
-        log.info("Successfully removed meal from user with ID: {}", userId);
-        return userMapper.toDTO(updatedUser);
-    }
+//    /**
+//     * Adds an existing meal to the user's list of meals.
+//     *
+//     * @param userId The ID of the user to whom the meal is to be added.
+//     * @param mealId The ID of the meal to be added.
+//     * @return The updated UserDTO with the newly added meal.
+//     * @throws UserNotFoundException if the user is not found.
+//     * @throws MealNotFoundException if the meal is not found.
+//     */
+//    @Override
+//    @Transactional
+//    public UserDTO addMealToUser(Long userId, Long mealId) {
+//        log.info("Attempting to add meal to user with ID: {}", userId);
+//        User user = userRepository.findById(userId)
+//                .orElseThrow(() -> new UserNotFoundException("User not found with ID: " + userId));
+//
+//        Meal meal = mealRepository.findById(mealId)
+//                .orElseThrow(() -> new MealNotFoundException(mealId));
+//
+//        // Add the meal to the user's list of meals.
+//        user.getMeals().add(meal);
+//
+//        // Save the user with the new meal and return the UserDTO.
+//        User updatedUser = userRepository.save(user);
+//        log.info("Successfully added meal to user with ID: {}", userId);
+//        return userMapper.toDTO(updatedUser);
+//    }
+//
+//    /**
+//     * Removes a meal from the user's list of meals.
+//     * This method checks if the user exists, and if the meal is associated with the user.
+//     *
+//     * @param userId The ID of the user.
+//     * @param mealId The ID of the meal to be removed.
+//     * @return The updated UserDTO without the removed meal.
+//     * @throws UserNotFoundException if the user is not found.
+//     * @throws MealNotFoundException if the meal is not found in the user's meal list.
+//     */
+//    @Transactional
+//    public UserDTO removeMealFromUser(Long userId, Long mealId) {
+//        log.info("Attempting to remove meal from user with ID: {}", userId);
+//        // Retrieve the user by their ID, throw UserNotFoundException if not found
+//        User user = userRepository.findById(userId)
+//                .orElseThrow(() -> new UserNotFoundException("User not found with ID: " + userId));
+//
+//        // Check if the meal belongs to the user, throw MealNotFoundException if not found
+//        Meal meal = user.getMeals().stream()
+//                .filter(m -> m.getId().equals(mealId))
+//                .findFirst()
+//                .orElseThrow(() -> new MealNotFoundException("The meal with ID " + mealId + " is not part of the user's meal list."));
+//
+//        // Remove the meal from the user's list and save the changes to the repository
+//        user.getMeals().remove(meal);
+//        User updatedUser = userRepository.save(user);
+//
+//        log.info("Successfully removed meal from user with ID: {}", userId);
+//        return userMapper.toDTO(updatedUser);
+//    }
 }
