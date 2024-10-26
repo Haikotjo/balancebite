@@ -7,6 +7,8 @@ import balancebite.errorHandling.InvalidFoodItemException;
 import balancebite.service.MealService;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -21,6 +23,8 @@ import java.util.Map;
 @RestController
 @RequestMapping("/meals")
 public class MealController {
+
+    private static final Logger log = LoggerFactory.getLogger(MealController.class);
 
     private final MealService mealService;
 
@@ -42,11 +46,14 @@ public class MealController {
     @PostMapping
     public ResponseEntity<?> createMeal(@Valid @RequestBody MealInputDTO mealInputDTO) {
         try {
+            log.info("Creating new meal with name: {}", mealInputDTO.getName());
             MealDTO createdMeal = mealService.createMeal(mealInputDTO);
             return ResponseEntity.status(HttpStatus.CREATED).body(createdMeal);
         } catch (InvalidFoodItemException e) {
+            log.warn("Invalid food item for meal creation: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
+            log.error("Unexpected error during meal creation: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "An unexpected error occurred."));
         }
     }
@@ -61,13 +68,17 @@ public class MealController {
     @PostMapping("/user/{userId}")
     public ResponseEntity<?> createMealForUser(@RequestBody MealInputDTO mealInputDTO, @PathVariable Long userId) {
         try {
+            log.info("Creating new meal for user ID: {}", userId);
             MealDTO createdMeal = mealService.createMealForUser(mealInputDTO, userId);
             return ResponseEntity.status(HttpStatus.CREATED).body(createdMeal);
         } catch (EntityNotFoundException e) {
+            log.warn("User not found with ID {} during meal creation: {}", userId, e.getMessage());
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
         } catch (InvalidFoodItemException e) {
+            log.warn("Invalid food item for user meal creation: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
+            log.error("Unexpected error during meal creation for user ID {}: {}", userId, e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "An unexpected error occurred."));
         }
     }
@@ -82,13 +93,17 @@ public class MealController {
     @PutMapping("/{id}")
     public ResponseEntity<?> updateMeal(@PathVariable Long id, @RequestBody MealInputDTO mealInputDTO) {
         try {
+            log.info("Updating meal with ID: {}", id);
             MealDTO updatedMeal = mealService.updateMeal(id, mealInputDTO);
             return ResponseEntity.ok(updatedMeal);
         } catch (EntityNotFoundException e) {
+            log.warn("Meal not found with ID {}: {}", id, e.getMessage());
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
         } catch (InvalidFoodItemException e) {
+            log.warn("Invalid food item in meal update: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
+            log.error("Unexpected error during meal update for ID {}: {}", id, e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "An unexpected error occurred."));
         }
     }
@@ -101,12 +116,15 @@ public class MealController {
     @GetMapping
     public ResponseEntity<?> getAllMeals() {
         try {
+            log.info("Retrieving all meals.");
             List<MealDTO> mealDTOs = mealService.getAllMeals();
             if (mealDTOs.isEmpty()) {
+                log.info("No meals found.");
                 return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
             }
             return ResponseEntity.ok(mealDTOs);
         } catch (Exception e) {
+            log.error("Unexpected error during retrieval of all meals: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "An unexpected error occurred."));
         }
     }
@@ -120,11 +138,14 @@ public class MealController {
     @GetMapping("/{id}")
     public ResponseEntity<?> getMealById(@PathVariable Long id) {
         try {
+            log.info("Retrieving meal with ID: {}", id);
             MealDTO mealDTO = mealService.getMealById(id);
             return ResponseEntity.ok(mealDTO);
         } catch (EntityNotFoundException e) {
+            log.warn("Meal not found with ID {}: {}", id, e.getMessage());
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
+            log.error("Unexpected error during retrieval for meal ID {}: {}", id, e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "An unexpected error occurred."));
         }
     }
@@ -138,11 +159,14 @@ public class MealController {
     @DeleteMapping("/meal/{mealId}")
     public ResponseEntity<?> deleteMeal(@PathVariable Long mealId) {
         try {
+            log.info("Deleting meal with ID: {}", mealId);
             mealService.deleteMeal(mealId);
             return ResponseEntity.noContent().build();
         } catch (EntityNotFoundException e) {
+            log.warn("Meal not found for deletion with ID: {}", mealId, e.getMessage());
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
+            log.error("Unexpected error during meal deletion for ID {}: {}", mealId, e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "An unexpected error occurred."));
         }
     }
@@ -156,11 +180,14 @@ public class MealController {
     @GetMapping("/nutrients-per-food-item/{id}")
     public ResponseEntity<?> calculateNutrientsPerFoodItem(@PathVariable Long id) {
         try {
+            log.info("Calculating nutrients per food item for meal ID: {}", id);
             Map<Long, Map<String, NutrientInfoDTO>> nutrientsPerFoodItem = mealService.calculateNutrientsPerFoodItem(id);
             return ResponseEntity.ok(nutrientsPerFoodItem);
         } catch (EntityNotFoundException e) {
+            log.warn("Meal not found for nutrient calculation with ID {}: {}", id, e.getMessage());
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
+            log.error("Unexpected error during nutrient calculation for meal ID {}: {}", id, e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "An unexpected error occurred."));
         }
     }
@@ -174,11 +201,14 @@ public class MealController {
     @GetMapping("/nutrients/{id}")
     public ResponseEntity<?> calculateNutrients(@PathVariable Long id) {
         try {
+            log.info("Calculating total nutrients for meal ID: {}", id);
             Map<String, NutrientInfoDTO> nutrients = mealService.calculateNutrients(id);
             return ResponseEntity.ok(nutrients);
         } catch (EntityNotFoundException e) {
+            log.warn("Meal not found for total nutrient calculation with ID {}: {}", id, e.getMessage());
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
+            log.error("Unexpected error during total nutrient calculation for meal ID {}: {}", id, e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "An unexpected error occurred."));
         }
     }
