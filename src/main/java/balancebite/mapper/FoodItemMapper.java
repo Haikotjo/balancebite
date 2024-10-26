@@ -27,7 +27,7 @@ public class FoodItemMapper {
     public FoodItem toEntity(FoodItemInputDTO inputDTO) {
         return Optional.ofNullable(inputDTO)
                 .map(dto -> {
-                    FoodItem foodItem = new FoodItem(dto.getName(), dto.getPortionDescription(), dto.getGramWeight());
+                    FoodItem foodItem = new FoodItem(dto.getName(),dto.getFdcId(), dto.getPortionDescription(), dto.getGramWeight());
                     List<NutrientInfo> nutrients = dto.getNutrients() != null ?
                             dto.getNutrients().stream()
                                     .map(n -> new NutrientInfo(n.getNutrientName(), n.getValue(), n.getUnitName(), n.getNutrientId()))
@@ -51,6 +51,7 @@ public class FoodItemMapper {
         return new FoodItemDTO(
                 foodItem.getId(),
                 foodItem.getName(),
+                foodItem.getFdcId(),
                 foodItem.getNutrients() != null ?
                         foodItem.getNutrients().stream()
                                 .map(n -> new NutrientInfoDTO(n.getNutrientName(), n.getValue(), n.getUnitName(), n.getNutrientId()))

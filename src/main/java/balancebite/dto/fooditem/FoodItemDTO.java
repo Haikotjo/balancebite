@@ -21,6 +21,11 @@ public class FoodItemDTO {
     private final String name;
 
     /**
+     * The FDC (FoodData Central) ID associated with the food item.
+     */
+    private final int fdcId;
+
+    /**
      * List of nutrients associated with the food item.
      */
     private final List<NutrientInfoDTO> nutrients;
@@ -40,14 +45,16 @@ public class FoodItemDTO {
      *
      * @param id The unique identifier of the food item.
      * @param name The name of the food item.
+     * @param fdcId The FDC ID of the food item.
      * @param nutrients The list of nutrients associated with the food item.
      * @param portionDescription The description of the portion.
      * @param gramWeight The gram weight of the portion.
      */
-    public FoodItemDTO(Long id, String name, List<NutrientInfoDTO> nutrients, String portionDescription, double gramWeight) {
+    public FoodItemDTO(Long id, String name, int fdcId, List<NutrientInfoDTO> nutrients, String portionDescription, double gramWeight) {
         this.id = id;
         this.name = name;
-        this.nutrients = (nutrients != null) ? List.copyOf(nutrients) : List.of();  // Gebruik een niet-wijzigbare lijst
+        this.fdcId = fdcId;
+        this.nutrients = (nutrients != null) ? List.copyOf(nutrients) : List.of();  // Use an unmodifiable list
         this.portionDescription = portionDescription;
         this.gramWeight = gramWeight;
     }
@@ -73,12 +80,21 @@ public class FoodItemDTO {
     }
 
     /**
+     * Gets the FDC ID of the food item.
+     *
+     * @return The FDC ID of the food item.
+     */
+    public int getFdcId() {
+        return fdcId;
+    }
+
+    /**
      * Gets the list of nutrients associated with the food item.
      *
      * @return An unmodifiable list of nutrients.
      */
     public List<NutrientInfoDTO> getNutrients() {
-        return List.copyOf(nutrients);  // Zorg ervoor dat de lijst niet gemuteerd kan worden buiten deze DTO
+        return List.copyOf(nutrients);  // Ensure the list cannot be mutated outside this DTO
     }
 
     /**

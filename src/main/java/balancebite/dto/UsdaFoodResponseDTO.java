@@ -27,6 +27,12 @@ public class UsdaFoodResponseDTO {
      */
     private List<FoodPortionDTO> foodPortions;
 
+    /**
+     * The unique FDC ID of the food item.
+     */
+    @JsonProperty("fdcId")
+    private int fdcId;
+
     // Getters and Setters
 
     /**
@@ -45,6 +51,24 @@ public class UsdaFoodResponseDTO {
      */
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    /**
+     * Gets the unique FDC ID of the food item.
+     *
+     * @return The FDC ID of the food item.
+     */
+    public int getFdcId() {
+        return fdcId;
+    }
+
+    /**
+     * Sets the unique FDC ID of the food item.
+     *
+     * @param fdcId The FDC ID of the food item.
+     */
+    public void setFdcId(int fdcId) {
+        this.fdcId = fdcId;
     }
 
     /**

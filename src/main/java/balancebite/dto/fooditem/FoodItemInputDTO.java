@@ -19,6 +19,14 @@ public class FoodItemInputDTO {
     private String name;
 
     /**
+     * The FDC (FoodData Central) ID associated with the food item.
+     * Must be greater than zero.
+     */
+    @NotNull(message = "The FDC ID must be provided.")
+    @Positive(message = "The FDC ID must be a positive integer.")
+    private int fdcId;
+
+    /**
      * List of nutrients associated with the food item.
      * Cannot be null.
      */
@@ -38,7 +46,7 @@ public class FoodItemInputDTO {
     @PositiveOrZero(message = "The gram weight must be greater than or equal to zero.")
     private Double gramWeight;
 
-    // Constructor, getters and setters
+    // Constructor, getters, and setters
 
     public FoodItemInputDTO() {
     }
@@ -49,6 +57,14 @@ public class FoodItemInputDTO {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public int getFdcId() {
+        return fdcId;
+    }
+
+    public void setFdcId(int fdcId) {
+        this.fdcId = fdcId;
     }
 
     public List<NutrientInfoDTO> getNutrients() {

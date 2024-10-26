@@ -14,13 +14,13 @@ import java.util.List;
  */
 public interface FoodItemRepository extends JpaRepository<FoodItem, Long> {
 
-    /**
-     * Finds a list of FoodItems by name, ignoring case.
-     *
-     * @param name The name to search for.
-     * @return A list of FoodItems that contain the specified name.
-     */
-    List<FoodItem> findByNameContainingIgnoreCase(String name);
+//    /**
+//     * Finds a list of FoodItems by name, ignoring case.
+//     *
+//     * @param name The name to search for.
+//     * @return A list of FoodItems that contain the specified name.
+//     */
+//    List<FoodItem> findByNameContainingIgnoreCase(String name);
 
     /**
      * Checks if a FoodItem with the specified name exists.
@@ -29,4 +29,13 @@ public interface FoodItemRepository extends JpaRepository<FoodItem, Long> {
      * @return True if a FoodItem with the specified name exists, false otherwise.
      */
     boolean existsByName(String name);
+
+    /**
+     * Checks if a FoodItem with the specified FDC ID exists.
+     *
+     * @param fdcId The FDC ID to check for.
+     * @return True if a FoodItem with the specified FDC ID exists, false otherwise.
+     */
+    boolean existsByFdcId(int fdcId);
+
 }

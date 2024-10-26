@@ -55,26 +55,36 @@ public class FoodItemService implements IFoodItemService {
     @Cacheable(value = "foodItemCache", key = "#fdcId")
     public void fetchAndSaveFoodItem(String fdcId) {
         log.info("Fetching food item with FDC ID: {}", fdcId);
+
+        // Convert the FDC ID from String to Integer.
+        int fdcIdInt = Integer.parseInt(fdcId);
+
+        // Check if the FoodItem with the given FDC ID already exists.
+        if (foodItemRepository.existsByFdcId(fdcIdInt)) {
+            log.warn("Food item already exists with FDC ID: {}", fdcIdInt);
+            throw new EntityAlreadyExistsException("Food item already exists with FDC ID: " + fdcIdInt);
+        }
+
+        // Fetch the food data from the USDA API.
         UsdaFoodResponseDTO response = usdaApiService.getFoodData(fdcId);
 
+        // Validate the response.
         if (response != null && response.getFoodNutrients() != null) {
             String description = response.getDescription();
 
             if (description != null && !description.isEmpty()) {
-                if (foodItemRepository.existsByName(description)) {
-                    log.warn("Food item already exists with name: {}", description);
-                    throw new EntityAlreadyExistsException("Food item already exists with name: " + description);
-                }
-
+                // Convert the USDA response to a FoodItem entity and save it.
                 FoodItem foodItem = balancebite.utils.FoodItemUtil.convertToFoodItem(response);
+                foodItem.setFdcId(fdcIdInt); // Set the FDC ID.
                 foodItemRepository.save(foodItem);
-                log.info("Successfully saved food item with name: {}", description);
+
+                log.info("Successfully saved food item with name: {} and FDC ID: {}", description, fdcIdInt);
             } else {
                 log.error("Invalid food description received from USDA API");
                 throw new IllegalArgumentException("Invalid food description received from USDA API");
             }
         } else {
-            log.error("Invalid response received from USDA API for FDC ID: {}", fdcId);
+            log.error("Invalid response received from USDA API for FDC ID: {}", fdcIdInt);
             throw new IllegalArgumentException("Invalid response received from USDA API");
         }
     }
@@ -90,19 +100,30 @@ public class FoodItemService implements IFoodItemService {
     @Async
     public CompletableFuture<Void> fetchAndSaveAllFoodItems(List<String> fdcIds) {
         log.info("Fetching multiple food items with FDC IDs: {}", fdcIds);
+
+        // Filter out FDC IDs that already exist in the database
+        List<String> newFdcIds = fdcIds.stream()
+                .filter(fdcId -> !foodItemRepository.existsByFdcId(Integer.parseInt(fdcId)))
+                .collect(Collectors.toList());
+
+        if (newFdcIds.isEmpty()) {
+            log.info("All provided FDC IDs already exist in the database. No API calls needed.");
+            return CompletableFuture.completedFuture(null);
+        }
+
+        List<UsdaFoodResponseDTO> responses = usdaApiService.getMultipleFoodData(newFdcIds);
         List<String> successfullySavedIds = new ArrayList<>();
-        List<UsdaFoodResponseDTO> responses = usdaApiService.getMultipleFoodData(fdcIds);
 
         responses.stream()
                 .filter(response -> response.getFoodNutrients() != null && response.getDescription() != null && !response.getDescription().isEmpty())
                 .forEach(response -> {
-                    if (!foodItemRepository.existsByName(response.getDescription())) {
+                    if (!foodItemRepository.existsByFdcId(response.getFdcId())) {
                         FoodItem foodItem = balancebite.utils.FoodItemUtil.convertToFoodItem(response);
                         foodItemRepository.save(foodItem);
                         successfullySavedIds.add(response.getDescription());
                         log.info("Successfully saved food item with name: {}", response.getDescription());
                     } else {
-                        log.warn("Food item with name {} already exists, skipping save.", response.getDescription());
+                        log.warn("Food item with FDC ID {} already exists, skipping save.", response.getFdcId());
                     }
                 });
 

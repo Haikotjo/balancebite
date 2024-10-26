@@ -42,6 +42,7 @@ public class FoodItemUtil {
 // Create the FoodItem entity using the data from the response
         FoodItem foodItem = new FoodItem(
                 response.getDescription(), // The name/description of the food item
+                response.getFdcId(), // The FDC ID from the response
                 portionDescription, // Description of the portion size (e.g., "1 cup")
                 gramWeight // Weight of the portion in grams
         );

@@ -25,6 +25,12 @@ public class FoodItem {
     private String name;
 
     /**
+     * The FDC (FoodData Central) ID associated with the food item.
+     * This ID is used to uniquely identify food items in the USDA database.
+     */
+    private int fdcId;
+
+    /**
      * List of nutrients associated with the food item.
      * This list is stored in the "food_item_nutrients" table with a foreign key reference to this FoodItem.
      */
@@ -55,14 +61,16 @@ public class FoodItem {
     public FoodItem() {}
 
     /**
-     * Constructor to initialize a FoodItem with a name, list of nutrients, portion description, and gram weight.
+     * Constructor to initialize a FoodItem with a name, FDC ID, portion description, and gram weight.
      *
      * @param name The name of the food item.
+     * @param fdcId The FDC ID associated with the food item.
      * @param portionDescription The description of the portion.
      * @param gramWeight The gram weight of the portion.
      */
-    public FoodItem(String name, String portionDescription, double gramWeight) {
+    public FoodItem(String name, int fdcId, String portionDescription, double gramWeight) {
         this.name = name;
+        this.fdcId = fdcId;
         this.portionDescription = portionDescription;
         this.gramWeight = gramWeight;
     }
@@ -94,6 +102,24 @@ public class FoodItem {
      */
     public void setName(String name) {
         this.name = name;
+    }
+
+    /**
+     * Gets the FDC ID of the food item.
+     *
+     * @return The FDC ID.
+     */
+    public int getFdcId() {
+        return fdcId;
+    }
+
+    /**
+     * Sets the FDC ID of the food item.
+     *
+     * @param fdcId The new FDC ID.
+     */
+    public void setFdcId(int fdcId) {
+        this.fdcId = fdcId;
     }
 
     /**
