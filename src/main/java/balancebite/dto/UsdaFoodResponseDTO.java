@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Data Transfer Object (DTO) for deserializing the response from the USDA FoodData Central API.
@@ -32,6 +33,37 @@ public class UsdaFoodResponseDTO {
      */
     @JsonProperty("fdcId")
     private int fdcId;
+
+    // Define the list of nutrient names to include in the filtering.
+    private static final List<String> NUTRIENT_NAMES = List.of(
+            "Energy kcal", "Protein", "Total lipid (fat)", "Carbohydrates",
+            "Carbohydrate, by difference", "Fiber, total dietary", "Total Sugars",
+            "Fatty acids, total saturated", "Fatty acids, total monounsaturated",
+            "Fatty acids, total polyunsaturated", "Fatty acids, total trans"
+            // Uncomment the following lines if you wish to include them later:
+            // "Calcium, Ca", "Iron, Fe", "Magnesium, Mg", "Phosphorus, P",
+            // "Potassium, K", "Sodium, Na", "Zinc, Zn", "Vitamin C, total ascorbic acid",
+            // "Vitamin D (D2 + D3)", "Vitamin B-12", "Vitamin A, RAE", "Vitamin E (alpha-tocopherol)"
+            // "Copper, Cu", "Manganese, Mn", "Selenium, Se",
+            // "Thiamin", "Riboflavin", "Niacin", "Pantothenic acid", "Vitamin B-6",
+            // "Folate, total", "Folic acid", "Folate, food", "Folate, DFE",
+            // "Choline, total", "Vitamin B-12, added", "Vitamin A, IU",
+            // "Retinol", "Carotene, beta", "Carotene, alpha",
+            // "Cryptoxanthin, beta", "Lycopene", "Lutein + zeaxanthin",
+            // "Vitamin E, added", "Vitamin D (D2 + D3), International Units",
+            // "Vitamin K (phylloquinone)", "Vitamin K (Dihydrophylloquinone)",
+            // "SFA 4:0", "SFA 6:0", "SFA 8:0", "SFA 10:0", "SFA 12:0",
+            // "SFA 14:0", "SFA 16:0", "SFA 18:0", "MUFA 16:1", "MUFA 18:1",
+            // "MUFA 20:1", "MUFA 22:1", "PUFA 18:2", "PUFA 18:3", "PUFA 18:4",
+            // "PUFA 20:4", "PUFA 20:5 n-3 (EPA)", "PUFA 22:5 n-3 (DPA)",
+            // "PUFA 22:6 n-3 (DHA)", "Cholesterol", "Alcohol, ethyl", "Caffeine",
+            // "Theobromine", "Sucrose", "Glucose", "Fructose", "Lactose",
+            // "Maltose", "Galactose", "Starch", "Betaine", "Tocopherol, beta",
+            // "Tocopherol, gamma", "Tocopherol, delta", "Tocotrienol, alpha",
+            // "Tocotrienol, beta", "Tocotrienol, gamma", "Tocotrienol, delta",
+            // "SFA 15:0", "SFA 17:0", "SFA 20:0", "SFA 22:0", "SFA 24:0",
+            // "MUFA 14:1", "Fluoride, F", "Phytosterols"
+    );
 
     // Getters and Setters
 
@@ -72,12 +104,17 @@ public class UsdaFoodResponseDTO {
     }
 
     /**
-     * Gets the list of nutrients associated with the food item.
+     * Gets the list of nutrients associated with the food item after filtering.
      *
-     * @return The list of FoodNutrientDTO representing the nutrients.
+     * @return The list of filtered FoodNutrientDTO representing the nutrients.
      */
     public List<FoodNutrientDTO> getFoodNutrients() {
-        return foodNutrients != null ? foodNutrients : List.of();
+        // Apply filtering based on nutrient name.
+        return foodNutrients != null
+                ? foodNutrients.stream()
+                .filter(nutrient -> NUTRIENT_NAMES.contains(nutrient.getNutrient().getName()))
+                .collect(Collectors.toList())
+                : List.of();
     }
 
     /**
@@ -307,10 +344,9 @@ public class UsdaFoodResponseDTO {
         /**
          * Sets the measure unit details of the portion.
          *
-         * @param measureUnit The MeasureUnitDTO representing the measure unit details.
-         */
-        public void setMeasureUnit(MeasureUnitDTO measureUnit) {
-            this.measureUnit = measureUnit;
+         * @... {
+
+        this.measureUnit = measureUnit;
         }
 
         /**
@@ -351,12 +387,6 @@ public class UsdaFoodResponseDTO {
         public String getName() {
             return name != null ? name : "";
         }
-
-        /**
-         * Sets the name of the measurement unit.
-         *
-         * @param name The name
-
 
         /**
          * Sets the name of the measurement unit.

@@ -56,7 +56,7 @@ public class RecommendedDailyIntake {
         addNutrient("Carbohydrate, by difference", 130.0);
         addNutrient("Fiber, total dietary", 38.0);
         addNutrient("Total Sugars", 50.0);
-        addNutrient("Ash", null);
+//        addNutrient("Ash", null);
 
         // Minerals
 //        addNutrient("Calcium, Ca", 1300.0);
