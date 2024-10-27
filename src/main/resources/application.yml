@@ -16,6 +16,15 @@ spring:
     show-sql: true
     generate-ddl: true
     hibernate:
+      # IMPORTANT: The 'ddl-auto' setting determines how Hibernate handles the database schema on startup.
+      # Options:
+      # - create: Drops and recreates the database schema each time the application starts.
+      #           WARNING: This will delete all existing data on every restart.
+      #           Use this only for testing or development where data persistence is not required.
+      # - update: Updates the existing schema without dropping tables, preserving data between restarts.
+      #           Recommended for development if you need to keep existing data.
+      # - none: Disables schema management, retaining all data and schema as is.
+      # - create-drop: Creates schema at startup but drops it when the application stops.
       ddl-auto: create
     defer-datasource-initialization: true
     properties:

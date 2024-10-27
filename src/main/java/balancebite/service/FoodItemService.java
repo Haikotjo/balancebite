@@ -101,10 +101,13 @@ public class FoodItemService implements IFoodItemService {
     public CompletableFuture<Void> fetchAndSaveAllFoodItems(List<String> fdcIds) {
         log.info("Fetching multiple food items with FDC IDs: {}", fdcIds);
 
-        // Filter out FDC IDs that already exist in the database
+        // Trim spaces and filter out FDC IDs that already exist in the database.
         List<String> newFdcIds = fdcIds.stream()
+                .map(String::trim)  // Trim leading and trailing spaces
                 .filter(fdcId -> !foodItemRepository.existsByFdcId(Integer.parseInt(fdcId)))
                 .collect(Collectors.toList());
+
+        log.info("Found {} new FDC IDs that are not in the database yet: {}", newFdcIds.size(), newFdcIds);
 
         if (newFdcIds.isEmpty()) {
             log.info("All provided FDC IDs already exist in the database. No API calls needed.");
@@ -121,11 +124,13 @@ public class FoodItemService implements IFoodItemService {
                         FoodItem foodItem = balancebite.utils.FoodItemUtil.convertToFoodItem(response);
                         foodItemRepository.save(foodItem);
                         successfullySavedIds.add(response.getDescription());
-                        log.info("Successfully saved food item with name: {}", response.getDescription());
+                        log.info("Successfully saved food item with name: {} and FDC ID: {}", response.getDescription(), response.getFdcId());
                     } else {
                         log.warn("Food item with FDC ID {} already exists, skipping save.", response.getFdcId());
                     }
                 });
+
+        log.info("Total food items successfully saved: {}", successfullySavedIds.size());
 
         if (successfullySavedIds.isEmpty()) {
             log.error("No food items were fetched and saved.");
