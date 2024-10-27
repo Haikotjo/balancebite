@@ -36,8 +36,7 @@ public class UsdaFoodResponseDTO {
 
     // Define the list of nutrient names to include in the filtering.
     private static final List<String> NUTRIENT_NAMES = List.of(
-            "Energy kcal", "Protein", "Total lipid (fat)", "Carbohydrates",
-            "Carbohydrate, by difference", "Fiber, total dietary", "Total Sugars",
+            "Energy kcal", "Protein", "Total lipid (fat)", "Carbohydrates", "Fiber, total dietary", "Total Sugars",
             "Fatty acids, total saturated", "Fatty acids, total monounsaturated",
             "Fatty acids, total polyunsaturated", "Fatty acids, total trans"
             // Uncomment the following lines if you wish to include them later:
@@ -104,14 +103,41 @@ public class UsdaFoodResponseDTO {
     }
 
     /**
-     * Gets the list of nutrients associated with the food item after filtering.
+     * Retrieves the list of nutrients associated with the food item,
+     * applying filtering and normalization for consistency.
      *
-     * @return The list of filtered FoodNutrientDTO representing the nutrients.
+     * This method checks if a nutrient named "Carbohydrates" is present
+     * with a value greater than zero. If not, it will look for
+     * "Carbohydrate, by difference" and use its value while keeping only the name "Carbohydrates".
+     *
+     * After renaming, the method filters the nutrients based on a predefined
+     * list of nutrient names to keep only those of interest.
+     *
+     * @return The list of filtered FoodNutrientDTO objects, with only "Carbohydrates"
+     *         as the final name if applicable.
      */
     public List<FoodNutrientDTO> getFoodNutrients() {
-        // Apply filtering based on nutrient name.
+        // Controleer of "Carbohydrates" aanwezig is en een waarde heeft die niet null of 0 is.
+        boolean hasValidCarbohydrates = foodNutrients != null && foodNutrients.stream()
+                .anyMatch(nutrient ->
+                        "Carbohydrates".equals(nutrient.getNutrient().getName())
+                                && nutrient.getAmount() > 0);
+
+        // Normaliseer de lijst: hernoem en verwijder ongewenste entries.
         return foodNutrients != null
                 ? foodNutrients.stream()
+                .map(nutrient -> {
+                    // Alleen als er geen geldige "Carbohydrates" is, "Carbohydrate, by difference" hernoemen.
+                    if (!hasValidCarbohydrates && "Carbohydrate, by difference".equals(nutrient.getNutrient().getName())) {
+                        nutrient.getNutrient().setName("Carbohydrates");
+                    }
+                    return nutrient;
+                })
+                // Verwijder duplicaten: behoud alleen één "Carbohydrates".
+                .filter(nutrient ->
+                        !"Carbohydrate, by difference".equals(nutrient.getNutrient().getName())
+                                && (!"Carbohydrates".equals(nutrient.getNutrient().getName())
+                                || hasValidCarbohydrates && nutrient.getAmount() > 0))
                 .filter(nutrient -> NUTRIENT_NAMES.contains(nutrient.getNutrient().getName()))
                 .collect(Collectors.toList())
                 : List.of();
