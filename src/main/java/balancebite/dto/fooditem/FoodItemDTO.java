@@ -2,11 +2,13 @@ package balancebite.dto.fooditem;
 
 import balancebite.dto.NutrientInfoDTO;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
  * Data Transfer Object (DTO) representing a FoodItem.
  * This DTO is used to transfer food item data between layers of the application.
+ * It calculates combined fat values for easier data handling.
  */
 public class FoodItemDTO {
 
@@ -42,6 +44,7 @@ public class FoodItemDTO {
 
     /**
      * Parameterized constructor to create a FoodItemDTO.
+     * Calculates the combined values for healthy and unhealthy fats.
      *
      * @param id The unique identifier of the food item.
      * @param name The name of the food item.
@@ -54,9 +57,59 @@ public class FoodItemDTO {
         this.id = id;
         this.name = name;
         this.fdcId = fdcId;
-        this.nutrients = (nutrients != null) ? List.copyOf(nutrients) : List.of();  // Use an unmodifiable list
+        this.nutrients = processNutrients(nutrients);
         this.portionDescription = portionDescription;
         this.gramWeight = gramWeight;
+    }
+
+    /**
+     * Processes the nutrients list to combine values of healthy and unhealthy fats.
+     * Adds new entries for "Mono- and Polyunsaturated fats" and "Saturated and Trans fats".
+     *
+     * @param nutrients The original list of nutrients.
+     * @return A list of nutrients with combined fat values.
+     */
+    private List<NutrientInfoDTO> processNutrients(List<NutrientInfoDTO> nutrients) {
+        double totalHealthyFats = 0.0;
+        double totalUnhealthyFats = 0.0;
+
+        // Create a copy of the nutrient list to modify.
+        List<NutrientInfoDTO> updatedNutrients = new ArrayList<>(nutrients);
+
+        // Calculate the sum of healthy and unhealthy fats.
+        for (NutrientInfoDTO nutrient : nutrients) {
+            switch (nutrient.getNutrientName()) {
+                case "Fatty acids, total monounsaturated":
+                case "Fatty acids, total polyunsaturated":
+                    totalHealthyFats += nutrient.getValue();
+                    break;
+                case "Fatty acids, total saturated":
+                case "Fatty acids, total trans":
+                    totalUnhealthyFats += nutrient.getValue();
+                    break;
+                default:
+                    // No action needed for other nutrients.
+                    break;
+            }
+        }
+
+        // Remove individual fat entries from the nutrient list.
+        updatedNutrients.removeIf(nutrient ->
+                nutrient.getNutrientName().equals("Fatty acids, total monounsaturated") ||
+                        nutrient.getNutrientName().equals("Fatty acids, total polyunsaturated") ||
+                        nutrient.getNutrientName().equals("Fatty acids, total saturated") ||
+                        nutrient.getNutrientName().equals("Fatty acids, total trans")
+        );
+
+        // Add combined entries if their values are greater than zero.
+        if (totalHealthyFats > 0) {
+            updatedNutrients.add(new NutrientInfoDTO("Mono- and Polyunsaturated fats", totalHealthyFats, "g"));
+        }
+        if (totalUnhealthyFats > 0) {
+            updatedNutrients.add(new NutrientInfoDTO("Saturated and Trans fats", totalUnhealthyFats, "g"));
+        }
+
+        return List.copyOf(updatedNutrients);
     }
 
     // Getters only (no setters)
