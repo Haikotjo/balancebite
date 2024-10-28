@@ -1,6 +1,10 @@
 package balancebite.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,6 +32,11 @@ public class Meal {
      * Name of the meal.
      */
     private String name;
+
+    /**
+     * Description of the meal.
+     */
+    private String mealDescription;
 
     /**
      * List of meal ingredients associated with the meal.
@@ -61,12 +70,14 @@ public class Meal {
     public Meal() {}
 
     /**
-     * Constructor to initialize a Meal with a name.
+     * Constructor to initialize a Meal with a name and description.
      *
      * @param name the name of the meal.
+     * @param mealDescription the description of the meal.
      */
-    public Meal(String name) {
+    public Meal(String name, String mealDescription) {
         this.name = name;
+        this.mealDescription = mealDescription;
     }
 
     /**
@@ -94,6 +105,24 @@ public class Meal {
      */
     public void setName(String name) {
         this.name = name;
+    }
+
+    /**
+     * Gets the description of the meal.
+     *
+     * @return the description of the meal.
+     */
+    public String getMealDescription() {
+        return mealDescription;
+    }
+
+    /**
+     * Sets the description of the meal.
+     *
+     * @param mealDescription the description of the meal.
+     */
+    public void setMealDescription(String mealDescription) {
+        this.mealDescription = mealDescription;
     }
 
     /**

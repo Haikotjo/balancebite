@@ -2,6 +2,7 @@ package balancebite.dto.meal;
 
 import balancebite.dto.mealingredient.MealIngredientInputDTO;
 import balancebite.dto.user.UserDTO;  // Import UserDTO
+import jakarta.persistence.Column;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
@@ -18,12 +19,20 @@ public class MealInputDTO {
     @NotBlank(message = "The name of the meal cannot be blank. Please provide a valid name.")
     private String name;
 
+    @NotEmpty(message = "The meal must contain at least one ingredient. Please provide a list of ingredients.")
+    @Valid
     private List<MealIngredientInputDTO> mealIngredients;
 
+    // Optional description of the meal.
+    @Column(length = 1000)
+    private String mealDescription;
+
     // List of users to associate with the meal (optional, depending on use case)
+    @Valid
     private List<UserDTO> users;
 
     // The user who created this meal (optional)
+    @Valid
     private UserDTO createdBy;
 
     /**
@@ -36,12 +45,14 @@ public class MealInputDTO {
      *
      * @param name             the name of the meal.
      * @param mealIngredients  the list of ingredients that make up the meal.
+     * @param mealDescription  the description of the meal (optional).
      * @param users            the list of users associated with the meal (if applicable).
      * @param createdBy        the user who created the meal (if applicable).
      */
-    public MealInputDTO(String name, List<MealIngredientInputDTO> mealIngredients, List<UserDTO> users, UserDTO createdBy) {
+    public MealInputDTO(String name, List<MealIngredientInputDTO> mealIngredients, String mealDescription, List<UserDTO> users, UserDTO createdBy) {
         this.name = name;
         this.mealIngredients = mealIngredients;
+        this.mealDescription = mealDescription;
         this.users = users;
         this.createdBy = createdBy;
     }
@@ -64,6 +75,15 @@ public class MealInputDTO {
      */
     public List<MealIngredientInputDTO> getMealIngredients() {
         return mealIngredients;
+    }
+
+    /**
+     * Gets the description of the meal.
+     *
+     * @return the description of the meal.
+     */
+    public String getMealDescription() {
+        return mealDescription;
     }
 
     /**
@@ -104,6 +124,15 @@ public class MealInputDTO {
     @Valid
     public void setMealIngredients(List<MealIngredientInputDTO> mealIngredients) {
         this.mealIngredients = mealIngredients;
+    }
+
+    /**
+     * Sets the description of the meal.
+     *
+     * @param mealDescription the description of the meal.
+     */
+    public void setMealDescription(String mealDescription) {
+        this.mealDescription = mealDescription;
     }
 
     /**

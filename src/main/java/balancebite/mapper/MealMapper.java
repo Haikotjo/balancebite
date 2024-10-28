@@ -48,6 +48,7 @@ public class MealMapper {
         return new MealDTO(
                 meal.getId(),
                 meal.getName(),
+                meal.getMealDescription(),  // Include meal description in the DTO
                 meal.getMealIngredients().stream()
                         .map(this::toMealIngredientDTO)
                         .collect(Collectors.toList()),
@@ -70,6 +71,7 @@ public class MealMapper {
                 .map(dto -> {
                     Meal meal = new Meal();
                     meal.setName(dto.getName());
+                    meal.setMealDescription(dto.getMealDescription());  // Set the description from the DTO
                     List<MealIngredient> mealIngredients = dto.getMealIngredients().stream()
                             .map(input -> mealIngredientMapper.toEntity(input, meal))
                             .collect(Collectors.toList());
@@ -111,14 +113,13 @@ public class MealMapper {
         MealIngredient ingredient = new MealIngredient();
         ingredient.setQuantity(inputDTO.getQuantity());
 
-        // Voeg deze regel toe om de FoodItem te koppelen aan het MealIngredient
+        // Retrieve and set the FoodItem for the MealIngredient
         FoodItem foodItem = foodItemRepository.findById(inputDTO.getFoodItemId())
                 .orElseThrow(() -> new InvalidFoodItemException("Invalid food item ID: " + inputDTO.getFoodItemId()));
         ingredient.setFoodItem(foodItem);
 
         return ingredient;
     }
-
 
     /**
      * Converts a User entity to a UserDTO.
