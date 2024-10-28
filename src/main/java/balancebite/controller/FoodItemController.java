@@ -1,5 +1,6 @@
 package balancebite.controller;
 
+import balancebite.dto.UsdaFoodResponseDTO;
 import balancebite.dto.fooditem.FoodItemDTO;
 import balancebite.errorHandling.EntityAlreadyExistsException;
 import balancebite.errorHandling.EntityNotFoundException;
@@ -38,15 +39,22 @@ public class FoodItemController {
      * Calls the FoodItemService to retrieve and save the food item.
      *
      * @param fdcId The FDC ID of the food item to fetch.
-     * @return A ResponseEntity with a success or error message, either CREATED (201) or CONFLICT (409) if the item already exists.
+     * @return A ResponseEntity with details of the saved food item or an error message.
      */
     @GetMapping("/fetch/{fdcId:[0-9]+}")
     public ResponseEntity<?> fetchFoodItem(@PathVariable String fdcId) {
         log.info("Fetching food item with FDC ID: {}", fdcId);
         try {
-            foodItemService.fetchAndSaveFoodItem(fdcId);
+            UsdaFoodResponseDTO response = foodItemService.fetchAndSaveFoodItem(fdcId);
             log.info("Successfully fetched and saved food item with FDC ID: {}", fdcId);
-            return ResponseEntity.status(HttpStatus.CREATED).body("Food item fetched and saved successfully");
+
+            // Create a response with details of the saved item.
+            Map<String, String> responseBody = Map.of(
+                    "message", "Food item fetched and saved successfully",
+                    "fdcId", String.valueOf(response.getFdcId()),
+                    "name", response.getDescription()
+            );
+            return ResponseEntity.status(HttpStatus.CREATED).body(responseBody);
         } catch (EntityAlreadyExistsException e) {
             log.warn("Food item already exists with FDC ID: {}", fdcId);
             return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", e.getMessage()));
@@ -55,6 +63,7 @@ public class FoodItemController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "An unexpected error occurred."));
         }
     }
+
 
     /**
      * Endpoint to fetch and save multiple FoodItems by a list of FDC IDs.

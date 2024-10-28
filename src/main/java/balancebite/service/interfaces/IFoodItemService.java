@@ -1,5 +1,6 @@
 package balancebite.service.interfaces;
 
+import balancebite.dto.UsdaFoodResponseDTO;
 import balancebite.dto.fooditem.FoodItemDTO;
 import balancebite.errorHandling.EntityAlreadyExistsException;
 import jakarta.persistence.EntityNotFoundException;
@@ -16,12 +17,15 @@ public interface IFoodItemService {
 
     /**
      * Fetches a single food item from the USDA API by its FDC ID and saves it.
+     * If the food item already exists in the database, it will not be added again.
      *
      * @param fdcId The FDC ID of the food item to fetch.
+     * @return The USDA API response DTO containing details of the fetched food item.
      * @throws EntityAlreadyExistsException if the food item already exists in the database.
-     * @throws IllegalArgumentException if the food description or response from the USDA API is invalid.
+     * @throws IllegalArgumentException if the USDA API response is invalid.
      */
-    void fetchAndSaveFoodItem(String fdcId);
+    UsdaFoodResponseDTO fetchAndSaveFoodItem(String fdcId);
+
 
     /**
      * Fetches multiple food items from the USDA API by a list of FDC IDs and saves them.

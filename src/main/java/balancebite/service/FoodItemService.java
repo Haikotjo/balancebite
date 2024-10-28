@@ -51,10 +51,13 @@ public class FoodItemService implements IFoodItemService {
      * If the food item already exists in the database, it will not be added again.
      *
      * @param fdcId The FDC ID of the food item to fetch.
+     * @return The USDA API response DTO containing details of the fetched food item.
+     * @throws EntityAlreadyExistsException if the food item already exists in the database.
+     * @throws IllegalArgumentException if the USDA API response is invalid.
      */
     @Override
     @Cacheable(value = "foodItemCache", key = "#fdcId")
-    public void fetchAndSaveFoodItem(String fdcId) {
+    public UsdaFoodResponseDTO fetchAndSaveFoodItem(String fdcId) {
         log.info("Fetching food item with FDC ID: {}", fdcId);
 
         // Convert the FDC ID from String to Integer.
@@ -82,6 +85,9 @@ public class FoodItemService implements IFoodItemService {
         foodItemRepository.save(foodItem);
 
         log.info("Successfully saved food item with name: {} and FDC ID: {}", response.getDescription(), fdcIdInt);
+
+        // Return the response DTO for further use.
+        return response;
     }
 
     /**
