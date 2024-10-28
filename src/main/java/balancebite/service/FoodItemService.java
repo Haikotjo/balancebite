@@ -9,6 +9,7 @@ import balancebite.model.FoodItem;
 import balancebite.repository.FoodItemRepository;
 import balancebite.service.interfaces.IFoodItemService;
 import balancebite.errorHandling.EntityNotFoundException;
+import balancebite.utils.FoodItemBulkFetchUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cache.annotation.Cacheable;
@@ -107,26 +108,15 @@ public class FoodItemService implements IFoodItemService {
         List<String> skippedItems = new ArrayList<>();
         List<String> invalidItems = new ArrayList<>();
 
-        // Filter out FDC IDs that already exist in the database
-        List<String> newFdcIds = fdcIds.stream()
-                .map(String::trim)
-                .filter(fdcId -> {
-                    if (foodItemRepository.existsByFdcId(Integer.parseInt(fdcId))) {
-                        skippedItems.add(fdcId);
-                        return false;
-                    }
-                    return true;
-                })
-                .collect(Collectors.toList());
+        // Filter out FDC IDs that already exist in the database using the utility method
+        List<String> newFdcIds = FoodItemBulkFetchUtil.filterExistingFdcIds(fdcIds, foodItemRepository, skippedItems);
 
-        // If all FDC IDs already exist, return a response directly
+        // If all FDC IDs already exist, return a response directly without making any API calls
         if (newFdcIds.isEmpty()) {
             log.info("All provided FDC IDs already exist in the database. No API calls needed.");
-            return CompletableFuture.completedFuture(Map.of(
-                    "message", "All provided FDC IDs already exist in the database.",
-                    "savedItems", savedItems,
-                    "skippedItems", skippedItems,
-                    "invalidItems", invalidItems
+            return CompletableFuture.completedFuture(FoodItemBulkFetchUtil.createResponse(
+                    "All provided FDC IDs already exist in the database.",
+                    savedItems, skippedItems, invalidItems
             ));
         }
 
@@ -135,15 +125,10 @@ public class FoodItemService implements IFoodItemService {
         try {
             responses = usdaApiService.getMultipleFoodData(newFdcIds);
         } catch (UsdaApiException e) {
-            // Add all FDC IDs to invalidItems if the API returns an error
-            log.debug("USDA API error for FDC IDs: {}. Adding to invalidItems.", newFdcIds, e);
-            invalidItems.addAll(newFdcIds);
-            return CompletableFuture.completedFuture(Map.of(
-                    "message", "An error occurred while processing some FDC IDs.",
-                    "savedItems", savedItems,
-                    "skippedItems", skippedItems,
-                    "invalidItems", invalidItems
-            ));
+            // Handle any errors from the USDA API and return a response with the affected FDC IDs marked as invalid
+            return CompletableFuture.completedFuture(
+                    FoodItemBulkFetchUtil.handleUsdaApiError(newFdcIds, savedItems, skippedItems, invalidItems, e)
+            );
         }
 
         // Track which FDC IDs received a valid response
@@ -151,37 +136,31 @@ public class FoodItemService implements IFoodItemService {
                 .map(response -> String.valueOf(response.getFdcId()))
                 .collect(Collectors.toSet());
 
-        // Add FDC IDs to 'invalidItems' if no valid response was received
+        // Add FDC IDs to 'invalidItems' if no valid response was received for them
         newFdcIds.stream()
                 .filter(fdcId -> !receivedFdcIds.contains(fdcId))
                 .forEach(invalidItems::add);
 
-        // Process the responses
+        // Process each response, saving valid items and marking invalid ones
         responses.forEach(response -> {
-            if (response == null || response.getFoodNutrients() == null || response.getDescription() == null || response.getDescription().isEmpty()) {
+            if (FoodItemBulkFetchUtil.isResponseInvalid(response)) {
+                // Add the FDC ID to invalidItems if the response is considered invalid
                 invalidItems.add(String.valueOf(response.getFdcId()));
             } else {
-                FoodItem foodItem = balancebite.utils.FoodItemUtil.convertToFoodItem(response);
-                foodItemRepository.save(foodItem);
-
-                Map<String, String> savedItem = new HashMap<>();
-                savedItem.put("fdcId", String.valueOf(response.getFdcId()));
-                savedItem.put("name", response.getDescription());
-                savedItems.add(savedItem);
-
-                log.info("Successfully saved food item with name: {} and FDC ID: {}", response.getDescription(), response.getFdcId());
+                // Save the valid response and add its details to the savedItems list
+                FoodItemBulkFetchUtil.processAndSaveResponse(response, foodItemRepository, savedItems);
             }
         });
 
+        // Log the summary of the operation
         log.info("Total food items successfully saved: {}", savedItems.size());
         log.info("Total skipped items: {}", skippedItems.size());
         log.info("Total invalid items: {}", invalidItems.size());
 
-        return CompletableFuture.completedFuture(Map.of(
-                "message", "Bulk food items fetched and processed.",
-                "savedItems", savedItems,
-                "skippedItems", skippedItems,
-                "invalidItems", invalidItems
+        // Return the final response containing all saved, skipped, and invalid items
+        return CompletableFuture.completedFuture(FoodItemBulkFetchUtil.createResponse(
+                "Bulk food items fetched and processed.",
+                savedItems, skippedItems, invalidItems
         ));
     }
 
