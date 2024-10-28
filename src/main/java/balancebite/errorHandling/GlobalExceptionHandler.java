@@ -3,8 +3,10 @@ package balancebite.errorHandling;
 import balancebite.service.user.UserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.orm.jpa.JpaObjectRetrievalFailureException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -142,4 +144,28 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", errorMessage));
     }
 
+
+    /**
+     * Handles data integrity violations such as constraint violations.
+     *
+     * @param ex The thrown {@link DataIntegrityViolationException}.
+     * @return A ResponseEntity indicating the conflict, with a CONFLICT status.
+     */
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<Map<String, String>> handleDataIntegrityViolationException(DataIntegrityViolationException ex) {
+        String errorMessage = "Data integrity violation: " + ex.getMostSpecificCause().getMessage();
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", errorMessage));
+    }
+
+    /**
+     * Handles errors related to retrieving objects from the database.
+     *
+     * @param ex The thrown {@link JpaObjectRetrievalFailureException}.
+     * @return A ResponseEntity indicating the entity retrieval failure, with a NOT_FOUND status.
+     */
+    @ExceptionHandler(JpaObjectRetrievalFailureException.class)
+    public ResponseEntity<Map<String, String>> handleJpaObjectRetrievalFailureException(JpaObjectRetrievalFailureException ex) {
+        String errorMessage = "Database retrieval error: " + ex.getMostSpecificCause().getMessage();
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", errorMessage));
+    }
 }

@@ -36,10 +36,11 @@ public class UsdaFoodResponseDTO {
 
     // Define the list of nutrient names to include in the filtering.
     private static final List<String> NUTRIENT_NAMES = List.of(
-            "Energy kcal", "Protein", "Total lipid (fat)", "Carbohydrates", "Fiber, total dietary", "Total Sugars",
+            "Energy kcal", "Protein", "Total lipid (fat)", "Carbohydrates", "Total Sugars",
             "Fatty acids, total saturated", "Fatty acids, total monounsaturated",
             "Fatty acids, total polyunsaturated", "Fatty acids, total trans"
             // Uncomment the following lines if you wish to include them later:
+            // "Fiber, total dietary",
             // "Calcium, Ca", "Iron, Fe", "Magnesium, Mg", "Phosphorus, P",
             // "Potassium, K", "Sodium, Na", "Zinc, Zn", "Vitamin C, total ascorbic acid",
             // "Vitamin D (D2 + D3)", "Vitamin B-12", "Vitamin A, RAE", "Vitamin E (alpha-tocopherol)"

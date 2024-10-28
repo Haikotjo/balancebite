@@ -61,16 +61,15 @@ public class FoodItemController {
      * Calls the FoodItemService to retrieve and save the food items asynchronously.
      *
      * @param fdcIds The list of FDC IDs of the food items to fetch.
-     * @return A CompletableFuture containing a ResponseEntity with a success or error message.
+     * @return A CompletableFuture containing a ResponseEntity with the list of saved items.
      */
     @PostMapping("/bulk-fetch-items")
-    public CompletableFuture<ResponseEntity<Map<String, String>>> fetchAllFoodItems(@RequestBody List<String> fdcIds) {
+    public CompletableFuture<ResponseEntity<Map<String, Object>>> fetchAllFoodItems(@RequestBody List<String> fdcIds) {
         log.info("Fetching multiple food items with FDC IDs: {}", fdcIds);
         return foodItemService.fetchAndSaveAllFoodItems(fdcIds)
-                .thenApply(voidResult -> {
+                .thenApply(result -> {
                     log.info("Bulk fetch and save completed for food items.");
-                    return ResponseEntity.status(HttpStatus.CREATED)
-                            .body(Map.of("message", "Bulk food items fetched and saved successfully"));
+                    return ResponseEntity.status(HttpStatus.CREATED).body(result);
                 })
                 .exceptionally(e -> {
                     log.error("Error during bulk fetch and save: {}", e.getMessage(), e);
@@ -124,17 +123,19 @@ public class FoodItemController {
      * @return A ResponseEntity indicating the result of the delete operation, either NO_CONTENT (204) if deleted or NOT_FOUND (404) if not found.
      */
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteFoodItemById(@PathVariable Long id) {
+    public ResponseEntity<Map<String, String>> deleteFoodItemById(@PathVariable Long id) {
         log.info("Deleting food item with ID: {}", id);
         try {
             foodItemService.deleteFoodItemById(id);
             return ResponseEntity.noContent().build();
         } catch (EntityNotFoundException e) {
             log.warn("Food item not found for deletion with ID: {}", id);
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", "Food item with ID " + id + " not found."));
         } catch (Exception e) {
             log.error("Unexpected error during deletion for food item ID: {}", id, e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "An unexpected error occurred."));
         }
     }
 }

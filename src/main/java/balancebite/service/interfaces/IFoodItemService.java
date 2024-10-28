@@ -5,6 +5,7 @@ import balancebite.errorHandling.EntityAlreadyExistsException;
 import jakarta.persistence.EntityNotFoundException;
 
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -29,7 +30,7 @@ public interface IFoodItemService {
      * @return A CompletableFuture indicating the completion of the operation.
      * @throws IllegalArgumentException if no valid food items were fetched.
      */
-    CompletableFuture<Void> fetchAndSaveAllFoodItems(List<String> fdcIds);
+    CompletableFuture<Map<String, Object>> fetchAndSaveAllFoodItems(List<String> fdcIds);
 
     /**
      * Retrieves a single FoodItem by its ID from the database.
