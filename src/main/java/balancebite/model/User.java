@@ -170,25 +170,23 @@ public class User {
     }
 
     /**
-     * Adds a meal to the user's set of meals.
-     * This method ensures consistency in the association between User and Meal.
+     * Adds a meal to the user's set of meals and increments the user count for the meal.
      *
      * @param meal the meal to be added
      */
     public void addMeal(Meal meal) {
         this.meals.add(meal);
-        meal.getUsers().add(this);
+        meal.incrementUserCount();
     }
 
     /**
-     * Removes a meal from the user's set of meals.
-     * This method ensures consistency in the association between User and Meal.
+     * Removes a meal from the user's set of meals and decrements the user count for the meal.
      *
      * @param meal the meal to be removed
      */
     public void removeMeal(Meal meal) {
         this.meals.remove(meal);
-        meal.getUsers().remove(this);
+        meal.decrementUserCount();
     }
 
     /**

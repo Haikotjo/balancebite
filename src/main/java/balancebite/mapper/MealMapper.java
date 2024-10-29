@@ -13,7 +13,6 @@ import balancebite.model.User;
 import balancebite.repository.FoodItemRepository;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -35,7 +34,7 @@ public class MealMapper {
 
     /**
      * Converts a Meal entity to a MealDTO.
-     * This includes converting the meal's ingredients, associated users, and the creator.
+     * This includes converting the meal's ingredients, user count, and the creator.
      *
      * @param meal the Meal entity to be converted.
      * @return the created MealDTO.
@@ -48,13 +47,11 @@ public class MealMapper {
         return new MealDTO(
                 meal.getId(),
                 meal.getName(),
-                meal.getMealDescription(),  // Include meal description in the DTO
+                meal.getMealDescription(),
                 meal.getMealIngredients().stream()
                         .map(this::toMealIngredientDTO)
                         .collect(Collectors.toList()),
-                meal.getUsers().stream()
-                        .map(this::toUserDTO)
-                        .collect(Collectors.toList()),
+                meal.getUserCount(), // userCount field instead of a list of users
                 meal.getCreatedBy() != null ? toUserDTO(meal.getCreatedBy()) : null
         );
     }
@@ -71,15 +68,15 @@ public class MealMapper {
                 .map(dto -> {
                     Meal meal = new Meal();
                     meal.setName(dto.getName());
-                    meal.setMealDescription(dto.getMealDescription());  // Set the description from the DTO
+                    meal.setMealDescription(dto.getMealDescription());
+
                     List<MealIngredient> mealIngredients = dto.getMealIngredients().stream()
                             .map(input -> mealIngredientMapper.toEntity(input, meal))
                             .collect(Collectors.toList());
                     mealIngredients.forEach(ingredient -> ingredient.setMeal(meal));
                     meal.addMealIngredients(mealIngredients);
-                    meal.setUsers(dto.getUsers() != null ? dto.getUsers().stream()
-                            .map(this::toUserEntity)
-                            .collect(Collectors.toList()) : new ArrayList<>());
+
+                    // Verwijderde setUserCount(0); lijn hier
 
                     meal.setCreatedBy(dto.getCreatedBy() != null ? toUserEntity(dto.getCreatedBy()) : null);
                     return meal;

@@ -97,10 +97,13 @@ public class MealService implements IMealService {
             Meal meal = mealMapper.toEntity(mealInputDTO);
             User user = userRepository.findById(userId)
                     .orElseThrow(() -> new EntityNotFoundException("User not found with ID: " + userId));
+
             meal.setCreatedBy(user);
-            meal.getUsers().add(user);
+            meal.incrementUserCount(); // Increment user count instead of adding to a user list
+
             Meal savedMeal = mealRepository.save(meal);
             log.info("Successfully created a new meal for user with ID: {}", userId);
+
             return mealMapper.toDTO(savedMeal);
         } catch (InvalidFoodItemException e) {
             log.error("Failed to create meal due to invalid food item: {}", e.getMessage());
@@ -113,6 +116,7 @@ public class MealService implements IMealService {
             throw new RuntimeException("An unexpected error occurred while creating the meal for user.");
         }
     }
+
 
     /**
      * Updates an existing Meal entity with new information.

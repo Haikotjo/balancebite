@@ -1,10 +1,6 @@
 package balancebite.model;
 
 import jakarta.persistence.*;
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotEmpty;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,9 +12,6 @@ import java.util.List;
 @Table(name = "meals")
 public class Meal {
 
-    private static final String USER_MEALS_TABLE = "user_meals";
-    private static final String MEAL_ID_COLUMN = "meal_id";
-    private static final String USER_ID_COLUMN = "user_id";
     private static final String CREATED_BY_USER_ID_COLUMN = "created_by_user_id";
 
     /**
@@ -46,16 +39,11 @@ public class Meal {
     private List<MealIngredient> mealIngredients = new ArrayList<>();
 
     /**
-     * Many-to-Many relationship with User.
-     * A meal can be associated with multiple users, and a user can have multiple meals.
+     * Count of users who have added this meal.
+     * This field tracks how many unique users have added this meal.
      */
-    @ManyToMany(fetch = FetchType.LAZY)
-    @JoinTable(
-            name = USER_MEALS_TABLE,  // Join table to link users and meals
-            joinColumns = @JoinColumn(name = MEAL_ID_COLUMN),  // Foreign key column in user_meals for meal
-            inverseJoinColumns = @JoinColumn(name = USER_ID_COLUMN)  // Foreign key column in user_meals for user
-    )
-    private List<User> users = new ArrayList<>();
+    @Column(name = "user_count", nullable = false)
+    private int userCount = 0;
 
     /**
      * The user who created this meal.
@@ -160,21 +148,28 @@ public class Meal {
     }
 
     /**
-     * Gets the list of users associated with the meal.
+     * Gets the user count for the meal.
      *
-     * @return the list of users associated with the meal.
+     * @return the count of users who have added this meal.
      */
-    public List<User> getUsers() {
-        return users;
+    public int getUserCount() {
+        return userCount;
     }
 
     /**
-     * Sets the list of users associated with the meal.
-     *
-     * @param users the list of users to associate with the meal.
+     * Increments the user count for this meal by 1.
      */
-    public void setUsers(List<User> users) {
-        this.users = users;
+    public void incrementUserCount() {
+        this.userCount++;
+    }
+
+    /**
+     * Decrements the user count for this meal by 1, ensuring it does not go below 0.
+     */
+    public void decrementUserCount() {
+        if (this.userCount > 0) {
+            this.userCount--;
+        }
     }
 
     /**

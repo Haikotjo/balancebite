@@ -24,13 +24,13 @@ VALUES ('Mieke White', 'miekewhite@example.com', 'password101', 'ADMIN');
 
 -- Voeg de maaltijden toe voor John Doe
 -- Ontbijt (Breakfast)
-INSERT INTO meals (name) VALUES ('Breakfast');
+INSERT INTO meals (name, user_count) VALUES ('Breakfast', 0);
 
 -- Lunch
-INSERT INTO meals (name) VALUES ('Lunch');
+INSERT INTO meals (name, user_count) VALUES ('Lunch', 0);
 
 -- Diner (Dinner)
-INSERT INTO meals (name) VALUES ('Dinner');
+INSERT INTO meals (name, user_count) VALUES ('Dinner', 0);
 
 -- Voeg de ingrediënten voor het ontbijt (Breakfast) toe
 -- Bananas, raw (126 grams)
@@ -65,13 +65,13 @@ INSERT INTO user_meals (user_id, meal_id) VALUES (1, 3); -- Diner
 
 -- Voeg de maaltijden toe voor Jane Smith
 -- Snack
-INSERT INTO meals (name) VALUES ('Snack');
+INSERT INTO meals (name, user_count) VALUES ('Snack', 0);
 
 -- Salad
-INSERT INTO meals (name) VALUES ('Salad');
+INSERT INTO meals (name, user_count) VALUES ('Salad', 0);
 
 -- Dinner Special
-INSERT INTO meals (name) VALUES ('Dinner Special');
+INSERT INTO meals (name, user_count) VALUES ('Dinner Special', 0);
 
 -- Voeg de ingrediënten voor de snack toe
 -- Apple, raw (1 medium = 182 grams)

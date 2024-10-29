@@ -27,10 +27,6 @@ public class MealInputDTO {
     @Column(length = 1000)
     private String mealDescription;
 
-    // List of users to associate with the meal (optional, depending on use case)
-    @Valid
-    private List<UserDTO> users;
-
     // The user who created this meal (optional)
     @Valid
     private UserDTO createdBy;
@@ -46,107 +42,47 @@ public class MealInputDTO {
      * @param name             the name of the meal.
      * @param mealIngredients  the list of ingredients that make up the meal.
      * @param mealDescription  the description of the meal (optional).
-     * @param users            the list of users associated with the meal (if applicable).
      * @param createdBy        the user who created the meal (if applicable).
      */
-    public MealInputDTO(String name, List<MealIngredientInputDTO> mealIngredients, String mealDescription, List<UserDTO> users, UserDTO createdBy) {
+    public MealInputDTO(String name, List<MealIngredientInputDTO> mealIngredients, String mealDescription, UserDTO createdBy) {
         this.name = name;
         this.mealIngredients = mealIngredients;
         this.mealDescription = mealDescription;
-        this.users = users;
         this.createdBy = createdBy;
     }
 
     // Getters
 
-    /**
-     * Gets the name of the meal.
-     *
-     * @return the name of the meal.
-     */
     public String getName() {
         return name;
     }
 
-    /**
-     * Gets the list of ingredients that make up the meal.
-     *
-     * @return the list of meal ingredients.
-     */
     public List<MealIngredientInputDTO> getMealIngredients() {
         return mealIngredients;
     }
 
-    /**
-     * Gets the description of the meal.
-     *
-     * @return the description of the meal.
-     */
     public String getMealDescription() {
         return mealDescription;
     }
 
-    /**
-     * Gets the list of users associated with the meal.
-     *
-     * @return the list of users.
-     */
-    public List<UserDTO> getUsers() {
-        return users;
-    }
-
-    /**
-     * Gets the user who created this meal.
-     *
-     * @return the user who created the meal, or null if not specified.
-     */
     public UserDTO getCreatedBy() {
         return createdBy;
     }
 
     // Setters
 
-    /**
-     * Sets the name of the meal.
-     *
-     * @param name the name of the meal to set.
-     */
     public void setName(String name) {
         this.name = name;
     }
 
-    /**
-     * Sets the list of ingredients that make up the meal.
-     *
-     * @param mealIngredients the list of meal ingredients to set.
-     */
     public void setMealIngredients(List<MealIngredientInputDTO> mealIngredients) {
         this.mealIngredients = mealIngredients;
     }
 
-    /**
-     * Sets the description of the meal.
-     *
-     * @param mealDescription the description of the meal.
-     */
     public void setMealDescription(String mealDescription) {
         this.mealDescription = mealDescription;
     }
 
-    /**
-     * Sets the list of users associated with the meal.
-     *
-     * @param users the list of users to set.
-     */
-    public void setUsers(List<UserDTO> users) {
-        this.users = users;
-    }
-
-    /**
-     * Sets the user who created this meal.
-     *
-     * @param createdBy the user who created the meal (optional).
-     */
     public void setCreatedBy(UserDTO createdBy) {
         this.createdBy = createdBy;
     }

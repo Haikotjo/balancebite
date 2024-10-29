@@ -34,20 +34,50 @@ public class UserMealService implements IUserMealService {
         this.userMapper = userMapper;
     }
 
+    /**
+     * Adds a meal to a user's set of meals and increments the user count for that meal.
+     * If either the user or meal is not found, a custom exception is thrown.
+     *
+     * @param userId The ID of the user to whom the meal will be added.
+     * @param mealId The ID of the meal to be added to the user.
+     * @return UserDTO The updated user information with the added meal.
+     * @throws UserNotFoundException If the user is not found.
+     * @throws MealNotFoundException If the meal is not found.
+     */
+    /**
+     * Adds a meal to a user's set of meals and increments the user count for that meal
+     * only if the user has not already added this meal.
+     * If either the user or meal is not found, a custom exception is thrown.
+     *
+     * @param userId The ID of the user to whom the meal will be added.
+     * @param mealId The ID of the meal to be added to the user.
+     * @return UserDTO The updated user information with the added meal.
+     * @throws UserNotFoundException If the user is not found.
+     * @throws MealNotFoundException If the meal is not found.
+     */
     @Override
     public UserDTO addMealToUser(Long userId, Long mealId) {
-        log.info("Attempting to add meal to user with ID: {}", userId);
+        log.info("Attempting to add meal with ID: {} to user with ID: {}", mealId, userId);
+
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("User not found with ID: " + userId));
-
         Meal meal = mealRepository.findById(mealId)
-                .orElseThrow(() -> new MealNotFoundException(mealId));
+                .orElseThrow(() -> new MealNotFoundException("Meal not found with ID: " + mealId));
 
-        user.getMeals().add(meal);
+        // Check if the user has already added this meal to prevent duplicate additions
+        if (!user.getMeals().contains(meal)) {
+            user.getMeals().add(meal);
+            meal.incrementUserCount(); // Increment the user count in the meal entity
+        } else {
+            log.info("User with ID: {} has already added meal with ID: {}", userId, mealId);
+        }
+
         User updatedUser = userRepository.save(user);
-        log.info("Successfully added meal to user with ID: {}", userId);
+        log.info("Successfully added meal with ID: {} to user with ID: {}", mealId, userId);
+
         return userMapper.toDTO(updatedUser);
     }
+
 
     @Override
     public UserDTO removeMealFromUser(Long userId, Long mealId) {
