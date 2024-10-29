@@ -23,7 +23,7 @@ public interface IMealService {
      * @return The created MealDTO with the persisted meal information.
      * @throws InvalidFoodItemException If any food item in the input is invalid.
      */
-    MealDTO createMeal(MealInputDTO mealInputDTO) throws InvalidFoodItemException;
+    MealDTO createMealNoUser(MealInputDTO mealInputDTO) throws InvalidFoodItemException;
 
     /**
      * Creates a new Meal entity for a specific user based on the provided MealInputDTO.

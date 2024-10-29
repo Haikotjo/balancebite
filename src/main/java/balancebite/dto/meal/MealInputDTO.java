@@ -19,7 +19,7 @@ public class MealInputDTO {
     @NotBlank(message = "The name of the meal cannot be blank. Please provide a valid name.")
     private String name;
 
-    @NotEmpty(message = "The meal must contain at least one ingredient. Please provide a list of ingredients.")
+    @NotEmpty(message = "The meal must contain at least one ingredient. Please provide ingredients.")
     @Valid
     private List<MealIngredientInputDTO> mealIngredients;
 
@@ -120,8 +120,6 @@ public class MealInputDTO {
      *
      * @param mealIngredients the list of meal ingredients to set.
      */
-    @NotEmpty(message = "The meal must contain at least one ingredient. Please provide ingredients.")
-    @Valid
     public void setMealIngredients(List<MealIngredientInputDTO> mealIngredients) {
         this.mealIngredients = mealIngredients;
     }

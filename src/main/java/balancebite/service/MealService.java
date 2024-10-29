@@ -63,7 +63,7 @@ public class MealService implements IMealService {
      */
     @Override
     @Transactional
-    public MealDTO createMeal(MealInputDTO mealInputDTO) {
+    public MealDTO createMealNoUser(MealInputDTO mealInputDTO) {
         log.info("Attempting to create a new meal with name: {}", mealInputDTO.getName());
         try {
             Meal meal = mealMapper.toEntity(mealInputDTO);

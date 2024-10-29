@@ -44,10 +44,10 @@ public class MealController {
      * @return ResponseEntity containing the created MealDTO with 201 status code, or an error response with an appropriate status.
      */
     @PostMapping
-    public ResponseEntity<?> createMeal(@Valid @RequestBody MealInputDTO mealInputDTO) {
+    public ResponseEntity<?> createMealNoUser(@Valid @RequestBody MealInputDTO mealInputDTO) {
         try {
             log.info("Creating new meal with name: {}", mealInputDTO.getName());
-            MealDTO createdMeal = mealService.createMeal(mealInputDTO);
+            MealDTO createdMeal = mealService.createMealNoUser(mealInputDTO);
             return ResponseEntity.status(HttpStatus.CREATED).body(createdMeal);
         } catch (InvalidFoodItemException e) {
             log.warn("Invalid food item for meal creation: {}", e.getMessage());
