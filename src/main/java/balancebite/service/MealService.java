@@ -117,7 +117,6 @@ public class MealService implements IMealService {
         }
     }
 
-
     /**
      * Updates an existing Meal entity with new information.
      * This method updates the meal's name and ingredients based on the provided MealInputDTO.
