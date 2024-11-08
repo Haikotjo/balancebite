@@ -13,6 +13,7 @@ import java.util.List;
 public class Meal {
 
     private static final String CREATED_BY_USER_ID_COLUMN = "created_by_user_id";
+    private static final String ADJUSTED_BY_USER_ID_COLUMN = "adjusted_by_user_id";
 
     /**
      * Unique identifier for the meal.
@@ -49,8 +50,23 @@ public class Meal {
      * The user who created this meal.
      */
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = CREATED_BY_USER_ID_COLUMN)
+    @JoinColumn(name = CREATED_BY_USER_ID_COLUMN, updatable = false)
     private User createdBy;
+
+    /**
+     * The user who has added and potentially adjusted this meal.
+     * This field is used to track if a user has created a personalized copy of the meal.
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = ADJUSTED_BY_USER_ID_COLUMN)
+    private User adjustedBy;
+
+    /**
+     * Indicates whether this meal is a template (original meal).
+     * If true, this meal is a template; if false, it is a user-specific copy.
+     */
+    @Column(name = "is_template", nullable = false)
+    private boolean isTemplate = true;
 
     /**
      * No-argument constructor required by JPA.
@@ -188,5 +204,42 @@ public class Meal {
      */
     public void setCreatedBy(User createdBy) {
         this.createdBy = createdBy;
+    }
+
+    /**
+     * Gets the user who added and potentially adjusted this meal.
+     *
+     * @return the user who adjusted this meal.
+     */
+    public User getAdjustedBy() {
+        return adjustedBy;
+    }
+
+    /**
+     * Sets the user who added and potentially adjusted this meal.
+     * This allows tracking of user-specific copies of the original meal.
+     *
+     * @param adjustedBy the user who adjusted the meal.
+     */
+    public void setAdjustedBy(User adjustedBy) {
+        this.adjustedBy = adjustedBy;
+    }
+
+    /**
+     * Checks if this meal is a template (original).
+     *
+     * @return true if this meal is a template, false if it is a user-specific copy.
+     */
+    public boolean isTemplate() {
+        return isTemplate;
+    }
+
+    /**
+     * Sets whether this meal is a template.
+     *
+     * @param isTemplate true if this meal is a template, false if it is a user-specific copy.
+     */
+    public void setIsTemplate(boolean isTemplate) {
+        this.isTemplate = isTemplate;
     }
 }

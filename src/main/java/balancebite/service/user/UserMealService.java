@@ -1,8 +1,10 @@
 package balancebite.service.user;
 
+import balancebite.dto.meal.MealDTO;
 import balancebite.dto.user.UserDTO;
 import balancebite.errorHandling.MealNotFoundException;
 import balancebite.errorHandling.UserNotFoundException;
+import balancebite.mapper.MealMapper;
 import balancebite.mapper.UserMapper;
 import balancebite.model.Meal;
 import balancebite.model.MealIngredient;
@@ -14,6 +16,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 /**
  * Service class responsible for managing the relationship between users and meals.
@@ -28,11 +32,13 @@ public class UserMealService implements IUserMealService {
     private final UserRepository userRepository;
     private final MealRepository mealRepository;
     private final UserMapper userMapper;
+    private final MealMapper mealMapper;
 
-    public UserMealService(UserRepository userRepository, MealRepository mealRepository, UserMapper userMapper) {
+    public UserMealService(UserRepository userRepository, MealRepository mealRepository, UserMapper userMapper, MealMapper mealMapper) {
         this.userRepository = userRepository;
         this.mealRepository = mealRepository;
         this.userMapper = userMapper;
+        this.mealMapper = mealMapper;
     }
 
     /**
@@ -57,11 +63,17 @@ public class UserMealService implements IUserMealService {
         Meal originalMeal = mealRepository.findById(mealId)
                 .orElseThrow(() -> new MealNotFoundException("Meal not found with ID: " + mealId));
 
+        // Increment the user count for the original meal
+        originalMeal.incrementUserCount();
+        mealRepository.save(originalMeal); // Persist the updated user count for the original meal
+
         // Create a deep copy of the original meal for the user
         Meal mealCopy = new Meal();
         mealCopy.setName(originalMeal.getName());
         mealCopy.setMealDescription(originalMeal.getMealDescription());
-        mealCopy.setCreatedBy(user); // Set the user as the creator of the copied meal
+        mealCopy.setCreatedBy(originalMeal.getCreatedBy()); // Preserve the original creator
+        mealCopy.setAdjustedBy(user); // Set the current user as the one who adjusted the meal
+        mealCopy.setIsTemplate(false); // Mark this as a user-specific copy, not a template
 
         // Copy each ingredient from the original meal into the new meal
         originalMeal.getMealIngredients().forEach(ingredient -> {
@@ -71,8 +83,9 @@ public class UserMealService implements IUserMealService {
             mealCopy.addMealIngredient(copiedIngredient);
         });
 
-        // Add the meal copy to the user's list and save it independently of the original
+        // Add only to user's personal list of meals, not to the main meal list
         user.getMeals().add(mealCopy);
+
         mealRepository.save(mealCopy); // Persist the meal copy in the database
 
         log.info("Successfully added a copy of meal with ID: {} to user with ID: {}", mealId, userId);
@@ -82,6 +95,25 @@ public class UserMealService implements IUserMealService {
 
         return userMapper.toDTO(updatedUser);
     }
+
+    /**
+     * Retrieves all meals for a specific user by user ID.
+     *
+     * @param userId the ID of the user whose meals are to be retrieved
+     * @return a list of MealDTOs representing the user's meals, or an empty list if no meals are found
+     */
+    @Transactional(readOnly = true)
+    public List<MealDTO> getAllMealsForUser(Long userId) {
+        log.info("Retrieving all meals for user ID: {}", userId);
+
+        // Find the user by ID and fetch their meals
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("User not found with ID: " + userId));
+
+        // Map the user's meals to MealDTOs
+        return user.getMeals().stream().map(mealMapper::toDTO).toList();
+    }
+
 
     @Override
     public UserDTO removeMealFromUser(Long userId, Long mealId) {

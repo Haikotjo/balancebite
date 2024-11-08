@@ -12,50 +12,96 @@ import java.util.List;
  */
 public class MealDTO {
 
+    /**
+     * Unique identifier of the meal.
+     */
     private final Long id;
+
+    /**
+     * Name of the meal.
+     */
     private final String name;
+
+    /**
+     * Description of the meal.
+     */
     private final String mealDescription;
+
+    /**
+     * List of ingredients associated with the meal.
+     */
     private final List<MealIngredientDTO> mealIngredients;
 
-    // Count of users associated with the meal
+    /**
+     * Count of users who have added this meal.
+     */
     private final int userCount;
 
-    // Creator of the meal
+    /**
+     * The user who originally created the meal.
+     */
     private final UserDTO createdBy;
 
     /**
-     * Constructor for creating a MealDTO with basic meal information.
-     *
-     * @param id                the ID of the meal.
-     * @param name              the name of the meal.
-     * @param mealDescription   the description of the meal.
-     * @param mealIngredients   the list of ingredients in the meal.
-     * @param userCount         the count of users who have added the meal.
-     * @param createdBy         the user that created the meal.
+     * The user who added and potentially adjusted the meal.
+     * This field allows identification of customized meal copies.
      */
-    public MealDTO(Long id, String name, String mealDescription, List<MealIngredientDTO> mealIngredients, int userCount, UserDTO createdBy) {
+    private final UserDTO adjustedBy;
+
+    /**
+     * Constructor for creating a MealDTO with essential meal information.
+     *
+     * @param id               the unique identifier of the meal.
+     * @param name             the name of the meal.
+     * @param mealDescription  the description of the meal.
+     * @param mealIngredients  the list of ingredients in the meal.
+     * @param userCount        the count of users who have added the meal.
+     * @param createdBy        the user who originally created the meal.
+     * @param adjustedBy       the user who adjusted the meal (if applicable).
+     */
+    public MealDTO(Long id, String name, String mealDescription, List<MealIngredientDTO> mealIngredients, int userCount, UserDTO createdBy, UserDTO adjustedBy) {
         this.id = id;
         this.name = name;
         this.mealDescription = mealDescription;
         this.mealIngredients = (mealIngredients != null) ? List.copyOf(mealIngredients) : List.of();  // Use an unmodifiable list
         this.userCount = userCount;
         this.createdBy = createdBy;
+        this.adjustedBy = adjustedBy;
     }
 
-    // Getters only (no setters)
-
+    /**
+     * Gets the unique identifier of the meal.
+     *
+     * @return the ID of the meal.
+     */
     public Long getId() {
         return id;
     }
 
+    /**
+     * Gets the name of the meal.
+     *
+     * @return the name of the meal.
+     */
     public String getName() {
         return name;
     }
 
+    /**
+     * Gets the description of the meal.
+     *
+     * @return the description of the meal.
+     */
     public String getMealDescription() {
         return mealDescription;
     }
 
+    /**
+     * Gets the list of ingredients associated with the meal.
+     * Returns an unmodifiable copy to maintain immutability.
+     *
+     * @return an unmodifiable list of meal ingredients.
+     */
     public List<MealIngredientDTO> getMealIngredients() {
         return List.copyOf(mealIngredients);  // Ensure the list cannot be mutated outside this DTO
     }
@@ -69,7 +115,21 @@ public class MealDTO {
         return userCount;
     }
 
+    /**
+     * Gets the user who originally created this meal.
+     *
+     * @return the creator of the meal.
+     */
     public UserDTO getCreatedBy() {
         return createdBy;
+    }
+
+    /**
+     * Gets the user who added and potentially adjusted this meal.
+     *
+     * @return the user who adjusted the meal.
+     */
+    public UserDTO getAdjustedBy() {
+        return adjustedBy;
     }
 }

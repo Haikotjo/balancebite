@@ -1,5 +1,6 @@
 package balancebite.controller.usercontroller;
 
+import balancebite.dto.meal.MealDTO;
 import balancebite.dto.user.UserDTO;
 import balancebite.errorHandling.DailyIntakeNotFoundException;
 import balancebite.errorHandling.MealNotFoundException;
@@ -12,6 +13,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -80,6 +82,30 @@ public class UserMealController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "An unexpected error occurred."));
         }
     }
+
+    /**
+     * Retrieves all meals for a specific user by user ID.
+     *
+     * @param userId the ID of the user
+     * @return ResponseEntity containing a list of MealDTO objects representing the user's meals,
+     *         or a 204 NO CONTENT if no meals are found for the user
+     */
+    @GetMapping("/{userId}/meals")
+    public ResponseEntity<?> getAllMealsForUser(@PathVariable Long userId) {
+        try {
+            log.info("Retrieving all meals for user with ID: {}", userId);
+            List<MealDTO> mealDTOs = userMealService.getAllMealsForUser(userId);
+            if (mealDTOs.isEmpty()) {
+                log.info("No meals found for user with ID: {}", userId);
+                return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+            }
+            return ResponseEntity.ok(mealDTOs);
+        } catch (Exception e) {
+            log.error("Unexpected error during retrieval of meals for user ID {}: {}", userId, e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "An unexpected error occurred."));
+        }
+    }
+
 
     /**
      * Endpoint for processing the consumption of a meal by a user.

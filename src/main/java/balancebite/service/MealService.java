@@ -99,11 +99,14 @@ public class MealService implements IMealService {
                     .orElseThrow(() -> new EntityNotFoundException("User not found with ID: " + userId));
 
             meal.setCreatedBy(user);
-            meal.incrementUserCount(); // Increment user count instead of adding to a user list
+            meal.incrementUserCount();
+
+            user.getMeals().add(meal);
 
             Meal savedMeal = mealRepository.save(meal);
-            log.info("Successfully created a new meal for user with ID: {}", userId);
+            userRepository.save(user);
 
+            log.info("Successfully created a new meal for user with ID: {}", userId);
             return mealMapper.toDTO(savedMeal);
         } catch (InvalidFoodItemException e) {
             log.error("Failed to create meal due to invalid food item: {}", e.getMessage());
@@ -116,6 +119,7 @@ public class MealService implements IMealService {
             throw new RuntimeException("An unexpected error occurred while creating the meal for user.");
         }
     }
+
 
     /**
      * Updates an existing Meal entity with new information.
@@ -148,21 +152,21 @@ public class MealService implements IMealService {
     }
 
     /**
-     * Retrieves all Meals from the repository.
+     * Retrieves all template Meals from the repository (isTemplate = true).
      *
-     * @return a list of MealDTOs, or an empty list if no meals are found.
+     * @return a list of MealDTOs representing all template meals, or an empty list if no templates are found.
      */
     @Override
     @Transactional(readOnly = true)
     public List<MealDTO> getAllMeals() {
-        log.info("Retrieving all meals from the system.");
-        List<Meal> meals = mealRepository.findAll();
-        if (meals.isEmpty()) {
-            log.info("No meals found in the system.");
+        log.info("Retrieving all template meals from the system.");
+        List<Meal> templateMeals = mealRepository.findAllTemplateMeals(); // Only fetch meals with isTemplate = true
+        if (templateMeals.isEmpty()) {
+            log.info("No template meals found in the system.");
         } else {
-            log.info("Found {} meals in the system.", meals.size());
+            log.info("Found {} template meals in the system.", templateMeals.size());
         }
-        return meals.stream().map(mealMapper::toDTO).toList();
+        return templateMeals.stream().map(mealMapper::toDTO).toList();
     }
 
     /**

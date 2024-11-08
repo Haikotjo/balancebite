@@ -45,4 +45,15 @@ public interface MealRepository extends JpaRepository<Meal, Long> {
             "AND NOT EXISTS (SELECT mi2 FROM MealIngredient mi2 WHERE mi2.meal = m AND mi2.foodItem NOT IN " +
             "(SELECT mi.foodItem FROM MealIngredient mi WHERE mi.meal.id = :mealId))")
     List<Meal> findMealsWithSameIngredients(@Param("mealId") Long mealId);
+
+
+    /**
+     * Retrieves all meals marked as templates.
+     * This query returns only the meals where isTemplate is set to true,
+     * filtering out any user-specific copies or adjusted meals.
+     *
+     * @return a list of meals that are marked as templates (isTemplate = true)
+     */
+    @Query("SELECT m FROM Meal m WHERE m.isTemplate = true")
+    List<Meal> findAllTemplateMeals();
 }

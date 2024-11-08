@@ -21,16 +21,15 @@ VALUES ('Haiko White', 'haikowhite@example.com', 'password101', 'ADMIN');
 INSERT INTO users (user_name, email, password, role)
 VALUES ('Mieke White', 'miekewhite@example.com', 'password101', 'ADMIN');
 
-
 -- Voeg de maaltijden toe voor John Doe
 -- Ontbijt (Breakfast)
-INSERT INTO meals (name, user_count) VALUES ('Breakfast', 0);
+INSERT INTO meals (name, user_count, is_template, created_by_user_id) VALUES ('Breakfast', 0, true, 1);
 
 -- Lunch
-INSERT INTO meals (name, user_count) VALUES ('Lunch', 0);
+INSERT INTO meals (name, user_count, is_template, created_by_user_id) VALUES ('Lunch', 0, true, 1);
 
 -- Diner (Dinner)
-INSERT INTO meals (name, user_count) VALUES ('Dinner', 0);
+INSERT INTO meals (name, user_count, is_template, created_by_user_id) VALUES ('Dinner', 0, true, 1);
 
 -- Voeg de ingrediënten voor het ontbijt (Breakfast) toe
 -- Bananas, raw (126 grams)
@@ -58,20 +57,21 @@ INSERT INTO meal_ingredients (meal_id, food_item_id, quantity) VALUES (3, 8, 100
 -- Egg, whole, cooked, hard-boiled (1 tbsp = 8.5 grams, assume 3 tablespoons)
 INSERT INTO meal_ingredients (meal_id, food_item_id, quantity) VALUES (3, 14, 25.5);
 
--- Koppel de maaltijden aan John Doe (user_id = 1)
-INSERT INTO user_meals (user_id, meal_id) VALUES (1, 1); -- Ontbijt
-INSERT INTO user_meals (user_id, meal_id) VALUES (1, 2); -- Lunch
-INSERT INTO user_meals (user_id, meal_id) VALUES (1, 3); -- Diner
+-- Koppel de maaltijden aan Jane Smith (user_id = 2)
+INSERT INTO meals (name, user_count, is_template, created_by_user_id, adjusted_by_user_id) VALUES ('Breakfast', 0, false, 1, 2);
+INSERT INTO meals (name, user_count, is_template, created_by_user_id, adjusted_by_user_id) VALUES ('Lunch', 0, false, 1, 2);
+INSERT INTO meals (name, user_count, is_template, created_by_user_id, adjusted_by_user_id) VALUES ('Dinner', 0, false, 1, 2);
 
 -- Voeg de maaltijden toe voor Jane Smith
 -- Snack
-INSERT INTO meals (name, user_count) VALUES ('Snack', 0);
+INSERT INTO meals (name, user_count, is_template, created_by_user_id) VALUES ('Snack', 0, true, 2);
 
 -- Salad
-INSERT INTO meals (name, user_count) VALUES ('Salad', 0);
+INSERT INTO meals (name, user_count, is_template, created_by_user_id) VALUES ('Salad', 0, true, 2);
 
 -- Dinner Special
-INSERT INTO meals (name, user_count) VALUES ('Dinner Special', 0);
+INSERT INTO meals (name, user_count, is_template, created_by_user_id) VALUES ('Dinner Special', 0, true, 2);
+
 
 -- Voeg de ingrediënten voor de snack toe
 -- Apple, raw (1 medium = 182 grams)
@@ -95,7 +95,18 @@ INSERT INTO meal_ingredients (meal_id, food_item_id, quantity) VALUES (6, 14, 15
 -- Broccoli, raw (1 cup = 91 grams)
 INSERT INTO meal_ingredients (meal_id, food_item_id, quantity) VALUES (6, 16, 91);
 
+-- Koppel de maaltijden aan John Doe (user_id = 1)
+INSERT INTO meals (name, user_count, is_template, created_by_user_id, adjusted_by_user_id) VALUES ('Snack', 0, false, 2, 1);
+INSERT INTO meals (name, user_count, is_template, created_by_user_id, adjusted_by_user_id) VALUES ('Salad', 0, false, 2, 1);
+INSERT INTO meals (name, user_count, is_template, created_by_user_id, adjusted_by_user_id) VALUES ('Dinner Special', 0, false, 2, 1);
+
+-- Koppel de maaltijden aan John Doe (user_id = 1)
+INSERT INTO user_meals (user_id, meal_id) VALUES (1, 1); -- Koppel Breakfast aan John Doe
+INSERT INTO user_meals (user_id, meal_id) VALUES (1, 2); -- Koppel Lunch aan John Doe
+INSERT INTO user_meals (user_id, meal_id) VALUES (1, 3); -- Koppel Dinner aan John Doe
+
 -- Koppel de maaltijden aan Jane Smith (user_id = 2)
-INSERT INTO user_meals (user_id, meal_id) VALUES (2, 4); -- Snack
-INSERT INTO user_meals (user_id, meal_id) VALUES (2, 5); -- Salad
-INSERT INTO user_meals (user_id, meal_id) VALUES (2, 6); -- Dinner Special
+INSERT INTO user_meals (user_id, meal_id) VALUES (2, 4); -- Koppel Snack aan Jane Smith
+INSERT INTO user_meals (user_id, meal_id) VALUES (2, 5); -- Koppel Salad aan Jane Smith
+INSERT INTO user_meals (user_id, meal_id) VALUES (2, 6); -- Koppel Dinner Special aan Jane Smith
+

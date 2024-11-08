@@ -34,7 +34,7 @@ public class MealMapper {
 
     /**
      * Converts a Meal entity to a MealDTO.
-     * This includes converting the meal's ingredients, user count, and the creator.
+     * This includes converting the meal's ingredients, user count, the creator, and adjusted user if applicable.
      *
      * @param meal the Meal entity to be converted.
      * @return the created MealDTO.
@@ -51,14 +51,16 @@ public class MealMapper {
                 meal.getMealIngredients().stream()
                         .map(this::toMealIngredientDTO)
                         .collect(Collectors.toList()),
-                meal.getUserCount(), // userCount field instead of a list of users
-                meal.getCreatedBy() != null ? toUserDTO(meal.getCreatedBy()) : null
+                meal.getUserCount(),
+                meal.getCreatedBy() != null ? toUserDTO(meal.getCreatedBy()) : null,
+                meal.getAdjustedBy() != null ? toUserDTO(meal.getAdjustedBy()) : null // Map adjustedBy if present
         );
     }
 
     /**
      * Converts a MealInputDTO to a Meal entity.
      * Used for creating or updating a Meal entity.
+     * The fields adjustedBy and isTemplate are managed by the service logic and not set from the input DTO.
      *
      * @param mealInputDTO the MealInputDTO containing the meal data.
      * @return the Meal entity created from the input DTO.
@@ -73,12 +75,11 @@ public class MealMapper {
                     List<MealIngredient> mealIngredients = dto.getMealIngredients().stream()
                             .map(input -> mealIngredientMapper.toEntity(input, meal))
                             .collect(Collectors.toList());
-                    mealIngredients.forEach(ingredient -> ingredient.setMeal(meal));
                     meal.addMealIngredients(mealIngredients);
 
-                    // Verwijderde setUserCount(0); lijn hier
-
                     meal.setCreatedBy(dto.getCreatedBy() != null ? toUserEntity(dto.getCreatedBy()) : null);
+
+                    // AdjustedBy and isTemplate are set in the service, not here
                     return meal;
                 })
                 .orElse(null);

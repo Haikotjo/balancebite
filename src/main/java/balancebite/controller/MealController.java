@@ -109,22 +109,22 @@ public class MealController {
     }
 
     /**
-     * Retrieves all Meal entities from the repository.
+     * Retrieves all template Meal entities from the repository.
      *
-     * @return ResponseEntity containing a list of MealDTO objects representing all meals, or a 204 NO CONTENT if no meals are found.
+     * @return ResponseEntity containing a list of MealDTO objects representing all template meals, or a 204 NO CONTENT if no templates are found.
      */
     @GetMapping
     public ResponseEntity<?> getAllMeals() {
         try {
-            log.info("Retrieving all meals.");
-            List<MealDTO> mealDTOs = mealService.getAllMeals();
+            log.info("Retrieving all template meals.");
+            List<MealDTO> mealDTOs = mealService.getAllMeals(); // Now returns only template meals
             if (mealDTOs.isEmpty()) {
-                log.info("No meals found.");
+                log.info("No template meals found.");
                 return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
             }
             return ResponseEntity.ok(mealDTOs);
         } catch (Exception e) {
-            log.error("Unexpected error during retrieval of all meals: {}", e.getMessage(), e);
+            log.error("Unexpected error during retrieval of all template meals: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "An unexpected error occurred."));
         }
     }
