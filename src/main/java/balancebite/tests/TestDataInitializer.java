@@ -4,6 +4,7 @@ import balancebite.model.User;
 import balancebite.repository.UserRepository;
 import balancebite.service.MealConsumptionExtendedService;
 import balancebite.service.RecommendedDailyIntakeService;
+import balancebite.service.user.UserMealService;
 import balancebite.tests.service.TestRecommendedDailyIntakeService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationRunner;
@@ -26,10 +27,13 @@ public class TestDataInitializer {
     private TestRecommendedDailyIntakeService testRecommendedDailyIntakeService;
 
     @Autowired
-    private MealConsumptionExtendedService MealConsumptionExtendedService;
+    private MealConsumptionExtendedService mealConsumptionExtendedService;
+
+    @Autowired
+    private UserMealService userMealService;
 
     @Bean
-    public ApplicationRunner init() {
+    public ApplicationRunner init(UserMealService userMealService) {
         return args -> {
             try {
                 // Zoek naar de user met ID 1 en voeg gewicht, leeftijd, enz. toe
@@ -50,7 +54,15 @@ public class TestDataInitializer {
                 // Zoek naar de user met ID 6 en voeg gewicht, leeftijd, enz. toe
                 updateUserDetails(6L, 80.0, 74, 164.0, "FEMALE", "MODERATE", "WEIGHT_LOSS_WITH_MUSCLE_MAINTENANCE");
 
-                // Create or retrieve RecommendedDailyIntake for user 5 and 6 for multiple days
+                // Maaltijden kopiëren tussen gebruikers
+                userMealService.addMealToUser(2L, 1L); // Maaltijd 1 naar User 2
+                userMealService.addMealToUser(2L, 2L); // Maaltijd 2 naar User 2
+                userMealService.addMealToUser(2L, 3L); // Maaltijd 3 naar User 2
+                userMealService.addMealToUser(1L, 4L); // Maaltijd 4 naar User 1
+                userMealService.addMealToUser(1L, 5L); // Maaltijd 5 naar User 1
+                userMealService.addMealToUser(1L, 6L); // Maaltijd 6 naar User 1
+
+                // Maak RecommendedDailyIntake aan voor meerdere dagen voor user 5 en 6
                 LocalDate threeDaysAgo = LocalDate.now().minusDays(3);
                 LocalDate twoDaysAgo = LocalDate.now().minusDays(2);
                 LocalDate yesterday = LocalDate.now().minusDays(1);
@@ -63,20 +75,19 @@ public class TestDataInitializer {
                 testRecommendedDailyIntakeService.createOrRetrieveRecommendedDailyIntakeForDate(2L, today);
                 testRecommendedDailyIntakeService.createOrRetrieveRecommendedDailyIntakeForDate(3L, today);
 
-                // For user 5
+                // Voor user 5
                 testRecommendedDailyIntakeService.createOrRetrieveRecommendedDailyIntakeForDate(5L, threeDaysAgo);
                 testRecommendedDailyIntakeService.createOrRetrieveRecommendedDailyIntakeForDate(5L, twoDaysAgo);
                 testRecommendedDailyIntakeService.createOrRetrieveRecommendedDailyIntakeForDate(5L, yesterday);
                 testRecommendedDailyIntakeService.createOrRetrieveRecommendedDailyIntakeForDate(5L, tomorrow);
                 testRecommendedDailyIntakeService.createOrRetrieveRecommendedDailyIntakeForDate(5L, dayAfterTomorrow);
-                testRecommendedDailyIntakeService.createOrRetrieveRecommendedDailyIntakeForDate(5L, today); // Always add 'today' as the last entry to ensure correct processing
+                testRecommendedDailyIntakeService.createOrRetrieveRecommendedDailyIntakeForDate(5L, today); // Voeg 'today' als laatste toe
 
-                // For user 6
+                // Voor user 6
                 testRecommendedDailyIntakeService.createOrRetrieveRecommendedDailyIntakeForDate(6L, threeDaysAgo);
                 testRecommendedDailyIntakeService.createOrRetrieveRecommendedDailyIntakeForDate(6L, twoDaysAgo);
                 testRecommendedDailyIntakeService.createOrRetrieveRecommendedDailyIntakeForDate(6L, yesterday);
-//                testRecommendedDailyIntakeService.createOrRetrieveRecommendedDailyIntakeForDate(6L, tomorrow);
-                testRecommendedDailyIntakeService.createOrRetrieveRecommendedDailyIntakeForDate(6L, today); // Always add 'today' as the last entry to ensure correct processing
+                testRecommendedDailyIntakeService.createOrRetrieveRecommendedDailyIntakeForDate(6L, today); // Voeg 'today' als laatste toe
 
                 System.out.println("Recommended daily intake created for users 5 and 6 for the specified days.");
 
@@ -85,7 +96,6 @@ public class TestDataInitializer {
                 addMealsForDay(5L, new Long[]{2L}, new int[]{3}, LocalDate.now().minusDays(2)); // Twee dagen geleden
                 addMealsForDay(5L, new Long[]{3L}, new int[]{1}, LocalDate.now().minusDays(3)); // Drie dagen geleden
 
-//                addMealsForYesterday(6L, new Long[]{4L}, new int[]{20}); // User 6 eet maaltijd 4 twintig keer
                 addMealsForDay(6L, new Long[]{4L}, new int[]{20}, LocalDate.now().minusDays(1)); // Gisteren
                 addMealsForDay(6L, new Long[]{2L}, new int[]{3}, LocalDate.now().minusDays(2)); // Twee dagen geleden
                 addMealsForDay(6L, new Long[]{3L}, new int[]{1}, LocalDate.now().minusDays(3)); // Drie dagen geleden
@@ -126,27 +136,8 @@ public class TestDataInitializer {
 
         for (int i = 0; i < mealIds.length; i++) {
             for (int j = 0; j < repetitions[i]; j++) {
-                MealConsumptionExtendedService.eatMealForSpecificDate(userId, mealIds[i], day);
+                mealConsumptionExtendedService.eatMealForSpecificDate(userId, mealIds[i], day);
             }
         }
     }
-
-    // Methode om specifieke maaltijden en herhalingen toe te voegen voor gisteren
-    private void addMealsForYesterday(Long userId, Long[] mealIds, int[] repetitions) {
-        LocalDate yesterday = LocalDate.now().minusDays(1);
-        addMealsForDay(userId, mealIds, repetitions, yesterday);
-    }
-
-    // Methode om specifieke maaltijden en herhalingen toe te voegen voor twee dagen geleden
-    private void addMealsForTwoDaysAgo(Long userId, Long[] mealIds, int[] repetitions) {
-        LocalDate twoDaysAgo = LocalDate.now().minusDays(2);
-        addMealsForDay(userId, mealIds, repetitions, twoDaysAgo);
-    }
-
-    // Methode om specifieke maaltijden en herhalingen toe te voegen voor drie dagen geleden
-    private void addMealsForThreeDaysAgo(Long userId, Long[] mealIds, int[] repetitions) {
-        LocalDate threeDaysAgo = LocalDate.now().minusDays(3);
-        addMealsForDay(userId, mealIds, repetitions, threeDaysAgo);
-    }
-
 }
