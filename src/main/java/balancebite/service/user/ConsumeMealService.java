@@ -124,8 +124,11 @@ public class ConsumeMealService implements IConsumeMealService {
                 double currentValue = HelperMethods.getValueOrDefault(nutrient.getValue());
                 double nutrientValue = HelperMethods.getValueOrDefault(nutrientInfo.getValue());
 
-                nutrient.setValue(currentValue - nutrientValue);
-                log.debug("Remaining intake for nutrient {} updated to {}", normalizedNutrientName, nutrient.getValue());
+                double newValue = currentValue - nutrientValue;
+                nutrient.setValue(newValue);
+
+                log.info("Nutrient {}: Initial = {}, Consumed = {}, Remaining = {}",
+                        normalizedNutrientName, currentValue, nutrientValue, newValue);
             } else {
                 log.warn("Nutrient {} not found in daily intake for user ID {}", originalNutrientName, userId);
             }

@@ -36,7 +36,7 @@ public class UsdaFoodResponseDTO {
 
     // Define the list of nutrient names to include in the filtering.
     private static final List<String> NUTRIENT_NAMES = List.of(
-            "Energy kcal", "Protein", "Total lipid (fat)", "Carbohydrates", "Total Sugars",
+            "Energy", "Protein", "Total lipid (fat)", "Carbohydrates", "Total Sugars",
             "Fatty acids, total saturated", "Fatty acids, total monounsaturated",
             "Fatty acids, total polyunsaturated", "Fatty acids, total trans"
             // Uncomment the following lines if you wish to include them later:
@@ -112,33 +112,33 @@ public class UsdaFoodResponseDTO {
      * "Carbohydrate, by difference" and use its value while keeping only the name "Carbohydrates".
      *
      * After renaming, the method filters the nutrients based on a predefined
-     * list of nutrient names to keep only those of interest.
+     * list of nutrient names to keep only those of interest. Additionally,
+     * it ensures only "Energy" with "kcal" as the unit is included.
      *
      * @return The list of filtered FoodNutrientDTO objects, with only "Carbohydrates"
      *         as the final name if applicable.
      */
     public List<FoodNutrientDTO> getFoodNutrients() {
-        // Controleer of "Carbohydrates" aanwezig is en een waarde heeft die niet null of 0 is.
+        // Check if "Carbohydrates" is valid and present.
         boolean hasValidCarbohydrates = foodNutrients != null && foodNutrients.stream()
                 .anyMatch(nutrient ->
                         "Carbohydrates".equals(nutrient.getNutrient().getName())
                                 && nutrient.getAmount() > 0);
 
-        // Normaliseer de lijst: hernoem en verwijder ongewenste entries.
         return foodNutrients != null
                 ? foodNutrients.stream()
                 .map(nutrient -> {
-                    // Alleen als er geen geldige "Carbohydrates" is, "Carbohydrate, by difference" hernoemen.
                     if (!hasValidCarbohydrates && "Carbohydrate, by difference".equals(nutrient.getNutrient().getName())) {
                         nutrient.getNutrient().setName("Carbohydrates");
                     }
                     return nutrient;
                 })
-                // Verwijder duplicaten: behoud alleen één "Carbohydrates".
+                // Apply filter to retain only the required nutrients and ensure "Energy" has unit "kcal".
                 .filter(nutrient ->
                         !"Carbohydrate, by difference".equals(nutrient.getNutrient().getName())
                                 && (!"Carbohydrates".equals(nutrient.getNutrient().getName())
-                                || hasValidCarbohydrates && nutrient.getAmount() > 0))
+                                || hasValidCarbohydrates && nutrient.getAmount() > 0)
+                                && (!"Energy".equals(nutrient.getNutrient().getName()) || "kcal".equals(nutrient.getUnitName())))
                 .filter(nutrient -> NUTRIENT_NAMES.contains(nutrient.getNutrient().getName()))
                 .collect(Collectors.toList())
                 : List.of();
@@ -371,9 +371,10 @@ public class UsdaFoodResponseDTO {
         /**
          * Sets the measure unit details of the portion.
          *
-         * @... {
-
-        this.measureUnit = measureUnit;
+         * @param measureUnit The MeasureUnitDTO representing the measure unit details.
+         */
+        public void setMeasureUnit(MeasureUnitDTO measureUnit) {
+            this.measureUnit = measureUnit;
         }
 
         /**
