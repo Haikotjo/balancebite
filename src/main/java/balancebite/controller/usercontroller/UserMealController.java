@@ -3,6 +3,7 @@ package balancebite.controller.usercontroller;
 import balancebite.dto.meal.MealDTO;
 import balancebite.dto.user.UserDTO;
 import balancebite.errorHandling.DailyIntakeNotFoundException;
+import balancebite.errorHandling.DuplicateMealException;
 import balancebite.errorHandling.MealNotFoundException;
 import balancebite.errorHandling.UserNotFoundException;
 import balancebite.service.user.ConsumeMealService;
@@ -52,6 +53,9 @@ public class UserMealController {
             log.info("Adding meal ID {} to user ID {}", mealId, userId);
             UserDTO user = userMealService.addMealToUser(userId, mealId);
             return ResponseEntity.ok(user);
+        } catch (DuplicateMealException e) {
+            log.warn("Duplicate meal detected for user ID {}: {}", userId, e.getMessage());
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", e.getMessage()));
         } catch (UserNotFoundException | MealNotFoundException e) {
             log.warn("Error occurred during meal addition: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
@@ -60,6 +64,7 @@ public class UserMealController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "An unexpected error occurred."));
         }
     }
+
 
     /**
      * Endpoint to remove a meal from the user's list of meals.

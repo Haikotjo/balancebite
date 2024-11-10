@@ -2,6 +2,7 @@ package balancebite.service.user;
 
 import balancebite.dto.meal.MealDTO;
 import balancebite.dto.user.UserDTO;
+import balancebite.errorHandling.DuplicateMealException;
 import balancebite.errorHandling.MealNotFoundException;
 import balancebite.errorHandling.UserNotFoundException;
 import balancebite.mapper.MealMapper;
@@ -18,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Service class responsible for managing the relationship between users and meals.
@@ -50,6 +52,7 @@ public class UserMealService implements IUserMealService {
      * @return UserDTO The updated user information with the added meal.
      * @throws UserNotFoundException If the user is not found.
      * @throws MealNotFoundException If the meal is not found.
+     * @throws DuplicateMealException If an identical meal already exists in the user's list.
      */
     @Override
     public UserDTO addMealToUser(Long userId, Long mealId) {
@@ -62,6 +65,22 @@ public class UserMealService implements IUserMealService {
         // Retrieve meal by ID or throw exception if not found
         Meal originalMeal = mealRepository.findById(mealId)
                 .orElseThrow(() -> new MealNotFoundException("Meal not found with ID: " + mealId));
+
+        // Collect food item IDs for duplicate check
+        List<Long> foodItemIds = originalMeal.getMealIngredients().stream()
+                .map(ingredient -> ingredient.getFoodItem().getId())
+                .collect(Collectors.toList());
+        log.debug("Collected food item IDs for duplicate check: {}", foodItemIds);
+
+        // Check for duplicates in the user's meal list
+        List<Meal> duplicateMeals = mealRepository.findUserMealsWithExactIngredients(mealId, userId);
+        if (!duplicateMeals.isEmpty()) {
+            Meal duplicateMeal = duplicateMeals.get(0); // Neem de eerste duplicate
+            String errorMsg = String.format("A meal with the same ingredients already exists. %s (ID: %d)",
+                    duplicateMeal.getName(), duplicateMeal.getId());
+            log.warn("Duplicate meal detected in user's list: {}", errorMsg);
+            throw new DuplicateMealException(errorMsg);
+        }
 
         // Increment the user count for the original meal
         originalMeal.incrementUserCount();
@@ -83,9 +102,7 @@ public class UserMealService implements IUserMealService {
             mealCopy.addMealIngredient(copiedIngredient);
         });
 
-        // Add only to user's personal list of meals, not to the main meal list
         user.getMeals().add(mealCopy);
-
         mealRepository.save(mealCopy); // Persist the meal copy in the database
 
         log.info("Successfully added a copy of meal with ID: {} to user with ID: {}", mealId, userId);
