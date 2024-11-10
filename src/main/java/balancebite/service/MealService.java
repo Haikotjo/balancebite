@@ -59,26 +59,35 @@ public class MealService implements IMealService {
      * Creates a new Meal entity based on the provided MealInputDTO.
      * This method converts the input DTO to a Meal entity, persists it, and then converts the result back to a DTO.
      *
-     * @param mealInputDTO the DTO containing the input data for creating a Meal.
-     * @return the created MealDTO with the persisted meal information.
+     * @param mealInputDTO The DTO containing the input data for creating a Meal.
+     * @return The created MealDTO with the persisted meal information.
      * @throws InvalidFoodItemException if any food item in the input is invalid.
+     * @throws DuplicateMealException   if a template meal with the same ingredients already exists.
      */
     @Override
     @Transactional
     public MealDTO createMealNoUser(MealInputDTO mealInputDTO) {
         log.info("Attempting to create a new meal with name: {}", mealInputDTO.getName());
-        try {
-            Meal meal = mealMapper.toEntity(mealInputDTO);
-            Meal savedMeal = mealRepository.save(meal);
-            log.info("Successfully created a new meal with ID: {}", savedMeal.getId());
-            return mealMapper.toDTO(savedMeal);
-        } catch (InvalidFoodItemException e) {
-            log.error("Failed to create meal due to invalid food item: {}", e.getMessage());
-            throw e;
-        } catch (Exception e) {
-            log.error("Unexpected error during meal creation: {}", e.getMessage(), e);
-            throw new RuntimeException("An unexpected error occurred while creating the meal.");
+
+        Meal meal = mealMapper.toEntity(mealInputDTO);
+        List<Long> foodItemIds = meal.getMealIngredients().stream()
+                .map(mi -> mi.getFoodItem().getId())
+                .collect(Collectors.toList());
+        log.debug("Collected food item IDs for duplicate check: {}", foodItemIds);
+
+        // Check for duplicate template meals
+        List<Meal> duplicateMeals = mealRepository.findTemplateMealsWithExactIngredients(foodItemIds, foodItemIds.size());
+        if (!duplicateMeals.isEmpty()) {
+            Meal duplicateMeal = duplicateMeals.get(0); // Using the first duplicate found
+            String duplicateInfo = String.format("Meal Name: %s, Meal ID: %d", duplicateMeal.getName(), duplicateMeal.getId());
+            log.warn("Duplicate template meal detected: {}", duplicateInfo);
+            throw new DuplicateMealException("A template meal with the same ingredients already exists. " + duplicateInfo);
         }
+
+        log.debug("Meal prepared for saving: {}", meal);
+        Meal savedMeal = mealRepository.save(meal);
+        log.info("Successfully created a new meal with ID: {}", savedMeal.getId());
+        return mealMapper.toDTO(savedMeal);
     }
 
     /**
@@ -103,10 +112,13 @@ public class MealService implements IMealService {
                 .collect(Collectors.toList());
         log.debug("Collected food item IDs for duplicate check: {}", foodItemIds);
 
+        // Check for duplicate template meals and include duplicate details in exception message
         List<Meal> duplicateMeals = mealRepository.findTemplateMealsWithExactIngredients(foodItemIds, foodItemIds.size());
         if (!duplicateMeals.isEmpty()) {
-            log.warn("Duplicate template meal detected: {}", duplicateMeals);
-            throw new DuplicateMealException("A template meal with the same ingredients already exists.");
+            Meal duplicateMeal = duplicateMeals.get(0); // Assumes the first match is sufficient for logging
+            String duplicateInfo = String.format("Meal Name: %s, Meal ID: %d", duplicateMeal.getName(), duplicateMeal.getId());
+            log.warn("Duplicate template meal detected: {}", duplicateInfo);
+            throw new DuplicateMealException("A meal with the same ingredients already exists. " + duplicateInfo);
         }
 
         log.debug("Attempting to retrieve user by ID: {}", userId);

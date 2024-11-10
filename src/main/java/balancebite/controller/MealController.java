@@ -45,11 +45,14 @@ public class MealController {
      * @return ResponseEntity containing the created MealDTO with 201 status code, or an error response with an appropriate status.
      */
     @PostMapping
-    public ResponseEntity<?> createMealNoUser(@Valid @RequestBody MealInputDTO mealInputDTO) {
+    public ResponseEntity<?> createMealNoUser(@RequestBody MealInputDTO mealInputDTO) {
         try {
             log.info("Creating new meal with name: {}", mealInputDTO.getName());
             MealDTO createdMeal = mealService.createMealNoUser(mealInputDTO);
             return ResponseEntity.status(HttpStatus.CREATED).body(createdMeal);
+        } catch (DuplicateMealException e) {
+            log.warn("Duplicate meal detected for meal name {}: {}", mealInputDTO.getName(), e.getMessage());
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", e.getMessage()));
         } catch (InvalidFoodItemException e) {
             log.warn("Invalid food item for meal creation: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));

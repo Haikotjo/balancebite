@@ -177,9 +177,10 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(DuplicateMealException.class)
     public ResponseEntity<Map<String, String>> handleDuplicateMealException(DuplicateMealException e) {
-        log.warn("DuplicateMealException handler reached for message: {}", e.getMessage()); // Debugging log
+        log.warn("DuplicateMealException handler reached for message: {}", e.getMessage());
         Map<String, String> response = new HashMap<>();
         response.put("error", e.getMessage());
         return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
     }
+
 }
