@@ -168,4 +168,18 @@ public class GlobalExceptionHandler {
         String errorMessage = "Database retrieval error: " + ex.getMostSpecificCause().getMessage();
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", errorMessage));
     }
+
+    /**
+     * Handles cases where a duplicate template meal with the same ingredients already exists.
+     *
+     * @param e The thrown {@link DuplicateMealException}.
+     * @return A ResponseEntity indicating that a duplicate template meal exists, with a CONFLICT (409) status.
+     */
+    @ExceptionHandler(DuplicateMealException.class)
+    public ResponseEntity<Map<String, String>> handleDuplicateMealException(DuplicateMealException e) {
+        log.warn("DuplicateMealException handler reached for message: {}", e.getMessage()); // Debugging log
+        Map<String, String> response = new HashMap<>();
+        response.put("error", e.getMessage());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
+    }
 }

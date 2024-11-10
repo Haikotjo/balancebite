@@ -3,6 +3,7 @@ package balancebite.controller;
 import balancebite.dto.meal.MealDTO;
 import balancebite.dto.meal.MealInputDTO;
 import balancebite.dto.NutrientInfoDTO;
+import balancebite.errorHandling.DuplicateMealException;
 import balancebite.errorHandling.InvalidFoodItemException;
 import balancebite.service.MealService;
 import jakarta.persistence.EntityNotFoundException;
@@ -71,6 +72,9 @@ public class MealController {
             log.info("Creating new meal for user ID: {}", userId);
             MealDTO createdMeal = mealService.createMealForUser(mealInputDTO, userId);
             return ResponseEntity.status(HttpStatus.CREATED).body(createdMeal);
+        } catch (DuplicateMealException e) {
+            log.warn("Duplicate meal detected for user ID {}: {}", userId, e.getMessage());
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", e.getMessage()));
         } catch (EntityNotFoundException e) {
             log.warn("User not found with ID {} during meal creation: {}", userId, e.getMessage());
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));

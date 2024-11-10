@@ -32,20 +32,36 @@ public interface MealRepository extends JpaRepository<Meal, Long> {
     List<Meal> findByNameContaining(String partialName);
 
     /**
-     * Finds all meals with the same ingredients as the provided meal, ignoring quantities.
-     * This custom query checks for meals with identical food items, regardless of meal name and quantity.
-     * Ensures that only meals with the exact same set of ingredients are returned.
+     * Finds meals in a user's meal list that have the exact same ingredients as the provided meal.
+     * This ensures the user does not have duplicate meals with identical ingredients, regardless of quantity.
      *
-     * @param mealId the ID of the meal to compare with others
-     * @return a list of meals that have the same ingredients as the specified meal, ignoring quantities
+     * @param mealId the ID of the meal to compare ingredients with
+     * @param userId the ID of the user to check within their meal list
+     * @return a list of meals with identical ingredients as the specified meal in the user's list
      */
-    @Query("SELECT m FROM Meal m WHERE m.id <> :mealId AND " +
-            "NOT EXISTS (SELECT mi FROM MealIngredient mi WHERE mi.meal.id = :mealId AND mi.foodItem NOT IN " +
+    @Query("SELECT m FROM User u JOIN u.meals m WHERE u.id = :userId AND m.id <> :mealId " +
+            "AND NOT EXISTS (SELECT mi FROM MealIngredient mi WHERE mi.meal.id = :mealId AND mi.foodItem NOT IN " +
             "(SELECT mi2.foodItem FROM MealIngredient mi2 WHERE mi2.meal = m)) " +
             "AND NOT EXISTS (SELECT mi2 FROM MealIngredient mi2 WHERE mi2.meal = m AND mi2.foodItem NOT IN " +
             "(SELECT mi.foodItem FROM MealIngredient mi WHERE mi.meal.id = :mealId))")
-    List<Meal> findMealsWithSameIngredients(@Param("mealId") Long mealId);
+    List<Meal> findUserMealsWithExactIngredients(@Param("mealId") Long mealId, @Param("userId") Long userId);
 
+    /**
+     * Finds template meals with the exact same ingredients as a provided meal.
+     * This ensures that there are no duplicate template meals with identical ingredients in the app,
+     * allowing multiple meals with the same name but only if the ingredients differ.
+     *
+     * @param foodItemIds the list of food item IDs to check
+     * @param size the expected size of the ingredient list
+     * @return a list of template meals with identical ingredients as the specified meal
+     */
+    @Query("SELECT m FROM Meal m " +
+            "JOIN m.mealIngredients mi " +
+            "WHERE m.isTemplate = true " +
+            "AND mi.foodItem.id IN :foodItemIds " +
+            "GROUP BY m.id " +
+            "HAVING COUNT(mi) = :size")
+    List<Meal> findTemplateMealsWithExactIngredients(@Param("foodItemIds") List<Long> foodItemIds, @Param("size") long size);
 
     /**
      * Retrieves all meals marked as templates.

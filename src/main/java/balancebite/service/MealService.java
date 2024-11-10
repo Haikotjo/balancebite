@@ -3,6 +3,7 @@ package balancebite.service;
 import balancebite.dto.meal.MealDTO;
 import balancebite.dto.meal.MealInputDTO;
 import balancebite.dto.NutrientInfoDTO;
+import balancebite.errorHandling.DuplicateMealException;
 import balancebite.errorHandling.InvalidFoodItemException;
 import balancebite.mapper.MealIngredientMapper;
 import balancebite.mapper.MealMapper;
@@ -21,6 +22,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Service class for managing Meal entities.
@@ -88,38 +90,40 @@ public class MealService implements IMealService {
      * @return The created MealDTO with the persisted meal information.
      * @throws InvalidFoodItemException if any food item in the input is invalid.
      * @throws EntityNotFoundException  if the user cannot be found.
+     * @throws DuplicateMealException   if a template meal with the same ingredients already exists.
      */
     @Override
     @Transactional
     public MealDTO createMealForUser(MealInputDTO mealInputDTO, Long userId) {
         log.info("Attempting to create a new meal for user ID: {}", userId);
-        try {
-            Meal meal = mealMapper.toEntity(mealInputDTO);
-            User user = userRepository.findById(userId)
-                    .orElseThrow(() -> new EntityNotFoundException("User not found with ID: " + userId));
 
-            meal.setCreatedBy(user);
-            meal.incrementUserCount();
+        Meal meal = mealMapper.toEntity(mealInputDTO);
+        List<Long> foodItemIds = meal.getMealIngredients().stream()
+                .map(mi -> mi.getFoodItem().getId())
+                .collect(Collectors.toList());
+        log.debug("Collected food item IDs for duplicate check: {}", foodItemIds);
 
-            user.getMeals().add(meal);
-
-            Meal savedMeal = mealRepository.save(meal);
-            userRepository.save(user);
-
-            log.info("Successfully created a new meal for user with ID: {}", userId);
-            return mealMapper.toDTO(savedMeal);
-        } catch (InvalidFoodItemException e) {
-            log.error("Failed to create meal due to invalid food item: {}", e.getMessage());
-            throw e;
-        } catch (EntityNotFoundException e) {
-            log.error("User not found while creating meal for user ID {}: {}", userId, e.getMessage());
-            throw e;
-        } catch (Exception e) {
-            log.error("Unexpected error during meal creation for user ID {}: {}", userId, e.getMessage(), e);
-            throw new RuntimeException("An unexpected error occurred while creating the meal for user.");
+        List<Meal> duplicateMeals = mealRepository.findTemplateMealsWithExactIngredients(foodItemIds, foodItemIds.size());
+        if (!duplicateMeals.isEmpty()) {
+            log.warn("Duplicate template meal detected: {}", duplicateMeals);
+            throw new DuplicateMealException("A template meal with the same ingredients already exists.");
         }
-    }
 
+        log.debug("Attempting to retrieve user by ID: {}", userId);
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("User not found with ID: " + userId));
+
+        meal.setCreatedBy(user);
+        meal.incrementUserCount();
+        user.getMeals().add(meal);
+        log.debug("Meal prepared for saving: {}", meal);
+
+        Meal savedMeal = mealRepository.save(meal);
+        userRepository.save(user);
+
+        log.info("Successfully created a new meal for user with ID: {}", userId);
+        return mealMapper.toDTO(savedMeal);
+    }
 
     /**
      * Updates an existing Meal entity with new information.
