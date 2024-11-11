@@ -97,7 +97,7 @@ public class MealController {
      * @param mealInputDTO The new details of the meal.
      * @return ResponseEntity containing the updated MealDTO with 200 status code, or an error response with an appropriate status.
      */
-    @PutMapping("/{id}")
+    @PatchMapping("/{id}")
     public ResponseEntity<?> updateMeal(@PathVariable Long id, @RequestBody MealInputDTO mealInputDTO) {
         try {
             log.info("Updating meal with ID: {}", id);
