@@ -16,6 +16,7 @@ import balancebite.repository.MealRepository;
 import balancebite.repository.UserRepository;
 import balancebite.service.interfaces.IMealService;
 import balancebite.utils.NutrientCalculatorUtil;
+import balancebite.utils.CheckForDuplicateTemplateMealUtil;
 import jakarta.persistence.EntityNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,6 +40,7 @@ public class MealService implements IMealService {
     private final UserRepository userRepository;
     private final MealMapper mealMapper;
     private final MealIngredientMapper mealIngredientMapper;
+    private final CheckForDuplicateTemplateMealUtil checkForDuplicateTemplateMeal;
 
     /**
      * Constructor for MealService, using constructor injection.
@@ -48,12 +50,13 @@ public class MealService implements IMealService {
      * @param userRepository     the repository for managing User entities.
      * @param mealMapper         the mapper for converting Meal entities to DTOs.
      */
-    public MealService(MealRepository mealRepository, FoodItemRepository foodItemRepository, UserRepository userRepository, MealMapper mealMapper, MealIngredientMapper mealIngredientMapper) {
+    public MealService(MealRepository mealRepository, FoodItemRepository foodItemRepository, UserRepository userRepository, MealMapper mealMapper, MealIngredientMapper mealIngredientMapper, CheckForDuplicateTemplateMealUtil checkForDuplicateTemplateMeal) {
         this.mealRepository = mealRepository;
         this.foodItemRepository = foodItemRepository;
         this.userRepository = userRepository;
         this.mealMapper = mealMapper;
         this.mealIngredientMapper = mealIngredientMapper;
+        this.checkForDuplicateTemplateMeal = checkForDuplicateTemplateMeal;
     }
 
     /**
@@ -76,14 +79,8 @@ public class MealService implements IMealService {
                 .collect(Collectors.toList());
         log.debug("Collected food item IDs for duplicate check: {}", foodItemIds);
 
-        // Check for duplicate template meals
-        List<Meal> duplicateMeals = mealRepository.findTemplateMealsWithExactIngredients(foodItemIds, foodItemIds.size());
-        if (!duplicateMeals.isEmpty()) {
-            Meal duplicateMeal = duplicateMeals.get(0); // Using the first duplicate found
-            String duplicateInfo = String.format("Meal Name: %s, Meal ID: %d", duplicateMeal.getName(), duplicateMeal.getId());
-            log.warn("Duplicate template meal detected: {}", duplicateInfo);
-            throw new DuplicateMealException("A template meal with the same ingredients already exists. " + duplicateInfo);
-        }
+        // Use CheckForDuplicateTemplateMealUtil to check for duplicate template meals
+        checkForDuplicateTemplateMeal.checkForDuplicateTemplateMeal(foodItemIds, null);
 
         log.debug("Meal prepared for saving: {}", meal);
         Meal savedMeal = mealRepository.save(meal);
@@ -113,14 +110,8 @@ public class MealService implements IMealService {
                 .collect(Collectors.toList());
         log.debug("Collected food item IDs for duplicate check: {}", foodItemIds);
 
-        // Check for duplicate template meals and include duplicate details in exception message
-        List<Meal> duplicateMeals = mealRepository.findTemplateMealsWithExactIngredients(foodItemIds, foodItemIds.size());
-        if (!duplicateMeals.isEmpty()) {
-            Meal duplicateMeal = duplicateMeals.get(0); // Assumes the first match is sufficient for logging
-            String duplicateInfo = String.format("Meal Name: %s, Meal ID: %d", duplicateMeal.getName(), duplicateMeal.getId());
-            log.warn("Duplicate template meal detected: {}", duplicateInfo);
-            throw new DuplicateMealException("A meal with the same ingredients already exists. " + duplicateInfo);
-        }
+        // Use CheckForDuplicateTemplateMealUtil to check for duplicate template meals
+        checkForDuplicateTemplateMeal.checkForDuplicateTemplateMeal(foodItemIds, null);
 
         log.debug("Attempting to retrieve user by ID: {}", userId);
         User user = userRepository.findById(userId)
@@ -159,23 +150,12 @@ public class MealService implements IMealService {
 
         // Duplicate check for template meals (isTemplate = true)
         if (existingMeal.isTemplate() && mealInputDTO.getMealIngredients() != null) {
-            // Convert MealInputDTO to Meal entity to retrieve the foodItemIds
             List<Long> foodItemIds = mealInputDTO.getMealIngredients().stream()
                     .map(MealIngredientInputDTO::getFoodItemId)
                     .toList();
 
-            // Check for duplicate template meals
-            List<Meal> duplicateMeals = mealRepository.findTemplateMealsWithExactIngredients(foodItemIds, foodItemIds.size());
-            duplicateMeals = duplicateMeals.stream()
-                    .filter(dupMeal -> !dupMeal.getId().equals(id))
-                    .toList();
-
-            if (!duplicateMeals.isEmpty()) {
-                Meal duplicateMeal = duplicateMeals.get(0);
-                String duplicateInfo = String.format("Meal Name: %s, Meal ID: %d", duplicateMeal.getName(), duplicateMeal.getId());
-                log.warn("Duplicate template meal detected during update: {}", duplicateInfo);
-                throw new DuplicateMealException("A template meal with the same ingredients already exists. " + duplicateInfo);
-            }
+            // Use CheckForDuplicateTemplateMealUtil to check for duplicate template meals, passing the current meal ID
+            checkForDuplicateTemplateMeal.checkForDuplicateTemplateMeal(foodItemIds, id);
         }
 
         // Proceed with updating the meal fields
@@ -199,7 +179,6 @@ public class MealService implements IMealService {
         log.info("Successfully updated meal with ID: {}", id);
         return mealMapper.toDTO(savedMeal);
     }
-
 
     /**
      * Retrieves all template Meals from the repository (isTemplate = true).
