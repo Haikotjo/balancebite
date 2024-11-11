@@ -3,6 +3,7 @@ package balancebite.service.interfaces;
 import balancebite.dto.meal.MealDTO;
 import balancebite.dto.meal.MealInputDTO;
 import balancebite.dto.user.UserDTO;
+import balancebite.errorHandling.DuplicateMealException;
 import balancebite.errorHandling.InvalidFoodItemException;
 import balancebite.errorHandling.MealNotFoundException;
 import balancebite.errorHandling.UserNotFoundException;
@@ -24,6 +25,21 @@ public interface IUserMealService {
      * @throws EntityNotFoundException  If the user cannot be found.
      */
     MealDTO createMealForUser(MealInputDTO mealInputDTO, Long userId) throws InvalidFoodItemException, EntityNotFoundException;
+
+    /**
+     * Updates an existing Meal entity for a specific user.
+     * Only meals in the user's list can be updated, with appropriate checks based on the template status.
+     *
+     * @param userId        The ID of the user whose meal is to be updated.
+     * @param mealId        The ID of the meal to be updated.
+     * @param mealInputDTO  The new details of the meal.
+     * @return The updated MealDTO with the new meal data.
+     * @throws EntityNotFoundException if the user or meal cannot be found.
+     * @throws InvalidFoodItemException if any food item ID in the ingredients is invalid.
+     * @throws DuplicateMealException if updating would create a duplicate template meal.
+     */
+    MealDTO updateUserMeal(Long userId, Long mealId, MealInputDTO mealInputDTO) throws EntityNotFoundException, InvalidFoodItemException, DuplicateMealException;
+
 
     /**
      * Adds an existing meal to the user's list of meals.

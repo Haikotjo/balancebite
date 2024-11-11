@@ -68,13 +68,43 @@ public class UserMealController {
     }
 
     /**
+     * Updates a user's meal by ID, only allowing updates to meals in their list.
+     *
+     * @param userId       The ID of the user.
+     * @param mealId       The ID of the meal to update.
+     * @param mealInputDTO The new details of the meal.
+     * @return ResponseEntity containing the updated MealDTO with 200 status code, or an error response with an appropriate status.
+     */
+    @PatchMapping("/{userId}/update-meal/{mealId}")
+    public ResponseEntity<?> updateUserMeal(@PathVariable Long userId, @PathVariable Long mealId, @RequestBody MealInputDTO mealInputDTO) {
+        try {
+            log.info("Updating meal with ID: {} for user ID: {}", mealId, userId);
+            MealDTO updatedMeal = userMealService.updateUserMeal(userId, mealId, mealInputDTO);
+            return ResponseEntity.ok(updatedMeal);
+        } catch (DuplicateMealException e) {
+            log.warn("Duplicate meal detected during update for user ID {} and meal ID {}: {}", userId, mealId, e.getMessage());
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", e.getMessage()));
+        } catch (EntityNotFoundException e) {
+            log.warn("User or meal not found for user ID {} and meal ID {}: {}", userId, mealId, e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+        } catch (InvalidFoodItemException e) {
+            log.warn("Invalid food item in meal update for user ID {} and meal ID {}: {}", userId, mealId, e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            log.error("Unexpected error during meal update for user ID {} and meal ID {}: {}", userId, mealId, e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "An unexpected error occurred."));
+        }
+    }
+
+
+    /**
      * Endpoint to add an existing meal to a user's list of meals.
      *
      * @param userId The ID of the user to whom the meal will be added.
      * @param mealId The ID of the meal to be added.
      * @return The updated UserDTO with 200 status code, or a 404 status code if the user or meal is not found.
      */
-    @PatchMapping("/{userId}/meals/{mealId}")
+    @PatchMapping("/{userId}/add-meal/{mealId}")
     public ResponseEntity<?> addMealToUser(@PathVariable Long userId, @PathVariable Long mealId) {
         try {
             log.info("Adding meal ID {} to user ID {}", mealId, userId);

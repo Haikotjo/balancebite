@@ -90,7 +90,6 @@ public class MealController {
         }
     }
 
-
     /**
      * Retrieves all template Meal entities from the repository.
      *

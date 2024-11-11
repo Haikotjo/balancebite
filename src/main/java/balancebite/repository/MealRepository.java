@@ -32,18 +32,20 @@ public interface MealRepository extends JpaRepository<Meal, Long> {
     List<Meal> findByNameContaining(String partialName);
 
     /**
-     * Finds meals in a user's meal list that have the exact same ingredients as the provided meal.
-     * This ensures the user does not have duplicate meals with identical ingredients, regardless of quantity.
+     * Finds meals in a user's meal list that have the exact same ingredients and quantities as the provided meal.
+     * This ensures the user does not have duplicate meals with identical ingredients and quantities.
      *
      * @param mealId the ID of the meal to compare ingredients with
      * @param userId the ID of the user to check within their meal list
-     * @return a list of meals with identical ingredients as the specified meal in the user's list
+     * @return a list of meals with identical ingredients and quantities as the specified meal in the user's list
      */
     @Query("SELECT m FROM User u JOIN u.meals m WHERE u.id = :userId AND m.id <> :mealId " +
-            "AND NOT EXISTS (SELECT mi FROM MealIngredient mi WHERE mi.meal.id = :mealId AND mi.foodItem NOT IN " +
-            "(SELECT mi2.foodItem FROM MealIngredient mi2 WHERE mi2.meal = m)) " +
-            "AND NOT EXISTS (SELECT mi2 FROM MealIngredient mi2 WHERE mi2.meal = m AND mi2.foodItem NOT IN " +
-            "(SELECT mi.foodItem FROM MealIngredient mi WHERE mi.meal.id = :mealId))")
+            "AND NOT EXISTS (SELECT mi FROM MealIngredient mi WHERE mi.meal.id = :mealId " +
+            "AND NOT EXISTS (SELECT mi2 FROM MealIngredient mi2 WHERE mi2.meal = m " +
+            "AND mi2.foodItem = mi.foodItem AND mi2.quantity = mi.quantity)) " +
+            "AND NOT EXISTS (SELECT mi2 FROM MealIngredient mi2 WHERE mi2.meal = m " +
+            "AND NOT EXISTS (SELECT mi FROM MealIngredient mi WHERE mi.meal.id = :mealId " +
+            "AND mi.foodItem = mi2.foodItem AND mi.quantity = mi2.quantity))")
     List<Meal> findUserMealsWithExactIngredients(@Param("mealId") Long mealId, @Param("userId") Long userId);
 
     /**
