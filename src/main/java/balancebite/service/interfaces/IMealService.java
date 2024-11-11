@@ -26,17 +26,6 @@ public interface IMealService {
     MealDTO createMealNoUser(MealInputDTO mealInputDTO) throws InvalidFoodItemException;
 
     /**
-     * Creates a new Meal entity for a specific user based on the provided MealInputDTO.
-     *
-     * @param mealInputDTO The DTO containing the input data for creating a Meal.
-     * @param userId       The ID of the user to whom the meal will be associated.
-     * @return The created MealDTO with the persisted meal information.
-     * @throws InvalidFoodItemException If any food item in the input is invalid.
-     * @throws EntityNotFoundException  If the user cannot be found.
-     */
-    MealDTO createMealForUser(MealInputDTO mealInputDTO, Long userId) throws InvalidFoodItemException, EntityNotFoundException;
-
-    /**
      * Updates an existing Meal entity with new information.
      *
      * @param id           The ID of the meal to be updated.

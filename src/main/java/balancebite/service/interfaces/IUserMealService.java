@@ -1,14 +1,29 @@
 package balancebite.service.interfaces;
 
+import balancebite.dto.meal.MealDTO;
+import balancebite.dto.meal.MealInputDTO;
 import balancebite.dto.user.UserDTO;
+import balancebite.errorHandling.InvalidFoodItemException;
 import balancebite.errorHandling.MealNotFoundException;
 import balancebite.errorHandling.UserNotFoundException;
+import jakarta.persistence.EntityNotFoundException;
 
 /**
  * Interface defining methods for managing the relationship between users and meals.
  * This includes adding and removing meals from a user's list.
  */
 public interface IUserMealService {
+
+    /**
+     * Creates a new Meal entity for a specific user based on the provided MealInputDTO.
+     *
+     * @param mealInputDTO The DTO containing the input data for creating a Meal.
+     * @param userId       The ID of the user to whom the meal will be associated.
+     * @return The created MealDTO with the persisted meal information.
+     * @throws InvalidFoodItemException If any food item in the input is invalid.
+     * @throws EntityNotFoundException  If the user cannot be found.
+     */
+    MealDTO createMealForUser(MealInputDTO mealInputDTO, Long userId) throws InvalidFoodItemException, EntityNotFoundException;
 
     /**
      * Adds an existing meal to the user's list of meals.

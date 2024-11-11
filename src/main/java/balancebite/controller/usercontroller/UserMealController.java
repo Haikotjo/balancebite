@@ -1,13 +1,12 @@
 package balancebite.controller.usercontroller;
 
 import balancebite.dto.meal.MealDTO;
+import balancebite.dto.meal.MealInputDTO;
 import balancebite.dto.user.UserDTO;
-import balancebite.errorHandling.DailyIntakeNotFoundException;
-import balancebite.errorHandling.DuplicateMealException;
-import balancebite.errorHandling.MealNotFoundException;
-import balancebite.errorHandling.UserNotFoundException;
+import balancebite.errorHandling.*;
 import balancebite.service.user.ConsumeMealService;
 import balancebite.service.user.UserMealService;
+import jakarta.persistence.EntityNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -38,6 +37,34 @@ public class UserMealController {
     public UserMealController(UserMealService userMealService, ConsumeMealService consumeMealService) {
         this.userMealService = userMealService;
         this.consumeMealService = consumeMealService;
+    }
+
+    /**
+     * Creates a new Meal entity for a specific user based on the provided MealInputDTO.
+     *
+     * @param mealInputDTO The input data for creating the meal.
+     * @param userId       The ID of the user to associate the meal with.
+     * @return ResponseEntity containing the created MealDTO with 201 status code, or an error response with an appropriate status.
+     */
+    @PostMapping("/{userId}/meal")
+    public ResponseEntity<?> createMealForUser(@RequestBody MealInputDTO mealInputDTO, @PathVariable Long userId) {
+        try {
+            log.info("Creating new meal for user ID: {}", userId);
+            MealDTO createdMeal = userMealService.createMealForUser(mealInputDTO, userId);
+            return ResponseEntity.status(HttpStatus.CREATED).body(createdMeal);
+        } catch (DuplicateMealException e) {
+            log.warn("Duplicate meal detected for user ID {}: {}", userId, e.getMessage());
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", e.getMessage()));
+        } catch (EntityNotFoundException e) {
+            log.warn("User not found with ID {} during meal creation: {}", userId, e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+        } catch (InvalidFoodItemException e) {
+            log.warn("Invalid food item for user meal creation: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            log.error("Unexpected error during meal creation for user ID {}: {}", userId, e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "An unexpected error occurred."));
+        }
     }
 
     /**
@@ -109,8 +136,6 @@ public class UserMealController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "An unexpected error occurred."));
         }
     }
-
-
 
     /**
      * Endpoint for processing the consumption of a meal by a user.

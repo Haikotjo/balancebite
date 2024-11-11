@@ -63,34 +63,6 @@ public class MealController {
     }
 
     /**
-     * Creates a new Meal entity for a specific user based on the provided MealInputDTO.
-     *
-     * @param mealInputDTO The input data for creating the meal.
-     * @param userId       The ID of the user to associate the meal with.
-     * @return ResponseEntity containing the created MealDTO with 201 status code, or an error response with an appropriate status.
-     */
-    @PostMapping("/user/{userId}")
-    public ResponseEntity<?> createMealForUser(@RequestBody MealInputDTO mealInputDTO, @PathVariable Long userId) {
-        try {
-            log.info("Creating new meal for user ID: {}", userId);
-            MealDTO createdMeal = mealService.createMealForUser(mealInputDTO, userId);
-            return ResponseEntity.status(HttpStatus.CREATED).body(createdMeal);
-        } catch (DuplicateMealException e) {
-            log.warn("Duplicate meal detected for user ID {}: {}", userId, e.getMessage());
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", e.getMessage()));
-        } catch (EntityNotFoundException e) {
-            log.warn("User not found with ID {} during meal creation: {}", userId, e.getMessage());
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
-        } catch (InvalidFoodItemException e) {
-            log.warn("Invalid food item for user meal creation: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
-        } catch (Exception e) {
-            log.error("Unexpected error during meal creation for user ID {}: {}", userId, e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "An unexpected error occurred."));
-        }
-    }
-
-    /**
      * Updates an existing Meal entity by its ID with the provided MealInputDTO.
      *
      * @param id           The ID of the meal to update.

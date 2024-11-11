@@ -89,47 +89,6 @@ public class MealService implements IMealService {
     }
 
     /**
-     * Creates a new Meal entity for a specific user based on the provided MealInputDTO.
-     * This method converts the input DTO to a Meal entity, associates it with a user, persists it, and then converts the result back to a DTO.
-     *
-     * @param mealInputDTO The DTO containing the input data for creating a Meal.
-     * @param userId       The ID of the user to whom the meal will be associated.
-     * @return The created MealDTO with the persisted meal information.
-     * @throws InvalidFoodItemException if any food item in the input is invalid.
-     * @throws EntityNotFoundException  if the user cannot be found.
-     * @throws DuplicateMealException   if a template meal with the same ingredients already exists.
-     */
-    @Override
-    @Transactional
-    public MealDTO createMealForUser(MealInputDTO mealInputDTO, Long userId) {
-        log.info("Attempting to create a new meal for user ID: {}", userId);
-
-        Meal meal = mealMapper.toEntity(mealInputDTO);
-        List<Long> foodItemIds = meal.getMealIngredients().stream()
-                .map(mi -> mi.getFoodItem().getId())
-                .collect(Collectors.toList());
-        log.debug("Collected food item IDs for duplicate check: {}", foodItemIds);
-
-        // Use CheckForDuplicateTemplateMealUtil to check for duplicate template meals
-        checkForDuplicateTemplateMeal.checkForDuplicateTemplateMeal(foodItemIds, null);
-
-        log.debug("Attempting to retrieve user by ID: {}", userId);
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new EntityNotFoundException("User not found with ID: " + userId));
-
-        meal.setCreatedBy(user);
-        meal.incrementUserCount();
-        user.getMeals().add(meal);
-        log.debug("Meal prepared for saving: {}", meal);
-
-        Meal savedMeal = mealRepository.save(meal);
-        userRepository.save(user);
-
-        log.info("Successfully created a new meal for user with ID: {}", userId);
-        return mealMapper.toDTO(savedMeal);
-    }
-
-    /**
      * Updates an existing Meal entity with new information.
      * If the meal is a template (isTemplate = true), it checks to ensure no duplicate ingredient lists.
      * The user relationship remains unchanged during this update.
