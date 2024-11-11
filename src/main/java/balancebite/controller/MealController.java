@@ -103,6 +103,9 @@ public class MealController {
             log.info("Updating meal with ID: {}", id);
             MealDTO updatedMeal = mealService.updateMeal(id, mealInputDTO);
             return ResponseEntity.ok(updatedMeal);
+        } catch (DuplicateMealException e) {
+            log.warn("Duplicate meal detected during update for meal ID {}: {}", id, e.getMessage());
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", e.getMessage()));
         } catch (EntityNotFoundException e) {
             log.warn("Meal not found with ID {}: {}", id, e.getMessage());
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
@@ -114,6 +117,7 @@ public class MealController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "An unexpected error occurred."));
         }
     }
+
 
     /**
      * Retrieves all template Meal entities from the repository.

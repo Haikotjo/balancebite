@@ -3,6 +3,7 @@ package balancebite.service;
 import balancebite.dto.meal.MealDTO;
 import balancebite.dto.meal.MealInputDTO;
 import balancebite.dto.NutrientInfoDTO;
+import balancebite.dto.mealingredient.MealIngredientInputDTO;
 import balancebite.errorHandling.DuplicateMealException;
 import balancebite.errorHandling.InvalidFoodItemException;
 import balancebite.mapper.MealIngredientMapper;
@@ -139,7 +140,7 @@ public class MealService implements IMealService {
 
     /**
      * Updates an existing Meal entity with new information.
-     * This method updates the meal's name and ingredients based on the provided MealInputDTO.
+     * If the meal is a template (isTemplate = true), it checks to ensure no duplicate ingredient lists.
      * The user relationship remains unchanged during this update.
      *
      * @param id           the ID of the meal to be updated.
@@ -147,6 +148,7 @@ public class MealService implements IMealService {
      * @return the updated MealDTO containing the new meal data.
      * @throws EntityNotFoundException if the meal with the given ID is not found.
      * @throws InvalidFoodItemException if any food item ID in the ingredients is invalid.
+     * @throws DuplicateMealException   if updating would create a duplicate template meal.
      */
     @Override
     @Transactional
@@ -155,17 +157,49 @@ public class MealService implements IMealService {
         Meal existingMeal = mealRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Meal not found with ID: " + id));
 
-        existingMeal.setName(mealInputDTO.getName());
-        existingMeal.getMealIngredients().clear();
-        List<MealIngredient> updatedIngredients = mealInputDTO.getMealIngredients().stream()
-                .map(inputDTO -> mealIngredientMapper.toEntity(inputDTO, existingMeal))
-                .toList();
-        existingMeal.addMealIngredients(updatedIngredients);
+        // Duplicate check for template meals (isTemplate = true)
+        if (existingMeal.isTemplate() && mealInputDTO.getMealIngredients() != null) {
+            // Convert MealInputDTO to Meal entity to retrieve the foodItemIds
+            List<Long> foodItemIds = mealInputDTO.getMealIngredients().stream()
+                    .map(MealIngredientInputDTO::getFoodItemId)
+                    .toList();
+
+            // Check for duplicate template meals
+            List<Meal> duplicateMeals = mealRepository.findTemplateMealsWithExactIngredients(foodItemIds, foodItemIds.size());
+            duplicateMeals = duplicateMeals.stream()
+                    .filter(dupMeal -> !dupMeal.getId().equals(id))
+                    .toList();
+
+            if (!duplicateMeals.isEmpty()) {
+                Meal duplicateMeal = duplicateMeals.get(0);
+                String duplicateInfo = String.format("Meal Name: %s, Meal ID: %d", duplicateMeal.getName(), duplicateMeal.getId());
+                log.warn("Duplicate template meal detected during update: {}", duplicateInfo);
+                throw new DuplicateMealException("A template meal with the same ingredients already exists. " + duplicateInfo);
+            }
+        }
+
+        // Proceed with updating the meal fields
+        if (mealInputDTO.getName() != null) {
+            existingMeal.setName(mealInputDTO.getName());
+        }
+        if (mealInputDTO.getMealDescription() != null) {
+            existingMeal.setMealDescription(mealInputDTO.getMealDescription());
+        }
+
+        if (mealInputDTO.getMealIngredients() != null) {
+            // Clear existing ingredients only if we have a new list to replace them with
+            existingMeal.getMealIngredients().clear();
+            List<MealIngredient> updatedIngredients = mealInputDTO.getMealIngredients().stream()
+                    .map(inputDTO -> mealIngredientMapper.toEntity(inputDTO, existingMeal))
+                    .toList();
+            existingMeal.addMealIngredients(updatedIngredients);
+        }
 
         Meal savedMeal = mealRepository.save(existingMeal);
         log.info("Successfully updated meal with ID: {}", id);
         return mealMapper.toDTO(savedMeal);
     }
+
 
     /**
      * Retrieves all template Meals from the repository (isTemplate = true).
