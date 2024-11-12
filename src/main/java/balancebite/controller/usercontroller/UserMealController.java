@@ -96,7 +96,6 @@ public class UserMealController {
         }
     }
 
-
     /**
      * Endpoint to add an existing meal to a user's list of meals.
      *
