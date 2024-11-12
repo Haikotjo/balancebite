@@ -6,6 +6,8 @@ import balancebite.model.FoodItem;
 import balancebite.model.Meal;
 import balancebite.model.MealIngredient;
 import balancebite.repository.FoodItemRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 /**
@@ -13,6 +15,8 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class MealIngredientMapper {
+
+    private static final Logger log = LoggerFactory.getLogger(MealIngredientMapper.class);
 
     private final FoodItemRepository foodItemRepository;
 
@@ -34,19 +38,26 @@ public class MealIngredientMapper {
      * @return the created MealIngredient entity.
      */
     public MealIngredient toEntity(MealIngredientInputDTO inputDTO, Meal meal) {
+        log.info("Converting MealIngredientInputDTO to MealIngredient entity for meal ID {}.", meal.getId());
+
         FoodItem foodItem = foodItemRepository.findById(inputDTO.getFoodItemId())
-                .orElseThrow(() -> new IllegalArgumentException("Invalid food item ID: " + inputDTO.getFoodItemId()));
+                .orElseThrow(() -> {
+                    log.error("Invalid food item ID: {}", inputDTO.getFoodItemId());
+                    return new IllegalArgumentException("Invalid food item ID: " + inputDTO.getFoodItemId());
+                });
 
         double quantity;
         if (inputDTO.getQuantity() == null || inputDTO.getQuantity() <= 0) {
             quantity = foodItem.getGramWeight();
-            System.out.println("Quantity is null or <= 0, using gramWeight from FoodItem: " + quantity);
+            log.debug("Quantity is null or <= 0, using gramWeight from FoodItem: {}", quantity);
         } else {
             quantity = inputDTO.getQuantity();
-            System.out.println("Using quantity from inputDTO: " + quantity);
+            log.debug("Using quantity from inputDTO: {}", quantity);
         }
 
-        return new MealIngredient(meal, foodItem, quantity);
+        MealIngredient mealIngredient = new MealIngredient(meal, foodItem, quantity);
+        log.debug("Finished mapping MealIngredientInputDTO to MealIngredient entity: {}", mealIngredient);
+        return mealIngredient;
     }
 
     /**
@@ -56,12 +67,17 @@ public class MealIngredientMapper {
      * @return the created MealIngredientDTO.
      */
     public MealIngredientDTO toDTO(MealIngredient mealIngredient) {
-        return new MealIngredientDTO(
+        log.info("Converting MealIngredient entity to MealIngredientDTO for meal ID {}.", mealIngredient.getMeal().getId());
+
+        MealIngredientDTO dto = new MealIngredientDTO(
                 mealIngredient.getId(),
                 mealIngredient.getMeal().getId(),
                 mealIngredient.getFoodItem().getId(),
                 mealIngredient.getFoodItem().getName(),
                 mealIngredient.getQuantity()
         );
+
+        log.debug("Finished mapping MealIngredient entity to MealIngredientDTO: {}", dto);
+        return dto;
     }
 }

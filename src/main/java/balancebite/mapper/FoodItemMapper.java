@@ -5,6 +5,8 @@ import balancebite.dto.fooditem.FoodItemInputDTO;
 import balancebite.dto.NutrientInfoDTO;
 import balancebite.model.FoodItem;
 import balancebite.model.NutrientInfo;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -18,6 +20,8 @@ import java.util.stream.Collectors;
 @Component
 public class FoodItemMapper {
 
+    private static final Logger log = LoggerFactory.getLogger(FoodItemMapper.class);
+
     /**
      * Converts a FoodItemInputDTO to a FoodItem entity.
      *
@@ -25,17 +29,25 @@ public class FoodItemMapper {
      * @return The corresponding FoodItem entity, or null if the inputDTO is null.
      */
     public FoodItem toEntity(FoodItemInputDTO inputDTO) {
+        log.info("Converting FoodItemInputDTO to FoodItem entity.");
         return Optional.ofNullable(inputDTO)
                 .map(dto -> {
-                    FoodItem foodItem = new FoodItem(dto.getName(),dto.getFdcId(), dto.getPortionDescription(), dto.getGramWeight());
+                    log.debug("Mapping fields from FoodItemInputDTO to FoodItem.");
+                    FoodItem foodItem = new FoodItem(dto.getName(), dto.getFdcId(), dto.getPortionDescription(), dto.getGramWeight());
+
                     List<NutrientInfo> nutrients = dto.getNutrients() != null ?
                             dto.getNutrients().stream()
                                     .map(n -> new NutrientInfo(n.getNutrientName(), n.getValue(), n.getUnitName(), n.getNutrientId()))
                                     .collect(Collectors.toList()) : List.of();
                     foodItem.setNutrients(nutrients);
+
+                    log.debug("Finished mapping FoodItemInputDTO to FoodItem entity: {}", foodItem);
                     return foodItem;
                 })
-                .orElse(null);
+                .orElseGet(() -> {
+                    log.warn("Received null FoodItemInputDTO, returning null for FoodItem.");
+                    return null;
+                });
     }
 
     /**
@@ -45,10 +57,12 @@ public class FoodItemMapper {
      * @return The corresponding FoodItemDTO, or null if the foodItem is null.
      */
     public FoodItemDTO toDTO(FoodItem foodItem) {
+        log.info("Converting FoodItem entity to FoodItemDTO.");
         if (foodItem == null) {
+            log.warn("Received null FoodItem entity, returning null for FoodItemDTO.");
             return null;
         }
-        return new FoodItemDTO(
+        FoodItemDTO dto = new FoodItemDTO(
                 foodItem.getId(),
                 foodItem.getName(),
                 foodItem.getFdcId(),
@@ -59,5 +73,7 @@ public class FoodItemMapper {
                 foodItem.getPortionDescription(),
                 foodItem.getGramWeight()
         );
+        log.debug("Finished mapping FoodItem entity to FoodItemDTO: {}", dto);
+        return dto;
     }
 }
