@@ -2,6 +2,7 @@ package balancebite.service;
 
 import balancebite.config.ApiConfig;
 import balancebite.dto.UsdaFoodResponseDTO;
+import balancebite.errorHandling.EntityNotFoundException;
 import balancebite.errorHandling.UsdaApiException;
 import balancebite.service.interfaces.IUsdaApiService;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -13,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
@@ -96,6 +98,9 @@ public class UsdaApiService implements IUsdaApiService {
             }
             return parseResponse(responseEntity.getBody(), UsdaFoodResponseDTO.class);
 
+        } catch (HttpClientErrorException.NotFound e) {
+            logger.error("USDA API returned 404 Not Found for FDC ID: {}", fdcId);
+            throw new EntityNotFoundException("Food item with FDC ID " + fdcId + " not found in USDA API.");
         } catch (RestClientException e) {
             logger.error("HTTP request failed for FDC ID: {}", fdcId, e);
             throw new UsdaApiException("Failed to fetch food data from USDA API for FDC ID: " + fdcId, e);

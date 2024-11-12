@@ -56,14 +56,13 @@ public class FoodItemController {
             );
             return ResponseEntity.status(HttpStatus.CREATED).body(responseBody);
         } catch (EntityAlreadyExistsException e) {
-            log.warn("Food item already exists with FDC ID: {}", fdcId);
             return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", e.getMessage()));
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
-            log.error("Unexpected error during fetch and save for FDC ID: {}", fdcId, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "An unexpected error occurred."));
         }
     }
-
 
     /**
      * Endpoint to fetch and save multiple FoodItems by a list of FDC IDs.
