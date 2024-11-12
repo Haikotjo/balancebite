@@ -61,30 +61,45 @@ public class MealService implements IMealService {
 
     /**
      * Creates a new Meal entity based on the provided MealInputDTO.
-     * This method converts the input DTO to a Meal entity, persists it, and then converts the result back to a DTO.
+     * This method converts the input DTO to a Meal entity, checks the validity of each FoodItem in the meal,
+     * persists the entity, and then converts the result back to a DTO.
      *
      * @param mealInputDTO The DTO containing the input data for creating a Meal.
      * @return The created MealDTO with the persisted meal information.
      * @throws InvalidFoodItemException if any food item in the input is invalid.
-     * @throws DuplicateMealException   if a template meal with the same ingredients already exists.
+     * @throws DuplicateMealException if a template meal with the same ingredients already exists.
      */
     @Override
     @Transactional
     public MealDTO createMealNoUser(MealInputDTO mealInputDTO) {
         log.info("Attempting to create a new meal with name: {}", mealInputDTO.getName());
 
+        // Convert input DTO to Meal entity
         Meal meal = mealMapper.toEntity(mealInputDTO);
+
+        // Collect all FoodItem IDs from the Meal's ingredients
         List<Long> foodItemIds = meal.getMealIngredients().stream()
                 .map(mi -> mi.getFoodItem().getId())
                 .collect(Collectors.toList());
         log.debug("Collected food item IDs for duplicate check: {}", foodItemIds);
 
+        // Validate each FoodItem ID to ensure it exists in the database
+        for (Long foodItemId : foodItemIds) {
+            if (!foodItemRepository.existsById(foodItemId)) {
+                log.error("Invalid food item ID: {}", foodItemId);
+                throw new InvalidFoodItemException("Invalid food item ID: " + foodItemId);
+            }
+        }
+
         // Use CheckForDuplicateTemplateMealUtil to check for duplicate template meals
         checkForDuplicateTemplateMeal.checkForDuplicateTemplateMeal(foodItemIds, null);
 
+        // Prepare the meal for saving and log the action
         log.debug("Meal prepared for saving: {}", meal);
         Meal savedMeal = mealRepository.save(meal);
         log.info("Successfully created a new meal with ID: {}", savedMeal.getId());
+
+        // Convert saved Meal entity to DTO for the response
         return mealMapper.toDTO(savedMeal);
     }
 

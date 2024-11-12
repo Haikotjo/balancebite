@@ -35,6 +35,8 @@ public class Meal {
     /**
      * List of meal ingredients associated with the meal.
      * Each ingredient corresponds to a food item with a specified quantity.
+     * Using orphanRemoval = true to ensure that all MealIngredient entities
+     * are deleted from the database when the associated Meal is removed.
      */
     @OneToMany(mappedBy = "meal", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<MealIngredient> mealIngredients = new ArrayList<>();
@@ -42,6 +44,7 @@ public class Meal {
     /**
      * Count of users who have added this meal.
      * This field tracks how many unique users have added this meal.
+     * Increments each time a user adds the meal and decrements if they remove it.
      */
     @Column(name = "user_count", nullable = false)
     private int userCount = 0;
@@ -173,7 +176,7 @@ public class Meal {
     }
 
     /**
-     * Increments the user count for this meal by 1.
+     * Increments the user count for this meal by 1, tracking users who add this meal.
      */
     public void incrementUserCount() {
         this.userCount++;
@@ -181,6 +184,7 @@ public class Meal {
 
     /**
      * Decrements the user count for this meal by 1, ensuring it does not go below 0.
+     * This is used to track users removing the meal.
      */
     public void decrementUserCount() {
         if (this.userCount > 0) {

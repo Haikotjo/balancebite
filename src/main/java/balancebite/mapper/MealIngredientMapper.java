@@ -2,6 +2,7 @@ package balancebite.mapper;
 
 import balancebite.dto.mealingredient.MealIngredientDTO;
 import balancebite.dto.mealingredient.MealIngredientInputDTO;
+import balancebite.errorHandling.InvalidFoodItemException;
 import balancebite.model.FoodItem;
 import balancebite.model.Meal;
 import balancebite.model.MealIngredient;
@@ -43,7 +44,7 @@ public class MealIngredientMapper {
         FoodItem foodItem = foodItemRepository.findById(inputDTO.getFoodItemId())
                 .orElseThrow(() -> {
                     log.error("Invalid food item ID: {}", inputDTO.getFoodItemId());
-                    return new IllegalArgumentException("Invalid food item ID: " + inputDTO.getFoodItemId());
+                    return new InvalidFoodItemException("Invalid food item ID: " + inputDTO.getFoodItemId());
                 });
 
         double quantity;
