@@ -199,12 +199,26 @@ public class MealService implements IMealService {
     @Transactional
     public void deleteMeal(Long mealId) {
         log.info("Attempting to delete meal with ID: {}", mealId);
+
+        // Retrieve the meal or throw an exception if not found
         Meal meal = mealRepository.findById(mealId)
                 .orElseThrow(() -> new EntityNotFoundException("Meal not found with ID: " + mealId));
 
+        // Loop through users associated with the meal and remove the association
+        List<User> associatedUsers = userRepository.findAllByMealsContaining(meal);
+        for (User user : associatedUsers) {
+            log.info("Removing association between User ID: {} and Meal ID: {}", user.getId(), meal.getId());
+            user.getMeals().remove(meal);
+        }
+
+        // Save updated users back to the database to ensure association is removed
+        userRepository.saveAll(associatedUsers);
+
+        // Delete the meal after cleaning up the relationships
         mealRepository.delete(meal);
         log.info("Successfully deleted meal with ID: {}", mealId);
     }
+
 
     /**
      * Retrieves the total nutrients for a given Meal by its ID.

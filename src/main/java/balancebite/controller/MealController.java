@@ -138,7 +138,7 @@ public class MealController {
      * @param mealId The ID of the meal to delete.
      * @return ResponseEntity with 204 NO CONTENT status if deletion is successful, or an error response with an appropriate status.
      */
-    @DeleteMapping("/meal/{mealId}")
+    @DeleteMapping("/{mealId}")
     public ResponseEntity<?> deleteMeal(@PathVariable Long mealId) {
         try {
             log.info("Deleting meal with ID: {}", mealId);

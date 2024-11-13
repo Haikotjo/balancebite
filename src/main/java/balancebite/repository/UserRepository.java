@@ -1,7 +1,12 @@
 package balancebite.repository;
 
+import balancebite.model.Meal;
 import balancebite.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -24,4 +29,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
      * @return An Optional containing the User if found, or empty if no user exists with the given username.
      */
     Optional<User> findByUserName(String userName);
+
+    @Query("SELECT u FROM User u JOIN u.meals m WHERE m = :meal")
+    List<User> findAllByMealsContaining(@Param("meal") Meal meal);
 }
