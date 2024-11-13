@@ -161,9 +161,10 @@ public class MealController {
      */
     @GetMapping("/nutrients-per-food-item/{id}")
     public ResponseEntity<?> calculateNutrientsPerFoodItem(@PathVariable Long id) {
+        log.info("Received request to calculate nutrients per food item for meal ID: {}", id);
         try {
-            log.info("Calculating nutrients per food item for meal ID: {}", id);
             Map<Long, Map<String, NutrientInfoDTO>> nutrientsPerFoodItem = mealService.calculateNutrientsPerFoodItem(id);
+            log.info("Successfully calculated nutrients per food item for meal ID: {}", id);
             return ResponseEntity.ok(nutrientsPerFoodItem);
         } catch (EntityNotFoundException e) {
             log.warn("Meal not found for nutrient calculation with ID {}: {}", id, e.getMessage());
@@ -182,9 +183,10 @@ public class MealController {
      */
     @GetMapping("/nutrients/{id}")
     public ResponseEntity<?> calculateNutrients(@PathVariable Long id) {
+        log.info("Received request to calculate total nutrients for meal ID: {}", id);
         try {
-            log.info("Calculating total nutrients for meal ID: {}", id);
             Map<String, NutrientInfoDTO> nutrients = mealService.calculateNutrients(id);
+            log.info("Successfully calculated total nutrients for meal ID: {}", id);
             return ResponseEntity.ok(nutrients);
         } catch (EntityNotFoundException e) {
             log.warn("Meal not found for total nutrient calculation with ID {}: {}", id, e.getMessage());

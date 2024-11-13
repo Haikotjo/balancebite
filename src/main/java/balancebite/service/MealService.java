@@ -229,10 +229,18 @@ public class MealService implements IMealService {
      */
     @Override
     public Map<String, NutrientInfoDTO> calculateNutrients(Long mealId) {
-        log.info("Calculating total nutrients for meal with ID: {}", mealId);
+        log.info("Starting total nutrient calculation for meal with ID: {}", mealId);
+
         Meal meal = mealRepository.findById(mealId)
-                .orElseThrow(() -> new EntityNotFoundException("Meal not found with ID: " + mealId));
-        return NutrientCalculatorUtil.calculateTotalNutrients(meal.getMealIngredients());
+                .orElseThrow(() -> {
+                    log.warn("Meal not found with ID: {}", mealId);
+                    return new EntityNotFoundException("Meal not found with ID: " + mealId);
+                });
+
+        log.debug("Meal with ID {} contains {} ingredients.", mealId, meal.getMealIngredients().size());
+        Map<String, NutrientInfoDTO> totalNutrients = NutrientCalculatorUtil.calculateTotalNutrients(meal.getMealIngredients());
+        log.info("Total nutrient calculation completed for meal ID: {}. Total nutrients: {}", mealId, totalNutrients);
+        return totalNutrients;
     }
 
     /**
@@ -244,9 +252,18 @@ public class MealService implements IMealService {
      */
     @Override
     public Map<Long, Map<String, NutrientInfoDTO>> calculateNutrientsPerFoodItem(Long mealId) {
-        log.info("Calculating nutrients per food item for meal with ID: {}", mealId);
+        log.info("Starting nutrient calculation per food item for meal with ID: {}", mealId);
+
         Meal meal = mealRepository.findById(mealId)
-                .orElseThrow(() -> new EntityNotFoundException("Meal not found with ID: " + mealId));
-        return NutrientCalculatorUtil.calculateNutrientsPerFoodItem(meal.getMealIngredients());
+                .orElseThrow(() -> {
+                    log.warn("Meal not found with ID: {}", mealId);
+                    return new EntityNotFoundException("Meal not found with ID: " + mealId);
+                });
+
+        log.debug("Meal with ID {} contains {} ingredients.", mealId, meal.getMealIngredients().size());
+        Map<Long, Map<String, NutrientInfoDTO>> nutrientsPerFoodItem =
+                NutrientCalculatorUtil.calculateNutrientsPerFoodItem(meal.getMealIngredients());
+        log.info("Nutrient calculation per food item completed for meal ID: {}.", mealId);
+        return nutrientsPerFoodItem;
     }
 }
