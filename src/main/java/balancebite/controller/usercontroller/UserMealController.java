@@ -156,7 +156,7 @@ public class UserMealController {
         try {
             log.info("Removing meal ID {} from user ID {}", mealId, userId);
             UserDTO updatedUser = userMealService.removeMealFromUser(userId, mealId);
-            return ResponseEntity.ok(updatedUser);
+            return ResponseEntity.noContent().build();
         } catch (UserNotFoundException | MealNotFoundException e) {
             log.warn("Error occurred during meal removal: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
