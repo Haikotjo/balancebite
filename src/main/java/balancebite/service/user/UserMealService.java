@@ -44,7 +44,9 @@ public class UserMealService implements IUserMealService {
     private final MealIngredientMapper mealIngredientMapper;
     private final CheckForDuplicateTemplateMealUtil checkForDuplicateTemplateMeal;
 
-    public UserMealService(UserRepository userRepository, MealRepository mealRepository, UserMapper userMapper, MealMapper mealMapper, MealIngredientMapper mealIngredientMapper,CheckForDuplicateTemplateMealUtil checkForDuplicateTemplateMeal) {
+    public UserMealService(UserRepository userRepository, MealRepository mealRepository, UserMapper userMapper,
+                           MealMapper mealMapper, MealIngredientMapper mealIngredientMapper,
+                           CheckForDuplicateTemplateMealUtil checkForDuplicateTemplateMeal) {
         this.userRepository = userRepository;
         this.mealRepository = mealRepository;
         this.userMapper = userMapper;
@@ -69,28 +71,35 @@ public class UserMealService implements IUserMealService {
     public MealDTO createMealForUser(MealInputDTO mealInputDTO, Long userId) {
         log.info("Attempting to create a new meal for user ID: {}", userId);
 
+        // Convert DTO to Meal entity
         Meal meal = mealMapper.toEntity(mealInputDTO);
+        log.debug("Meal converted from DTO: {}", meal);
+
+        // Validate and check for duplicate ingredients
         List<Long> foodItemIds = meal.getMealIngredients().stream()
-                .map(mi -> mi.getFoodItem().getId())
+                .map(ingredient -> ingredient.getFoodItem().getId())
                 .collect(Collectors.toList());
         log.debug("Collected food item IDs for duplicate check: {}", foodItemIds);
 
-        // Use CheckForDuplicateTemplateMealUtil to check for duplicate template meals
         checkForDuplicateTemplateMeal.checkForDuplicateTemplateMeal(foodItemIds, null);
 
-        log.debug("Attempting to retrieve user by ID: {}", userId);
+        // Retrieve user or throw exception
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new EntityNotFoundException("User not found with ID: " + userId));
+                .orElseThrow(() -> {
+                    log.error("User with ID {} not found", userId);
+                    return new UserNotFoundException("User not found with ID: " + userId);
+                });
 
+        // Associate meal with user
         meal.setCreatedBy(user);
         meal.incrementUserCount();
         user.getMeals().add(meal);
-        log.debug("Meal prepared for saving: {}", meal);
 
+        // Save meal and user
         Meal savedMeal = mealRepository.save(meal);
         userRepository.save(user);
+        log.info("Successfully created meal for user ID: {}", userId);
 
-        log.info("Successfully created a new meal for user with ID: {}", userId);
         return mealMapper.toDTO(savedMeal);
     }
 
@@ -98,40 +107,37 @@ public class UserMealService implements IUserMealService {
      * Updates an existing Meal entity for a specific user.
      * Only meals in the user's list can be updated, with appropriate checks based on the template status.
      *
-     * @param userId        The ID of the user whose meal is to be updated.
-     * @param mealId        The ID of the meal to be updated.
-     * @param mealInputDTO  The new details of the meal.
+     * @param userId       The ID of the user whose meal is to be updated.
+     * @param mealId       The ID of the meal to be updated.
+     * @param mealInputDTO The new details of the meal.
      * @return The updated MealDTO with the new meal data.
      * @throws EntityNotFoundException if the user or meal cannot be found.
      * @throws InvalidFoodItemException if any food item ID in the ingredients is invalid.
-     * @throws DuplicateMealException if updating would create a duplicate template meal.
+     * @throws DuplicateMealException   if updating would create a duplicate template meal.
      */
     @Override
     @Transactional
     public MealDTO updateUserMeal(Long userId, Long mealId, MealInputDTO mealInputDTO) {
         log.info("Updating meal with ID: {} for user ID: {}", mealId, userId);
 
-        // Check if the user exists and retrieve the user
+        // Retrieve user and meal
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new EntityNotFoundException("User not found with ID: " + userId));
+                .orElseThrow(() -> {
+                    log.error("User with ID {} not found", userId);
+                    return new UserNotFoundException("User not found with ID: " + userId);
+                });
 
-        // Find the meal in the user's list or throw an exception if not found
         Meal existingMeal = user.getMeals().stream()
                 .filter(meal -> meal.getId().equals(mealId))
                 .findFirst()
-                .orElseThrow(() -> new EntityNotFoundException("Meal not found in user's list with ID: " + mealId));
+                .orElseThrow(() -> {
+                    log.error("Meal with ID {} not found in user's list", mealId);
+                    return new MealNotFoundException("Meal not found with ID: " + mealId);
+                });
 
-        // Duplicate check for template meals (isTemplate = true)
-        if (existingMeal.isTemplate() && mealInputDTO.getMealIngredients() != null) {
-            List<Long> foodItemIds = mealInputDTO.getMealIngredients().stream()
-                    .map(MealIngredientInputDTO::getFoodItemId)
-                    .toList();
+        log.debug("Existing meal retrieved: {}", existingMeal);
 
-            // Use CheckForDuplicateTemplateMealUtil to verify duplicates
-            checkForDuplicateTemplateMeal.checkForDuplicateTemplateMeal(foodItemIds, mealId);
-        }
-
-        // Update meal fields if provided in the DTO
+        // Update fields
         if (mealInputDTO.getName() != null) {
             existingMeal.setName(mealInputDTO.getName());
         }
@@ -140,17 +146,16 @@ public class UserMealService implements IUserMealService {
         }
         if (mealInputDTO.getMealIngredients() != null) {
             existingMeal.getMealIngredients().clear();
-            List<MealIngredient> updatedIngredients = mealInputDTO.getMealIngredients().stream()
+            mealInputDTO.getMealIngredients().stream()
                     .map(inputDTO -> mealIngredientMapper.toEntity(inputDTO, existingMeal))
-                    .toList();
-            existingMeal.addMealIngredients(updatedIngredients);
+                    .forEach(existingMeal::addMealIngredient);
         }
 
         Meal savedMeal = mealRepository.save(existingMeal);
         log.info("Successfully updated meal with ID: {} for user ID: {}", mealId, userId);
+
         return mealMapper.toDTO(savedMeal);
     }
-
 
     /**
      * Adds a copy of an existing meal to a user's list of meals. This allows users to customize
@@ -165,68 +170,63 @@ public class UserMealService implements IUserMealService {
      */
     @Override
     public UserDTO addMealToUser(Long userId, Long mealId) {
-        log.info("Attempting to add a copy of meal with ID: {} to user with ID: {}", mealId, userId);
+        log.info("Adding meal with ID: {} to user with ID: {}", mealId, userId);
 
-        // Retrieve user by ID or throw exception if not found
+        // Retrieve user and meal
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("User not found with ID: " + userId));
-
-        // Retrieve meal by ID or throw exception if not found
         Meal originalMeal = mealRepository.findById(mealId)
                 .orElseThrow(() -> new MealNotFoundException("Meal not found with ID: " + mealId));
 
-        // Collect food item IDs for duplicate check
-        List<Long> foodItemIds = originalMeal.getMealIngredients().stream()
-                .map(ingredient -> ingredient.getFoodItem().getId())
-                .collect(Collectors.toList());
-        log.debug("Collected food item IDs for duplicate check: {}", foodItemIds);
-
-        // Check for duplicates in the user's meal list
+        // Check for duplicates
         List<Meal> duplicateMeals = mealRepository.findUserMealsWithExactIngredients(mealId, userId);
         if (!duplicateMeals.isEmpty()) {
-            Meal duplicateMeal = duplicateMeals.get(0); // Neem de eerste duplicate
-            String errorMsg = String.format("A meal with the same ingredients already exists. %s (ID: %d)",
-                    duplicateMeal.getName(), duplicateMeal.getId());
-            log.warn("Duplicate meal detected in user's list: {}", errorMsg);
-            throw new DuplicateMealException(errorMsg);
+            log.warn("Duplicate meal detected for user ID: {} with meal ID: {}", userId, mealId);
+            throw new DuplicateMealException("Meal already exists in user's list.");
         }
 
-        // Increment the user count for the original meal
-        originalMeal.incrementUserCount();
-        mealRepository.save(originalMeal); // Persist the updated user count for the original meal
+        // Create a copy
+        Meal mealCopy = createMealCopy(originalMeal, user);
+        mealRepository.save(mealCopy);
 
-        // Create a deep copy of the original meal for the user
+        // Update user and save
+        user.getMeals().add(mealCopy);
+        userRepository.save(user);
+        log.info("Successfully added meal with ID: {} to user with ID: {}", mealId, userId);
+
+        return userMapper.toDTO(user);
+    }
+
+    /**
+     * Creates a deep copy of a meal for a specific user.
+     * Preserves the original creator while associating the copy with the new user.
+     *
+     * @param originalMeal The original Meal entity to copy.
+     * @param user         The User entity to associate with the copied Meal.
+     * @return A new Meal entity that is a copy of the original Meal.
+     */
+    private Meal createMealCopy(Meal originalMeal, User user) {
         Meal mealCopy = new Meal();
         mealCopy.setName(originalMeal.getName());
         mealCopy.setMealDescription(originalMeal.getMealDescription());
-        mealCopy.setCreatedBy(originalMeal.getCreatedBy()); // Preserve the original creator
-        mealCopy.setAdjustedBy(user); // Set the current user as the one who adjusted the meal
-        mealCopy.setIsTemplate(false); // Mark this as a user-specific copy, not a template
-
-        // Copy each ingredient from the original meal into the new meal
+        mealCopy.setCreatedBy(originalMeal.getCreatedBy());
+        mealCopy.setAdjustedBy(user);
+        mealCopy.setIsTemplate(false);
         originalMeal.getMealIngredients().forEach(ingredient -> {
             MealIngredient copiedIngredient = new MealIngredient();
             copiedIngredient.setFoodItem(ingredient.getFoodItem());
             copiedIngredient.setQuantity(ingredient.getQuantity());
             mealCopy.addMealIngredient(copiedIngredient);
         });
-
-        user.getMeals().add(mealCopy);
-        mealRepository.save(mealCopy); // Persist the meal copy in the database
-
-        log.info("Successfully added a copy of meal with ID: {} to user with ID: {}", mealId, userId);
-
-        // Save the updated user to maintain the relationship with the new meal copy
-        User updatedUser = userRepository.save(user);
-
-        return userMapper.toDTO(updatedUser);
+        log.debug("Meal copy created: {}", mealCopy);
+        return mealCopy;
     }
 
     /**
      * Retrieves all meals for a specific user by user ID.
      *
-     * @param userId the ID of the user whose meals are to be retrieved
-     * @return a list of MealDTOs representing the user's meals, or an empty list if no meals are found
+     * @param userId The ID of the user whose meals are to be retrieved.
+     * @return A list of MealDTOs representing the user's meals, or an empty list if no meals are found.
      */
     @Transactional(readOnly = true)
     public List<MealDTO> getAllMealsForUser(Long userId) {
@@ -240,7 +240,15 @@ public class UserMealService implements IUserMealService {
         return user.getMeals().stream().map(mealMapper::toDTO).toList();
     }
 
-
+    /**
+     * Removes a specific meal from a user's list of meals.
+     *
+     * @param userId The ID of the user from whom the meal will be removed.
+     * @param mealId The ID of the meal to be removed.
+     * @return UserDTO The updated user information without the removed meal.
+     * @throws UserNotFoundException If the user is not found.
+     * @throws MealNotFoundException If the meal is not found in the user's list.
+     */
     @Override
     public UserDTO removeMealFromUser(Long userId, Long mealId) {
         log.info("Attempting to remove meal from user with ID: {}", userId);
