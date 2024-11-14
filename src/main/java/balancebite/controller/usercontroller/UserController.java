@@ -27,18 +27,18 @@ import java.util.Map;
 @RequestMapping("/users")
 public class UserController {
 
-    private static final Logger log = LoggerFactory.getLogger(UserService.class);
+    private static final Logger log = LoggerFactory.getLogger(UserController.class);
 
     private final UserService userService;
     private final ConsumeMealService consumeMealService;
     private final RecommendedDailyIntakeService recommendedDailyIntakeService;
 
     /**
-     * Constructor to initialize the UserController with the UserService and other necessary services.
+     * Constructor to initialize the UserController with the necessary services.
      *
      * @param userService                   The service responsible for user-related business logic.
-     * @param recommendedDailyIntakeService  The service responsible for recommended daily intake logic.
-     * @param consumeMealService             The service responsible for handling meal consumption logic.
+     * @param recommendedDailyIntakeService The service responsible for recommended daily intake logic.
+     * @param consumeMealService            The service responsible for handling meal consumption logic.
      */
     public UserController(UserService userService, RecommendedDailyIntakeService recommendedDailyIntakeService, ConsumeMealService consumeMealService) {
         this.userService = userService;
@@ -54,9 +54,10 @@ public class UserController {
      */
     @PostMapping
     public ResponseEntity<?> createUser(@Valid @RequestBody UserBasicInfoInputDTO userBasicInfoInputDTO) {
+        log.info("Creating a new user with email: {}", userBasicInfoInputDTO.getEmail());
         try {
-            log.info("Creating a new user with email: {}", userBasicInfoInputDTO.getEmail());
             UserDTO createdUser = userService.createUser(userBasicInfoInputDTO);
+            log.info("Successfully created user with ID: {}", createdUser.getId());
             return ResponseEntity.status(HttpStatus.CREATED).body(createdUser);
         } catch (EntityAlreadyExistsException e) {
             log.warn("User already exists: {}", e.getMessage());
@@ -76,9 +77,10 @@ public class UserController {
      */
     @PatchMapping("/{id}/basic-info")
     public ResponseEntity<?> updateUserBasicInfo(@PathVariable Long id, @Valid @RequestBody UserBasicInfoInputDTO userBasicInfoInputDTO) {
+        log.info("Updating basic info for user with ID: {}", id);
         try {
-            log.info("Updating basic information for user ID: {}", id);
             UserDTO updatedUser = userService.updateUserBasicInfo(id, userBasicInfoInputDTO);
+            log.info("Successfully updated user with ID: {}", id);
             return ResponseEntity.ok(updatedUser);
         } catch (UserNotFoundException e) {
             log.warn("User not found during update: {}", e.getMessage());
@@ -92,21 +94,25 @@ public class UserController {
     /**
      * Endpoint to update the detailed information of an existing user.
      *
-     * @param id                   The ID of the user to update.
-     * @param userDetailsInputDTO  The input data for updating the user's detailed information.
+     * @param id                  The ID of the user to update.
+     * @param userDetailsInputDTO The input data for updating the user's detailed information.
      * @return The updated UserDTO with 200 status code, or a 404 status code if the user is not found.
      */
     @PutMapping("/{id}/details")
     public ResponseEntity<?> updateUserDetails(@PathVariable Long id, @Valid @RequestBody UserDetailsInputDTO userDetailsInputDTO) {
+        log.info("Updating details for user with ID: {}", id);
         try {
-            log.info("Updating detailed information for user ID: {}", id);
             UserDTO updatedUser = userService.updateUserDetails(id, userDetailsInputDTO);
+            log.info("Successfully updated user details for ID: {}", id);
             return ResponseEntity.ok(updatedUser);
         } catch (UserNotFoundException e) {
             log.warn("User not found during detail update: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+        } catch (DailyIntakeNotFoundException e) {
+            log.warn("Daily intake not found during user detail update: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
-            log.error("Unexpected error during detail update: {}", e.getMessage(), e);
+            log.error("Unexpected error during user detail update: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "An unexpected error occurred."));
         }
     }
@@ -118,13 +124,14 @@ public class UserController {
      */
     @GetMapping
     public ResponseEntity<?> getAllUsers() {
+        log.info("Retrieving all users from the system.");
         try {
-            log.info("Retrieving all users from the system.");
             List<UserDTO> users = userService.getAllUsers();
             if (users.isEmpty()) {
-                log.info("No users found.");
+                log.info("No users found in the system.");
                 return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
             }
+            log.info("Retrieved {} users from the system.", users.size());
             return ResponseEntity.ok(users);
         } catch (Exception e) {
             log.error("Unexpected error during user retrieval: {}", e.getMessage(), e);
@@ -140,9 +147,10 @@ public class UserController {
      */
     @GetMapping("/{id}")
     public ResponseEntity<?> getUserById(@PathVariable Long id) {
+        log.info("Retrieving user by ID: {}", id);
         try {
-            log.info("Retrieving user by ID: {}", id);
             UserDTO user = userService.getUserById(id);
+            log.info("Successfully retrieved user with ID: {}", id);
             return ResponseEntity.ok(user);
         } catch (UserNotFoundException e) {
             log.warn("User not found: {}", e.getMessage());
@@ -161,9 +169,10 @@ public class UserController {
      */
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
+        log.info("Deleting user with ID: {}", id);
         try {
-            log.info("Deleting user with ID: {}", id);
             userService.deleteUser(id);
+            log.info("Successfully deleted user with ID: {}", id);
             return ResponseEntity.noContent().build();
         } catch (UserNotFoundException e) {
             log.warn("User not found while attempting to delete: {}", e.getMessage());
