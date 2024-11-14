@@ -9,52 +9,56 @@ import jakarta.validation.constraints.Size;
 /**
  * Data Transfer Object (DTO) for handling basic user information.
  *
- * This DTO is used to receive basic user information, such as username, email, password, and role,
- * during user creation or updates. It includes validation constraints to ensure the provided data is correct.
+ * This DTO is used to collect and validate basic user information during user registration or updates.
+ * It includes fields for the user's name, email, password, and role, with appropriate validation constraints.
  */
 public class UserBasicInfoInputDTO {
 
     /**
-     * The user's name. Must be between 2 and 50 characters long and cannot be blank.
+     * The user's name. This field is mandatory and must be between 2 and 50 characters long.
      */
     @NotBlank(message = "The user name cannot be blank. Please provide a valid name.")
     @Size(min = 2, max = 50, message = "User name must be between 2 and 50 characters.")
     private String userName;
 
     /**
-     * The user's email address. Must be a valid email format and cannot be blank.
+     * The user's email address. This field is mandatory and must follow a valid email format.
      */
     @NotBlank(message = "The email cannot be blank. Please provide a valid email address.")
     @Email(message = "Please provide a valid email address.")
     private String email;
 
     /**
-     * The user's password. Must be at least 4 characters long and cannot be blank.
+     * The user's password. This field is mandatory and must be at least 4 characters long.
      */
     @NotBlank(message = "The password cannot be blank. Please provide a valid password.")
     @Size(min = 4, message = "Password must be at least 4 characters long.")
     private String password;
 
     /**
-     * The role assigned to the user. This field cannot be null.
+     * The role assigned to the user. This field is mandatory and must match a valid Role enum value.
      */
-    @NotNull(message = "Role must be provided.")
+    @NotNull(message = "Role must be provided. Please select a valid role for the user.")
     private Role role;
 
     /**
-     * Default constructor for UserBasicInfoInputDTO.
+     * Default no-argument constructor for frameworks that require it.
      */
     public UserBasicInfoInputDTO() {}
 
     /**
-     * Constructor for creating a user with basic information.
+     * Constructor for creating a UserBasicInfoInputDTO with all fields.
      *
-     * @param userName The user's name.
-     * @param email The user's email address.
-     * @param password The user's password.
-     * @param role The user's role.
+     * @param userName The user's name. Must not be blank and must have 2-50 characters.
+     * @param email    The user's email address. Must not be blank and must be a valid email format.
+     * @param password The user's password. Must not be blank and must be at least 4 characters long.
+     * @param role     The user's role. Must not be null and must match a valid Role enum value.
      */
-    public UserBasicInfoInputDTO(String userName, String email, String password, Role role) {
+    public UserBasicInfoInputDTO(
+            @NotBlank(message = "The user name cannot be blank.") @Size(min = 2, max = 50) String userName,
+            @NotBlank(message = "The email cannot be blank.") @Email(message = "Please provide a valid email address.") String email,
+            @NotBlank(message = "The password cannot be blank.") @Size(min = 4, message = "Password must be at least 4 characters long.") String password,
+            @NotNull(message = "Role must be provided.") Role role) {
         this.userName = userName;
         this.email = email;
         this.password = password;
@@ -75,7 +79,7 @@ public class UserBasicInfoInputDTO {
     /**
      * Sets the user's name.
      *
-     * @param userName The user's name.
+     * @param userName The user's name. Must not be blank and must have 2-50 characters.
      */
     public void setUserName(String userName) {
         this.userName = userName;
@@ -93,7 +97,7 @@ public class UserBasicInfoInputDTO {
     /**
      * Sets the user's email address.
      *
-     * @param email The user's email address.
+     * @param email The user's email address. Must not be blank and must follow a valid email format.
      */
     public void setEmail(String email) {
         this.email = email;
@@ -111,7 +115,7 @@ public class UserBasicInfoInputDTO {
     /**
      * Sets the user's password.
      *
-     * @param password The user's password.
+     * @param password The user's password. Must not be blank and must be at least 4 characters long.
      */
     public void setPassword(String password) {
         this.password = password;
@@ -129,7 +133,7 @@ public class UserBasicInfoInputDTO {
     /**
      * Sets the user's role.
      *
-     * @param role The user's role.
+     * @param role The user's role. Must not be null and must match a valid Role enum value.
      */
     public void setRole(Role role) {
         this.role = role;

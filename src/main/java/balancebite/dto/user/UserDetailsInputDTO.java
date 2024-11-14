@@ -11,41 +11,65 @@ import jakarta.validation.constraints.NotNull;
  */
 public class UserDetailsInputDTO {
 
-    @NotNull(message = "Weight must be provided.")
+    /**
+     * The user's weight, in kilograms. This field is mandatory.
+     */
+    @NotNull(message = "Weight must be provided. Please specify your weight in kilograms.")
     private Double weight;
 
-    @NotNull(message = "Age must be provided.")
+    /**
+     * The user's age, in years. This field is mandatory.
+     */
+    @NotNull(message = "Age must be provided. Please specify your age in years.")
     private Integer age;
 
-    @NotNull(message = "Height must be provided.")
+    /**
+     * The user's height, in centimeters. This field is mandatory.
+     */
+    @NotNull(message = "Height must be provided. Please specify your height in centimeters.")
     private Double height;
 
-    @NotNull(message = "Gender must be provided.")
+    /**
+     * The user's gender. This field is mandatory and must match a valid gender enum value.
+     */
+    @NotNull(message = "Gender must be provided. Please select a valid gender option.")
     private Gender gender;
 
-    @NotNull(message = "Activity level must be provided.")
+    /**
+     * The user's activity level. This field is mandatory and must match a valid activity level enum value.
+     */
+    @NotNull(message = "Activity level must be provided. Please select your activity level.")
     private ActivityLevel activityLevel;
 
-    @NotNull(message = "Goal must be provided.")
+    /**
+     * The user's goal. This field is mandatory and must match a valid goal enum value.
+     */
+    @NotNull(message = "Goal must be provided. Please specify your health or fitness goal.")
     private Goal goal;
 
     /**
-     * Default constructor for UserDetailsInputDTO.
-     * This constructor is necessary for frameworks that require a no-argument constructor.
+     * Default constructor for frameworks that require a no-argument constructor.
      */
     public UserDetailsInputDTO() {}
 
     /**
      * Full constructor for creating a UserDetailsInputDTO with all fields.
      *
-     * @param weight The user's weight.
-     * @param age The user's age.
-     * @param height The user's height.
-     * @param gender The user's gender.
-     * @param activityLevel The user's activity level.
-     * @param goal The user's goal.
+     * @param weight         The user's weight in kilograms. Cannot be null.
+     * @param age            The user's age in years. Cannot be null.
+     * @param height         The user's height in centimeters. Cannot be null.
+     * @param gender         The user's gender. Cannot be null.
+     * @param activityLevel  The user's activity level. Cannot be null.
+     * @param goal           The user's goal. Cannot be null.
      */
-    public UserDetailsInputDTO(Double weight, Integer age, Double height, Gender gender, ActivityLevel activityLevel, Goal goal) {
+    public UserDetailsInputDTO(
+            @NotNull(message = "Weight must be provided.") Double weight,
+            @NotNull(message = "Age must be provided.") Integer age,
+            @NotNull(message = "Height must be provided.") Double height,
+            @NotNull(message = "Gender must be provided.") Gender gender,
+            @NotNull(message = "Activity level must be provided.") ActivityLevel activityLevel,
+            @NotNull(message = "Goal must be provided.") Goal goal
+    ) {
         this.weight = weight;
         this.age = age;
         this.height = height;
@@ -57,7 +81,7 @@ public class UserDetailsInputDTO {
     /**
      * Gets the user's weight.
      *
-     * @return The user's weight.
+     * @return The user's weight in kilograms.
      */
     public Double getWeight() {
         return weight;
@@ -66,7 +90,7 @@ public class UserDetailsInputDTO {
     /**
      * Sets the user's weight.
      *
-     * @param weight The user's weight. Must not be null.
+     * @param weight The user's weight in kilograms. Must not be null.
      */
     public void setWeight(Double weight) {
         this.weight = weight;
@@ -75,7 +99,7 @@ public class UserDetailsInputDTO {
     /**
      * Gets the user's age.
      *
-     * @return The user's age.
+     * @return The user's age in years.
      */
     public Integer getAge() {
         return age;
@@ -84,7 +108,7 @@ public class UserDetailsInputDTO {
     /**
      * Sets the user's age.
      *
-     * @param age The user's age. Must not be null.
+     * @param age The user's age in years. Must not be null.
      */
     public void setAge(Integer age) {
         this.age = age;
@@ -93,7 +117,7 @@ public class UserDetailsInputDTO {
     /**
      * Gets the user's height.
      *
-     * @return The user's height.
+     * @return The user's height in centimeters.
      */
     public Double getHeight() {
         return height;
@@ -102,7 +126,7 @@ public class UserDetailsInputDTO {
     /**
      * Sets the user's height.
      *
-     * @param height The user's height. Must not be null.
+     * @param height The user's height in centimeters. Must not be null.
      */
     public void setHeight(Double height) {
         this.height = height;
