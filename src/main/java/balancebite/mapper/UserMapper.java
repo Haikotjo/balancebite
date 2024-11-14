@@ -9,6 +9,8 @@ import balancebite.model.User;
 import balancebite.model.RecommendedDailyIntake;
 import balancebite.mapper.MealMapper;
 import balancebite.mapper.RecommendedDailyIntakeMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -17,19 +19,22 @@ import java.util.stream.Collectors;
 
 /**
  * Mapper class responsible for converting between User entities and User DTOs.
- * This class handles mapping from User to UserDTO, UserBasicInfoInputDTO, and UserDetailsInputDTO to User.
+ * Handles mapping between User and UserDTO, UserBasicInfoInputDTO, and UserDetailsInputDTO.
+ * Ensures immutability and encapsulation of sensitive information.
  */
 @Component
 public class UserMapper {
+
+    private static final Logger log = LoggerFactory.getLogger(UserMapper.class);
 
     private final MealMapper mealMapper;
     private final RecommendedDailyIntakeMapper recommendedDailyIntakeMapper;
 
     /**
-     * Constructor that accepts a MealMapper and RecommendedDailyIntakeMapper.
+     * Constructor for UserMapper.
      *
-     * @param mealMapper Mapper to convert between Meal entities and MealDTOs.
-     * @param recommendedDailyIntakeMapper Mapper to convert between RecommendedDailyIntake entities and DTOs.
+     * @param mealMapper                   Mapper for converting Meal entities to MealDTOs.
+     * @param recommendedDailyIntakeMapper Mapper for converting RecommendedDailyIntake entities to DTOs.
      */
     public UserMapper(MealMapper mealMapper, RecommendedDailyIntakeMapper recommendedDailyIntakeMapper) {
         this.mealMapper = mealMapper;
@@ -38,30 +43,33 @@ public class UserMapper {
 
     /**
      * Converts a User entity to a UserDTO.
-     * This includes converting meals and recommended daily intakes.
+     * Includes associated meals and recommended daily intakes.
      *
      * @param user The User entity to convert.
-     * @return The UserDTO object containing user data for client consumption.
+     * @return The converted UserDTO or null if the input is null.
      */
     public UserDTO toDTO(User user) {
+        log.info("Mapping User entity to UserDTO for user ID: {}", user != null ? user.getId() : "null");
         if (user == null) {
+            log.warn("User entity is null, returning null for UserDTO.");
             return null;
         }
 
-        // Convert the set of meals associated with the user to MealDTOs
-        List<MealDTO> mealDTOs = user.getMeals() != null ? user.getMeals().stream()
+        // Map meals to MealDTOs
+        List<MealDTO> mealDTOs = user.getMeals() != null
+                ? user.getMeals().stream()
                 .map(mealMapper::toDTO)
-                .collect(Collectors.toList()) : List.of();
+                .collect(Collectors.toList())
+                : List.of();
 
-        // Convert the set of recommended daily intakes associated with the user to DTOs
+        // Map recommended daily intakes to DTOs
         List<RecommendedDailyIntakeDTO> recommendedDailyIntakeDTOs = user.getRecommendedDailyIntakes() != null
                 ? user.getRecommendedDailyIntakes().stream()
                 .map(recommendedDailyIntakeMapper::toDTO)
                 .collect(Collectors.toList())
                 : List.of();
 
-        // Create and return the UserDTO with all relevant fields
-        return new UserDTO(
+        UserDTO userDTO = new UserDTO(
                 user.getId(),
                 user.getUserName(),
                 user.getEmail(),
@@ -75,58 +83,77 @@ public class UserMapper {
                 user.getRole(),
                 recommendedDailyIntakeDTOs
         );
+
+        log.debug("Successfully mapped User entity to UserDTO: {}", userDTO);
+        return userDTO;
     }
 
     /**
      * Converts a UserBasicInfoInputDTO to a User entity.
-     * Used when creating or updating basic user information.
+     * Used for creating new users or updating basic user information.
      *
-     * @param userBasicInfoInputDTO The input DTO containing basic user data from the client.
-     * @return The User entity to be stored in the database.
+     * @param userBasicInfoInputDTO The input DTO containing user basic information.
+     * @return The created User entity.
+     * @throws IllegalArgumentException if the input DTO is null.
      */
     public User toEntity(UserBasicInfoInputDTO userBasicInfoInputDTO) {
+        log.info("Mapping UserBasicInfoInputDTO to User entity.");
         if (userBasicInfoInputDTO == null) {
-            throw new IllegalArgumentException("UserBasicInfoInputDTO cannot be null");
+            log.error("Input UserBasicInfoInputDTO is null.");
+            throw new IllegalArgumentException("UserBasicInfoInputDTO cannot be null.");
         }
 
-        // Create a new User entity without ID, as it's auto-generated
-        return new User(
+        User user = new User(
                 userBasicInfoInputDTO.getUserName(),
                 userBasicInfoInputDTO.getEmail(),
-                userBasicInfoInputDTO.getPassword(),  // Make sure to hash the password before saving in the service layer
+                userBasicInfoInputDTO.getPassword(),  // Password hashing should occur in the service layer
                 userBasicInfoInputDTO.getRole()
         );
+
+        log.debug("Successfully mapped UserBasicInfoInputDTO to User entity: {}", user);
+        return user;
     }
 
     /**
-     * Updates an existing User entity with details from UserDetailsInputDTO.
-     * Used when updating detailed user information.
+     * Updates an existing User entity with data from UserDetailsInputDTO.
+     * Does not modify fields not provided in the DTO.
      *
-     * @param user The existing User entity to be updated.
-     * @param userDetailsInputDTO The input DTO containing detailed user data from the client.
+     * @param user                  The existing User entity to update.
+     * @param userDetailsInputDTO   The input DTO with detailed user information.
+     * @throws IllegalArgumentException if the User or DTO is null.
      */
     public void updateEntityWithDetails(User user, UserDetailsInputDTO userDetailsInputDTO) {
+        log.info("Updating User entity with ID: {} using UserDetailsInputDTO.", user != null ? user.getId() : "null");
         if (user == null || userDetailsInputDTO == null) {
-            throw new IllegalArgumentException("User and UserDetailsInputDTO cannot be null");
+            log.error("User or UserDetailsInputDTO is null. User: {}, DTO: {}", user, userDetailsInputDTO);
+            throw new IllegalArgumentException("User and UserDetailsInputDTO cannot be null.");
         }
 
         if (userDetailsInputDTO.getWeight() != null) {
+            log.debug("Updating weight for user ID {}: {} -> {}", user.getId(), user.getWeight(), userDetailsInputDTO.getWeight());
             user.setWeight(userDetailsInputDTO.getWeight());
         }
         if (userDetailsInputDTO.getAge() != null) {
+            log.debug("Updating age for user ID {}: {} -> {}", user.getId(), user.getAge(), userDetailsInputDTO.getAge());
             user.setAge(userDetailsInputDTO.getAge());
         }
         if (userDetailsInputDTO.getHeight() != null) {
+            log.debug("Updating height for user ID {}: {} -> {}", user.getId(), user.getHeight(), userDetailsInputDTO.getHeight());
             user.setHeight(userDetailsInputDTO.getHeight());
         }
         if (userDetailsInputDTO.getGender() != null) {
+            log.debug("Updating gender for user ID {}: {} -> {}", user.getId(), user.getGender(), userDetailsInputDTO.getGender());
             user.setGender(userDetailsInputDTO.getGender());
         }
         if (userDetailsInputDTO.getActivityLevel() != null) {
+            log.debug("Updating activity level for user ID {}: {} -> {}", user.getId(), user.getActivityLevel(), userDetailsInputDTO.getActivityLevel());
             user.setActivityLevel(userDetailsInputDTO.getActivityLevel());
         }
         if (userDetailsInputDTO.getGoal() != null) {
+            log.debug("Updating goal for user ID {}: {} -> {}", user.getId(), user.getGoal(), userDetailsInputDTO.getGoal());
             user.setGoal(userDetailsInputDTO.getGoal());
         }
+
+        log.info("Successfully updated User entity with ID: {}", user.getId());
     }
 }
