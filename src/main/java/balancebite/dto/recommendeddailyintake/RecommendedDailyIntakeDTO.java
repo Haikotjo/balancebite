@@ -16,25 +16,12 @@ public class RecommendedDailyIntakeDTO {
     /**
      * A set of nutrient DTOs representing the nutrients and their recommended daily intake values.
      */
-    private Set<Nutrient> nutrients;
+    private final Set<Nutrient> nutrients;
 
     /**
      * The timestamp when the recommended daily intake was created.
      */
-    private LocalDate createdAt;
-
-    /**
-     * The formatted timestamp when the recommended daily intake was created.
-     */
-    private String createdAtFormatted;
-
-    /**
-     * Default no-argument constructor for serialization/deserialization purposes.
-     * This constructor is used by frameworks like Jackson to map incoming JSON data.
-     */
-    public RecommendedDailyIntakeDTO() {
-        // Default constructor for serialization frameworks
-    }
+    private final LocalDate createdAt;
 
     /**
      * Full constructor to create a RecommendedDailyIntakeDTO with a specified set of nutrients and creation timestamp.
@@ -43,46 +30,17 @@ public class RecommendedDailyIntakeDTO {
      * @param createdAt The timestamp when the recommended daily intake was created.
      */
     public RecommendedDailyIntakeDTO(Set<Nutrient> nutrients, LocalDate createdAt) {
-        this.nutrients = nutrients;
+        this.nutrients = Set.copyOf(nutrients); // Immutable copy
         this.createdAt = createdAt;
-        this.createdAtFormatted = createdAt != null ? createdAt.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) : null;
     }
 
     /**
      * Retrieves the set of nutrients and their corresponding recommended daily intake values.
      *
-     * @return The set of nutrients.
+     * @return An immutable set of nutrients.
      */
     public Set<Nutrient> getNutrients() {
         return nutrients;
-    }
-
-    /**
-     * Sets the set of nutrients and their corresponding recommended daily intake values.
-     *
-     * @param nutrients The set of nutrients to set, each represented as a NutrientDTO object.
-     */
-    public void setNutrients(Set<Nutrient> nutrients) {
-        this.nutrients = nutrients;
-    }
-
-    /**
-     * Retrieves the timestamp when the recommended daily intake was created.
-     *
-     * @return The creation timestamp.
-     */
-    public LocalDate getCreatedAt() {
-        return createdAt;
-    }
-
-    /**
-     * Sets the timestamp when the recommended daily intake was created.
-     *
-     * @param createdAt The timestamp to set.
-     */
-    public void setCreatedAt(LocalDate createdAt) {
-        this.createdAt = createdAt;
-        this.createdAtFormatted = createdAt != null ? createdAt.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) : null;
     }
 
     /**
@@ -91,7 +49,6 @@ public class RecommendedDailyIntakeDTO {
      * @return The formatted creation timestamp.
      */
     public String getCreatedAtFormatted() {
-        return createdAtFormatted;
+        return createdAt != null ? createdAt.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) : null;
     }
 }
-

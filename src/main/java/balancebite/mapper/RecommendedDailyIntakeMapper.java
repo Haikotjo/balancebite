@@ -1,53 +1,37 @@
 package balancebite.mapper;
 
 import balancebite.dto.recommendeddailyintake.RecommendedDailyIntakeDTO;
-import balancebite.model.Nutrient;
 import balancebite.model.RecommendedDailyIntake;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDate;
-import java.util.Set;
-
 /**
- * Mapper class for converting between RecommendedDailyIntake and RecommendedDailyIntakeDTO.
- * Handles the transformation of RecommendedDailyIntake data into its corresponding DTO representation.
+ * Mapper class for converting between RecommendedDailyIntake entity and RecommendedDailyIntakeDTO.
+ * This class is responsible for transforming data from the database entity representation
+ * into a Data Transfer Object (DTO) that can be safely exposed to the client.
  */
 @Component
 public class RecommendedDailyIntakeMapper {
 
     /**
-     * Converts a RecommendedDailyIntake entity to a RecommendedDailyIntakeDTO.
+     * Converts a RecommendedDailyIntake entity into a RecommendedDailyIntakeDTO.
+     * This method is used to transform internal entity data into a format suitable
+     * for returning to the client. The DTO includes a set of nutrients and a formatted
+     * creation date (createdAtFormatted).
      *
-     * @param recommendedDailyIntake The entity to convert.
-     * @return The corresponding RecommendedDailyIntakeDTO.
+     * @param recommendedDailyIntake The RecommendedDailyIntake entity to convert.
+     *                               If null, the method returns null.
+     * @return A RecommendedDailyIntakeDTO containing the nutrients and the formatted creation date,
+     *         or null if the provided entity is null.
      */
     public RecommendedDailyIntakeDTO toDTO(RecommendedDailyIntake recommendedDailyIntake) {
         if (recommendedDailyIntake == null) {
-            return null;
+            return null; // Return null if the input entity is null
         }
 
-        // Return the DTO with the set of Nutrients and createdAt timestamp
-        return new RecommendedDailyIntakeDTO(recommendedDailyIntake.getNutrients(), recommendedDailyIntake.getCreatedAt());
-    }
-
-    /**
-     * Converts a RecommendedDailyIntakeDTO back to a RecommendedDailyIntake entity.
-     *
-     * @param recommendedDailyIntakeDTO The DTO to convert.
-     * @return A new RecommendedDailyIntake entity.
-     */
-    public RecommendedDailyIntake toEntity(RecommendedDailyIntakeDTO recommendedDailyIntakeDTO) {
-        if (recommendedDailyIntakeDTO == null) {
-            return null;
-        }
-
-        // Create a new RecommendedDailyIntake entity and add the nutrients
-        RecommendedDailyIntake entity = new RecommendedDailyIntake();
-        Set<Nutrient> nutrients = recommendedDailyIntakeDTO.getNutrients();
-        LocalDate createdAt = recommendedDailyIntakeDTO.getCreatedAt();
-
-        entity.getNutrients().addAll(nutrients);
-        entity.setCreatedAt(createdAt != null ? createdAt : LocalDate.now());
-        return entity;
+        // Create and return a DTO with the set of nutrients and the createdAt timestamp
+        return new RecommendedDailyIntakeDTO(
+                recommendedDailyIntake.getNutrients(), // Nutrients to be included in the DTO
+                recommendedDailyIntake.getCreatedAt()  // Creation date to be formatted in the DTO
+        );
     }
 }
