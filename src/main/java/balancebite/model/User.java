@@ -41,21 +41,18 @@ public class User {
     private String password;
 
     /**
-     * The weight of the user, stored with a maximum precision of 5 digits and 2 decimal places.
+     * The weight of the user.
      */
-    @Column(precision = 5, scale = 2)
     private Double weight;
 
     /**
-     * The age of the user, stored as a two-digit integer.
+     * The age of the user, stored as an integer.
      */
-    @Column(precision = 2)
     private Integer age;
 
     /**
-     * The height of the user in centimeters, stored with a maximum precision of 5 digits and 1 decimal place.
+     * The height of the user in centimeters.
      */
-    @Column(precision = 5, scale = 1)
     private Double height;
 
     /**

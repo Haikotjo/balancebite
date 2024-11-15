@@ -3,6 +3,8 @@ package balancebite.dto.user;
 import balancebite.model.userenums.ActivityLevel;
 import balancebite.model.userenums.Gender;
 import balancebite.model.userenums.Goal;
+import jakarta.validation.constraints.Digits;
+import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.NotNull;
 
 /**
@@ -12,21 +14,24 @@ import jakarta.validation.constraints.NotNull;
 public class UserDetailsInputDTO {
 
     /**
-     * The user's weight, in kilograms. This field is mandatory.
+     * The user's weight, in kilograms. This field is mandatory and must have a maximum of 5 digits with 2 decimal places.
      */
     @NotNull(message = "Weight must be provided. Please specify your weight in kilograms.")
+    @Digits(integer = 3, fraction = 2, message = "Weight must be a valid number with up to 3 digits and 2 decimal places.")
     private Double weight;
 
     /**
-     * The user's age, in years. This field is mandatory.
+     * The user's age, in years. This field is mandatory and must be an integer.
      */
     @NotNull(message = "Age must be provided. Please specify your age in years.")
+    @Max(value = 99, message = "Age cannot be more than 99 years.")
     private Integer age;
 
     /**
-     * The user's height, in centimeters. This field is mandatory.
+     * The user's height, in centimeters. This field is mandatory and must have a maximum of 5 digits with 1 decimal place.
      */
     @NotNull(message = "Height must be provided. Please specify your height in centimeters.")
+    @Digits(integer = 3, fraction = 1, message = "Height must be a valid number with up to 3 digits and 1 decimal place.")
     private Double height;
 
     /**
