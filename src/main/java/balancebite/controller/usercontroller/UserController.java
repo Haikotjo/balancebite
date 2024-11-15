@@ -168,10 +168,10 @@ public class UserController {
      * Endpoint to delete an existing user by ID.
      *
      * @param id The ID of the user to delete.
-     * @return A 204 No Content status code if successful, or a 404 status code if the user is not found.
+     * @return A 204 No Content status code if successful, or a 404 status code with an error message if the user is not found.
      */
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
+    public ResponseEntity<?> deleteUser(@PathVariable Long id) {
         log.info("Deleting user with ID: {}", id);
         try {
             userService.deleteUser(id);
@@ -179,10 +179,11 @@ public class UserController {
             return ResponseEntity.noContent().build();
         } catch (UserNotFoundException e) {
             log.warn("User not found while attempting to delete: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
             log.error("Unexpected error during user deletion: {}", e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "An unexpected error occurred."));
         }
     }
+
 }
