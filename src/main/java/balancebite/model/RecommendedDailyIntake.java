@@ -50,9 +50,9 @@ public class RecommendedDailyIntake {
         // Proximates
 //        addNutrient("Water", 3700.0);
         addNutrient("Energy kcal", null);
-        addNutrient("Protein", 56.0);
-        addNutrient("Total lipid (fat)", 78.0);
-        addNutrient("Carbohydrates", 130.0);
+        addNutrient("Protein", null);
+        addNutrient("Total lipid (fat)", null);
+        addNutrient("Carbohydrates", null);
 //        addNutrient("Fiber, total dietary", 38.0);
 //        addNutrient("Total Sugars", 50.0);
 //        addNutrient("Carbohydrate, by difference", 130.0);
@@ -100,7 +100,9 @@ public class RecommendedDailyIntake {
 //        addNutrient("Vitamin K (Dihydrophylloquinone)", null);
 
         // Lipids
-        addNutrient("Fatty acids, total saturated", 20.0);
+        addNutrient("Saturated and Trans fats", null);
+        addNutrient("Mono- and Polyunsaturated fats", null);
+//        addNutrient("Fatty acids, total saturated", null);
 //        addNutrient("SFA 4:0", null);
 //        addNutrient("SFA 6:0", null);
 //        addNutrient("SFA 8:0", null);
@@ -109,12 +111,12 @@ public class RecommendedDailyIntake {
 //        addNutrient("SFA 14:0", null);
 //        addNutrient("SFA 16:0", null);
 //        addNutrient("SFA 18:0", null);
-        addNutrient("Fatty acids, total monounsaturated", null);
+//        addNutrient("Fatty acids, total monounsaturated", null);
 //        addNutrient("MUFA 16:1", null);
 //        addNutrient("MUFA 18:1", null);
 //        addNutrient("MUFA 20:1", null);
 //        addNutrient("MUFA 22:1", null);
-        addNutrient("Fatty acids, total polyunsaturated", 17.0);
+//        addNutrient("Fatty acids, total polyunsaturated", null);
 //        addNutrient("PUFA 18:2", null);
 //        addNutrient("PUFA 18:3", 1.6);
 //        addNutrient("PUFA 18:4", null);
@@ -122,7 +124,7 @@ public class RecommendedDailyIntake {
 //        addNutrient("PUFA 20:5 n-3 (EPA)", null);
 //        addNutrient("PUFA 22:5 n-3 (DPA)", null);
 //        addNutrient("PUFA 22:6 n-3 (DHA)", null);
-        addNutrient("Fatty acids, total trans", null);
+//        addNutrient("Fatty acids, total trans", null);
 //        addNutrient("Cholesterol", 300.0);
 
         // Amino acids

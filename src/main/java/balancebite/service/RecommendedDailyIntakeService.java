@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Service class responsible for managing Recommended Daily Intake logic.
@@ -55,6 +56,23 @@ public class RecommendedDailyIntakeService implements IRecommendedDailyIntakeSer
      *         (weight, height, age, gender, activity level, goal).
      * @throws IllegalArgumentException If the user with the given ID does not exist in the system.
      */
+    /**
+     * Retrieves or creates the recommended daily intake for a specific user for the current date.
+     *
+     * This method ensures that the user has provided all required information:
+     * weight, height, age, gender, activity level, and goal. If any required information is missing,
+     * a {@link MissingUserInformationException} is thrown to prompt the user to complete their profile.
+     *
+     * If all required details are provided, the method either retrieves an existing recommended
+     * daily intake for the current date or calculates and saves a new one based on the user's profile.
+     *
+     * @param userId The ID of the user for whom the recommended daily intake is retrieved or created.
+     * @return A {@code RecommendedDailyIntakeDTO} containing the recommended intake values for nutrients such as
+     *         energy, protein, fat, saturated fat, and unsaturated fat.
+     * @throws MissingUserInformationException If the user has not provided all the required information
+     *         (weight, height, age, gender, activity level, goal).
+     * @throws IllegalArgumentException If the user with the given ID does not exist in the system.
+     */
     @Override
     public RecommendedDailyIntakeDTO getOrCreateDailyIntakeForUser(Long userId) {
         User user = findUserById(userId);
@@ -62,24 +80,33 @@ public class RecommendedDailyIntakeService implements IRecommendedDailyIntakeSer
         // Check if all necessary fields for calculation are provided
         if (user.getWeight() == null || user.getHeight() == null || user.getAge() == null ||
                 user.getGender() == null || user.getActivityLevel() == null || user.getGoal() == null) {
-
             log.warn("User with ID {} is missing necessary information", userId);
             throw new MissingUserInformationException("User must provide all required information: weight, height, age, gender, activity level, and goal. Please update profile.");
         }
 
-        // Directly use the static method from the utility class
+        // Check if an intake already exists for today
+        Optional<RecommendedDailyIntake> existingIntake = recommendedDailyIntakeRepository.findByUser_IdAndCreatedAt(user.getId(), LocalDate.now());
+        if (existingIntake.isPresent()) {
+            log.info("Found existing RecommendedDailyIntake for user ID {} on date {}", userId, LocalDate.now());
+            return recommendedDailyIntakeMapper.toDTO(existingIntake.get());
+        }
+
+        // Calculate a new intake if none exists
         log.info("Calculating recommended daily intake for user with ID: {}", userId);
         RecommendedDailyIntake recommendedDailyIntake = DailyIntakeCalculatorUtil.getOrCreateDailyIntakeForUser(user);
-        log.info("Attempting to save RecommendedDailyIntake for user ID {} on date {}", userId, recommendedDailyIntake.getCreatedAt());
+        recommendedDailyIntake.setUser(user);
+        recommendedDailyIntake.setCreatedAt(LocalDate.now());
 
-        // Save the recommended daily intake to the database
+        // Save the new intake
+        log.info("Attempting to save RecommendedDailyIntake for user ID {} on date {}", userId, LocalDate.now());
         recommendedDailyIntakeRepository.save(recommendedDailyIntake);
 
-        log.info("RecommendedDailyIntake for user ID {} successfully created or retrieved for date {}", userId, LocalDate.now());
+        log.info("RecommendedDailyIntake for user ID {} successfully created for date {}", userId, LocalDate.now());
 
         // Convert to DTO and return
         return recommendedDailyIntakeMapper.toDTO(recommendedDailyIntake);
     }
+
 
     /**
      * Calculates and retrieves the cumulative recommended nutrient intake for the current week for a specific user.

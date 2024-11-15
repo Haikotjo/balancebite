@@ -110,7 +110,7 @@ public class DailyIntakeCalculatorUtil {
                 case "Fatty acids, total polyunsaturated":
                     nutrient.setValue(fatDistribution.getUnsaturatedFat());
                     break;
-                case "Carbohydrate, by difference":
+                case "Carbohydrates":
                     nutrient.setValue(carbohydrateIntake);
                     break;
                 default:
