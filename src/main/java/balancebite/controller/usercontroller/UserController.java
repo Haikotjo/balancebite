@@ -82,6 +82,9 @@ public class UserController {
             UserDTO updatedUser = userService.updateUserBasicInfo(id, userBasicInfoInputDTO);
             log.info("Successfully updated user with ID: {}", id);
             return ResponseEntity.ok(updatedUser);
+        } catch (EntityAlreadyExistsException e) {
+            log.warn("Entity already exists during user update: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", e.getMessage()));
         } catch (UserNotFoundException e) {
             log.warn("User not found during update: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));

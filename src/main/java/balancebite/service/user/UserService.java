@@ -68,22 +68,30 @@ public class UserService implements IUserService {
     @Override
     public UserDTO updateUserBasicInfo(Long id, UserBasicInfoInputDTO userBasicInfoInputDTO) {
         log.info("Updating basic info for user with ID: {}", id);
+
+        // Fetch the existing user or throw an exception if not found
         User existingUser = userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException("Cannot update user: No user found with ID " + id));
 
-        // Check for duplicate email
+        // Check for duplicate email and ensure it's not the same as the current user's email
         if (userRepository.existsByEmail(userBasicInfoInputDTO.getEmail()) &&
                 !existingUser.getEmail().equals(userBasicInfoInputDTO.getEmail())) {
-            throw new EntityAlreadyExistsException("The email " + userBasicInfoInputDTO.getEmail() + " is already in use by another account.");
+            String errorMessage = "The email " + userBasicInfoInputDTO.getEmail() + " is already in use by another account.";
+            log.warn(errorMessage);
+            throw new EntityAlreadyExistsException(errorMessage);
         }
 
+        // Update the user details with the provided input
         existingUser.setUserName(userBasicInfoInputDTO.getUserName());
         existingUser.setEmail(userBasicInfoInputDTO.getEmail());
         existingUser.setPassword(userBasicInfoInputDTO.getPassword());
         existingUser.setRole(userBasicInfoInputDTO.getRole());
 
+        // Save the updated user back to the database
         User updatedUser = userRepository.save(existingUser);
         log.info("Successfully updated basic info for user with ID: {}", id);
+
+        // Return the updated user as a DTO
         return userMapper.toDTO(updatedUser);
     }
 
