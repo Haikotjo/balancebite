@@ -93,6 +93,9 @@ public class RecommendedDailyIntakeController {
         } catch (UserNotFoundException e) {
             log.warn("User not found while retrieving weekly intake: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+        } catch (MissingUserInformationException e) {
+            log.warn("Missing user information while retrieving weekly intake: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
             log.error("Unexpected error during weekly intake retrieval for user ID {}: {}", userId, e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "An unexpected error occurred."));
@@ -114,6 +117,9 @@ public class RecommendedDailyIntakeController {
         } catch (UserNotFoundException e) {
             log.warn("User not found while retrieving monthly intake: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+        } catch (MissingUserInformationException e) {
+            log.warn("Missing user information while retrieving monthly intake: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
             log.error("Unexpected error during monthly intake retrieval for user ID {}: {}", userId, e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "An unexpected error occurred."));
