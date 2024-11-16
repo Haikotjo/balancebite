@@ -93,6 +93,23 @@ public class RecommendedDailyIntakeService implements IRecommendedDailyIntakeSer
     }
 
     @Override
+    public RecommendedDailyIntakeDTO getDailyIntakeForDate(Long userId, LocalDate date) {
+        log.info("Fetching recommended daily intake for user ID {} on date {}", userId, date);
+
+        User user = findUserById(userId);
+
+        Optional<RecommendedDailyIntake> intake = recommendedDailyIntakeRepository.findByUser_IdAndCreatedAt(userId, date);
+        if (intake.isEmpty()) {
+            log.warn("No RecommendedDailyIntake found for user ID {} on date {}", userId, date);
+            throw new DailyIntakeNotFoundException("No recommended daily intake found for user ID " + userId + " on date " + date);
+        }
+
+        log.info("Successfully fetched RecommendedDailyIntake for user ID {} on date {}", userId, date);
+        return recommendedDailyIntakeMapper.toDTO(intake.get());
+    }
+
+
+    @Override
     public void deleteRecommendedDailyIntakeForUser(Long userId) {
         log.info("Attempting to delete recommended daily intake for user with ID: {}", userId);
 

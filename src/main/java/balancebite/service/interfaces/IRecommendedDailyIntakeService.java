@@ -3,6 +3,7 @@ package balancebite.service.interfaces;
 import balancebite.dto.recommendeddailyintake.RecommendedDailyIntakeDTO;
 import balancebite.errorHandling.MissingUserInformationException;
 
+import java.time.LocalDate;
 import java.util.Map;
 
 /**
@@ -45,6 +46,22 @@ public interface IRecommendedDailyIntakeService {
      * @throws IllegalArgumentException If the user with the given ID is not found in the system.
      */
     Map<String, Double> getAdjustedMonthlyIntakeForUser(Long userId);
+
+    /**
+     * Retrieves the recommended daily intake for a specific user on a specific date.
+     * Ensures that the user has provided all necessary information for calculation.
+     *
+     * @param userId    The ID of the user for whom the recommended daily intake is retrieved.
+     * @param createdAt The date for which the recommended daily intake is being retrieved.
+     * @return The {@link RecommendedDailyIntakeDTO} containing the calculated intake values for energy,
+     *         protein, fat, saturated fat, and unsaturated fat.
+     * @throws MissingUserInformationException If the user has not provided all the required information
+     *         (weight, height, age, gender, activity level, goal).
+     * @throws IllegalArgumentException If the user with the given ID does not exist in the system or if
+     *         no recommended daily intake is found for the specified date.
+     */
+    RecommendedDailyIntakeDTO getDailyIntakeForDate(Long userId, LocalDate createdAt);
+
 
     /**
      * Deletes the recommended daily intake record for a specific user.
