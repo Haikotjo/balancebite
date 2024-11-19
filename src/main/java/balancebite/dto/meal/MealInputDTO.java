@@ -1,8 +1,7 @@
 package balancebite.dto.meal;
 
 import balancebite.dto.mealingredient.MealIngredientInputDTO;
-import balancebite.dto.user.UserDTO; // Import UserDTO
-import jakarta.persistence.Column;
+import balancebite.dto.user.UserDTO;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
@@ -39,6 +38,20 @@ public class MealInputDTO {
     private String mealDescription;
 
     /**
+     * Base64-encoded image representing the meal.
+     * Optional field for meal creation or update.
+     */
+    @Size(max = 500000, message = "Image size must not exceed 500 KB.")
+    private String image;
+
+    /**
+     * URL of the image representing the meal.
+     * Optional field for meal creation or update.
+     */
+    @Size(max = 500, message = "Image URL must not exceed 500 characters.")
+    private String imageUrl;
+
+    /**
      * The user who created this meal (if applicable).
      * This field is managed by the system and should not be set by the client directly.
      */
@@ -56,6 +69,8 @@ public class MealInputDTO {
      * @param name            The name of the meal. Must not be blank and must not exceed 100 characters.
      * @param mealIngredients The list of ingredients that make up the meal. Must not be empty.
      * @param mealDescription The description of the meal (optional). Must not exceed 1000 characters.
+     * @param image           Base64-encoded image of the meal (optional).
+     * @param imageUrl        URL of the image representing the meal (optional).
      * @param createdBy       The user who created the meal (optional).
      */
     public MealInputDTO(
@@ -64,10 +79,14 @@ public class MealInputDTO {
             @NotEmpty(message = "The meal must contain at least one ingredient. Please provide ingredients.")
             @Valid List<MealIngredientInputDTO> mealIngredients,
             @Size(max = 1000, message = "The meal description must not exceed 1000 characters.") String mealDescription,
+            @Size(max = 500000, message = "Image size must not exceed 500 KB.") String image,
+            @Size(max = 500, message = "Image URL must not exceed 500 characters.") String imageUrl,
             @Valid UserDTO createdBy) {
         this.name = name;
         this.mealIngredients = mealIngredients;
         this.mealDescription = mealDescription;
+        this.image = image;
+        this.imageUrl = imageUrl;
         this.createdBy = createdBy;
     }
 
@@ -123,6 +142,42 @@ public class MealInputDTO {
      */
     public void setMealDescription(String mealDescription) {
         this.mealDescription = mealDescription;
+    }
+
+    /**
+     * Gets the Base64-encoded image of the meal.
+     *
+     * @return The Base64-encoded image of the meal.
+     */
+    public String getImage() {
+        return image;
+    }
+
+    /**
+     * Sets the Base64-encoded image of the meal.
+     *
+     * @param image The Base64-encoded image of the meal.
+     */
+    public void setImage(String image) {
+        this.image = image;
+    }
+
+    /**
+     * Gets the URL of the image representing the meal.
+     *
+     * @return The URL of the image.
+     */
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    /**
+     * Sets the URL of the image representing the meal.
+     *
+     * @param imageUrl The URL of the image.
+     */
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
     }
 
     /**

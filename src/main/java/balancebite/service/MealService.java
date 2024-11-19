@@ -74,8 +74,25 @@ public class MealService implements IMealService {
     public MealDTO createMealNoUser(MealInputDTO mealInputDTO) {
         log.info("Attempting to create a new meal with name: {}", mealInputDTO.getName());
 
+        // Controleer of zowel image als imageUrl is ingevuld
+        if (mealInputDTO.getImage() != null && mealInputDTO.getImageUrl() != null) {
+            log.error("Both image and imageUrl provided. Only one of them is allowed.");
+            throw new IllegalArgumentException("You can only provide either an image or an imageUrl, not both.");
+        }
+
         // Convert input DTO to Meal entity
         Meal meal = mealMapper.toEntity(mealInputDTO);
+
+        // Handle image and imageUrl logic
+        if (mealInputDTO.getImage() != null) {
+            log.info("Using uploaded image for the meal.");
+            meal.setImage(mealInputDTO.getImage());
+        } else if (mealInputDTO.getImageUrl() != null) {
+            log.info("Using provided image URL for the meal.");
+            meal.setImageUrl(mealInputDTO.getImageUrl());
+        } else {
+            log.info("No image or imageUrl provided for the meal.");
+        }
 
         // Collect all FoodItem IDs from the Meal's ingredients
         List<Long> foodItemIds = meal.getMealIngredients().stream()

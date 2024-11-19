@@ -28,6 +28,18 @@ public class MealDTO {
     private final String mealDescription;
 
     /**
+     * Base64-encoded image representing the meal.
+     * This field is optional.
+     */
+    private final String image;
+
+    /**
+     * URL of the image representing the meal.
+     * This field is optional.
+     */
+    private final String imageUrl;
+
+    /**
      * List of ingredients associated with the meal.
      */
     private final List<MealIngredientDTO> mealIngredients;
@@ -54,16 +66,20 @@ public class MealDTO {
      * @param id               the unique identifier of the meal.
      * @param name             the name of the meal.
      * @param mealDescription  the description of the meal.
+     * @param image            the Base64-encoded image of the meal (optional).
+     * @param imageUrl         the URL of the meal image (optional).
      * @param mealIngredients  the list of ingredients in the meal.
      * @param userCount        the count of users who have added the meal.
      * @param createdBy        the user who originally created the meal.
      * @param adjustedBy       the user who adjusted the meal (if applicable).
      */
-    public MealDTO(Long id, String name, String mealDescription, List<MealIngredientDTO> mealIngredients, int userCount, UserDTO createdBy, UserDTO adjustedBy) {
+    public MealDTO(Long id, String name, String mealDescription, String image, String imageUrl, List<MealIngredientDTO> mealIngredients, int userCount, UserDTO createdBy, UserDTO adjustedBy) {
         this.id = id;
         this.name = name;
         this.mealDescription = mealDescription;
-        this.mealIngredients = (mealIngredients != null) ? List.copyOf(mealIngredients) : List.of();  // Use an unmodifiable list
+        this.image = image;
+        this.imageUrl = imageUrl;
+        this.mealIngredients = (mealIngredients != null) ? List.copyOf(mealIngredients) : List.of(); // Use an unmodifiable list
         this.userCount = userCount;
         this.createdBy = createdBy;
         this.adjustedBy = adjustedBy;
@@ -97,13 +113,31 @@ public class MealDTO {
     }
 
     /**
+     * Gets the Base64-encoded image of the meal.
+     *
+     * @return the Base64-encoded image of the meal.
+     */
+    public String getImage() {
+        return image;
+    }
+
+    /**
+     * Gets the URL of the image representing the meal.
+     *
+     * @return the URL of the image.
+     */
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    /**
      * Gets the list of ingredients associated with the meal.
      * Returns an unmodifiable copy to maintain immutability.
      *
      * @return an unmodifiable list of meal ingredients.
      */
     public List<MealIngredientDTO> getMealIngredients() {
-        return List.copyOf(mealIngredients);  // Ensure the list cannot be mutated outside this DTO
+        return List.copyOf(mealIngredients); // Ensure the list cannot be mutated outside this DTO
     }
 
     /**

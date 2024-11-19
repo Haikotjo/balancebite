@@ -38,7 +38,7 @@ public class MealMapper {
 
     /**
      * Converts a Meal entity to a MealDTO.
-     * This includes converting the meal's ingredients, user count, the creator, and adjusted user if applicable.
+     * This includes converting the meal's ingredients, user count, creator, adjusted user, and optional image fields.
      *
      * @param meal the Meal entity to be converted.
      * @return the created MealDTO.
@@ -54,6 +54,8 @@ public class MealMapper {
                 meal.getId(),
                 meal.getName(),
                 meal.getMealDescription(),
+                meal.getImage(), // Base64 image
+                meal.getImageUrl(), // Image URL
                 meal.getMealIngredients().stream()
                         .map(this::toMealIngredientDTO)
                         .collect(Collectors.toList()),
@@ -67,8 +69,7 @@ public class MealMapper {
 
     /**
      * Converts a MealInputDTO to a Meal entity.
-     * Used for creating or updating a Meal entity.
-     * The fields adjustedBy and isTemplate are managed by the service logic and not set from the input DTO.
+     * Used for creating or updating a Meal entity, including optional image fields.
      *
      * @param mealInputDTO the MealInputDTO containing the meal data.
      * @return the Meal entity created from the input DTO.
@@ -81,6 +82,8 @@ public class MealMapper {
                     Meal meal = new Meal();
                     meal.setName(dto.getName());
                     meal.setMealDescription(dto.getMealDescription());
+                    meal.setImage(dto.getImage()); // Map optional Base64 image
+                    meal.setImageUrl(dto.getImageUrl()); // Map optional image URL
 
                     List<MealIngredient> mealIngredients = dto.getMealIngredients().stream()
                             .map(input -> mealIngredientMapper.toEntity(input, meal))

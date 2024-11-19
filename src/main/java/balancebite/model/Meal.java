@@ -33,6 +33,18 @@ public class Meal {
     private String mealDescription;
 
     /**
+     * Base64-encoded image representing the meal.
+     * This field is optional and can be used to store an image of the meal.
+     */
+    private String image;
+
+    /**
+     * URL of the image representing the meal.
+     * This field is optional and can be used instead of a Base64-encoded image.
+     */
+    private String imageUrl;
+
+    /**
      * List of meal ingredients associated with the meal.
      * Each ingredient corresponds to a food item with a specified quantity.
      * Using orphanRemoval = true to ensure that all MealIngredient entities
@@ -130,6 +142,42 @@ public class Meal {
      */
     public void setMealDescription(String mealDescription) {
         this.mealDescription = mealDescription;
+    }
+
+    /**
+     * Gets the image of the meal.
+     *
+     * @return the Base64-encoded image of the meal.
+     */
+    public String getImage() {
+        return image;
+    }
+
+    /**
+     * Sets the image of the meal.
+     *
+     * @param image the Base64-encoded image of the meal.
+     */
+    public void setImage(String image) {
+        this.image = image;
+    }
+
+    /**
+     * Gets the imageUrl of the meal.
+     *
+     * @return the imageUrl for the image of the meal.
+     */
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    /**
+     * Sets the image url of the meal.
+     *
+     * @param imageUrl for the image of the meal.
+     */
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
     }
 
     /**
