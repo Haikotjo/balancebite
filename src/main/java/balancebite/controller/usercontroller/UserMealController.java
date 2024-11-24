@@ -146,6 +146,30 @@ public class UserMealController {
     }
 
     /**
+     * Retrieves all meals created by a specific user by user ID.
+     *
+     * @param userId The ID of the user.
+     * @return ResponseEntity containing a list of MealDTO objects representing meals created by the user,
+     *         or a 204 NO CONTENT if no such meals are found.
+     */
+    @GetMapping("/{userId}/created-meals")
+    public ResponseEntity<?> getMealsCreatedByUser(@PathVariable Long userId) {
+        try {
+            log.info("Retrieving meals created by user with ID: {}", userId);
+            List<MealDTO> mealDTOs = userMealService.getMealsCreatedByUser(userId);
+            if (mealDTOs.isEmpty()) {
+                log.info("No meals created by user with ID: {}", userId);
+                return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+            }
+            return ResponseEntity.ok(mealDTOs);
+        } catch (Exception e) {
+            log.error("Unexpected error during retrieval of meals created by user ID {}: {}", userId, e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "An unexpected error occurred."));
+        }
+    }
+
+
+    /**
      * Removes a meal from the user's list of meals.
      *
      * @param userId The ID of the user.

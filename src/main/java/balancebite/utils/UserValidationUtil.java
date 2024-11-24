@@ -1,7 +1,7 @@
 package balancebite.utils;
 
 import balancebite.errorHandling.MissingUserInformationException;
-import balancebite.model.User;
+import balancebite.model.user.User;
 
 /**
  * Utility class for validating user information.

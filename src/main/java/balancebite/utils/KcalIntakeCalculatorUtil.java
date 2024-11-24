@@ -1,9 +1,9 @@
 package balancebite.utils;
 
-import balancebite.model.User;
-import balancebite.model.userenums.ActivityLevel;
-import balancebite.model.userenums.Goal;
-import balancebite.model.userenums.Gender;
+import balancebite.model.user.User;
+import balancebite.model.user.userenums.ActivityLevel;
+import balancebite.model.user.userenums.Goal;
+import balancebite.model.user.userenums.Gender;
 
 /**
  * Utility class for calculating daily intake values such as BMR and TDEE.

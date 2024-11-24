@@ -1,5 +1,6 @@
 package balancebite.model;
 
+import balancebite.model.user.User;
 import jakarta.persistence.*;
 import java.util.ArrayList;
 import java.util.List;

@@ -1,6 +1,6 @@
 package balancebite.utils;
 
-import balancebite.model.User;
+import balancebite.model.user.User;
 
 /**
  * Utility class for calculating the recommended daily protein intake.

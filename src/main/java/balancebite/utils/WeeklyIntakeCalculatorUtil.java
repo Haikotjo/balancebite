@@ -1,7 +1,7 @@
 package balancebite.utils;
 
 import balancebite.model.RecommendedDailyIntake;
-import balancebite.model.User;
+import balancebite.model.user.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

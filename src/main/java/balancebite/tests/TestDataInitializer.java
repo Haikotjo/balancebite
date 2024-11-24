@@ -1,6 +1,9 @@
 package balancebite.tests;
 
-import balancebite.model.User;
+import balancebite.model.user.User;
+import balancebite.model.user.userenums.ActivityLevel;
+import balancebite.model.user.userenums.Gender;
+import balancebite.model.user.userenums.Goal;
 import balancebite.repository.UserRepository;
 import balancebite.service.MealConsumptionExtendedService;
 import balancebite.service.RecommendedDailyIntakeService;
@@ -117,9 +120,9 @@ public class TestDataInitializer {
             user.setWeight(weight);
             user.setAge(age);
             user.setHeight(height);
-            user.setGender(Enum.valueOf(balancebite.model.userenums.Gender.class, gender));
-            user.setActivityLevel(Enum.valueOf(balancebite.model.userenums.ActivityLevel.class, activityLevel));
-            user.setGoal(Enum.valueOf(balancebite.model.userenums.Goal.class, goal));
+            user.setGender(Enum.valueOf(Gender.class, gender));
+            user.setActivityLevel(Enum.valueOf(ActivityLevel.class, activityLevel));
+            user.setGoal(Enum.valueOf(Goal.class, goal));
 
             userRepository.save(user);
         } else {

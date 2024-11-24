@@ -9,7 +9,7 @@ import balancebite.errorHandling.InvalidFoodItemException;
 import balancebite.model.FoodItem;
 import balancebite.model.Meal;
 import balancebite.model.MealIngredient;
-import balancebite.model.User;
+import balancebite.model.user.User;
 import balancebite.repository.FoodItemRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

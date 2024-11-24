@@ -4,7 +4,7 @@ import balancebite.dto.recommendeddailyintake.RecommendedDailyIntakeDTO;
 import balancebite.errorHandling.*;
 import balancebite.mapper.RecommendedDailyIntakeMapper;
 import balancebite.model.RecommendedDailyIntake;
-import balancebite.model.User;
+import balancebite.model.user.User;
 import balancebite.repository.RecommendedDailyIntakeRepository;
 import balancebite.repository.UserRepository;
 import balancebite.service.interfaces.IRecommendedDailyIntakeService;

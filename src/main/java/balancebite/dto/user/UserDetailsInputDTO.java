@@ -1,8 +1,8 @@
 package balancebite.dto.user;
 
-import balancebite.model.userenums.ActivityLevel;
-import balancebite.model.userenums.Gender;
-import balancebite.model.userenums.Goal;
+import balancebite.model.user.userenums.ActivityLevel;
+import balancebite.model.user.userenums.Gender;
+import balancebite.model.user.userenums.Goal;
 import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.NotNull;

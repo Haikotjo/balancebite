@@ -32,7 +32,7 @@ public interface IUserService {
      * @return The updated UserDTO.
      * @throws UserNotFoundException If the user with the specified ID is not found.
      */
-    UserDTO updateUserBasicInfo(Long id, UserBasicInfoInputDTO userBasicInfoInputDTO);
+    UserDTO updateUserBasicInfo(Long id, UserBasicInfoInputDTO userBasicInfoInputDTO, boolean isAdmin);
 
     /**
      * Updates the detailed information of an existing user in the system based on the provided UserDetailsInputDTO.

@@ -1,4 +1,4 @@
-package balancebite.model.userenums;
+package balancebite.model.user.userenums;
 
 /**
  * Enum representing the fitness or nutrition goal of a user.

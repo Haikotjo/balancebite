@@ -1,7 +1,7 @@
 package balancebite.repository;
 
 import balancebite.model.Meal;
-import balancebite.model.User;
+import balancebite.model.user.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -21,6 +21,14 @@ public interface UserRepository extends JpaRepository<User, Long> {
      * @return true if a user with the given email address exists, false otherwise.
      */
     boolean existsByEmail(String email);
+
+    /**
+     * Finds a user by their email address.
+     *
+     * @param email the email address to search for
+     * @return an Optional containing the found user, or empty if no user found
+     */
+    Optional<User> findByEmail(String email);
 
     /**
      * Finds a user by their username.

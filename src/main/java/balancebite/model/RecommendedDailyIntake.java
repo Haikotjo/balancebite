@@ -1,5 +1,6 @@
 package balancebite.model;
 
+import balancebite.model.user.User;
 import jakarta.persistence.*;
 
 import java.time.LocalDate;

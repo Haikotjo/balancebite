@@ -3,7 +3,6 @@ package balancebite.service.user;
 import balancebite.dto.meal.MealDTO;
 import balancebite.dto.meal.MealInputDTO;
 import balancebite.dto.user.UserDTO;
-import balancebite.dto.mealingredient.MealIngredientInputDTO;
 import balancebite.errorHandling.DuplicateMealException;
 import balancebite.errorHandling.InvalidFoodItemException;
 import balancebite.errorHandling.MealNotFoundException;
@@ -13,7 +12,7 @@ import balancebite.mapper.MealMapper;
 import balancebite.mapper.UserMapper;
 import balancebite.model.Meal;
 import balancebite.model.MealIngredient;
-import balancebite.model.User;
+import balancebite.model.user.User;
 import balancebite.repository.MealRepository;
 import balancebite.repository.UserRepository;
 import balancebite.service.interfaces.IUserMealService;
@@ -239,6 +238,14 @@ public class UserMealService implements IUserMealService {
         // Map the user's meals to MealDTOs
         return user.getMeals().stream().map(mealMapper::toDTO).toList();
     }
+
+    public List<MealDTO> getMealsCreatedByUser(Long userId) {
+        return mealRepository.findByCreatedBy_Id(userId)
+                .stream()
+                .map(mealMapper::toDTO)
+                .collect(Collectors.toList());
+    }
+
 
     /**
      * Removes a specific meal from a user's list of meals.

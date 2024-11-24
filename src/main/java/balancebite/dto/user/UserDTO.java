@@ -2,10 +2,10 @@ package balancebite.dto.user;
 
 import balancebite.dto.meal.MealDTO;
 import balancebite.dto.recommendeddailyintake.RecommendedDailyIntakeDTO;
-import balancebite.model.Role;
-import balancebite.model.userenums.ActivityLevel;
-import balancebite.model.userenums.Gender;
-import balancebite.model.userenums.Goal;
+import balancebite.model.user.Role;
+import balancebite.model.user.userenums.ActivityLevel;
+import balancebite.model.user.userenums.Gender;
+import balancebite.model.user.userenums.Goal;
 
 import java.util.List;
 import java.util.Set;

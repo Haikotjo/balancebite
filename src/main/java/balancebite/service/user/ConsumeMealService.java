@@ -8,7 +8,7 @@ import balancebite.errorHandling.UserNotFoundException;
 import balancebite.model.Meal;
 import balancebite.model.Nutrient;
 import balancebite.model.RecommendedDailyIntake;
-import balancebite.model.User;
+import balancebite.model.user.User;
 import balancebite.repository.MealRepository;
 import balancebite.repository.RecommendedDailyIntakeRepository;
 import balancebite.repository.UserRepository;

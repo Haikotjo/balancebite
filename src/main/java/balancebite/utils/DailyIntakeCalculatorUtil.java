@@ -1,7 +1,7 @@
 package balancebite.utils;
 
 import balancebite.model.RecommendedDailyIntake;
-import balancebite.model.User;
+import balancebite.model.user.User;
 
 import java.time.LocalDate;
 import java.util.Optional;

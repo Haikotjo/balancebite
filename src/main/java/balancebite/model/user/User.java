@@ -1,9 +1,13 @@
-package balancebite.model;
+package balancebite.model.user;
 
-import balancebite.model.userenums.ActivityLevel;
-import balancebite.model.userenums.Gender;
-import balancebite.model.userenums.Goal;
+import balancebite.model.Meal;
+import balancebite.model.RecommendedDailyIntake;
+import balancebite.model.user.userenums.ActivityLevel;
+import balancebite.model.user.userenums.Gender;
+import balancebite.model.user.userenums.Goal;
 import jakarta.persistence.*;
+
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -86,11 +90,16 @@ public class User {
     private Set<Meal> meals = new HashSet<>();
 
     /**
-     * The role of the user, stored as a string representation of the Role enum.
+     * The roles assigned to the user.
+     * This establishes a many-to-many relationship with the Role entity.
      */
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private Role role;
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+            name = "user_roles",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "roles_rolename")
+    )
+    private Collection<Role> roles = new HashSet<>();
 
     /**
      * The recommended daily intakes associated with the user.
@@ -110,13 +119,13 @@ public class User {
      * @param userName the name of the user.
      * @param email    the email of the user.
      * @param password the password of the user.
-     * @param role     the role of the user.
+     * @param roles    the roles assigned to the user
      */
-    public User(String userName, String email, String password, Role role) {
+    public User(String userName, String email, String password, Collection<Role> roles) {
         this.userName = userName;
         this.email = email;
         this.password = password;
-        this.role = role;
+        this.roles = roles;
     }
 
     /**
@@ -309,21 +318,21 @@ public class User {
     }
 
     /**
-     * Gets the role of the user.
+     * Gets the roles assigned to the user.
      *
-     * @return the role of the user.
+     * @return the roles assigned to the user
      */
-    public Role getRole() {
-        return role;
+    public Collection<Role> getRoles() {
+        return roles;
     }
 
     /**
-     * Sets the role of the user.
+     * Sets the roles assigned to the user.
      *
-     * @param role the role of the user.
+     * @param roles the roles assigned to the user
      */
-    public void setRole(Role role) {
-        this.role = role;
+    public void setRoles(Collection<Role> roles) {
+        this.roles = roles;
     }
 
     /**

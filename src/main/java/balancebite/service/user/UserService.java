@@ -6,7 +6,7 @@ import balancebite.dto.user.UserDetailsInputDTO;
 import balancebite.errorHandling.EntityAlreadyExistsException;
 import balancebite.errorHandling.UserNotFoundException;
 import balancebite.mapper.UserMapper;
-import balancebite.model.User;
+import balancebite.model.user.User;
 import balancebite.repository.RecommendedDailyIntakeRepository;
 import balancebite.repository.UserRepository;
 import balancebite.service.RecommendedDailyIntakeService;
@@ -19,7 +19,9 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -87,16 +89,18 @@ public class UserService implements IUserService {
 
     /**
      * Updates basic information of an existing user.
+     * Allows role updates only if the requester is an admin.
      *
      * @param id                    The ID of the user to update.
      * @param userBasicInfoInputDTO The input DTO containing updated user information.
+     * @param isAdmin               Boolean flag indicating if the requester is an admin.
      * @return The updated UserDTO.
      * @throws UserNotFoundException       If the user with the specified ID does not exist.
      * @throws EntityAlreadyExistsException If the provided email is already in use by another user.
      */
     @Override
-    public UserDTO updateUserBasicInfo(Long id, UserBasicInfoInputDTO userBasicInfoInputDTO) {
-        log.info("Updating basic info for user with ID: {}", id);
+    public UserDTO updateUserBasicInfo(Long id, UserBasicInfoInputDTO userBasicInfoInputDTO, boolean isAdmin) {
+        log.info("Updating basic info for user with ID: {}. Admin privileges: {}", id, isAdmin);
 
         // Fetch the existing user or throw exception if not found
         User existingUser = userRepository.findById(id)
@@ -110,17 +114,22 @@ public class UserService implements IUserService {
             throw new EntityAlreadyExistsException(errorMessage);
         }
 
-        // Update user details
+        // Update basic user details
         existingUser.setUserName(userBasicInfoInputDTO.getUserName());
         existingUser.setEmail(userBasicInfoInputDTO.getEmail());
         existingUser.setPassword(userBasicInfoInputDTO.getPassword());
-        existingUser.setRole(userBasicInfoInputDTO.getRole());
 
-        // Save and return updated user
+        // Update roles if requester is an admin and roles are provided
+        if (isAdmin && userBasicInfoInputDTO.getRoles() != null && !userBasicInfoInputDTO.getRoles().isEmpty()) {
+            existingUser.setRoles(new HashSet<>(userBasicInfoInputDTO.getRoles())); // Overschrijft alle bestaande rollen
+        }
+
+        // Save and return the updated user
         User updatedUser = userRepository.save(existingUser);
         log.info("Successfully updated basic info for user with ID: {}", id);
         return userMapper.toDTO(updatedUser);
     }
+
 
     /**
      * Updates detailed information of an existing user.

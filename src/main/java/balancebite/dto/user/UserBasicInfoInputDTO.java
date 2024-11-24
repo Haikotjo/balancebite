@@ -1,10 +1,12 @@
 package balancebite.dto.user;
 
-import balancebite.model.Role;
+import balancebite.model.user.Role;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+
+import java.util.Collection;
 
 /**
  * Data Transfer Object (DTO) for handling basic user information.
@@ -36,10 +38,15 @@ public class UserBasicInfoInputDTO {
     private String password;
 
     /**
-     * The role assigned to the user. This field is mandatory and must match a valid Role enum value.
+     * The roles assigned to the user.
+     * This field can contain one or more roles, such as USER, ADMIN, or CHEF.
      */
-    @NotNull(message = "Role must be provided. Please select a valid role for the user.")
-    private Role role;
+    private Collection<Role> roles;
+
+    /**
+     * Optional token for elevated roles (Admin/Chef).
+     */
+    private String verificationToken;
 
     /**
      * Default no-argument constructor for frameworks that require it.
@@ -49,21 +56,28 @@ public class UserBasicInfoInputDTO {
     /**
      * Constructor for creating a UserBasicInfoInputDTO with all fields.
      *
-     * @param userName The user's name. Must not be blank and must have 2-50 characters.
-     * @param email    The user's email address. Must not be blank and must be a valid email format.
-     * @param password The user's password. Must not be blank and must be at least 4 characters long.
-     * @param role     The user's role. Must not be null and must match a valid Role enum value.
+     * @param userName           The user's name. Must not be blank and must have 2-50 characters.
+     * @param email              The user's email address. Must not be blank and must be a valid email format.
+     * @param password           The user's password. Must not be blank and must be at least 4 characters long.
+     * @param roles              The roles assigned to the user. For normal users, this is set by the backend as USER.
+     *                           For elevated roles (e.g., ADMIN, CHEF), this is determined based on the verificationToken.
+     *                           Multiple roles can be assigned in the form of a collection.
+     * @param verificationToken  Optional token used to validate elevated roles (e.g., ADMIN, CHEF).
+     *                           If provided, it must match a valid token in the system for the desired role.
      */
     public UserBasicInfoInputDTO(
             @NotBlank(message = "The user name cannot be blank.") @Size(min = 2, max = 50) String userName,
             @NotBlank(message = "The email cannot be blank.") @Email(message = "Please provide a valid email address.") String email,
             @NotBlank(message = "The password cannot be blank.") @Size(min = 4, message = "Password must be at least 4 characters long.") String password,
-            @NotNull(message = "Role must be provided.") Role role) {
+            Collection<Role> roles,
+            String verificationToken) {
         this.userName = userName;
         this.email = email;
         this.password = password;
-        this.role = role;
+        this.roles = roles;
+        this.verificationToken = verificationToken;
     }
+
 
     // Getters and setters
 
@@ -122,20 +136,41 @@ public class UserBasicInfoInputDTO {
     }
 
     /**
-     * Gets the user's role.
+     * Gets the collection of roles assigned to the user.
      *
-     * @return The user's role.
+     * @return A collection of roles assigned to the user. This collection may contain multiple roles.
      */
-    public Role getRole() {
-        return role;
+    public Collection<Role> getRoles() {
+        return roles;
     }
 
     /**
-     * Sets the user's role.
+     * Sets the collection of roles assigned to the user.
+     * This method replaces all existing roles with the provided collection of roles.
      *
-     * @param role The user's role. Must not be null and must match a valid Role enum value.
+     * @param roles A collection of roles to assign to the user. Cannot be null or empty for elevated roles.
      */
-    public void setRole(Role role) {
-        this.role = role;
+    public void setRoles(Collection<Role> roles) {
+        this.roles = roles;
+    }
+
+    /**
+     * Gets the verification token provided during user creation.
+     * This token is used to validate requests for elevated roles (e.g., ADMIN, CHEF).
+     *
+     * @return The verification token, or null if not provided.
+     */
+    public String getVerificationToken() {
+        return verificationToken;
+    }
+
+    /**
+     * Sets the verification token for user creation.
+     * This token must match a valid token in the system to assign elevated roles (e.g., ADMIN, CHEF).
+     *
+     * @param verificationToken The verification token.
+     */
+    public void setVerificationToken(String verificationToken) {
+        this.verificationToken = verificationToken;
     }
 }

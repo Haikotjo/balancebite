@@ -1,7 +1,7 @@
 package balancebite.service;
 
 import balancebite.model.Meal;
-import balancebite.model.User;
+import balancebite.model.user.User;
 import balancebite.model.RecommendedDailyIntake;
 import balancebite.repository.MealRepository;
 import balancebite.repository.RecommendedDailyIntakeRepository;

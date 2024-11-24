@@ -70,16 +70,21 @@ public class UserController {
 
     /**
      * Endpoint to update the basic information of an existing user.
+     * Allows role updates only if the requester is an admin.
      *
-     * @param id                   The ID of the user to update.
+     * @param id                    The ID of the user to update.
      * @param userBasicInfoInputDTO The input data for updating the user.
-     * @return The updated UserDTO with 200 status code, or a 404 status code if the user is not found.
+     * @param isAdmin               Boolean flag indicating if the requester is an admin.
+     * @return The updated UserDTO with a 200 status code, or appropriate error response.
      */
     @PatchMapping("/{id}/basic-info")
-    public ResponseEntity<?> updateUserBasicInfo(@PathVariable Long id, @Valid @RequestBody UserBasicInfoInputDTO userBasicInfoInputDTO) {
-        log.info("Updating basic info for user with ID: {}", id);
+    public ResponseEntity<?> updateUserBasicInfo(
+            @PathVariable Long id,
+            @Valid @RequestBody UserBasicInfoInputDTO userBasicInfoInputDTO,
+            @RequestParam(defaultValue = "false") boolean isAdmin) { // Default to false if not provided
+        log.info("Updating basic info for user with ID: {}. Admin privileges: {}", id, isAdmin);
         try {
-            UserDTO updatedUser = userService.updateUserBasicInfo(id, userBasicInfoInputDTO);
+            UserDTO updatedUser = userService.updateUserBasicInfo(id, userBasicInfoInputDTO, isAdmin);
             log.info("Successfully updated user with ID: {}", id);
             return ResponseEntity.ok(updatedUser);
         } catch (EntityAlreadyExistsException e) {
@@ -93,6 +98,7 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "An unexpected error occurred."));
         }
     }
+
 
     /**
      * Endpoint to update the detailed information of an existing user.

@@ -10,7 +10,7 @@ import balancebite.mapper.MealIngredientMapper;
 import balancebite.mapper.MealMapper;
 import balancebite.model.Meal;
 import balancebite.model.MealIngredient;
-import balancebite.model.User;
+import balancebite.model.user.User;
 import balancebite.repository.FoodItemRepository;
 import balancebite.repository.MealRepository;
 import balancebite.repository.UserRepository;

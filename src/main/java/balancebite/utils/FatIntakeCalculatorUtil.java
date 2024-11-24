@@ -1,7 +1,7 @@
 package balancebite.utils;
 
-import balancebite.model.User;
-import balancebite.model.userenums.Goal;
+import balancebite.model.user.User;
+import balancebite.model.user.userenums.Goal;
 
 /**
  * Utility class for calculating the recommended daily fat intake.

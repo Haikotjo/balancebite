@@ -1,7 +1,6 @@
 package balancebite.repository;
 
 import balancebite.model.Meal;
-import balancebite.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -75,4 +74,12 @@ public interface MealRepository extends JpaRepository<Meal, Long> {
      */
     @Query("SELECT m FROM Meal m WHERE m.isTemplate = true")
     List<Meal> findAllTemplateMeals();
+
+    /**
+     * Finds all meals where the createdBy user ID matches the given userId.
+     *
+     * @param userId The ID of the user who created the meals.
+     * @return A list of meals created by the specified user.
+     */
+    List<Meal> findByCreatedBy_Id(Long userId);
 }
