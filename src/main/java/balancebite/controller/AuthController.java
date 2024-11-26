@@ -2,9 +2,9 @@ package balancebite.controller;
 
 import balancebite.dto.user.UserLoginInputDTO;
 import balancebite.dto.user.UserRegistrationInputDTO;
-import balancebite.mapper.UserMapper;
-import balancebite.security.JwtService;
 import balancebite.service.user.RegistrationService;
+import balancebite.security.JwtService;
+import balancebite.security.LoginService;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,9 +12,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
@@ -31,6 +28,7 @@ public class AuthController {
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
     private final RegistrationService registrationService;
+    private final LoginService loginService;
     private static final Logger log = LoggerFactory.getLogger(AuthController.class);
 
     /**
@@ -39,12 +37,14 @@ public class AuthController {
      * @param authenticationManager The Spring Security AuthenticationManager.
      * @param jwtService            The JWT service for token generation and validation.
      * @param registrationService   The service handling user registration logic.
+     * @param loginService          The service handling user login logic.
      */
     public AuthController(AuthenticationManager authenticationManager, JwtService jwtService,
-                          RegistrationService registrationService) {
+                          RegistrationService registrationService, LoginService loginService) {
         this.authenticationManager = authenticationManager;
         this.jwtService = jwtService;
         this.registrationService = registrationService;
+        this.loginService = loginService;
     }
 
     /**
@@ -59,7 +59,7 @@ public class AuthController {
         log.info("Processing user registration for email: {}", registrationDTO.getEmail());
 
         try {
-            // Gebruik de registratie service om de gebruiker te registreren
+            // Use the registration service to register the user
             registrationService.registerUser(registrationDTO);
 
             log.info("User registered successfully with email: {}", registrationDTO.getEmail());
@@ -71,40 +71,33 @@ public class AuthController {
     }
 
     /**
-     * Handles user login.
-     * Authenticates the provided credentials and returns JWT tokens upon success.
+     * Handles user login requests.
+     * Authenticates the provided credentials using the LoginService and returns JWT tokens upon success.
      *
-     * @param loginDTO The DTO containing user login details.
-     * @return A ResponseEntity containing tokens or an error message upon failure.
+     * @param loginDTO The DTO containing user login credentials (email and password).
+     * @return A ResponseEntity containing access and refresh tokens if login is successful,
+     *         or an error message with status 401 (Unauthorized) if login fails.
      */
     @PostMapping("/login")
     public ResponseEntity<Object> loginUser(@Valid @RequestBody UserLoginInputDTO loginDTO) {
         log.info("Processing login for email: {}", loginDTO.getEmail());
 
-        try {
-            // Authenticate user credentials
-            Authentication authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(loginDTO.getEmail(), loginDTO.getPassword())
-            );
+        // Call the LoginService to handle the login process
+        Map<String, String> tokens = loginService.login(loginDTO.getEmail(), loginDTO.getPassword());
 
-            // Generate JWT tokens
-            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-            String accessToken = jwtService.generateAccessToken(userDetails);
-            String refreshToken = jwtService.generateRefreshToken(userDetails);
-
-            log.info("Login successful for email: {}", loginDTO.getEmail());
-
-            return ResponseEntity.ok()
-                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
-                    .body(Map.of(
-                            "message", "Login successful",
-                            "accessToken", accessToken,
-                            "refreshToken", refreshToken
-                    ));
-        } catch (AuthenticationException ex) {
-            log.warn("Login failed for email '{}': {}", loginDTO.getEmail(), ex.getMessage());
+        if (tokens == null) {
+            log.warn("Login failed for email '{}': Invalid credentials", loginDTO.getEmail());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Invalid credentials"));
         }
+
+        log.info("Login successful for email '{}'", loginDTO.getEmail());
+        return ResponseEntity.ok()
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + tokens.get("accessToken"))
+                .body(Map.of(
+                        "message", "Login successful",
+                        "accessToken", tokens.get("accessToken"),
+                        "refreshToken", tokens.get("refreshToken")
+                ));
     }
 
     /**
@@ -123,7 +116,7 @@ public class AuthController {
         }
 
         String email = jwtService.extractEmail(refreshToken);
-        UserDetails userDetails = registrationService.loadUserByEmail(email); // Hier gebruik je een methode die gebruikersgegevens ophaalt
+        UserDetails userDetails = registrationService.loadUserByEmail(email); // Here, use a method that retrieves user data
         String newAccessToken = jwtService.generateAccessToken(userDetails);
 
         log.info("Access token refreshed successfully for email: {}", email);

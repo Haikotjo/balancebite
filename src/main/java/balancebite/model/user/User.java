@@ -5,6 +5,9 @@ import balancebite.model.RecommendedDailyIntake;
 import balancebite.model.user.userenums.ActivityLevel;
 import balancebite.model.user.userenums.Gender;
 import balancebite.model.user.userenums.Goal;
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import jakarta.persistence.*;
 
 import java.util.Collection;
@@ -87,19 +90,20 @@ public class User {
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "meal_id")
     )
+    @JsonIgnore
     private Set<Meal> meals = new HashSet<>();
 
     /**
      * The roles assigned to the user.
      * This establishes a many-to-many relationship with the Role entity.
      */
-    @ManyToMany(fetch = FetchType.EAGER)
+    @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
             name = "user_roles",
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "roles_rolename")
     )
-    private Collection<Role> roles = new HashSet<>();
+    private Set<Role> roles;
 
     /**
      * The recommended daily intakes associated with the user.
@@ -121,7 +125,7 @@ public class User {
      * @param password the password of the user.
      * @param roles    the roles assigned to the user
      */
-    public User(String userName, String email, String password, Collection<Role> roles) {
+    public User(String userName, String email, String password, Set<Role> roles) {
         this.userName = userName;
         this.email = email;
         this.password = password;
@@ -322,7 +326,7 @@ public class User {
      *
      * @return the roles assigned to the user
      */
-    public Collection<Role> getRoles() {
+    public Set<Role> getRoles() {
         return roles;
     }
 
@@ -331,7 +335,7 @@ public class User {
      *
      * @param roles the roles assigned to the user
      */
-    public void setRoles(Collection<Role> roles) {
+    public void setRoles(Set<Role> roles) {
         this.roles = roles;
     }
 

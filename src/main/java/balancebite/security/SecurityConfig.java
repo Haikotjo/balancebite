@@ -25,27 +25,15 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
     private final JwtService jwtService;
-    private final UserRepository userRepository;
+    private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
+    private final JwtRequestFilter jwtRequestFilter;
 
-    /**
-     * Constructs a SecurityConfig with the specified JwtService and UserRepository.
-     *
-     * @param jwtService the JwtService used for handling JWT tokens
-     * @param userRepository the UserRepository used for retrieving user data
-     */
-    public SecurityConfig(JwtService jwtService, UserRepository userRepository) {
+    public SecurityConfig(JwtService jwtService,
+                          CustomAuthenticationEntryPoint customAuthenticationEntryPoint,
+                          JwtRequestFilter jwtRequestFilter) {
         this.jwtService = jwtService;
-        this.userRepository = userRepository;
-    }
-
-    /**
-     * Configures a UserDetailsService bean.
-     *
-     * @return a UserDetailsService implementation
-     */
-    @Bean
-    public UserDetailsService userDetailsService() {
-        return new MyUserDetailsService(this.userRepository);
+        this.customAuthenticationEntryPoint = customAuthenticationEntryPoint;
+        this.jwtRequestFilter = jwtRequestFilter;
     }
 
     /**
@@ -61,15 +49,20 @@ public class SecurityConfig {
     /**
      * Configures an AuthenticationManager bean.
      *
-     * @param http the HttpSecurity to configure
+     * @param http                the HttpSecurity to configure
+     * @param passwordEncoder     the PasswordEncoder to use
+     * @param userDetailsService  the UserDetailsService to use
      * @return the AuthenticationManager
      * @throws Exception if an error occurs during configuration
      */
     @Bean
-    public AuthenticationManager authenticationManager(HttpSecurity http) throws Exception {
+    public AuthenticationManager authenticationManager(HttpSecurity http, PasswordEncoder passwordEncoder,
+                                                       UserDetailsService userDetailsService) throws Exception {
         AuthenticationManagerBuilder authenticationManagerBuilder =
                 http.getSharedObject(AuthenticationManagerBuilder.class);
-        authenticationManagerBuilder.userDetailsService(userDetailsService()).passwordEncoder(passwordEncoder());
+        authenticationManagerBuilder
+                .userDetailsService(userDetailsService)
+                .passwordEncoder(passwordEncoder);
         return authenticationManagerBuilder.build();
     }
 
@@ -86,38 +79,31 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(authz -> authz
 
-                                // register endpoints
-                                .requestMatchers(HttpMethod.POST, "/auth/register").permitAll()
-                                .requestMatchers(HttpMethod.POST, "/auth/login").permitAll()
-                                .requestMatchers(HttpMethod.POST, "/auth/refresh").permitAll()
+                        // register endpoints
+                        .requestMatchers(HttpMethod.POST, "/auth/register").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/auth/login").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/auth/refresh").permitAll()
 
-                                // user entity endpoints
-                                .requestMatchers(HttpMethod.GET, "/users").hasAuthority("ADMIN")
+                        // user entity endpoints
+                        .requestMatchers(HttpMethod.GET, "/users").hasAuthority("ADMIN")
 
-                                // usersmeal endpoints
+                        // meal entity endpoints
+                        .requestMatchers(HttpMethod.GET, "/meals").permitAll()
 
-                                // meal entity endpoints
-                                .requestMatchers(HttpMethod.GET, "/meals").permitAll()
-
-                                // recommendeddailyintake entity endpoints
-
-                                // Enabling this line will allow ADMIN to access all endpoints.
-//                .requestMatchers("/**").hasAnyAuthority("ADMIN")
-
-                                // Add this line to disable security for all endpoints
-//                                .anyRequest().permitAll()
-
-                                .anyRequest().authenticated()
+                        .anyRequest().authenticated()
                 )
-
+                .exceptionHandling(exception -> exception.authenticationEntryPoint(customAuthenticationEntryPoint))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .addFilterBefore(new JwtRequestFilter(jwtService, userDetailsService()), UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
+
         return http.build();
     }
 }
 
 
-                                        //  Turn all above off and below on to disable security
+
+
+//  Turn all above off and below on to disable security
 
 
 //package nl.novi.eindopdrachtbackend.security;

@@ -1,6 +1,5 @@
 package balancebite.security;
 
-
 import balancebite.model.user.Role;
 import balancebite.model.user.User;
 import org.springframework.security.core.GrantedAuthority;

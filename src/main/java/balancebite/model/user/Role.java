@@ -1,8 +1,11 @@
 package balancebite.model.user;
 
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import jakarta.persistence.*;
 import java.util.Collection;
+import java.util.Set;
 
 /**
  * Represents a role entity in the system.
@@ -16,6 +19,7 @@ public class Role {
      * The role name is an enumerated type.
      */
     @Id
+    @JsonIgnore
     @Enumerated(EnumType.STRING)
     private UserRole rolename;
 
@@ -23,8 +27,9 @@ public class Role {
      * The collection of users that have this role.
      * This establishes a many-to-many relationship with the User entity.
      */
-    @ManyToMany(mappedBy = "roles")
-    private Collection<User> users;
+    @ManyToMany(mappedBy = "roles", fetch = FetchType.LAZY)
+    @JsonIgnore
+    private Set<User> users;
 
     // Constructor
 
@@ -69,7 +74,6 @@ public class Role {
      *
      * @return the name of the role as a string
      */
-    @JsonIgnore
     public String getRoleName() {
         return rolename.name();
     }

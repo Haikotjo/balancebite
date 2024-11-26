@@ -2,16 +2,14 @@ package balancebite.security;
 
 import balancebite.model.user.User;
 import balancebite.repository.UserRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
-import java.util.Optional;
-
 /**
- * MyUserDetailsService is an implementation of the UserDetailsService interface,
- * which loads user-specific data.
+ * MyUserDetailsService implements the UserDetailsService interface
+ * to provide user details for authentication.
  */
 @Service
 public class MyUserDetailsService implements UserDetailsService {
@@ -21,27 +19,23 @@ public class MyUserDetailsService implements UserDetailsService {
     /**
      * Constructs a MyUserDetailsService with the specified UserRepository.
      *
-     * @param userRepository the UserRepository to use for retrieving user data
+     * @param userRepository the UserRepository used to retrieve user data
      */
+    @Autowired
     public MyUserDetailsService(UserRepository userRepository) {
         this.userRepository = userRepository;
     }
 
     /**
-     * Loads the user by their username (email).
+     * Loads the user by username (email in this case).
      *
-     * @param email the email of the user to load
-     * @return the UserDetails of the user
-     * @throws UsernameNotFoundException if the user with the specified email is not found
+     * @param email the email of the user
+     * @return UserDetails for authentication
      */
     @Override
-    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        Optional<User> ou = userRepository.findByEmail(email);
-        if (ou.isPresent()) {
-            User user = ou.get();
-            return new MyUserDetails(user);
-        } else {
-            throw new UsernameNotFoundException(email);
-        }
+    public UserDetails loadUserByUsername(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
+        return new MyUserDetails(user);
     }
 }

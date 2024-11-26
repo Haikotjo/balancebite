@@ -143,6 +143,12 @@
             <artifactId>spring-boot-starter-logging</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>jakarta.servlet</groupId>
+            <artifactId>jakarta.servlet-api</artifactId>
+            <version>6.0.0</version> <!-- Controleer of dit de meest recente versie is -->
+            <scope>provided</scope>
+        </dependency>
 
     </dependencies>
 
