@@ -1,6 +1,7 @@
 package balancebite.controller.usercontroller;
 
-import balancebite.dto.user.UserBasicInfoInputDTO;
+import balancebite.dto.user.UserRegistrationInputDTO;
+import balancebite.dto.user.UserLoginInputDTO;
 import balancebite.dto.user.UserDTO;
 import balancebite.dto.user.UserDetailsInputDTO;
 import balancebite.errorHandling.DailyIntakeNotFoundException;
@@ -47,44 +48,17 @@ public class UserController {
     }
 
     /**
-     * Endpoint to create a new user.
-     *
-     * @param userBasicInfoInputDTO The input data for creating the user.
-     * @return The created UserDTO with 201 status code, or a 409 status code if the user already exists.
-     */
-    @PostMapping
-    public ResponseEntity<?> createUser(@Valid @RequestBody UserBasicInfoInputDTO userBasicInfoInputDTO) {
-        log.info("Creating a new user with email: {}", userBasicInfoInputDTO.getEmail());
-        try {
-            UserDTO createdUser = userService.createUser(userBasicInfoInputDTO);
-            log.info("Successfully created user with ID: {}", createdUser.getId());
-            return ResponseEntity.status(HttpStatus.CREATED).body(createdUser);
-        } catch (EntityAlreadyExistsException e) {
-            log.warn("User already exists: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", e.getMessage()));
-        } catch (Exception e) {
-            log.error("Unexpected error during user creation: {}", e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "An unexpected error occurred."));
-        }
-    }
-
-    /**
      * Endpoint to update the basic information of an existing user.
-     * Allows role updates only if the requester is an admin.
      *
-     * @param id                    The ID of the user to update.
-     * @param userBasicInfoInputDTO The input data for updating the user.
-     * @param isAdmin               Boolean flag indicating if the requester is an admin.
-     * @return The updated UserDTO with a 200 status code, or appropriate error response.
+     * @param id                   The ID of the user to update.
+     * @param userRegistrationInputDTO The input data for updating the user.
+     * @return The updated UserDTO with 200 status code, or a 404 status code if the user is not found.
      */
     @PatchMapping("/{id}/basic-info")
-    public ResponseEntity<?> updateUserBasicInfo(
-            @PathVariable Long id,
-            @Valid @RequestBody UserBasicInfoInputDTO userBasicInfoInputDTO,
-            @RequestParam(defaultValue = "false") boolean isAdmin) { // Default to false if not provided
-        log.info("Updating basic info for user with ID: {}. Admin privileges: {}", id, isAdmin);
+    public ResponseEntity<?> updateUserBasicInfo(@PathVariable Long id, @Valid @RequestBody UserRegistrationInputDTO userRegistrationInputDTO) {
+        log.info("Updating basic info for user with ID: {}", id);
         try {
-            UserDTO updatedUser = userService.updateUserBasicInfo(id, userBasicInfoInputDTO, isAdmin);
+            UserDTO updatedUser = userService.updateUserBasicInfo(id, userRegistrationInputDTO, true); // Assuming admin privileges
             log.info("Successfully updated user with ID: {}", id);
             return ResponseEntity.ok(updatedUser);
         } catch (EntityAlreadyExistsException e) {
@@ -98,7 +72,6 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "An unexpected error occurred."));
         }
     }
-
 
     /**
      * Endpoint to update the detailed information of an existing user.

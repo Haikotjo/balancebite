@@ -1,25 +1,23 @@
--- Voeg een nieuwe user toe zonder handmatig een ID in te stellen
-INSERT INTO users (user_name, email, password, role) VALUES ('John Doe', 'johndoe@example.com', 'password123', 'USER');
+-- Voeg rollen toe aan de roles tabel
+INSERT INTO roles (rolename) VALUES ('USER');
+INSERT INTO roles (rolename) VALUES ('CHEF');
+INSERT INTO roles (rolename) VALUES ('ADMIN');
 
--- Voeg een tweede nieuwe user toe
-INSERT INTO users (user_name, email, password, role)
-VALUES ('Jane Smith', 'janesmith@example.com', 'password456', 'USER');
+-- Voeg gebruikers toe aan de users tabel (zonder rollen direct in te voegen)
+INSERT INTO users (user_name, email, password) VALUES ('John Doe', 'johndoe@example.com', '$2a$10$NZiboKAt4GXZa6QHFIbRz.icOxExTovPnIA6jmKkd32RfIEwpZHca');
+INSERT INTO users (user_name, email, password) VALUES ('Jane Smith', 'janesmith@example.com', '$2a$10$qWUenFq6GIcysBeH5NBd0eCfgD8b2ZQAnQzPtEfOMpZF6ffQdPqbK');
+INSERT INTO users (user_name, email, password) VALUES ('Tom Brown', 'tombrown@example.com', '$2a$10$gLTUOCupIV0pNhK.jpUXY.wlL/5.2oPn4n/9XLgVWTQHpUeuhN3We');
+INSERT INTO users (user_name, email, password) VALUES ('Emily White', 'emilywhite@example.com', '$2a$10$ID2KgWBTEUBZHfyzOg6vqOCX4YbMqEP0KxHn1GK.6FgksWlUM2jT6');
+INSERT INTO users (user_name, email, password) VALUES ('Haiko White', 'haikowhite@example.com', '$2a$10$jN02ZF5bszGvrxxyEq0Um.RLus.L4xuYLXOZ2FMISl/yVloEViate');
+INSERT INTO users (user_name, email, password) VALUES ('Mieke White', 'miekewhite@example.com', '$2a$10$GDVZMTJjgHVw7C3cuLosLOl369TofeGNfyYI2AjrCoLMxqk48Jy6y');
 
--- Voeg een derde nieuwe user toe
-INSERT INTO users (user_name, email, password, role)
-VALUES ('Tom Brown', 'tombrown@example.com', 'password789', 'USER');
-
--- Voeg een vierde nieuwe user toe
-INSERT INTO users (user_name, email, password, role)
-VALUES ('Emily White', 'emilywhite@example.com', 'password101', 'ADMIN');
-
--- Voeg een vijfde nieuwe user toe
-INSERT INTO users (user_name, email, password, role)
-VALUES ('Haiko White', 'haikowhite@example.com', 'password101', 'ADMIN');
-
--- Voeg een zesde nieuwe user toe
-INSERT INTO users (user_name, email, password, role)
-VALUES ('Mieke White', 'miekewhite@example.com', 'password101', 'ADMIN');
+-- Koppel gebruikers aan rollen via de user_roles tabel
+INSERT INTO user_roles (user_id, roles_rolename) VALUES (1, 'USER');
+INSERT INTO user_roles (user_id, roles_rolename) VALUES (2, 'USER');
+INSERT INTO user_roles (user_id, roles_rolename) VALUES (3, 'USER');
+INSERT INTO user_roles (user_id, roles_rolename) VALUES (4, 'ADMIN');
+INSERT INTO user_roles (user_id, roles_rolename) VALUES (5, 'ADMIN');
+INSERT INTO user_roles (user_id, roles_rolename) VALUES (6, 'CHEF');
 
 -- Voeg de maaltijden toe voor John Doe
 -- Ontbijt (Breakfast)
@@ -40,7 +38,6 @@ VALUES ('Lunch',
         1,
         'https://images.unsplash.com/photo-1485451456034-3f9391c6f769?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D');
 
-
 -- Dinner
 INSERT INTO meals (name, meal_description, user_count, is_template, created_by_user_id, image_url)
 VALUES ('Dinner',
@@ -50,38 +47,26 @@ VALUES ('Dinner',
         1,
         'https://images.unsplash.com/photo-1505932049984-db368d92fa63?q=80&w=1936&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D');
 
-
 -- Voeg de ingrediënten voor het ontbijt (Breakfast) toe
--- Bananas, raw (126 grams)
 INSERT INTO meal_ingredients (meal_id, food_item_id, quantity, food_item_name)
 VALUES (1, 4, 126, 'Bananas, raw');
--- Milk, nonfat, fluid (1 cup = 245 grams)
 INSERT INTO meal_ingredients (meal_id, food_item_id, quantity, food_item_name)
 VALUES (1, 17, 245, 'Milk, nonfat, fluid, with added vitamin A and vitamin D (fat free or skim)');
--- Bread, whole-wheat (1 slice = 28.35 grams)
 INSERT INTO meal_ingredients (meal_id, food_item_id, quantity, food_item_name)
 VALUES (1, 15, 28.35, 'Bread, whole-wheat, commercially prepared');
 
 -- Voeg de ingrediënten voor de lunch (Lunch) toe
--- Peas and carrots, frozen (1 package = 278 grams)
 INSERT INTO meal_ingredients (meal_id, food_item_id, food_item_name, quantity) VALUES (2, 1, 'Peas and carrots, frozen', 278);
--- Spinach, frozen (1 package = 284 grams)
 INSERT INTO meal_ingredients (meal_id, food_item_id, food_item_name, quantity) VALUES (2, 2, 'Spinach, frozen', 284);
--- Strawberries, raw (no specific portion, but we assume 200 grams)
 INSERT INTO meal_ingredients (meal_id, food_item_id, food_item_name, quantity) VALUES (2, 7, 'Strawberries, raw', 200);
--- Avocados, raw (1 cup pureed = 230 grams)
 INSERT INTO meal_ingredients (meal_id, food_item_id, food_item_name, quantity) VALUES (2, 11, 'Avocados, raw', 230);
 
 -- Voeg de ingrediënten voor het diner (Dinner) toe
--- Corn, sweet, yellow (1 ear small = 89 grams)
 INSERT INTO meal_ingredients (meal_id, food_item_id, food_item_name, quantity) VALUES (3, 3, 'Corn, sweet, yellow', 89);
--- Cauliflower, raw (100 grams assumed)
 INSERT INTO meal_ingredients (meal_id, food_item_id, food_item_name, quantity) VALUES (3, 8, 'Cauliflower, raw', 100);
--- Egg, whole, cooked, hard-boiled (1 tbsp = 8.5 grams, assume 3 tablespoons)
 INSERT INTO meal_ingredients (meal_id, food_item_id, food_item_name, quantity) VALUES (3, 14, 'Egg, whole, cooked, hard-boiled', 25.5);
 
 -- Voeg de maaltijden toe voor Jane Smith
--- Snack
 INSERT INTO meals (name, meal_description, user_count, is_template, created_by_user_id, image_url)
 VALUES ('Snack',
         'A delightful snack of fresh, crisp apples and crunchy almonds. Ideal for a quick energy boost.',
@@ -108,34 +93,20 @@ VALUES ('Dinner Special',
         2,
         'https://images.unsplash.com/photo-1605926637512-c8b131444a4b?q=80&w=2080&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D');
 
--- Voeg de ingrediënten voor de snack toe
--- Apple, raw (1 medium = 182 grams)
-INSERT INTO meal_ingredients (meal_id, food_item_id, food_item_name, quantity) VALUES (4, 5, 'Apple, raw', 182);
--- Almonds, raw (28 grams)
-INSERT INTO meal_ingredients (meal_id, food_item_id, food_item_name, quantity) VALUES (4, 6, 'Almonds, raw', 28);
-
--- Voeg de ingrediënten voor de salade toe
--- Lettuce, romaine (1 head = 626 grams)
-INSERT INTO meal_ingredients (meal_id, food_item_id, food_item_name, quantity) VALUES (5, 9, 'Lettuce, romaine', 626);
--- Tomatoes, raw (1 medium = 123 grams)
-INSERT INTO meal_ingredients (meal_id, food_item_id, food_item_name, quantity) VALUES (5, 10, 'Tomatoes, raw', 123);
--- Cucumbers, raw (1 medium = 201 grams)
-INSERT INTO meal_ingredients (meal_id, food_item_id, food_item_name, quantity) VALUES (5, 12, 'Cucumbers, raw', 201);
-
 -- Voeg de ingrediënten voor het Dinner Special toe
--- Chicken, cooked, roasted (1 cup = 140 grams)
 INSERT INTO meal_ingredients (meal_id, food_item_id, food_item_name, quantity) VALUES (6, 13, 'Chicken, cooked, roasted', 140);
--- Rice, white, cooked (1 cup = 158 grams)
 INSERT INTO meal_ingredients (meal_id, food_item_id, food_item_name, quantity) VALUES (6, 14, 'Rice, white, cooked', 158);
--- Broccoli, raw (1 cup = 91 grams)
 INSERT INTO meal_ingredients (meal_id, food_item_id, food_item_name, quantity) VALUES (6, 16, 'Broccoli, raw', 91);
 
--- Koppel de maaltijden aan John Doe (user_id = 1)
-INSERT INTO user_meals (user_id, meal_id) VALUES (1, 1); -- Koppel Breakfast aan John Doe
-INSERT INTO user_meals (user_id, meal_id) VALUES (1, 2); -- Koppel Lunch aan John Doe
-INSERT INTO user_meals (user_id, meal_id) VALUES (1, 3); -- Koppel Dinner aan John Doe
 
--- Koppel de maaltijden aan Jane Smith (user_id = 2)
-INSERT INTO user_meals (user_id, meal_id) VALUES (2, 4); -- Koppel Snack aan Jane Smith
-INSERT INTO user_meals (user_id, meal_id) VALUES (2, 5); -- Koppel Salad aan Jane Smith
-INSERT INTO user_meals (user_id, meal_id) VALUES (2, 6); -- Koppel Dinner Special aan Jane Smith
+-- Voeg ingrediënten toe
+INSERT INTO meal_ingredients (meal_id, food_item_id, food_item_name, quantity) VALUES (4, 5, 'Apple, raw', 182);
+INSERT INTO meal_ingredients (meal_id, food_item_id, food_item_name, quantity) VALUES (4, 6, 'Almonds, raw', 28);
+
+-- Koppel de maaltijden aan gebruikers
+INSERT INTO user_meals (user_id, meal_id) VALUES (1, 1);
+INSERT INTO user_meals (user_id, meal_id) VALUES (1, 2);
+INSERT INTO user_meals (user_id, meal_id) VALUES (1, 3);
+INSERT INTO user_meals (user_id, meal_id) VALUES (2, 4);
+INSERT INTO user_meals (user_id, meal_id) VALUES (2, 5);
+INSERT INTO user_meals (user_id, meal_id) VALUES (2, 6);

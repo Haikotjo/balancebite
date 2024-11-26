@@ -16,16 +16,15 @@ import java.util.function.Function;
 
 /**
  * JwtService is a service class that provides methods for generating, validating,
- * and extracting information from JWT tokens, including support for refresh tokens.
+ * and extracting information from JWT tokens, including support for access and refresh tokens.
  */
 @Service
 public class JwtService {
 
     private final static String SECRET_KEY = "yabbadabbadooyabbadabbadooyabbadabbadooyabbadabbadoo";
 
-    private final static long ACCESS_TOKEN_VALIDITY = 1000 * 60 * 15; // 15 minutes
+    private final static long ACCESS_TOKEN_VALIDITY = 1000 * 60 * 60; // 1 uur
     private final static long REFRESH_TOKEN_VALIDITY = 1000L * 60 * 60 * 24 * 30; // 30 days
-
 
     /**
      * Retrieves the signing key used to sign JWT tokens.
@@ -97,7 +96,9 @@ public class JwtService {
      * @return the generated access token
      */
     public String generateAccessToken(UserDetails userDetails) {
-        return createToken(new HashMap<>(), userDetails.getUsername(), ACCESS_TOKEN_VALIDITY);
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("type", "access");
+        return createToken(claims, userDetails.getUsername(), ACCESS_TOKEN_VALIDITY);
     }
 
     /**
@@ -107,7 +108,9 @@ public class JwtService {
      * @return the generated refresh token
      */
     public String generateRefreshToken(UserDetails userDetails) {
-        return createToken(new HashMap<>(), userDetails.getUsername(), REFRESH_TOKEN_VALIDITY);
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("type", "refresh");
+        return createToken(claims, userDetails.getUsername(), REFRESH_TOKEN_VALIDITY);
     }
 
     /**
@@ -142,12 +145,32 @@ public class JwtService {
     }
 
     /**
-     * Checks if the token is a valid refresh token.
+     * Validates whether the given token is a refresh token.
      *
      * @param token the JWT token
-     * @return true if the token is valid and not expired
+     * @return true if the token is valid, of type refresh, and not expired
      */
     public Boolean validateRefreshToken(String token) {
-        return !isTokenExpired(token);
+        if (isTokenExpired(token)) {
+            return false;
+        }
+        final Claims claims = extractAllClaims(token);
+        String type = claims.get("type", String.class);
+        return "refresh".equals(type);
+    }
+
+    /**
+     * Validates whether the given token is an access token.
+     *
+     * @param token the JWT token
+     * @return true if the token is valid, of type access, and not expired
+     */
+    public Boolean validateAccessToken(String token) {
+        if (isTokenExpired(token)) {
+            return false;
+        }
+        final Claims claims = extractAllClaims(token);
+        String type = claims.get("type", String.class);
+        return "access".equals(type);
     }
 }

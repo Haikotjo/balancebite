@@ -1,12 +1,16 @@
 package balancebite.service.user;
 
-import balancebite.dto.user.UserBasicInfoInputDTO;
+import balancebite.dto.user.UserRegistrationInputDTO;
+import balancebite.dto.user.UserLoginInputDTO;
 import balancebite.dto.user.UserDTO;
 import balancebite.dto.user.UserDetailsInputDTO;
+import balancebite.dto.user.UserRegistrationInputDTO;
 import balancebite.errorHandling.EntityAlreadyExistsException;
 import balancebite.errorHandling.UserNotFoundException;
 import balancebite.mapper.UserMapper;
+import balancebite.model.user.Role;
 import balancebite.model.user.User;
+import balancebite.model.user.UserRole;
 import balancebite.repository.RecommendedDailyIntakeRepository;
 import balancebite.repository.UserRepository;
 import balancebite.service.RecommendedDailyIntakeService;
@@ -61,45 +65,18 @@ public class UserService implements IUserService {
     }
 
     /**
-     * Creates a new user and saves it to the database.
-     *
-     * @param userBasicInfoInputDTO The input DTO containing basic user information.
-     * @return The created UserDTO.
-     * @throws EntityAlreadyExistsException If the email already exists in the database.
-     * @throws RuntimeException             If an unexpected error occurs during user creation.
-     */
-    @Override
-    public UserDTO createUser(UserBasicInfoInputDTO userBasicInfoInputDTO) {
-        log.info("Attempting to create a new user with email: {}", userBasicInfoInputDTO.getEmail());
-        try {
-            // Convert input DTO to User entity and save
-            User savedUser = userRepository.save(userMapper.toEntity(userBasicInfoInputDTO));
-            log.info("Successfully created a new user with ID: {}", savedUser.getId());
-            return userMapper.toDTO(savedUser);
-        } catch (DataIntegrityViolationException e) {
-            // Handle duplicate email error
-            log.error("Failed to create user due to a duplicate email: {}", userBasicInfoInputDTO.getEmail(), e);
-            throw new EntityAlreadyExistsException("A user with email " + userBasicInfoInputDTO.getEmail() + " already exists. Please use a different email.");
-        } catch (Exception e) {
-            // Handle unexpected errors
-            log.error("Unexpected error during user creation: {}", e.getMessage(), e);
-            throw new RuntimeException("An unexpected error occurred while creating the user. Please try again.");
-        }
-    }
-
-    /**
      * Updates basic information of an existing user.
      * Allows role updates only if the requester is an admin.
      *
      * @param id                    The ID of the user to update.
-     * @param userBasicInfoInputDTO The input DTO containing updated user information.
+     * @param userRegistrationInputDTO The input DTO containing updated user information.
      * @param isAdmin               Boolean flag indicating if the requester is an admin.
      * @return The updated UserDTO.
      * @throws UserNotFoundException       If the user with the specified ID does not exist.
      * @throws EntityAlreadyExistsException If the provided email is already in use by another user.
      */
     @Override
-    public UserDTO updateUserBasicInfo(Long id, UserBasicInfoInputDTO userBasicInfoInputDTO, boolean isAdmin) {
+    public UserDTO updateUserBasicInfo(Long id, UserRegistrationInputDTO userRegistrationInputDTO, boolean isAdmin) {
         log.info("Updating basic info for user with ID: {}. Admin privileges: {}", id, isAdmin);
 
         // Fetch the existing user or throw exception if not found
@@ -107,21 +84,23 @@ public class UserService implements IUserService {
                 .orElseThrow(() -> new UserNotFoundException("Cannot update user: No user found with ID " + id));
 
         // Check for duplicate email and ensure it belongs to another user
-        if (userRepository.existsByEmail(userBasicInfoInputDTO.getEmail()) &&
-                !existingUser.getEmail().equals(userBasicInfoInputDTO.getEmail())) {
-            String errorMessage = "The email " + userBasicInfoInputDTO.getEmail() + " is already in use by another account.";
+        if (userRepository.existsByEmail(userRegistrationInputDTO.getEmail()) &&
+                !existingUser.getEmail().equals(userRegistrationInputDTO.getEmail())) {
+            String errorMessage = "The email " + userRegistrationInputDTO.getEmail() + " is already in use by another account.";
             log.warn(errorMessage);
             throw new EntityAlreadyExistsException(errorMessage);
         }
 
         // Update basic user details
-        existingUser.setUserName(userBasicInfoInputDTO.getUserName());
-        existingUser.setEmail(userBasicInfoInputDTO.getEmail());
-        existingUser.setPassword(userBasicInfoInputDTO.getPassword());
+        existingUser.setUserName(userRegistrationInputDTO.getUserName());
+        existingUser.setEmail(userRegistrationInputDTO.getEmail());
 
         // Update roles if requester is an admin and roles are provided
-        if (isAdmin && userBasicInfoInputDTO.getRoles() != null && !userBasicInfoInputDTO.getRoles().isEmpty()) {
-            existingUser.setRoles(new HashSet<>(userBasicInfoInputDTO.getRoles())); // Overschrijft alle bestaande rollen
+        if (isAdmin && userRegistrationInputDTO.getRoles() != null && !userRegistrationInputDTO.getRoles().isEmpty()) {
+            Set<Role> roles = userRegistrationInputDTO.getRoles().stream()
+                    .map(roleName -> new Role(UserRole.valueOf(roleName))) // Convert String to Role
+                    .collect(Collectors.toSet());
+            existingUser.setRoles(roles); // Overwrite all existing roles
         }
 
         // Save and return the updated user
@@ -148,7 +127,7 @@ public class UserService implements IUserService {
                 .orElseThrow(() -> new UserNotFoundException("Cannot update user details: No user found with ID " + id));
 
         // Update user entity with details
-        userMapper.updateEntityWithDetails(existingUser, userDetailsInputDTO);
+        userMapper.updateDetailsFromDTO(existingUser, userDetailsInputDTO);
 
         // Save the updated user
         User updatedUser = userRepository.save(existingUser);

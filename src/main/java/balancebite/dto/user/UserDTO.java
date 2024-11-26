@@ -7,6 +7,7 @@ import balancebite.model.user.userenums.ActivityLevel;
 import balancebite.model.user.userenums.Gender;
 import balancebite.model.user.userenums.Goal;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
@@ -14,7 +15,7 @@ import java.util.Set;
  * Data Transfer Object (DTO) for User.
  * This DTO is used to transfer user data between the application layers and send it back to the client.
  * It encapsulates all the necessary information about a user, including their profile details, associated meals,
- * and recommended daily intake.
+ * roles, and recommended daily intake.
  */
 public class UserDTO {
 
@@ -69,9 +70,9 @@ public class UserDTO {
     private final List<MealDTO> meals;
 
     /**
-     * The user's role (e.g., ADMIN, USER).
+     * The roles assigned to the user (e.g., ADMIN, USER).
      */
-    private final Role role;
+    private final Collection<Role> roles;
 
     /**
      * The list of recommended daily intakes associated with the user.
@@ -92,11 +93,11 @@ public class UserDTO {
      * @param activityLevel          The user's activity level.
      * @param goal                   The user's goal.
      * @param meals                  The list of meals associated with the user.
-     * @param role                   The user's role.
+     * @param roles                  The roles assigned to the user.
      * @param recommendedDailyIntakes The list of recommended daily intakes for the user.
      */
     public UserDTO(Long id, String userName, String email, Double weight, Integer age, Double height, Gender gender,
-                   ActivityLevel activityLevel, Goal goal, List<MealDTO> meals, Role role,
+                   ActivityLevel activityLevel, Goal goal, List<MealDTO> meals, Collection<Role> roles,
                    List<RecommendedDailyIntakeDTO> recommendedDailyIntakes) {
         this.id = id;
         this.userName = userName;
@@ -108,7 +109,7 @@ public class UserDTO {
         this.activityLevel = activityLevel;
         this.goal = goal;
         this.meals = (meals != null) ? List.copyOf(meals) : List.of(); // Ensure immutability
-        this.role = role;
+        this.roles = (roles != null) ? List.copyOf(roles) : List.of(); // Ensure immutability
         this.recommendedDailyIntakes = (recommendedDailyIntakes != null) ? List.copyOf(recommendedDailyIntakes) : List.of(); // Ensure immutability
     }
 
@@ -122,7 +123,7 @@ public class UserDTO {
      * @param email    The email of the user.
      */
     public UserDTO(Long id, String userName, String email) {
-        this(id, userName, email, null, null, null, null, null, null, List.of(), null, List.of());
+        this(id, userName, email, null, null, null, null, null, null, List.of(), List.of(), List.of());
     }
 
     /**
@@ -208,30 +209,28 @@ public class UserDTO {
 
     /**
      * Gets the list of meals associated with the user.
-     * Returns an immutable set to ensure the meals cannot be modified outside the DTO.
      *
-     * @return An immutable set of the user's meals.
+     * @return An immutable list of the user's meals.
      */
-    public Set<MealDTO> getMeals() {
-        return Set.copyOf(meals);
+    public List<MealDTO> getMeals() {
+        return meals;
     }
 
     /**
-     * Gets the user's role.
+     * Gets the roles assigned to the user.
      *
-     * @return The user's role.
+     * @return An immutable collection of the user's roles.
      */
-    public Role getRole() {
-        return role;
+    public Collection<Role> getRoles() {
+        return roles;
     }
 
     /**
      * Gets the list of recommended daily intakes for the user.
-     * Returns an immutable set to ensure the daily intakes cannot be modified outside the DTO.
      *
-     * @return An immutable set of the user's recommended daily intakes.
+     * @return An immutable list of the user's recommended daily intakes.
      */
-    public Set<RecommendedDailyIntakeDTO> getRecommendedDailyIntakes() {
-        return Set.copyOf(recommendedDailyIntakes);
+    public List<RecommendedDailyIntakeDTO> getRecommendedDailyIntakes() {
+        return recommendedDailyIntakes;
     }
 }

@@ -5,6 +5,7 @@ import balancebite.repository.UserRepository;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 
@@ -12,6 +13,7 @@ import java.util.Optional;
  * MyUserDetailsService is an implementation of the UserDetailsService interface,
  * which loads user-specific data.
  */
+@Service
 public class MyUserDetailsService implements UserDetailsService {
 
     private final UserRepository userRepository;

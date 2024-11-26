@@ -86,117 +86,20 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(authz -> authz
 
-                                // Ingredient entity endpoints
-                                .requestMatchers(HttpMethod.GET, "/ingredients/admin/**").hasAuthority("ADMIN")
-                                .requestMatchers(HttpMethod.GET, "/ingredients/owner").hasAnyAuthority("ADMIN", "OWNER")
-                                .requestMatchers(HttpMethod.GET, "/ingredients/owner/ingredient/**").hasAnyAuthority("ADMIN", "OWNER")
+                                // register endpoints
+                                .requestMatchers(HttpMethod.POST, "/auth/register").permitAll()
+                                .requestMatchers(HttpMethod.POST, "/auth/login").permitAll()
+                                .requestMatchers(HttpMethod.POST, "/auth/refresh").permitAll()
 
-                                .requestMatchers(HttpMethod.GET, "/ingredients/owner/menu_item/**").hasAnyAuthority("ADMIN", "OWNER")
-                                .requestMatchers(HttpMethod.POST, "/ingredients/admin/create").hasAuthority("ADMIN")
-                                .requestMatchers(HttpMethod.POST, "/ingredients/owner/**").hasAnyAuthority("ADMIN", "OWNER")
-                                .requestMatchers(HttpMethod.PUT, "/ingredients/admin/**").hasAuthority("ADMIN")
-                                .requestMatchers(HttpMethod.PUT, "/ingredients/owner/**").hasAnyAuthority("ADMIN", "OWNER")
-                                .requestMatchers(HttpMethod.DELETE, "/ingredients/admin/**").hasAuthority("ADMIN")
-                                .requestMatchers(HttpMethod.DELETE, "/ingredients/owner/**").hasAnyAuthority("ADMIN", "OWNER")
+                                // user entity endpoints
+                                .requestMatchers(HttpMethod.GET, "/users").hasAuthority("ADMIN")
 
-                                // MenuItem entity endpoints
-                                .requestMatchers(HttpMethod.GET, "/menu-items/admin/**").hasAuthority("ADMIN")
-                                .requestMatchers(HttpMethod.GET, "/menu-items/owner/**").hasAnyAuthority("ADMIN", "OWNER")
-                                .requestMatchers(HttpMethod.GET, "/menu-items/restaurant/**").permitAll()
-                                .requestMatchers(HttpMethod.GET, "/menu-items/**").permitAll()
-                                .requestMatchers(HttpMethod.POST, "/menu-items/admin/**").hasAuthority("ADMIN")
-                                .requestMatchers(HttpMethod.POST, "/menu-items/owner/**").hasAnyAuthority("OWNER", "ADMIN")
-                                .requestMatchers(HttpMethod.PUT, "/menu-items/owner/**").hasAuthority("OWNER")
-                                .requestMatchers(HttpMethod.PUT, "/menu-items/admin/**").hasAuthority("ADMIN")
-                                .requestMatchers(HttpMethod.DELETE, "/menu-items/owner/**").hasAnyAuthority("OWNER", "ADMIN")
-                                .requestMatchers(HttpMethod.DELETE, "/menu-items/admin/**").hasAuthority("ADMIN")
-                                .requestMatchers(HttpMethod.GET, "/menu-items/search").permitAll()
+                                // usersmeal endpoints
 
-                                // Menu entity endpoints
-                                .requestMatchers(HttpMethod.GET, "/menus/admin/**").hasAuthority("ADMIN")
-                                .requestMatchers(HttpMethod.GET, "/menus/owner/**").hasAnyAuthority("ADMIN", "OWNER")
-                                .requestMatchers(HttpMethod.GET, "/menus/restaurant/**").permitAll()
-                                .requestMatchers(HttpMethod.GET, "/menus/menu/**").permitAll()
-                                .requestMatchers(HttpMethod.GET, "/menus/search").permitAll()
-                                .requestMatchers(HttpMethod.POST, "/menus/admin/**").hasAuthority("ADMIN")
-                                .requestMatchers(HttpMethod.POST, "/menus/owner").hasAnyAuthority("OWNER", "ADMIN")
-                                .requestMatchers(HttpMethod.PUT, "/menus/owner/**").hasAnyAuthority("OWNER", "ADMIN")
-                                .requestMatchers(HttpMethod.PUT, "/menus/admin/**").hasAuthority("ADMIN")
-                                .requestMatchers(HttpMethod.DELETE, "/menus/owner/**").hasAnyAuthority("OWNER", "ADMIN")
-                                .requestMatchers(HttpMethod.DELETE, "/menus/admin/**").hasAuthority("ADMIN")
+                                // meal entity endpoints
+                                .requestMatchers(HttpMethod.GET, "/meals").permitAll()
 
-                                // Restaurants entity endpoints
-                                .requestMatchers(HttpMethod.GET, "/restaurants").permitAll()
-                                .requestMatchers(HttpMethod.GET, "/restaurants/search").permitAll()
-                                .requestMatchers(HttpMethod.GET, "/restaurants/{id}").permitAll()
-                                .requestMatchers(HttpMethod.GET, "/restaurants/admin/**").hasAuthority("ADMIN")
-                                .requestMatchers(HttpMethod.PUT, "/restaurants/owner/**").hasAnyAuthority("OWNER", "ADMIN")
-                                .requestMatchers(HttpMethod.PUT, "/restaurants/admin/**").hasAnyAuthority( "ADMIN")
-                                .requestMatchers(HttpMethod.POST, "/restaurants/owner").hasAnyAuthority("OWNER", "ADMIN")
-                                .requestMatchers(HttpMethod.PUT, "/restaurants/admin/**").hasAuthority("ADMIN")
-                                .requestMatchers(HttpMethod.DELETE, "/restaurants/owner").hasAnyAuthority("OWNER", "ADMIN")
-                                .requestMatchers(HttpMethod.DELETE, "/restaurants/admin/**").hasAuthority("ADMIN")
-
-                                // User entity endpoints
-                                .requestMatchers(HttpMethod.GET, "/users/profile").authenticated()
-                                .requestMatchers(HttpMethod.GET, "/users/admin/**").hasAuthority("ADMIN")
-                                .requestMatchers(HttpMethod.GET, "/users/admin/all").hasAuthority("ADMIN")
-                                .requestMatchers(HttpMethod.GET, "/users/search/by-email").hasAuthority("ADMIN")
-                                .requestMatchers(HttpMethod.GET, "/users/search/by-role").hasAuthority("ADMIN")
-                                .requestMatchers(HttpMethod.GET, "/{userId}/address").hasAnyAuthority("ADMIN", "CUSTOMER")
-                                .requestMatchers(HttpMethod.GET, "/{userId}/restaurants").hasAnyAuthority("ADMIN", "OWNER")
-                                .requestMatchers(HttpMethod.POST, "/users/customer").permitAll()
-                                .requestMatchers(HttpMethod.POST, "/users/owner").permitAll()
-                                .requestMatchers(HttpMethod.POST, "/auth").permitAll()
-                                .requestMatchers(HttpMethod.PUT, "/users/admin/**").hasAuthority("ADMIN")
-                                .requestMatchers(HttpMethod.PUT, "/users/profile").authenticated()
-                                .requestMatchers(HttpMethod.PUT, "/users/role/**").hasAuthority("ADMIN")
-                                .requestMatchers(HttpMethod.DELETE, "/users/profile").authenticated()
-                                .requestMatchers(HttpMethod.DELETE, "/users/admin/**").hasAuthority("ADMIN")
-
-                                // Role entity endpoints
-                                .requestMatchers(HttpMethod.GET, "/roles").hasAuthority("ADMIN")
-
-                                // DeliveryAddress entity endpoints
-                                .requestMatchers(HttpMethod.GET, "/address/admin/all").hasAuthority("ADMIN")
-                                .requestMatchers(HttpMethod.GET, "/address/admin/{id}").hasAuthority("ADMIN")
-                                .requestMatchers(HttpMethod.GET, "/address/customer").hasAuthority("CUSTOMER")
-
-                                .requestMatchers(HttpMethod.POST, "/address/admin/{userId}").hasAuthority("ADMIN")
-                                .requestMatchers(HttpMethod.POST, "/address/customer").hasAuthority("CUSTOMER")
-
-                                .requestMatchers(HttpMethod.PUT, "/address/admin/**").hasAuthority("ADMIN")
-                                .requestMatchers(HttpMethod.PUT, "/address/customer").hasAuthority("CUSTOMER")
-
-                                .requestMatchers(HttpMethod.DELETE, "/address/admin/{id}").hasAuthority("ADMIN")
-                                .requestMatchers(HttpMethod.DELETE, "/address/customer").hasAuthority("CUSTOMER")
-
-                                // Notification entity endpoints
-                                .requestMatchers(HttpMethod.GET, "/notifications/all").hasAnyAuthority("ADMIN")
-                                .requestMatchers(HttpMethod.GET, "/notifications/**").hasAnyAuthority("ADMIN", "OWNER")
-                                .requestMatchers(HttpMethod.POST, "/notifications/**").hasAnyAuthority("ADMIN", "OWNER")
-                                .requestMatchers(HttpMethod.PUT, "/notifications/**").hasAnyAuthority("ADMIN", "OWNER")
-                                .requestMatchers(HttpMethod.DELETE, "/notifications/**").hasAnyAuthority("ADMIN", "OWNER")
-                                .requestMatchers(HttpMethod.GET, "/notifications/admin/**").hasAuthority("ADMIN")
-                                .requestMatchers(HttpMethod.GET, "/notifications/owner/**").hasAuthority("OWNER")
-
-                                //  Test endpoints
-                                .requestMatchers(HttpMethod.GET, "/test/check-expiration-dates").permitAll()
-
-                                // Order entity endpoints
-                                .requestMatchers(HttpMethod.GET, "/orders/admin/all").hasAuthority("ADMIN")
-                                .requestMatchers(HttpMethod.GET, "/orders/admin/{id}").hasAuthority("ADMIN")
-                                .requestMatchers(HttpMethod.GET, "/orders/customer").hasAuthority("CUSTOMER")
-                                .requestMatchers(HttpMethod.GET, "/orders/owner").hasAuthority("OWNER")
-                                .requestMatchers(HttpMethod.GET, "/orders/{id}/print").hasAuthority("OWNER")
-
-                                .requestMatchers(HttpMethod.POST).hasAnyAuthority("ADMIN", "CUSTOMER")
-
-                                .requestMatchers(HttpMethod.PUT, "/orders/customer/**").hasAuthority("CUSTOMER")
-                                .requestMatchers(HttpMethod.PUT, "/orders/admin/**").hasAuthority("ADMIN")
-
-                                .requestMatchers(HttpMethod.DELETE, "/orders/**").hasAuthority("ADMIN")
-
+                                // recommendeddailyintake entity endpoints
 
                                 // Enabling this line will allow ADMIN to access all endpoints.
 //                .requestMatchers("/**").hasAnyAuthority("ADMIN")
