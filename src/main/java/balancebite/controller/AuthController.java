@@ -136,7 +136,6 @@ public class AuthController {
     @PostMapping("/logout")
     public ResponseEntity<Object> logoutUser() {
         log.info("User requested logout.");
-        return ResponseEntity.ok(Map.of("message", "Logout successful. Please clear your tokens locally."));
+        return ResponseEntity.ok(Map.of("message", "Logged out on this device."));
     }
-
 }

@@ -114,5 +114,4 @@ public class RegistrationService implements IRegistrationService {
                 .orElseThrow(() -> new UsernameNotFoundException("User with email " + email + " not found"));
         return new MyUserDetails(user); // Assuming MyUserDetails is your custom UserDetails implementation.
     }
-
 }
