@@ -126,4 +126,17 @@ public class AuthController {
                 "accessToken", newAccessToken
         ));
     }
+
+    /**
+     * Handles user logout requests.
+     * Informs the client to clear tokens locally, as no server-side invalidation is used.
+     *
+     * @return ResponseEntity indicating successful logout.
+     */
+    @PostMapping("/logout")
+    public ResponseEntity<Object> logoutUser() {
+        log.info("User requested logout.");
+        return ResponseEntity.ok(Map.of("message", "Logout successful. Please clear your tokens locally."));
+    }
+
 }

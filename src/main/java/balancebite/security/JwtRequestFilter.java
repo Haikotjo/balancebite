@@ -25,7 +25,7 @@ import java.io.IOException;
 public class JwtRequestFilter extends OncePerRequestFilter {
 
     @Autowired
-    private UserDetailsService userDetailsService; // Gebruik veldinjectie
+    private UserDetailsService userDetailsService;
 
     private final JwtService jwtService;
     private static final Logger log = LoggerFactory.getLogger(JwtRequestFilter.class);

@@ -115,15 +115,4 @@ public class RegistrationService implements IRegistrationService {
         return new MyUserDetails(user); // Assuming MyUserDetails is your custom UserDetails implementation.
     }
 
-//    /**
-//     * Retrieves a Role entity by its name from the database.
-//     *
-//     * @param roleName The name of the role to retrieve.
-//     * @return The Role entity associated with the given name.
-//     * @throws RuntimeException if the role is not found in the database.
-//     */
-//    private Role getRoleByName(UserRole roleName) {
-//        return roleRepository.findByRolename(roleName)
-//                .orElseThrow(() -> new RuntimeException("Role " + roleName + " not found in the database."));
-//    }
 }
