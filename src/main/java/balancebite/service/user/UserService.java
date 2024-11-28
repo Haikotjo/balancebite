@@ -65,23 +65,22 @@ public class UserService implements IUserService {
     }
 
     /**
-     * Updates basic information of an existing user.
-     * Allows role updates only if the requester is an admin.
+     * Updates basic information of the currently logged-in user.
+     * If the user does not exist, throws a UserNotFoundException.
      *
-     * @param id                    The ID of the user to update.
      * @param userRegistrationInputDTO The input DTO containing updated user information.
-     * @param isAdmin               Boolean flag indicating if the requester is an admin.
+     * @param userId                   The ID of the currently logged-in user (from JWT token).
      * @return The updated UserDTO.
      * @throws UserNotFoundException       If the user with the specified ID does not exist.
      * @throws EntityAlreadyExistsException If the provided email is already in use by another user.
      */
     @Override
-    public UserDTO updateUserBasicInfo(Long id, UserRegistrationInputDTO userRegistrationInputDTO, boolean isAdmin) {
-        log.info("Updating basic info for user with ID: {}. Admin privileges: {}", id, isAdmin);
+    public UserDTO updateUserBasicInfo(Long userId, UserRegistrationInputDTO userRegistrationInputDTO) {
+        log.info("Updating basic info for logged-in user with ID: {}", userId);
 
         // Fetch the existing user or throw exception if not found
-        User existingUser = userRepository.findById(id)
-                .orElseThrow(() -> new UserNotFoundException("Cannot update user: No user found with ID " + id));
+        User existingUser = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("Cannot update user: No user found with ID " + userId));
 
         // Check for duplicate email and ensure it belongs to another user
         if (userRepository.existsByEmail(userRegistrationInputDTO.getEmail()) &&
@@ -91,24 +90,15 @@ public class UserService implements IUserService {
             throw new EntityAlreadyExistsException(errorMessage);
         }
 
-        // Update basic user details
+        // Update basic user details (except password)
         existingUser.setUserName(userRegistrationInputDTO.getUserName());
         existingUser.setEmail(userRegistrationInputDTO.getEmail());
 
-        // Update roles if requester is an admin and roles are provided
-        if (isAdmin && userRegistrationInputDTO.getRoles() != null && !userRegistrationInputDTO.getRoles().isEmpty()) {
-            Set<Role> roles = userRegistrationInputDTO.getRoles().stream()
-                    .map(roleName -> new Role(UserRole.valueOf(roleName))) // Convert String to Role
-                    .collect(Collectors.toSet());
-            existingUser.setRoles(roles); // Overwrite all existing roles
-        }
-
         // Save and return the updated user
         User updatedUser = userRepository.save(existingUser);
-        log.info("Successfully updated basic info for user with ID: {}", id);
+        log.info("Successfully updated basic info for user with ID: {}", userId);
         return userMapper.toDTO(updatedUser);
     }
-
 
     /**
      * Updates detailed information of an existing user.
@@ -136,29 +126,6 @@ public class UserService implements IUserService {
         // Ensure recommended daily intake is updated
         recommendedDailyIntakeService.getOrCreateDailyIntakeForUser(id);
         return userMapper.toDTO(updatedUser);
-    }
-
-    /**
-     * Retrieves all users from the database.
-     *
-     * @return A list of UserDTOs.
-     */
-    @Override
-    public List<UserDTO> getAllUsers() {
-        log.info("Retrieving all users from the system.");
-        List<User> users = userRepository.findAll();
-
-        // Log if no users are found
-        if (users.isEmpty()) {
-            log.info("No users found in the system.");
-        } else {
-            log.info("Found {} users in the system.", users.size());
-        }
-
-        // Map entities to DTOs
-        return users.stream()
-                .map(userMapper::toDTO)
-                .collect(Collectors.toList());
     }
 
     /**

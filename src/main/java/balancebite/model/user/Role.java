@@ -27,7 +27,7 @@ public class Role {
      * The collection of users that have this role.
      * This establishes a many-to-many relationship with the User entity.
      */
-    @ManyToMany(mappedBy = "roles", fetch = FetchType.LAZY)
+    @ManyToMany(mappedBy = "roles", fetch = FetchType.EAGER)
     @JsonIgnore
     private Set<User> users;
 

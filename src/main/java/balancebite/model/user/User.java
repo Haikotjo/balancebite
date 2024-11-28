@@ -97,7 +97,7 @@ public class User {
      * The roles assigned to the user.
      * This establishes a many-to-many relationship with the Role entity.
      */
-    @ManyToMany(fetch = FetchType.LAZY)
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "user_roles",
             joinColumns = @JoinColumn(name = "user_id"),

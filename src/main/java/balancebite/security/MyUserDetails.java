@@ -29,7 +29,7 @@ public class MyUserDetails implements UserDetails {
 
     /**
      * Returns the authorities granted to the user.
-     * In this case, it converts the user's roles to GrantedAuthority.
+     * Adds "ROLE_" prefix to the roles to conform to Spring Security standards.
      *
      * @return a collection of granted authorities
      */
@@ -37,8 +37,9 @@ public class MyUserDetails implements UserDetails {
     public Collection<? extends GrantedAuthority> getAuthorities() {
         List<GrantedAuthority> authorities = new ArrayList<>();
 
+        // Voeg "ROLE_" toe aan elke rol
         for (Role role : user.getRoles()) {
-            authorities.add(new SimpleGrantedAuthority(role.getRoleName()));
+            authorities.add(new SimpleGrantedAuthority("ROLE_" + role.getRoleName()));
         }
 
         return authorities;

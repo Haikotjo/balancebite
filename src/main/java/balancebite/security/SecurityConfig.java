@@ -80,13 +80,11 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authz -> authz
 
                         // register endpoints
-                        .requestMatchers(HttpMethod.POST, "/auth/register").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/auth/login").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/auth/refresh").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/auth/logout").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/auth/**").permitAll()
 
                         // user entity endpoints
-                        .requestMatchers(HttpMethod.GET, "/users").hasAuthority("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/users/**").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/admins/**").hasRole("ADMIN")
 
                         // meal entity endpoints
                         .requestMatchers(HttpMethod.GET, "/meals").permitAll()

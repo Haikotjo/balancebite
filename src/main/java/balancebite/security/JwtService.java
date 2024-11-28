@@ -23,7 +23,7 @@ public class JwtService {
 
     private final static String SECRET_KEY = "yabbadabbadooyabbadabbadooyabbadabbadooyabbadabbadoo";
 
-    private final static long ACCESS_TOKEN_VALIDITY = 1000 * 60 * 60; // 1 uur
+    private final static long ACCESS_TOKEN_VALIDITY = 1000 * 60 * 60; // 1 hour
     private final static long REFRESH_TOKEN_VALIDITY = 1000L * 60 * 60 * 24 * 30; // 30 days
 
     /**
@@ -47,13 +47,34 @@ public class JwtService {
     }
 
     /**
-     * Extracts the expiration date from the JWT token.
+     * Extracts the user ID from the JWT token.
      *
      * @param token the JWT token
-     * @return the expiration date extracted from the token
+     * @return the user ID extracted from the token
+     * @throws IllegalArgumentException if the token is invalid or cannot be parsed
      */
-    private Date extractExpiration(String token) {
-        return extractClaim(token, Claims::getExpiration);
+    public Long extractUserId(String token) {
+        try {
+            Claims claims = extractAllClaims(token);
+            String userId = claims.getSubject(); // Assuming 'sub' contains the user ID
+            return Long.parseLong(userId);
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Invalid or malformed token provided.");
+        }
+    }
+
+    /**
+     * Extracts all claims from a JWT token.
+     *
+     * @param token the JWT token
+     * @return Claims object containing all token details
+     */
+    private Claims extractAllClaims(String token) {
+        return Jwts.parserBuilder()
+                .setSigningKey(getSigningKey())
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
     }
 
     /**
@@ -70,16 +91,6 @@ public class JwtService {
     }
 
     /**
-     * Extracts all claims from the JWT token.
-     *
-     * @param token the JWT token
-     * @return all claims extracted from the token
-     */
-    private Claims extractAllClaims(String token) {
-        return Jwts.parserBuilder().setSigningKey(getSigningKey()).build().parseClaimsJws(token).getBody();
-    }
-
-    /**
      * Checks if the JWT token is expired.
      *
      * @param token the JWT token
@@ -87,6 +98,16 @@ public class JwtService {
      */
     private Boolean isTokenExpired(String token) {
         return extractExpiration(token).before(new Date());
+    }
+
+    /**
+     * Extracts the expiration date from the JWT token.
+     *
+     * @param token the JWT token
+     * @return the expiration date extracted from the token
+     */
+    private Date extractExpiration(String token) {
+        return extractClaim(token, Claims::getExpiration);
     }
 
     /**
@@ -145,21 +166,6 @@ public class JwtService {
     }
 
     /**
-     * Validates whether the given token is a refresh token.
-     *
-     * @param token the JWT token
-     * @return true if the token is valid, of type refresh, and not expired
-     */
-    public Boolean validateRefreshToken(String token) {
-        if (isTokenExpired(token)) {
-            return false;
-        }
-        final Claims claims = extractAllClaims(token);
-        String type = claims.get("type", String.class);
-        return "refresh".equals(type);
-    }
-
-    /**
      * Validates whether the given token is an access token.
      *
      * @param token the JWT token
@@ -170,7 +176,20 @@ public class JwtService {
             return false;
         }
         final Claims claims = extractAllClaims(token);
-        String type = claims.get("type", String.class);
-        return "access".equals(type);
+        return "access".equals(claims.get("type", String.class));
+    }
+
+    /**
+     * Validates whether the given token is a refresh token.
+     *
+     * @param token the JWT token
+     * @return true if the token is valid, of type refresh, and not expired
+     */
+    public Boolean validateRefreshToken(String token) {
+        if (isTokenExpired(token)) {
+            return false;
+        }
+        final Claims claims = extractAllClaims(token);
+        return "refresh".equals(claims.get("type", String.class));
     }
 }
