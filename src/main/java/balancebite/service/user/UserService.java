@@ -90,7 +90,7 @@ public class UserService implements IUserService {
             throw new EntityAlreadyExistsException(errorMessage);
         }
 
-        // Update basic user details (except password)
+        // Update basic user details (username and email only)
         existingUser.setUserName(userRegistrationInputDTO.getUserName());
         existingUser.setEmail(userRegistrationInputDTO.getEmail());
 
@@ -99,6 +99,7 @@ public class UserService implements IUserService {
         log.info("Successfully updated basic info for user with ID: {}", userId);
         return userMapper.toDTO(updatedUser);
     }
+
 
     /**
      * Updates detailed information of an existing user.

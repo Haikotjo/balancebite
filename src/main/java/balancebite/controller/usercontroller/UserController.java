@@ -87,7 +87,6 @@ public class UserController {
         }
     }
 
-
     /**
      * Endpoint to update the detailed information of an existing user.
      *

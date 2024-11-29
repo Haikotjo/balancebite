@@ -49,21 +49,17 @@ public class UserAdminController {
      * Endpoint to update the basic information of an existing user.
      * Only accessible to admins.
      *
-     * @param id                   The ID of the user to update.
-     * @param userRegistrationInputDTO The input data for updating the user.
+     * @param userRegistrationInputDTO The input data for updating the user, including the email of the user to update.
      * @return The updated UserDTO with 200 status code, or a 404 status code if the user is not found.
      */
     @PreAuthorize("hasRole('ADMIN')") // Ensures only users with ADMIN role can access this endpoint
-    @PatchMapping("/{id}/basic-info")
-    public ResponseEntity<?> updateUserBasicInfo(@PathVariable Long id, @Valid @RequestBody UserRegistrationInputDTO userRegistrationInputDTO) {
-        log.info("Updating basic info for user with ID: {}", id);
+    @PatchMapping("/users/update-basic-info")
+    public ResponseEntity<?> updateUserBasicInfo(@Valid @RequestBody UserRegistrationInputDTO userRegistrationInputDTO) {
+        log.info("Updating basic info for user with email: {}", userRegistrationInputDTO.getEmail());
         try {
-            UserDTO updatedUser = userAdminService.updateUserBasicInfoForAdmin(id, userRegistrationInputDTO); // Removed boolean
-            log.info("Successfully updated user with ID: {}", id);
+            UserDTO updatedUser = userAdminService.updateUserBasicInfoForAdmin(userRegistrationInputDTO.getEmail(), userRegistrationInputDTO);
+            log.info("Successfully updated user with email: {}", userRegistrationInputDTO.getEmail());
             return ResponseEntity.ok(updatedUser);
-        } catch (EntityAlreadyExistsException e) {
-            log.warn("Entity already exists during user update: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", e.getMessage()));
         } catch (UserNotFoundException e) {
             log.warn("User not found during update: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
@@ -73,13 +69,12 @@ public class UserAdminController {
         }
     }
 
-
     /**
      * Endpoint to retrieve all users.
      *
      * @return A list of UserDTOs with 200 status code, or a 204 status code if no users are found.
      */
-    @GetMapping
+    @GetMapping("/users")
     public ResponseEntity<?> getAllUsers() {
         log.info("Retrieving all users from the system.");
         try {

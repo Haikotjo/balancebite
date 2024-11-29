@@ -59,43 +59,33 @@ public class UserAdminService implements IUserAdminService {
      * Updates basic information of an existing user.
      * Only accessible by admins.
      *
-     * @param id                    The ID of the user to update.
+     * @param email                 The email of the user to update.
      * @param userRegistrationInputDTO The input DTO containing updated user information.
      * @return The updated UserDTO.
-     * @throws UserNotFoundException       If the user with the specified ID does not exist.
-     * @throws EntityAlreadyExistsException If the provided email is already in use by another user.
+     * @throws UserNotFoundException If no user with the specified email exists.
      */
     @Override
-    public UserDTO updateUserBasicInfoForAdmin(Long id, UserRegistrationInputDTO userRegistrationInputDTO) {
-        log.info("Updating basic info for user with ID: {}", id);
+    public UserDTO updateUserBasicInfoForAdmin(String email, UserRegistrationInputDTO userRegistrationInputDTO) {
+        log.info("Updating basic info for user with email: {}", email);
 
         // Fetch the existing user or throw exception if not found
-        User existingUser = userRepository.findById(id)
-                .orElseThrow(() -> new UserNotFoundException("Cannot update user: No user found with ID " + id));
-
-        // Check for duplicate email and ensure it belongs to another user
-        if (userRepository.existsByEmail(userRegistrationInputDTO.getEmail()) &&
-                !existingUser.getEmail().equals(userRegistrationInputDTO.getEmail())) {
-            String errorMessage = "The email " + userRegistrationInputDTO.getEmail() + " is already in use by another account.";
-            log.warn(errorMessage);
-            throw new EntityAlreadyExistsException(errorMessage);
-        }
+        User existingUser = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException("Cannot update user: No user found with email " + email));
 
         // Update basic user details
         existingUser.setUserName(userRegistrationInputDTO.getUserName());
-        existingUser.setEmail(userRegistrationInputDTO.getEmail());
 
-        // Update roles if roles are provided (handled for admin logic only)
+        // Update roles if roles are provided
         if (userRegistrationInputDTO.getRoles() != null && !userRegistrationInputDTO.getRoles().isEmpty()) {
             Set<Role> roles = userRegistrationInputDTO.getRoles().stream()
                     .map(roleName -> new Role(UserRole.valueOf(roleName))) // Convert String to Role
                     .collect(Collectors.toSet());
-            existingUser.setRoles(roles); // Overwrite all existing roles
+            existingUser.setRoles(roles);
         }
 
         // Save and return the updated user
         User updatedUser = userRepository.save(existingUser);
-        log.info("Successfully updated basic info for user with ID: {}", id);
+        log.info("Successfully updated basic info for user with email: {}", email);
         return userMapper.toDTO(updatedUser);
     }
 
