@@ -8,12 +8,12 @@ public class PasswordHashGenerator {
         BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
 
         String[] rawPasswords = {
-                "password123",
-                "password456",
-                "password789",
-                "password101",
-                "password102",
-                "password103"
+                "Password123!",
+                "Password456@",
+                "Password789#",
+                "Password101$",
+                "Password102%",
+                "Password103&"
         };
 
         String[] userNames = {

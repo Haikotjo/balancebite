@@ -2,6 +2,7 @@ package balancebite.dto.user;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 import java.util.Collection;
@@ -37,8 +38,8 @@ public class UserRegistrationInputDTO {
      * <p>
      * This field is mandatory and must be at least 4 characters long.
      */
-    @NotBlank(message = "The password cannot be blank. Please provide a valid password.")
-    @Size(min = 4, message = "Password must be at least 4 characters long.")
+    @Pattern(regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=])[A-Za-z\\d@#$%^&+=]{5,}$",
+            message = "Password must be at least 5 characters long, include an uppercase letter, a lowercase letter, and a special character.")
     private String password;
 
     /**

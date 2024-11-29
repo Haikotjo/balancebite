@@ -4,12 +4,12 @@ INSERT INTO roles (rolename) VALUES ('CHEF');
 INSERT INTO roles (rolename) VALUES ('ADMIN');
 
 -- Voeg gebruikers toe aan de users tabel (zonder rollen direct in te voegen)
-INSERT INTO users (user_name, email, password) VALUES ('John Doe', 'johndoe@example.com', '$2a$10$NZiboKAt4GXZa6QHFIbRz.icOxExTovPnIA6jmKkd32RfIEwpZHca');
-INSERT INTO users (user_name, email, password) VALUES ('Jane Smith', 'janesmith@example.com', '$2a$10$qWUenFq6GIcysBeH5NBd0eCfgD8b2ZQAnQzPtEfOMpZF6ffQdPqbK');
-INSERT INTO users (user_name, email, password) VALUES ('Tom Brown', 'tombrown@example.com', '$2a$10$gLTUOCupIV0pNhK.jpUXY.wlL/5.2oPn4n/9XLgVWTQHpUeuhN3We');
-INSERT INTO users (user_name, email, password) VALUES ('Emily White', 'emilywhite@example.com', '$2a$10$ID2KgWBTEUBZHfyzOg6vqOCX4YbMqEP0KxHn1GK.6FgksWlUM2jT6');
-INSERT INTO users (user_name, email, password) VALUES ('Haiko White', 'haikowhite@example.com', '$2a$10$jN02ZF5bszGvrxxyEq0Um.RLus.L4xuYLXOZ2FMISl/yVloEViate');
-INSERT INTO users (user_name, email, password) VALUES ('Mieke White', 'miekewhite@example.com', '$2a$10$GDVZMTJjgHVw7C3cuLosLOl369TofeGNfyYI2AjrCoLMxqk48Jy6y');
+INSERT INTO users (user_name, email, password) VALUES ('John Doe', 'johndoe@example.com', '$2a$10$jPPPOnf7yp7gCZu8MVzApO4euavXZ.RFWFYjuEOPRewVLcWgJQR1C');
+INSERT INTO users (user_name, email, password) VALUES ('Jane Smith', 'janesmith@example.com', '$2a$10$EeRkWfH4ZL7rYL2kdtuaHOUAOgr731Z5kjUu0AoxzxUaadjnyi12K');
+INSERT INTO users (user_name, email, password) VALUES ('Tom Brown', 'tombrown@example.com', '$2a$10$8kNk0oZxjHrBPqSGg1d9xuhga/0tX8KQkVTBRfvQylu/InVzOQpm2');
+INSERT INTO users (user_name, email, password) VALUES ('Emily White', 'emilywhite@example.com', '$2a$10$VZAkFVLuVhPf08LLoK2Z/enlk2gpgzvPMDlb8K1surRSrRz4QN1NO');
+INSERT INTO users (user_name, email, password) VALUES ('Haiko White', 'haikowhite@example.com', '$2a$10$WdJdBTECeJE7TfzngaGFK.3xF45rnmmwiUUYeVt4xt0vVSJstKWIW');
+INSERT INTO users (user_name, email, password) VALUES ('Mieke White', 'miekewhite@example.com', '$2a$10$5wHAveL167oKGageyZgfGuLP9JJzRFbBHrtGgGd6V2w0hpueNbci6');
 
 -- Koppel gebruikers aan rollen via de user_roles tabel
 INSERT INTO user_roles (user_id, roles_rolename) VALUES (1, 'USER');

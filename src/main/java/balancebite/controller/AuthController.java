@@ -82,22 +82,22 @@ public class AuthController {
     public ResponseEntity<Object> loginUser(@Valid @RequestBody UserLoginInputDTO loginDTO) {
         log.info("Processing login for email: {}", loginDTO.getEmail());
 
-        // Call the LoginService to handle the login process
-        Map<String, String> tokens = loginService.login(loginDTO.getEmail(), loginDTO.getPassword());
+        try {
+            Map<String, String> tokens = loginService.login(loginDTO.getEmail(), loginDTO.getPassword());
 
-        if (tokens == null) {
-            log.warn("Login failed for email '{}': Invalid credentials", loginDTO.getEmail());
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Invalid credentials"));
+            log.info("Login successful for email '{}'", loginDTO.getEmail());
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + tokens.get("accessToken"))
+                    .body(Map.of(
+                            "message", "Login successful",
+                            "accessToken", tokens.get("accessToken"),
+                            "refreshToken", tokens.get("refreshToken")
+                    ));
+
+        } catch (RuntimeException e) {
+            log.warn("Login failed for email '{}': {}", loginDTO.getEmail(), e.getMessage());
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", e.getMessage()));
         }
-
-        log.info("Login successful for email '{}'", loginDTO.getEmail());
-        return ResponseEntity.ok()
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + tokens.get("accessToken"))
-                .body(Map.of(
-                        "message", "Login successful",
-                        "accessToken", tokens.get("accessToken"),
-                        "refreshToken", tokens.get("refreshToken")
-                ));
     }
 
     /**

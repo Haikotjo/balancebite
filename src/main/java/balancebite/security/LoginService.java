@@ -54,38 +54,35 @@ public class LoginService {
     public Map<String, String> login(String email, String password) {
         log.info("Attempting login for email: {}", email);
 
-        // First, check if the email exists in the database
+        // Controleer of het e-mailadres bestaat
         Optional<User> userOptional = userRepository.findByEmail(email);
         if (userOptional.isEmpty()) {
-            log.warn("Login failed for email '{}': User not found", email);
-            return null;  // Return null if the user does not exist
+            log.warn("Login failed for email '{}': Email not found", email);
+            throw new RuntimeException("Email not found");
         }
 
-        // Proceed with authentication if the user exists
+        // Authenticatie met wachtwoordcontrole
         try {
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(email, password)
             );
 
-            // Get authenticated user details
+            // JWT-tokens genereren
             UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-
-            // Generate JWT tokens
             String accessToken = jwtService.generateAccessToken(userDetails);
             String refreshToken = jwtService.generateRefreshToken(userDetails);
 
             log.info("Login successful for email: {}", email);
 
-            // Return the tokens as a map
+            // Tokens teruggeven
             Map<String, String> tokens = new HashMap<>();
             tokens.put("accessToken", accessToken);
             tokens.put("refreshToken", refreshToken);
             return tokens;
 
         } catch (AuthenticationException ex) {
-            // Log failed login attempt due to incorrect password and return null
             log.warn("Login failed for email '{}': Incorrect password", email);
-            return null;  // Return null if authentication fails (wrong password)
+            throw new RuntimeException("Incorrect password");
         }
     }
 }

@@ -25,11 +25,11 @@ public class UserLoginInputDTO {
     /**
      * The user's password.
      * <p>
-     * This field is mandatory and must be at least 4 characters long.
+     * This field is mandatory.
      */
-    @Pattern(regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=])[A-Za-z\\d@#$%^&+=]{5,}$",
-            message = "Password must be at least 5 characters long, include an uppercase letter, a lowercase letter, and a special character.")
+    @NotBlank(message = "Password is required and cannot be empty.")
     private String password;
+
 
     /**
      * Default no-argument constructor for frameworks that require it.
