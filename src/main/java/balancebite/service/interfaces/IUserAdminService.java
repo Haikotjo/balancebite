@@ -18,14 +18,10 @@ public interface IUserAdminService {
      * Updates the basic information of an existing user in the system based on the provided UserRegistrationInputDTO.
      * Only admins are allowed to perform this action.
      *
-     * @param email The email of the user to update.
-     * @param userRegistrationInputDTO The input data for updating the user.
+     * @param userRegistrationInputDTO The input DTO containing the user ID and updated user information.
      * @return The updated UserDTO.
-     * @throws UserNotFoundException If the user with the specified email is not found.
      */
-    UserDTO updateUserBasicInfoForAdmin(String email, UserRegistrationInputDTO userRegistrationInputDTO);
-
-
+    UserDTO updateUserBasicInfoForAdmin(UserRegistrationInputDTO userRegistrationInputDTO);
 
     /**
      * Retrieves all users in the system.

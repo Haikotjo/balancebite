@@ -67,16 +67,25 @@ public class AuthController {
         log.info("Processing user registration for email: {}", registrationDTO.getEmail());
 
         try {
-            // Use the registration service to register the user
+            // Gebruik de registratie-service om de gebruiker te registreren
             registrationService.registerUser(registrationDTO);
 
+            // Stel een eenvoudige response samen
+            Map<String, Object> response = Map.of(
+                    "message", "User registered successfully!",
+                    "email", registrationDTO.getEmail(),
+                    "userName", registrationDTO.getUserName(),
+                    "roles", registrationDTO.getRoles()
+            );
+
             log.info("User registered successfully with email: {}", registrationDTO.getEmail());
-            return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("message", "User registered successfully!"));
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
         } catch (Exception e) {
             log.error("Error during registration for email '{}': {}", registrationDTO.getEmail(), e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", e.getMessage()));
         }
     }
+
 
     /**
      * Handles user login requests.

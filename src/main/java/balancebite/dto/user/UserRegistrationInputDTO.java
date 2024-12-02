@@ -8,13 +8,19 @@ import jakarta.validation.constraints.Size;
 import java.util.Collection;
 
 /**
- * Data Transfer Object (DTO) for handling user registration input.
+ * Data Transfer Object (DTO) for handling user registration and update input.
  *
- * This DTO is specifically designed for user registration requests, collecting
- * and validating the necessary fields for creating a new user, including optional
- * elevated role assignments.
+ * This DTO is specifically designed for user registration requests and update operations,
+ * collecting and validating the necessary fields for creating or updating a user.
  */
 public class UserRegistrationInputDTO {
+
+    /**
+     * The user's unique identifier.
+     * <p>
+     * This field is optional and primarily used for update operations.
+     */
+    private Long id;
 
     /**
      * The user's name.
@@ -36,7 +42,7 @@ public class UserRegistrationInputDTO {
     /**
      * The user's password.
      * <p>
-     * This field is mandatory and must be at least 4 characters long.
+     * This field is mandatory and must be at least 5 characters long.
      */
     @Pattern(regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=])[A-Za-z\\d@#$%^&+=]{5,}$",
             message = "Password must be at least 5 characters long, include an uppercase letter, a lowercase letter, and a special character.")
@@ -66,18 +72,38 @@ public class UserRegistrationInputDTO {
     /**
      * Constructor for creating a UserRegistrationInputDTO with all fields.
      *
+     * @param id                 The user's ID (optional, used for updates).
      * @param userName           The user's name. If null or blank, it will default to the email.
      * @param email              The user's email address. Must not be blank and must be a valid email format.
-     * @param password           The user's password. Must not be blank and must be at least 4 characters long.
+     * @param password           The user's password. Must not be blank and must be at least 5 characters long.
      * @param roles              The roles assigned to the user as strings. This field is optional.
      * @param verificationToken  Optional token used to validate elevated roles (e.g., ADMIN, CHEF).
      */
-    public UserRegistrationInputDTO(String userName, String email, String password, Collection<String> roles, String verificationToken) {
+    public UserRegistrationInputDTO(Long id, String userName, String email, String password, Collection<String> roles, String verificationToken) {
+        this.id = id;
         this.userName = userName;
         this.email = email;
         this.password = password;
         this.roles = roles;
         this.verificationToken = verificationToken;
+    }
+
+    /**
+     * Gets the user's ID.
+     *
+     * @return The user's ID, or null if not provided.
+     */
+    public Long getId() {
+        return id;
+    }
+
+    /**
+     * Sets the user's ID.
+     *
+     * @param id The user's ID (used for updates).
+     */
+    public void setId(Long id) {
+        this.id = id;
     }
 
     /**
@@ -129,7 +155,7 @@ public class UserRegistrationInputDTO {
     /**
      * Sets the user's password.
      *
-     * @param password The user's password. Must not be blank and must be at least 4 characters long.
+     * @param password The user's password. Must not be blank and must be at least 5 characters long.
      */
     public void setPassword(String password) {
         this.password = password;

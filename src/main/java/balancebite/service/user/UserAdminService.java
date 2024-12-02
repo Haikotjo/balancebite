@@ -12,6 +12,7 @@ import balancebite.repository.RecommendedDailyIntakeRepository;
 import balancebite.repository.UserRepository;
 import balancebite.service.RecommendedDailyIntakeService;
 import balancebite.service.interfaces.IUserAdminService;
+import balancebite.utils.UserUpdateHelper;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import org.slf4j.Logger;
@@ -33,6 +34,7 @@ public class UserAdminService implements IUserAdminService {
     private final RecommendedDailyIntakeRepository recommendedDailyIntakeRepository;
     private final UserMapper userMapper;
     private final RecommendedDailyIntakeService recommendedDailyIntakeService;
+    private final UserUpdateHelper userUpdateHelper;
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -44,50 +46,79 @@ public class UserAdminService implements IUserAdminService {
      * @param userMapper                      The mapper to convert between User and UserDTO.
      * @param recommendedDailyIntakeRepository The repository to manage recommended daily intakes.
      * @param recommendedDailyIntakeService   The service to handle recommended daily intake logic.
+     * @param userUpdateHelper
      */
     public UserAdminService(UserRepository userRepository,
                        UserMapper userMapper,
                        RecommendedDailyIntakeRepository recommendedDailyIntakeRepository,
-                       RecommendedDailyIntakeService recommendedDailyIntakeService) {
+                       RecommendedDailyIntakeService recommendedDailyIntakeService,
+                       UserUpdateHelper userUpdateHelper) {
         this.userRepository = userRepository;
         this.userMapper = userMapper;
         this.recommendedDailyIntakeRepository = recommendedDailyIntakeRepository;
         this.recommendedDailyIntakeService = recommendedDailyIntakeService;
+        this.userUpdateHelper = userUpdateHelper;
     }
 
     /**
      * Updates basic information of an existing user.
      * Only accessible by admins.
      *
-     * @param email                 The email of the user to update.
-     * @param userRegistrationInputDTO The input DTO containing updated user information.
+     * @param userRegistrationInputDTO The input DTO containing the user ID and updated user information.
      * @return The updated UserDTO.
-     * @throws UserNotFoundException If no user with the specified email exists.
      */
-    @Override
-    public UserDTO updateUserBasicInfoForAdmin(String email, UserRegistrationInputDTO userRegistrationInputDTO) {
-        log.info("Updating basic info for user with email: {}", email);
+    public UserDTO updateUserBasicInfoForAdmin(UserRegistrationInputDTO userRegistrationInputDTO) {
+        log.info("Admin attempting to update user with ID: {}", userRegistrationInputDTO.getId());
 
-        // Fetch the existing user or throw exception if not found
-        User existingUser = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UserNotFoundException("Cannot update user: No user found with email " + email));
+        // Fetch the user by ID
+        User existingUser = userUpdateHelper.fetchUserById(userRegistrationInputDTO.getId());
 
-        // Update basic user details
-        existingUser.setUserName(userRegistrationInputDTO.getUserName());
+        // Update username if provided
+        if (userRegistrationInputDTO.getUserName() != null) {
+            log.debug("Updating username for user ID {}: '{}' -> '{}'",
+                    existingUser.getId(), existingUser.getUserName(), userRegistrationInputDTO.getUserName());
+            existingUser.setUserName(userRegistrationInputDTO.getUserName());
+        }
 
         // Update roles if roles are provided
         if (userRegistrationInputDTO.getRoles() != null && !userRegistrationInputDTO.getRoles().isEmpty()) {
+            log.debug("Updating roles for user ID {}: Current Roles = {}, New Roles = {}",
+                    existingUser.getId(),
+                    existingUser.getRoles().stream().map(Role::getRoleName).toList(),
+                    userRegistrationInputDTO.getRoles());
+
             Set<Role> roles = userRegistrationInputDTO.getRoles().stream()
-                    .map(roleName -> new Role(UserRole.valueOf(roleName))) // Convert String to Role
+                    .map(roleName -> {
+                        try {
+                            return new Role(UserRole.valueOf(roleName)); // Convert String to Role Enum
+                        } catch (IllegalArgumentException e) {
+                            log.warn("Invalid role provided: {}", roleName);
+                            throw new RuntimeException("Invalid role provided: " + roleName);
+                        }
+                    })
                     .collect(Collectors.toSet());
             existingUser.setRoles(roles);
         }
 
+        // Update email if provided
+        if (userRegistrationInputDTO.getEmail() != null) {
+            log.debug("Updating email for user ID {}: '{}' -> '{}'",
+                    existingUser.getId(), existingUser.getEmail(), userRegistrationInputDTO.getEmail());
+            userUpdateHelper.validateUniqueEmail(userRegistrationInputDTO.getEmail(), existingUser.getId());
+            existingUser.setEmail(userRegistrationInputDTO.getEmail());
+        }
+
         // Save and return the updated user
         User updatedUser = userRepository.save(existingUser);
-        log.info("Successfully updated basic info for user with email: {}", email);
+        log.info("Successfully updated user with ID: {}. Updated Username: '{}', Updated Roles: '{}', Updated Email: '{}'",
+                updatedUser.getId(),
+                updatedUser.getUserName(),
+                updatedUser.getRoles().stream().map(Role::getRoleName).toList(),
+                updatedUser.getEmail());
+
         return userMapper.toDTO(updatedUser);
     }
+
 
     /**
      * Retrieves all users from the database.

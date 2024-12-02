@@ -49,16 +49,17 @@ public class UserAdminController {
      * Endpoint to update the basic information of an existing user.
      * Only accessible to admins.
      *
-     * @param userRegistrationInputDTO The input data for updating the user, including the email of the user to update.
+     * @param userRegistrationInputDTO The input data for updating the user, including the ID of the user to update.
      * @return The updated UserDTO with 200 status code, or a 404 status code if the user is not found.
      */
     @PreAuthorize("hasRole('ADMIN')") // Ensures only users with ADMIN role can access this endpoint
     @PatchMapping("/users/update-basic-info")
     public ResponseEntity<?> updateUserBasicInfo(@Valid @RequestBody UserRegistrationInputDTO userRegistrationInputDTO) {
-        log.info("Updating basic info for user with email: {}", userRegistrationInputDTO.getEmail());
+        log.info("Updating basic info for user with ID: {}", userRegistrationInputDTO.getId());
         try {
-            UserDTO updatedUser = userAdminService.updateUserBasicInfoForAdmin(userRegistrationInputDTO.getEmail(), userRegistrationInputDTO);
-            log.info("Successfully updated user with email: {}", userRegistrationInputDTO.getEmail());
+            // Call the service method using the provided ID
+            UserDTO updatedUser = userAdminService.updateUserBasicInfoForAdmin(userRegistrationInputDTO);
+            log.info("Successfully updated user with ID: {}", userRegistrationInputDTO.getId());
             return ResponseEntity.ok(updatedUser);
         } catch (UserNotFoundException e) {
             log.warn("User not found during update: {}", e.getMessage());
@@ -68,6 +69,11 @@ public class UserAdminController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "An unexpected error occurred."));
         }
     }
+
+
+
+
+
 
     /**
      * Endpoint to retrieve all users.

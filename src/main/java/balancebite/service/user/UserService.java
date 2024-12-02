@@ -15,6 +15,7 @@ import balancebite.repository.RecommendedDailyIntakeRepository;
 import balancebite.repository.UserRepository;
 import balancebite.service.RecommendedDailyIntakeService;
 import balancebite.service.interfaces.IUserService;
+import balancebite.utils.UserUpdateHelper;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import org.slf4j.Logger;
@@ -42,6 +43,7 @@ public class UserService implements IUserService {
     private final RecommendedDailyIntakeRepository recommendedDailyIntakeRepository;
     private final UserMapper userMapper;
     private final RecommendedDailyIntakeService recommendedDailyIntakeService;
+    private final UserUpdateHelper userUpdateHelper;
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -53,15 +55,18 @@ public class UserService implements IUserService {
      * @param userMapper                      The mapper to convert between User and UserDTO.
      * @param recommendedDailyIntakeRepository The repository to manage recommended daily intakes.
      * @param recommendedDailyIntakeService   The service to handle recommended daily intake logic.
+     * @param userUpdateHelper
      */
     public UserService(UserRepository userRepository,
                        UserMapper userMapper,
                        RecommendedDailyIntakeRepository recommendedDailyIntakeRepository,
-                       RecommendedDailyIntakeService recommendedDailyIntakeService) {
+                       RecommendedDailyIntakeService recommendedDailyIntakeService,
+                       UserUpdateHelper userUpdateHelper) {
         this.userRepository = userRepository;
         this.userMapper = userMapper;
         this.recommendedDailyIntakeRepository = recommendedDailyIntakeRepository;
         this.recommendedDailyIntakeService = recommendedDailyIntakeService;
+        this.userUpdateHelper = userUpdateHelper;
     }
 
     /**
@@ -71,28 +76,20 @@ public class UserService implements IUserService {
      * @param userRegistrationInputDTO The input DTO containing updated user information.
      * @param userId                   The ID of the currently logged-in user (from JWT token).
      * @return The updated UserDTO.
-     * @throws UserNotFoundException       If the user with the specified ID does not exist.
-     * @throws EntityAlreadyExistsException If the provided email is already in use by another user.
      */
-    @Override
     public UserDTO updateUserBasicInfo(Long userId, UserRegistrationInputDTO userRegistrationInputDTO) {
         log.info("Updating basic info for logged-in user with ID: {}", userId);
 
-        // Fetch the existing user or throw exception if not found
-        User existingUser = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException("Cannot update user: No user found with ID " + userId));
+        // Fetch the user by ID
+        User existingUser = userUpdateHelper.fetchUserById(userId);
 
-        // Check for duplicate email and ensure it belongs to another user
-        if (userRepository.existsByEmail(userRegistrationInputDTO.getEmail()) &&
-                !existingUser.getEmail().equals(userRegistrationInputDTO.getEmail())) {
-            String errorMessage = "The email " + userRegistrationInputDTO.getEmail() + " is already in use by another account.";
-            log.warn(errorMessage);
-            throw new EntityAlreadyExistsException(errorMessage);
+        // Validate unique email
+        if (userRegistrationInputDTO.getEmail() != null) {
+            userUpdateHelper.validateUniqueEmail(userRegistrationInputDTO.getEmail(), userId);
         }
 
-        // Update basic user details (username and email only)
-        existingUser.setUserName(userRegistrationInputDTO.getUserName());
-        existingUser.setEmail(userRegistrationInputDTO.getEmail());
+        // Update basic info
+        existingUser = userUpdateHelper.updateBasicInfo(existingUser, userRegistrationInputDTO);
 
         // Save and return the updated user
         User updatedUser = userRepository.save(existingUser);
