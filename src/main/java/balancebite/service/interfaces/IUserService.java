@@ -18,10 +18,10 @@ public interface IUserService {
      * Updates the basic information of the currently logged-in user.
      * Uses the user ID extracted from the JWT token.
      *
-     * @param userId The ID of the currently logged-in user.
+     * @param userId                   The ID of the currently logged-in user.
      * @param userRegistrationInputDTO The input data for updating the user.
      * @return The updated UserDTO.
-     * @throws UserNotFoundException If the user with the specified ID is not found.
+     * @throws UserNotFoundException        If the user with the specified ID is not found.
      * @throws EntityAlreadyExistsException If the provided email already exists for another user.
      */
     UserDTO updateUserBasicInfo(Long userId, UserRegistrationInputDTO userRegistrationInputDTO);
@@ -29,7 +29,7 @@ public interface IUserService {
     /**
      * Updates the detailed information of an existing user in the system based on the provided UserDetailsInputDTO.
      *
-     * @param id The ID of the user to update.
+     * @param id                  The ID of the user to update.
      * @param userDetailsInputDTO The input data for updating the user's detailed information.
      * @return The updated UserDTO.
      * @throws UserNotFoundException If the user with the specified ID is not found.
@@ -37,19 +37,21 @@ public interface IUserService {
     UserDTO updateUserDetails(Long id, UserDetailsInputDTO userDetailsInputDTO);
 
     /**
-     * Retrieves a user by their unique ID.
+     * Retrieves the details of the currently logged-in user.
      *
-     * @param id The ID of the user to retrieve.
-     * @return The UserDTO representing the user.
+     * @param userId The ID of the currently logged-in user (extracted from JWT token).
+     * @return The UserDTO representing the logged-in user.
      * @throws UserNotFoundException If the user with the specified ID is not found.
      */
-    UserDTO getUserById(Long id);
+    UserDTO getOwnDetails(Long userId);
+
 
     /**
-     * Deletes a user by their ID.
+     * Deletes the currently logged-in user by their ID.
      *
-     * @param id The ID of the user to delete.
+     * @param id The ID of the user to delete (extracted from the JWT token).
      * @throws UserNotFoundException If the user with the specified ID is not found.
      */
-    void deleteUser(Long id);
+    void deleteLoggedInUser(Long id);
 }
+

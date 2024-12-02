@@ -85,6 +85,7 @@ public class SecurityConfig {
                         // user entity endpoints
                         .requestMatchers(HttpMethod.GET, "/users/**").authenticated()
                         .requestMatchers(HttpMethod.PATCH, "/users/**").authenticated()
+                        .requestMatchers(HttpMethod.PUT, "/users/**").authenticated()
                         .requestMatchers(HttpMethod.GET, "/admins/**").hasRole("ADMIN")
 
                         // meal entity endpoints

@@ -66,7 +66,7 @@ public class Meal {
      * The user who created this meal.
      */
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = CREATED_BY_USER_ID_COLUMN, updatable = false)
+    @JoinColumn(name = CREATED_BY_USER_ID_COLUMN, updatable = true, nullable = true)
     private User createdBy;
 
     /**

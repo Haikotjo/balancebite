@@ -70,11 +70,6 @@ public class UserAdminController {
         }
     }
 
-
-
-
-
-
     /**
      * Endpoint to retrieve all users.
      *
@@ -96,4 +91,28 @@ public class UserAdminController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "An unexpected error occurred."));
         }
     }
+
+    /**
+     * Endpoint to delete an existing user by ID.
+     *
+     * @param userRegistrationInputDTO The input DTO containing the user ID to delete.
+     * @return A 204 No Content status code if successful, or a 404 status code with an error message if the user is not found.
+     */
+    @DeleteMapping
+    public ResponseEntity<?> deleteUser(@RequestBody UserRegistrationInputDTO userRegistrationInputDTO) {
+        Long id = userRegistrationInputDTO.getId();
+        log.info("Deleting user with ID: {}", id);
+        try {
+            userAdminService.deleteUser(id);
+            log.info("Successfully deleted user with ID: {}", id);
+            return ResponseEntity.noContent().build();
+        } catch (UserNotFoundException e) {
+            log.warn("User not found while attempting to delete: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            log.error("Unexpected error during user deletion: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "An unexpected error occurred."));
+        }
+    }
+
 }

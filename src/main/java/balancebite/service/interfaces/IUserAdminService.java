@@ -30,20 +30,11 @@ public interface IUserAdminService {
      */
     List<UserDTO> getAllUsers();
 
-//    /**
-//     * Retrieves a user by their unique ID.
-//     *
-//     * @param id The ID of the user to retrieve.
-//     * @return The UserDTO representing the user.
-//     * @throws UserNotFoundException If the user with the specified ID is not found.
-//     */
-//    UserDTO getUserById(Long id);
-
-//    /**
-//     * Deletes a user by their ID.
-//     *
-//     * @param id The ID of the user to delete.
-//     * @throws UserNotFoundException If the user with the specified ID is not found.
-//     */
-//    void deleteUser(Long id);
+    /**
+     * Deletes a user by their ID.
+     *
+     * @param id The ID of the user to delete.
+     * @throws UserNotFoundException If the user with the specified ID is not found.
+     */
+    void deleteUser(Long id);
 }

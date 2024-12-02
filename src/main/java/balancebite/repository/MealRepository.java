@@ -1,9 +1,11 @@
 package balancebite.repository;
 
 import balancebite.model.Meal;
+import balancebite.model.user.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+
 import java.util.List;
 import java.util.Optional;
 
@@ -82,4 +84,13 @@ public interface MealRepository extends JpaRepository<Meal, Long> {
      * @return A list of meals created by the specified user.
      */
     List<Meal> findByCreatedBy_Id(Long userId);
+
+    /**
+     * Finds all meals where the user is referenced as createdBy or adjustedBy.
+     *
+     * @param user The user to search for.
+     * @return A list of meals where the user is referenced.
+     */
+    @Query("SELECT m FROM Meal m WHERE m.createdBy = :user OR m.adjustedBy = :user")
+    List<Meal> findByCreatedByOrAdjustedBy(@Param("user") User user);
 }

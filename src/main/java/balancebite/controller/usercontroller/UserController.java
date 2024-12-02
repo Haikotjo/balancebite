@@ -124,47 +124,61 @@ public class UserController {
     }
 
     /**
-     * Endpoint to retrieve a specific user by ID.
+     * Endpoint to retrieve the currently logged-in user's details.
      *
-     * @param id The ID of the user to retrieve.
+     * @param authorizationHeader The Authorization header containing the JWT token.
      * @return The UserDTO with 200 status code, or a 404 status code if the user is not found.
      */
-    @GetMapping("/{id}")
-    public ResponseEntity<?> getUserById(@PathVariable Long id) {
-        log.info("Retrieving user by ID: {}", id);
+    @PreAuthorize("isAuthenticated()")
+    @GetMapping("/profile")
+    public ResponseEntity<?> getOwnDetails(@RequestHeader("Authorization") String authorizationHeader) {
+        log.info("Retrieving details for the currently logged-in user.");
+
         try {
-            UserDTO user = userService.getUserById(id);
-            log.info("Successfully retrieved user with ID: {}", id);
+            // Extract user ID from the token
+            String token = authorizationHeader.substring(7); // Remove "Bearer " prefix
+            Long userId = jwtService.extractUserId(token);
+
+            // Call the service method
+            UserDTO user = userService.getOwnDetails(userId);
+
+            log.info("Successfully retrieved details for logged-in user with ID: {}", userId);
             return ResponseEntity.ok(user);
         } catch (UserNotFoundException e) {
             log.warn("User not found: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
-            log.error("Unexpected error during user retrieval by ID: {}", e.getMessage(), e);
+            log.error("Unexpected error during user retrieval: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "An unexpected error occurred."));
         }
     }
 
     /**
-     * Endpoint to delete an existing user by ID.
+     * Endpoint to delete the currently logged-in user.
      *
-     * @param id The ID of the user to delete.
+     * @param authorizationHeader The Authorization header containing the JWT token.
      * @return A 204 No Content status code if successful, or a 404 status code with an error message if the user is not found.
      */
-    @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteUser(@PathVariable Long id) {
-        log.info("Deleting user with ID: {}", id);
+    @DeleteMapping()
+    public ResponseEntity<?> deleteLoggedInUser(@RequestHeader("Authorization") String authorizationHeader) {
+        log.info("Deleting the currently logged-in user.");
+
         try {
-            userService.deleteUser(id);
-            log.info("Successfully deleted user with ID: {}", id);
+            // Extract user ID from the token
+            String token = authorizationHeader.substring(7); // Remove "Bearer " prefix
+            Long userId = jwtService.extractUserId(token);
+
+            // Call the service method
+            userService.deleteLoggedInUser(userId);
+
+            log.info("Successfully deleted logged-in user with ID: {}", userId);
             return ResponseEntity.noContent().build();
         } catch (UserNotFoundException e) {
-            log.warn("User not found while attempting to delete: {}", e.getMessage());
+            log.warn("Logged-in user not found while attempting to delete: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
-            log.error("Unexpected error during user deletion: {}", e.getMessage(), e);
+            log.error("Unexpected error during logged-in user deletion: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "An unexpected error occurred."));
         }
     }
-
 }

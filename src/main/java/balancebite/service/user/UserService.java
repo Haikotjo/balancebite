@@ -8,9 +8,11 @@ import balancebite.dto.user.UserRegistrationInputDTO;
 import balancebite.errorHandling.EntityAlreadyExistsException;
 import balancebite.errorHandling.UserNotFoundException;
 import balancebite.mapper.UserMapper;
+import balancebite.model.Meal;
 import balancebite.model.user.Role;
 import balancebite.model.user.User;
 import balancebite.model.user.UserRole;
+import balancebite.repository.MealRepository;
 import balancebite.repository.RecommendedDailyIntakeRepository;
 import balancebite.repository.UserRepository;
 import balancebite.service.RecommendedDailyIntakeService;
@@ -25,6 +27,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -44,6 +47,7 @@ public class UserService implements IUserService {
     private final UserMapper userMapper;
     private final RecommendedDailyIntakeService recommendedDailyIntakeService;
     private final UserUpdateHelper userUpdateHelper;
+    private final MealRepository mealRepository;
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -56,17 +60,20 @@ public class UserService implements IUserService {
      * @param recommendedDailyIntakeRepository The repository to manage recommended daily intakes.
      * @param recommendedDailyIntakeService   The service to handle recommended daily intake logic.
      * @param userUpdateHelper
+     * @param mealRepository
      */
     public UserService(UserRepository userRepository,
                        UserMapper userMapper,
                        RecommendedDailyIntakeRepository recommendedDailyIntakeRepository,
                        RecommendedDailyIntakeService recommendedDailyIntakeService,
-                       UserUpdateHelper userUpdateHelper) {
+                       UserUpdateHelper userUpdateHelper,
+                       MealRepository mealRepository) {
         this.userRepository = userRepository;
         this.userMapper = userMapper;
         this.recommendedDailyIntakeRepository = recommendedDailyIntakeRepository;
         this.recommendedDailyIntakeService = recommendedDailyIntakeService;
         this.userUpdateHelper = userUpdateHelper;
+        this.mealRepository = mealRepository;
     }
 
     /**
@@ -128,42 +135,79 @@ public class UserService implements IUserService {
 
 
     /**
-     * Retrieves a user by their ID.
+     * Retrieves the currently logged-in user's details.
      *
-     * @param id The ID of the user to retrieve.
-     * @return The UserDTO of the requested user.
+     * @param userId The ID of the currently logged-in user (extracted from JWT token).
+     * @return The UserDTO of the logged-in user.
      * @throws UserNotFoundException If no user with the specified ID is found.
      */
     @Override
-    public UserDTO getUserById(Long id) {
-        log.info("Retrieving user with ID: {}", id);
+    public UserDTO getOwnDetails(Long userId) {
+        log.info("Retrieving details for the currently logged-in user with ID: {}", userId);
 
         // Fetch user or throw exception if not found
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new UserNotFoundException("No user found with ID " + id));
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("No user found with ID " + userId));
 
-        log.info("Successfully retrieved user with ID: {}", id);
+        log.info("Successfully retrieved details for logged-in user with ID: {}", userId);
         return userMapper.toDTO(user);
     }
 
+
     /**
-     * Deletes a user by their ID.
+     * Deletes the currently logged-in user by their ID.
      *
-     * @param id The ID of the user to delete.
+     * This method removes all meals with `isTemplate == false` associated with the user
+     * and ensures template meals (`isTemplate == true`) have their `createdBy` reference removed.
+     * All relationships in the `user_meals` join table are handled automatically by Hibernate.
+     * After processing the meals, the user is deleted from the database.
+     *
+     * @param id The ID of the logged-in user to delete (extracted from the JWT token).
      * @throws UserNotFoundException If the user with the specified ID does not exist.
      */
     @Override
-    public void deleteUser(Long id) {
-        log.info("Deleting user with ID: {}", id);
+    public void deleteLoggedInUser(Long id) {
+        log.info("Deleting logged-in user with ID: {}", id);
 
-        // Check if user exists
-        if (!userRepository.existsById(id)) {
-            log.warn("Attempted to delete non-existing user with ID: {}", id);
-            throw new UserNotFoundException("Cannot delete user: No user found with ID " + id);
+        // Fetch the user, or throw an exception if they do not exist
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new UserNotFoundException("Cannot delete user: No user found with ID " + id));
+
+        // Fetch meals where the user is referenced as createdBy or adjustedBy
+        List<Meal> mealsToUpdate = mealRepository.findByCreatedByOrAdjustedBy(user);
+
+        // Iterate through the meals and unlink the user from createdBy/adjustedBy
+        for (Meal meal : mealsToUpdate) {
+            if (meal.getCreatedBy() != null && meal.getCreatedBy().equals(user)) {
+                log.info("Unlinking user from 'createdBy' for meal ID: {}", meal.getId());
+                meal.setCreatedBy(null);
+            }
+            if (meal.getAdjustedBy() != null && meal.getAdjustedBy().equals(user)) {
+                log.info("Unlinking user from 'adjustedBy' for meal ID: {}", meal.getId());
+                meal.setAdjustedBy(null);
+            }
+            mealRepository.save(meal); // Persist changes
         }
 
-        // Perform deletion
-        userRepository.deleteById(id);
-        log.info("Successfully deleted user with ID: {}", id);
+        // Remove meals associated with the user and delete non-template meals
+        Iterator<Meal> mealIterator = user.getMeals().iterator();
+        while (mealIterator.hasNext()) {
+            Meal meal = mealIterator.next();
+            if (!meal.isTemplate()) {
+                log.info("Deleting non-template meal with ID: {}", meal.getId());
+                mealIterator.remove(); // Remove from user's meal list
+                mealRepository.delete(meal); // Delete the meal itself
+            }
+        }
+
+        // Flush changes to ensure join table updates are persisted
+        log.info("Flushing changes to the database before deleting the logged-in user.");
+        userRepository.save(user); // Save updated user state
+        userRepository.flush();
+
+        // Finally, delete the logged-in user
+        userRepository.delete(user);
+        log.info("Successfully deleted logged-in user with ID: {}", id);
     }
+
 }
