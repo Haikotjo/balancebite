@@ -16,7 +16,7 @@ import java.util.function.Function;
 
 /**
  * JwtService is a service class that provides methods for generating, validating,
- * and extracting information from JWT tokens, including support for access and refresh tokens.
+ * and extracting information from JWT tokens, using user IDs as the subject.
  */
 @Service
 public class JwtService {
@@ -37,16 +37,6 @@ public class JwtService {
     }
 
     /**
-     * Extracts the email (subject) from the JWT token.
-     *
-     * @param token the JWT token
-     * @return the email extracted from the token
-     */
-    public String extractEmail(String token) {
-        return extractClaim(token, Claims::getSubject);
-    }
-
-    /**
      * Extracts the user ID from the JWT token.
      *
      * @param token the JWT token
@@ -55,11 +45,9 @@ public class JwtService {
      */
     public Long extractUserId(String token) {
         try {
-            Claims claims = extractAllClaims(token);
-            String userId = claims.getSubject(); // Assuming 'sub' contains the user ID
-            return Long.parseLong(userId);
+            return Long.valueOf(extractClaim(token, Claims::getSubject));
         } catch (Exception e) {
-            throw new IllegalArgumentException("Invalid or malformed token provided.");
+            throw new IllegalArgumentException("Invalid or malformed token provided.", e);
         }
     }
 
@@ -111,34 +99,34 @@ public class JwtService {
     }
 
     /**
-     * Generates an access token for the given user details.
+     * Generates an access token for the given user ID.
      *
-     * @param userDetails the user details
+     * @param userId the ID of the user
      * @return the generated access token
      */
-    public String generateAccessToken(UserDetails userDetails) {
+    public String generateAccessToken(Long userId) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("type", "access");
-        return createToken(claims, userDetails.getUsername(), ACCESS_TOKEN_VALIDITY);
+        return createToken(claims, String.valueOf(userId), ACCESS_TOKEN_VALIDITY);
     }
 
     /**
-     * Generates a refresh token for the given user details.
+     * Generates a refresh token for the given user ID.
      *
-     * @param userDetails the user details
+     * @param userId the ID of the user
      * @return the generated refresh token
      */
-    public String generateRefreshToken(UserDetails userDetails) {
+    public String generateRefreshToken(Long userId) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("type", "refresh");
-        return createToken(claims, userDetails.getUsername(), REFRESH_TOKEN_VALIDITY);
+        return createToken(claims, String.valueOf(userId), REFRESH_TOKEN_VALIDITY);
     }
 
     /**
      * Creates a JWT token with the given claims, subject, and validity period.
      *
      * @param claims the claims to include in the token
-     * @param subject the subject (username) of the token
+     * @param subject the subject (user ID) of the token
      * @param validity the validity period of the token in milliseconds
      * @return the created JWT token
      */
@@ -151,18 +139,6 @@ public class JwtService {
                 .setExpiration(new Date(currentTime + validity))
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)
                 .compact();
-    }
-
-    /**
-     * Validates the JWT token against the given user details.
-     *
-     * @param token the JWT token
-     * @param userDetails the user details
-     * @return true if the token is valid, false otherwise
-     */
-    public Boolean validateToken(String token, UserDetails userDetails) {
-        final String username = extractEmail(token);
-        return username.equals(userDetails.getUsername()) && !isTokenExpired(token);
     }
 
     /**

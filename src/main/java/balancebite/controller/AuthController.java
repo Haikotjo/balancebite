@@ -2,9 +2,12 @@ package balancebite.controller;
 
 import balancebite.dto.user.UserLoginInputDTO;
 import balancebite.dto.user.UserRegistrationInputDTO;
+import balancebite.security.MyUserDetails;
 import balancebite.service.user.RegistrationService;
 import balancebite.security.JwtService;
 import balancebite.security.LoginService;
+import balancebite.model.user.User;
+import balancebite.repository.UserRepository;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,8 +18,8 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * AuthController handles user registration, login, and token management.
@@ -29,6 +32,8 @@ public class AuthController {
     private final JwtService jwtService;
     private final RegistrationService registrationService;
     private final LoginService loginService;
+    private final UserRepository userRepository;
+
     private static final Logger log = LoggerFactory.getLogger(AuthController.class);
 
     /**
@@ -38,13 +43,16 @@ public class AuthController {
      * @param jwtService            The JWT service for token generation and validation.
      * @param registrationService   The service handling user registration logic.
      * @param loginService          The service handling user login logic.
+     * @param userRepository        The repository to fetch user details by ID.
      */
     public AuthController(AuthenticationManager authenticationManager, JwtService jwtService,
-                          RegistrationService registrationService, LoginService loginService) {
+                          RegistrationService registrationService, LoginService loginService,
+                          UserRepository userRepository) {
         this.authenticationManager = authenticationManager;
         this.jwtService = jwtService;
         this.registrationService = registrationService;
         this.loginService = loginService;
+        this.userRepository = userRepository;
     }
 
     /**
@@ -115,11 +123,20 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Invalid or expired refresh token"));
         }
 
-        String email = jwtService.extractEmail(refreshToken);
-        UserDetails userDetails = registrationService.loadUserByEmail(email); // Here, use a method that retrieves user data
-        String newAccessToken = jwtService.generateAccessToken(userDetails);
+        Long userId = jwtService.extractUserId(refreshToken);
+        log.info("Extracted userId {} from refresh token.", userId);
 
-        log.info("Access token refreshed successfully for email: {}", email);
+        Optional<User> optionalUser = userRepository.findById(userId);
+        if (optionalUser.isEmpty()) {
+            log.warn("User with ID {} not found.", userId);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "User not found."));
+        }
+
+        User user = optionalUser.get();
+        UserDetails userDetails = new MyUserDetails(user); // Assuming MyUserDetails is your custom UserDetails implementation.
+        String newAccessToken = jwtService.generateAccessToken(userId);
+
+        log.info("Access token refreshed successfully for userId: {}", userId);
 
         return ResponseEntity.ok(Map.of(
                 "message", "Access token refreshed successfully",

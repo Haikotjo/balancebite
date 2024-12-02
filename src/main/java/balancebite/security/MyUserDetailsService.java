@@ -28,6 +28,7 @@ public class MyUserDetailsService implements UserDetailsService {
 
     /**
      * Loads the user by username (email in this case).
+     * This method remains for backward compatibility with Spring Security's default behavior.
      *
      * @param email the email of the user
      * @return UserDetails for authentication
@@ -36,6 +37,19 @@ public class MyUserDetailsService implements UserDetailsService {
     public UserDetails loadUserByUsername(String email) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
+        return new MyUserDetails(user);
+    }
+
+    /**
+     * Loads the user by their ID.
+     * This is used for JWT token-based authentication.
+     *
+     * @param userId the ID of the user
+     * @return UserDetails for authentication
+     */
+    public UserDetails loadUserById(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
         return new MyUserDetails(user);
     }
 }

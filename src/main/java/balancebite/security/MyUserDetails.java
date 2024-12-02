@@ -37,7 +37,7 @@ public class MyUserDetails implements UserDetails {
     public Collection<? extends GrantedAuthority> getAuthorities() {
         List<GrantedAuthority> authorities = new ArrayList<>();
 
-        // Voeg "ROLE_" toe aan elke rol
+        // Add "ROLE_" prefix to each role
         for (Role role : user.getRoles()) {
             authorities.add(new SimpleGrantedAuthority("ROLE_" + role.getRoleName()));
         }
@@ -56,13 +56,33 @@ public class MyUserDetails implements UserDetails {
     }
 
     /**
-     * Returns the username used to authenticate the user.
+     * Returns the username (email) used to authenticate the user.
      *
-     * @return the username
+     * @return the email
      */
     @Override
     public String getUsername() {
         return user.getEmail();
+    }
+
+    /**
+     * Returns the ID of the user.
+     * This is specific to our application logic and is not part of the UserDetails interface.
+     *
+     * @return the user ID
+     */
+    public Long getId() {
+        return user.getId();
+    }
+
+    /**
+     * Returns the underlying User entity.
+     * Useful when you need access to the full User object.
+     *
+     * @return the User entity
+     */
+    public User getUser() {
+        return this.user;
     }
 
     /**
@@ -103,14 +123,5 @@ public class MyUserDetails implements UserDetails {
     @Override
     public boolean isEnabled() {
         return true;
-    }
-
-    /**
-     * Returns the ID of the user.
-     *
-     * @return the user ID
-     */
-    public Long getId() {
-        return user.getId();
     }
 }

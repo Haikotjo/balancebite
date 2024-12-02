@@ -2,7 +2,6 @@ package balancebite.security;
 
 import balancebite.model.user.User;
 import balancebite.repository.UserRepository;
-import balancebite.security.JwtService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -34,8 +33,8 @@ public class LoginService {
      * Injects the necessary dependencies: AuthenticationManager, JwtService, and UserRepository.
      *
      * @param authenticationManager The AuthenticationManager to handle user authentication.
-     * @param jwtService The JwtService to generate JWT tokens.
-     * @param userRepository The UserRepository to check if a user exists in the database.
+     * @param jwtService            The JwtService to generate JWT tokens.
+     * @param userRepository        The UserRepository to check if a user exists in the database.
      */
     public LoginService(AuthenticationManager authenticationManager, JwtService jwtService, UserRepository userRepository) {
         this.authenticationManager = authenticationManager;
@@ -45,36 +44,40 @@ public class LoginService {
 
     /**
      * Attempts to authenticate a user by their email and password and generates JWT tokens upon successful authentication.
-     * If the user is not found or authentication fails (wrong password), it returns null.
+     * If the user is not found or authentication fails (wrong password), it throws an exception.
      *
-     * @param email The email of the user.
+     * @param email    The email of the user.
      * @param password The password of the user.
-     * @return A map containing the generated access and refresh tokens, or null if authentication fails.
+     * @return A map containing the generated access and refresh tokens.
      */
     public Map<String, String> login(String email, String password) {
         log.info("Attempting login for email: {}", email);
 
-        // Controleer of het e-mailadres bestaat
+        // Check if the email exists
         Optional<User> userOptional = userRepository.findByEmail(email);
         if (userOptional.isEmpty()) {
             log.warn("Login failed for email '{}': Email not found", email);
             throw new RuntimeException("Email not found");
         }
 
-        // Authenticatie met wachtwoordcontrole
+        User user = userOptional.get();
+
+        // Authenticate using email and password
         try {
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(email, password)
             );
 
-            // JWT-tokens genereren
-            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-            String accessToken = jwtService.generateAccessToken(userDetails);
-            String refreshToken = jwtService.generateRefreshToken(userDetails);
+            log.info("Authentication successful for email: {}", email);
 
-            log.info("Login successful for email: {}", email);
+            // Generate JWT tokens using userId
+            Long userId = user.getId();
+            String accessToken = jwtService.generateAccessToken(userId);
+            String refreshToken = jwtService.generateRefreshToken(userId);
 
-            // Tokens teruggeven
+            log.info("JWT tokens generated successfully for userId: {}", userId);
+
+            // Return tokens
             Map<String, String> tokens = new HashMap<>();
             tokens.put("accessToken", accessToken);
             tokens.put("refreshToken", refreshToken);
