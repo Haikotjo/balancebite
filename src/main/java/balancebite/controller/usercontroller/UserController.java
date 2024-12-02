@@ -88,18 +88,28 @@ public class UserController {
     }
 
     /**
-     * Endpoint to update the detailed information of an existing user.
+     * Endpoint to update the detailed information of the currently logged-in user.
      *
-     * @param id                  The ID of the user to update.
+     * @param authorizationHeader The Authorization header containing the JWT token.
      * @param userDetailsInputDTO The input data for updating the user's detailed information.
      * @return The updated UserDTO with 200 status code, or a 404 status code if the user is not found.
      */
-    @PutMapping("/{id}/details")
-    public ResponseEntity<?> updateUserDetails(@PathVariable Long id, @Valid @RequestBody UserDetailsInputDTO userDetailsInputDTO) {
-        log.info("Updating details for user with ID: {}", id);
+    @PreAuthorize("isAuthenticated()")
+    @PutMapping("/details")
+    public ResponseEntity<?> updateOwnDetails(
+            @RequestHeader("Authorization") String authorizationHeader,
+            @Valid @RequestBody UserDetailsInputDTO userDetailsInputDTO) {
+        log.info("Updating details for the currently logged-in user.");
+
         try {
-            UserDTO updatedUser = userService.updateUserDetails(id, userDetailsInputDTO);
-            log.info("Successfully updated user details for ID: {}", id);
+            // Extract user ID from the token
+            String token = authorizationHeader.substring(7); // Remove "Bearer " prefix
+            Long userId = jwtService.extractUserId(token);
+
+            // Call the service method
+            UserDTO updatedUser = userService.updateUserDetails(userId, userDetailsInputDTO);
+
+            log.info("Successfully updated detailed info for logged-in user with ID: {}", userId);
             return ResponseEntity.ok(updatedUser);
         } catch (UserNotFoundException e) {
             log.warn("User not found during detail update: {}", e.getMessage());

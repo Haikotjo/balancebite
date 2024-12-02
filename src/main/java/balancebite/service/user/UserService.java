@@ -99,16 +99,16 @@ public class UserService implements IUserService {
 
 
     /**
-     * Updates detailed information of an existing user.
+     * Updates detailed information of the currently logged-in user.
      *
-     * @param id                  The ID of the user to update.
+     * @param id                  The ID of the user to update (from JWT token).
      * @param userDetailsInputDTO The input DTO containing detailed user information.
      * @return The updated UserDTO.
      * @throws UserNotFoundException If the user with the specified ID does not exist.
      */
     @Override
     public UserDTO updateUserDetails(Long id, UserDetailsInputDTO userDetailsInputDTO) {
-        log.info("Updating details for user with ID: {}", id);
+        log.info("Updating details for logged-in user with ID: {}", id);
 
         // Fetch the user or throw exception if not found
         User existingUser = userRepository.findById(id)
@@ -125,6 +125,7 @@ public class UserService implements IUserService {
         recommendedDailyIntakeService.getOrCreateDailyIntakeForUser(id);
         return userMapper.toDTO(updatedUser);
     }
+
 
     /**
      * Retrieves a user by their ID.
