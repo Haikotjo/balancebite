@@ -8,10 +8,10 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -70,9 +70,13 @@ public class LoginService {
 
             log.info("Authentication successful for email: {}", email);
 
-            // Generate JWT tokens using userId
+            // Extract roles from the authenticated user
+            MyUserDetails userDetails = new MyUserDetails(user);
+            List<String> roles = userDetails.getRoles();
+
+            // Generate JWT tokens using userId and roles
             Long userId = user.getId();
-            String accessToken = jwtService.generateAccessToken(userId);
+            String accessToken = jwtService.generateAccessToken(userId, roles);
             String refreshToken = jwtService.generateRefreshToken(userId);
 
             log.info("JWT tokens generated successfully for userId: {}", userId);

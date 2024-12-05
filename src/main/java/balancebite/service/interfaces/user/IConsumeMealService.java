@@ -1,4 +1,4 @@
-package balancebite.service.interfaces;
+package balancebite.service.interfaces.user;
 
 import balancebite.errorHandling.DailyIntakeNotFoundException;
 import balancebite.errorHandling.DailyIntakeUpdateException;

@@ -6,7 +6,7 @@ import balancebite.model.Meal;
 import balancebite.model.MealIngredient;
 import balancebite.repository.MealIngredientRepository;
 import balancebite.repository.MealRepository;
-import balancebite.service.interfaces.IMealIngredientService;
+import balancebite.service.interfaces.meal.IMealIngredientService;
 import org.springframework.stereotype.Service;
 
 /**

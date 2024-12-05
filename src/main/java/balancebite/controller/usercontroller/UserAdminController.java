@@ -98,7 +98,7 @@ public class UserAdminController {
      * @param userRegistrationInputDTO The input DTO containing the user ID to delete.
      * @return A 204 No Content status code if successful, or a 404 status code with an error message if the user is not found.
      */
-    @DeleteMapping
+    @DeleteMapping("/user")
     public ResponseEntity<?> deleteUser(@RequestBody UserRegistrationInputDTO userRegistrationInputDTO) {
         Long id = userRegistrationInputDTO.getId();
         log.info("Deleting user with ID: {}", id);

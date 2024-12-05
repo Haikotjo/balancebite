@@ -46,6 +46,20 @@ public class MyUserDetails implements UserDetails {
     }
 
     /**
+     * Returns the roles of the user as plain strings.
+     * This is useful for adding roles to the JWT token.
+     *
+     * @return a list of role names
+     */
+    public List<String> getRoles() {
+        List<String> roles = new ArrayList<>();
+        for (Role role : user.getRoles()) {
+            roles.add(role.getRoleName()); // No "ROLE_" prefix for JWT
+        }
+        return roles;
+    }
+
+    /**
      * Returns the password used to authenticate the user.
      *
      * @return the password

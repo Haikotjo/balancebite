@@ -84,12 +84,35 @@ public class SecurityConfig {
 
                         // user entity endpoints
                         .requestMatchers(HttpMethod.GET, "/users/**").authenticated()
+
+                        .requestMatchers(HttpMethod.POST, "/users/create-meal").authenticated()
+                        .requestMatchers(HttpMethod.PATCH, "/users/update-meal/{mealId}").authenticated()
+                        .requestMatchers(HttpMethod.PATCH, "/users/add-meal/{mealId}").authenticated()
+
+                        .requestMatchers(HttpMethod.GET, "/users/meals").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/users/created-meals").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/users/meal/{mealId}").authenticated()
+
+                        .requestMatchers(HttpMethod.DELETE, "/users/meal/{mealId}").authenticated()
+
+                        .requestMatchers(HttpMethod.POST, "/users/consume-meal/{mealId}").authenticated()
+
                         .requestMatchers(HttpMethod.PATCH, "/users/**").authenticated()
                         .requestMatchers(HttpMethod.PUT, "/users/**").authenticated()
                         .requestMatchers(HttpMethod.GET, "/admins/**").hasRole("ADMIN")
 
                         // meal entity endpoints
                         .requestMatchers(HttpMethod.GET, "/meals").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/meals-admin/all").hasAnyRole("ADMIN", "CHEF")
+                        .requestMatchers(HttpMethod.GET, "/meals-admin/meal/{id}").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/meals/{id}").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/meals/nutrients/{id}").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/meals/nutrients-per-food-item/{id}").permitAll()
+
+                        .requestMatchers(HttpMethod.POST, "/meals-admin/create-meal").hasAnyRole("ADMIN", "CHEF")
+                        .requestMatchers(HttpMethod.PATCH, "/meals-admin/update-meal").hasAnyRole("ADMIN", "CHEF")
+                        .requestMatchers(HttpMethod.PATCH, "/meals-admin/add-meal/{mealId}").hasAnyRole("ADMIN", "CHEF")
+                        .requestMatchers(HttpMethod.DELETE, "/meals-admin/delete-meal/").hasAnyRole("ADMIN", "CHEF")
 
                         .anyRequest().authenticated()
                 )

@@ -1,9 +1,7 @@
-package balancebite.service.interfaces;
+package balancebite.service.interfaces.user;
 
 import balancebite.dto.user.UserRegistrationInputDTO;
-import balancebite.dto.user.UserDetailsInputDTO;
 import balancebite.dto.user.UserDTO;
-import balancebite.errorHandling.EntityAlreadyExistsException;
 import balancebite.errorHandling.UserNotFoundException;
 
 import java.util.List;

@@ -9,8 +9,10 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import java.security.Key;
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
@@ -25,6 +27,11 @@ public class JwtService {
 
     private final static long ACCESS_TOKEN_VALIDITY = 1000 * 60 * 60; // 1 hour
     private final static long REFRESH_TOKEN_VALIDITY = 1000L * 60 * 60 * 24 * 30; // 30 days
+
+    private final TokenBlacklistService tokenBlacklistService;
+    public JwtService(TokenBlacklistService tokenBlacklistService) {
+        this.tokenBlacklistService = tokenBlacklistService;
+    }
 
     /**
      * Retrieves the signing key used to sign JWT tokens.
@@ -49,6 +56,17 @@ public class JwtService {
         } catch (Exception e) {
             throw new IllegalArgumentException("Invalid or malformed token provided.", e);
         }
+    }
+
+    /**
+     * Extracts roles from the JWT token.
+     *
+     * @param token the JWT token
+     * @return a list of roles extracted from the token
+     */
+    public List<String> extractRoles(String token) {
+        Claims claims = extractAllClaims(token);
+        return claims.get("roles", List.class);
     }
 
     /**
@@ -99,14 +117,16 @@ public class JwtService {
     }
 
     /**
-     * Generates an access token for the given user ID.
+     * Generates an access token for the given user ID and roles.
      *
      * @param userId the ID of the user
+     * @param roles the roles of the user
      * @return the generated access token
      */
-    public String generateAccessToken(Long userId) {
+    public String generateAccessToken(Long userId, List<String> roles) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("type", "access");
+        claims.put("roles", roles); // Add roles to the token
         return createToken(claims, String.valueOf(userId), ACCESS_TOKEN_VALIDITY);
     }
 
@@ -168,4 +188,25 @@ public class JwtService {
         final Claims claims = extractAllClaims(token);
         return "refresh".equals(claims.get("type", String.class));
     }
+
+    /**
+     * Blacklists a token by adding it to the database with an expiry time.
+     *
+     * @param token the token to blacklist.
+     */
+    public void blacklistToken(String token) {
+        LocalDateTime expiry = extractExpiration(token).toInstant().atZone(java.time.ZoneId.systemDefault()).toLocalDateTime();
+        tokenBlacklistService.blacklistToken(token, expiry); // Delegate to TokenBlacklistService
+    }
+
+    /**
+     * Checks if a token is blacklisted.
+     *
+     * @param token the token to check.
+     * @return true if the token is blacklisted, false otherwise.
+     */
+    public boolean isTokenBlacklisted(String token) {
+        return tokenBlacklistService.isTokenBlacklisted(token);
+    }
+
 }

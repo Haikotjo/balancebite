@@ -1,4 +1,4 @@
-package balancebite.service.interfaces;
+package balancebite.service.interfaces.user;
 
 import balancebite.dto.meal.MealDTO;
 import balancebite.dto.meal.MealInputDTO;
@@ -51,6 +51,17 @@ public interface IUserMealService {
      * @throws MealNotFoundException If the meal with the specified ID is not found.
      */
     UserDTO addMealToUser(Long userId, Long mealId);
+
+    /**
+     * Retrieves a Meal by its ID, only if it belongs to the authenticated user.
+     *
+     * @param id     The ID of the Meal.
+     * @param userId The ID of the authenticated user.
+     * @return The MealDTO.
+     * @throws EntityNotFoundException If the meal with the given ID is not found,
+     *                                 or if the meal does not belong to the user.
+     */
+    MealDTO getUserMealById(Long id, Long userId) throws EntityNotFoundException;
 
     /**
      * Removes a meal from the user's list of meals.

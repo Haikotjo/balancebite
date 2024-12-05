@@ -2,7 +2,6 @@ package balancebite.service.user;
 
 import balancebite.dto.user.UserDTO;
 import balancebite.dto.user.UserRegistrationInputDTO;
-import balancebite.errorHandling.EntityAlreadyExistsException;
 import balancebite.errorHandling.UserNotFoundException;
 import balancebite.mapper.UserMapper;
 import balancebite.model.Meal;
@@ -13,7 +12,7 @@ import balancebite.repository.MealRepository;
 import balancebite.repository.RecommendedDailyIntakeRepository;
 import balancebite.repository.UserRepository;
 import balancebite.service.RecommendedDailyIntakeService;
-import balancebite.service.interfaces.IUserAdminService;
+import balancebite.service.interfaces.user.IUserAdminService;
 import balancebite.utils.UserUpdateHelper;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;

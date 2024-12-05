@@ -1,36 +1,27 @@
 package balancebite.service.user;
 
 import balancebite.dto.user.UserRegistrationInputDTO;
-import balancebite.dto.user.UserLoginInputDTO;
 import balancebite.dto.user.UserDTO;
 import balancebite.dto.user.UserDetailsInputDTO;
-import balancebite.dto.user.UserRegistrationInputDTO;
-import balancebite.errorHandling.EntityAlreadyExistsException;
 import balancebite.errorHandling.UserNotFoundException;
 import balancebite.mapper.UserMapper;
 import balancebite.model.Meal;
-import balancebite.model.user.Role;
 import balancebite.model.user.User;
-import balancebite.model.user.UserRole;
 import balancebite.repository.MealRepository;
 import balancebite.repository.RecommendedDailyIntakeRepository;
 import balancebite.repository.UserRepository;
 import balancebite.service.RecommendedDailyIntakeService;
-import balancebite.service.interfaces.IUserService;
+import balancebite.service.interfaces.user.IUserService;
 import balancebite.utils.UserUpdateHelper;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * Service class responsible for managing users.

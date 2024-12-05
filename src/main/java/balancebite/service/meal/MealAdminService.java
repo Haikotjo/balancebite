@@ -1,21 +1,23 @@
-package balancebite.service;
+package balancebite.service.meal;
 
 import balancebite.dto.meal.MealDTO;
 import balancebite.dto.meal.MealInputDTO;
-import balancebite.dto.NutrientInfoDTO;
 import balancebite.dto.mealingredient.MealIngredientInputDTO;
+import balancebite.dto.user.UserDTO;
 import balancebite.errorHandling.DuplicateMealException;
 import balancebite.errorHandling.InvalidFoodItemException;
+import balancebite.errorHandling.MealNotFoundException;
+import balancebite.errorHandling.UserNotFoundException;
 import balancebite.mapper.MealIngredientMapper;
 import balancebite.mapper.MealMapper;
+import balancebite.mapper.UserMapper;
 import balancebite.model.Meal;
 import balancebite.model.MealIngredient;
 import balancebite.model.user.User;
 import balancebite.repository.FoodItemRepository;
 import balancebite.repository.MealRepository;
 import balancebite.repository.UserRepository;
-import balancebite.service.interfaces.IMealService;
-import balancebite.utils.NutrientCalculatorUtil;
+import balancebite.service.interfaces.meal.IMealAdminService;
 import balancebite.utils.CheckForDuplicateTemplateMealUtil;
 import jakarta.persistence.EntityNotFoundException;
 import org.slf4j.Logger;
@@ -23,15 +25,15 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.*;
+import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * Service class for managing Meal entities.
+ * Service class for managing Meal entities for ADMIN Users.
  * Handles the creation, retrieval, updating, and processing of Meal entities and their related data.
  */
 @Service
-public class MealService implements IMealService {
+public class MealAdminService implements IMealAdminService {
 
     private static final Logger log = LoggerFactory.getLogger(MealService.class);
 
@@ -39,42 +41,46 @@ public class MealService implements IMealService {
     private final FoodItemRepository foodItemRepository;
     private final UserRepository userRepository;
     private final MealMapper mealMapper;
+    private final UserMapper userMapper;
     private final MealIngredientMapper mealIngredientMapper;
     private final CheckForDuplicateTemplateMealUtil checkForDuplicateTemplateMeal;
 
     /**
-     * Constructor for MealService, using constructor injection.
+     * Constructor for MealAdminService, using constructor injection.
      *
      * @param mealRepository     the repository for managing Meal entities.
      * @param foodItemRepository the repository for managing FoodItem entities.
      * @param userRepository     the repository for managing User entities.
      * @param mealMapper         the mapper for converting Meal entities to DTOs.
      */
-    public MealService(MealRepository mealRepository, FoodItemRepository foodItemRepository, UserRepository userRepository, MealMapper mealMapper, MealIngredientMapper mealIngredientMapper, CheckForDuplicateTemplateMealUtil checkForDuplicateTemplateMeal) {
+    public MealAdminService(MealRepository mealRepository, FoodItemRepository foodItemRepository, UserRepository userRepository, MealMapper mealMapper, UserMapper userMapper, MealIngredientMapper mealIngredientMapper, CheckForDuplicateTemplateMealUtil checkForDuplicateTemplateMeal) {
         this.mealRepository = mealRepository;
         this.foodItemRepository = foodItemRepository;
         this.userRepository = userRepository;
         this.mealMapper = mealMapper;
+        this.userMapper = userMapper;
         this.mealIngredientMapper = mealIngredientMapper;
         this.checkForDuplicateTemplateMeal = checkForDuplicateTemplateMeal;
     }
 
     /**
-     * Creates a new Meal entity based on the provided MealInputDTO.
-     * This method converts the input DTO to a Meal entity, checks the validity of each FoodItem in the meal,
-     * persists the entity, and then converts the result back to a DTO.
+     * Creates a new Meal entity based on the provided MealInputDTO and associates it with a specific User if provided.
+     * If no userId is provided, the meal is assigned to the authenticated User creating it (admin or chef).
      *
      * @param mealInputDTO The DTO containing the input data for creating a Meal.
+     * @param authenticatedUserId The ID of the authenticated user extracted from the token.
+     * @param userId       Optional: The ID of the user to associate the meal with.
      * @return The created MealDTO with the persisted meal information.
      * @throws InvalidFoodItemException if any food item in the input is invalid.
-     * @throws DuplicateMealException if a template meal with the same ingredients already exists.
+     * @throws DuplicateMealException   if a template meal with the same ingredients already exists.
+     * @throws EntityNotFoundException  if the user with the provided ID is not found.
      */
     @Override
     @Transactional
-    public MealDTO createMealNoUser(MealInputDTO mealInputDTO) {
+    public MealDTO createMealForAdmin(MealInputDTO mealInputDTO, Long authenticatedUserId, Long userId) {
         log.info("Attempting to create a new meal with name: {}", mealInputDTO.getName());
 
-        // Controleer of zowel image als imageUrl is ingevuld
+        // Validate that both image and imageUrl are not provided simultaneously
         if (mealInputDTO.getImage() != null && mealInputDTO.getImageUrl() != null) {
             log.error("Both image and imageUrl provided. Only one of them is allowed.");
             throw new IllegalArgumentException("You can only provide either an image or an imageUrl, not both.");
@@ -111,14 +117,27 @@ public class MealService implements IMealService {
         // Use CheckForDuplicateTemplateMealUtil to check for duplicate template meals
         checkForDuplicateTemplateMeal.checkForDuplicateTemplateMeal(foodItemIds, null);
 
-        // Prepare the meal for saving and log the action
-        log.debug("Meal prepared for saving: {}", meal);
+        // Determine which user to associate the meal with
+        Long targetUserId = (userId != null) ? userId : authenticatedUserId;
+        log.info("Associating meal with user ID: {}", targetUserId);
+
+        User user = userRepository.findById(targetUserId)
+                .orElseThrow(() -> new EntityNotFoundException("User not found with ID: " + targetUserId));
+
+        // Associate meal with the determined user
+        meal.setCreatedBy(user);
+        user.getMeals().add(meal);
+
+        // Save user and meal to persist the relationship
+        userRepository.save(user);
         Meal savedMeal = mealRepository.save(meal);
-        log.info("Successfully created a new meal with ID: {}", savedMeal.getId());
+
+        log.info("Successfully created a new meal with ID: {} for user ID: {}", savedMeal.getId(), targetUserId);
 
         // Convert saved Meal entity to DTO for the response
         return mealMapper.toDTO(savedMeal);
     }
+
 
     /**
      * Updates an existing Meal entity with new information.
@@ -172,39 +191,90 @@ public class MealService implements IMealService {
     }
 
     /**
-     * Retrieves all template Meals from the repository (isTemplate = true).
+     * Adds a copy of an existing meal to a user's list of meals.
+     * This allows users to customize meals in their own lists without affecting other users' copies of the same meal.
+     * ADMIN or CHEF roles can assign meals to other users.
      *
-     * @return a list of MealDTOs representing all template meals, or an empty list if no templates are found.
+     * @param userId The ID of the user to whom the meal will be assigned.
+     * @param mealId The ID of the meal to be copied and added to the user.
+     * @return UserDTO The updated user information with the added meal.
+     * @throws UserNotFoundException  If the user is not found.
+     * @throws MealNotFoundException  If the meal is not found.
+     * @throws DuplicateMealException If an identical meal already exists in the user's list.
+     */
+    @Override
+    @Transactional
+    public UserDTO addMealToUser(Long userId, Long mealId) {
+        log.info("Adding meal with ID: {} to user with ID: {}", mealId, userId);
+
+        // Retrieve user and meal
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("User not found with ID: " + userId));
+        Meal originalMeal = mealRepository.findById(mealId)
+                .orElseThrow(() -> new MealNotFoundException("Meal not found with ID: " + mealId));
+
+        // Check for duplicates
+        List<Meal> duplicateMeals = mealRepository.findUserMealsWithExactIngredients(mealId, userId);
+        if (!duplicateMeals.isEmpty()) {
+            log.warn("Duplicate meal detected for user ID: {} with meal ID: {}", userId, mealId);
+            throw new DuplicateMealException("Meal already exists in user's list.");
+        }
+
+        // Create a copy
+        Meal mealCopy = balancebite.util.MealCopyUtil.createMealCopy(originalMeal, user);
+        mealRepository.save(mealCopy);
+
+        // Update user and save
+        user.getMeals().add(mealCopy);
+        userRepository.save(user);
+        log.info("Successfully added meal with ID: {} to user ID: {}", mealId, userId);
+
+        return userMapper.toDTO(user);
+    }
+
+    /**
+     * Retrieves all Meals from the repository, regardless of their isTemplate value.
+     *
+     * @return A list of MealDTOs representing all meals, or an empty list if no meals are found.
      */
     @Override
     @Transactional(readOnly = true)
     public List<MealDTO> getAllMeals() {
-        log.info("Retrieving all template meals from the system.");
-        List<Meal> templateMeals = mealRepository.findAllTemplateMeals(); // Only fetch meals with isTemplate = true
-        if (templateMeals.isEmpty()) {
-            log.info("No template meals found in the system.");
+        log.info("Retrieving all meals from the system, regardless of template status.");
+        List<Meal> allMeals = mealRepository.findAll(); // Fetch all meals from the repository
+        if (allMeals.isEmpty()) {
+            log.info("No meals found in the system.");
         } else {
-            log.info("Found {} template meals in the system.", templateMeals.size());
+            log.info("Found {} meals in the system.", allMeals.size());
         }
-        return templateMeals.stream().map(mealMapper::toDTO).toList();
+        return allMeals.stream().map(mealMapper::toDTO).toList();
     }
 
     /**
-     * Retrieves a Meal by its ID.
+     * Retrieves a Meal entity by its ID.
+     * This method is intended for Admin users and allows retrieval of any meal,
+     * regardless of ownership or template status.
      *
-     * @param id the ID of the Meal.
-     * @return the MealDTO.
-     * @throws EntityNotFoundException if the meal with the given ID is not found.
+     * @param id The ID of the Meal to retrieve.
+     * @return The MealDTO representing the meal.
+     * @throws EntityNotFoundException If the meal with the given ID does not exist.
      */
     @Override
     @Transactional(readOnly = true)
     public MealDTO getMealById(Long id) {
-        log.info("Retrieving meal with ID: {}", id);
+        log.info("Admin attempting to retrieve meal with ID: {}", id);
+
+        // Fetch the meal from the repository
         Meal meal = mealRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Meal not found with ID: " + id));
-        log.info("Successfully retrieved meal with ID: {}", id);
-        return mealMapper.toDTO(meal);
+
+        // Map the Meal entity to a MealDTO
+        MealDTO mealDTO = mealMapper.toDTO(meal);
+
+        log.info("Admin successfully retrieved meal with ID: {}", id);
+        return mealDTO;
     }
+
 
     /**
      * Deletes a specific meal from the repository.
@@ -234,53 +304,5 @@ public class MealService implements IMealService {
         // Delete the meal after cleaning up the relationships
         mealRepository.delete(meal);
         log.info("Successfully deleted meal with ID: {}", mealId);
-    }
-
-
-    /**
-     * Retrieves the total nutrients for a given Meal by its ID.
-     *
-     * @param mealId the ID of the Meal.
-     * @return a map of nutrient names and their corresponding total values for the meal.
-     * @throws EntityNotFoundException if the meal with the given ID is not found.
-     */
-    @Override
-    public Map<String, NutrientInfoDTO> calculateNutrients(Long mealId) {
-        log.info("Starting total nutrient calculation for meal with ID: {}", mealId);
-
-        Meal meal = mealRepository.findById(mealId)
-                .orElseThrow(() -> {
-                    log.warn("Meal not found with ID: {}", mealId);
-                    return new EntityNotFoundException("Meal not found with ID: " + mealId);
-                });
-
-        log.debug("Meal with ID {} contains {} ingredients.", mealId, meal.getMealIngredients().size());
-        Map<String, NutrientInfoDTO> totalNutrients = NutrientCalculatorUtil.calculateTotalNutrients(meal.getMealIngredients());
-        log.info("Total nutrient calculation completed for meal ID: {}. Total nutrients: {}", mealId, totalNutrients);
-        return totalNutrients;
-    }
-
-    /**
-     * Retrieves the nutrients per food item for a given Meal by its ID.
-     *
-     * @param mealId the ID of the Meal.
-     * @return a map of food item IDs to nutrient maps, where each map contains nutrient names and their values.
-     * @throws EntityNotFoundException if the meal with the given ID is not found.
-     */
-    @Override
-    public Map<Long, Map<String, NutrientInfoDTO>> calculateNutrientsPerFoodItem(Long mealId) {
-        log.info("Starting nutrient calculation per food item for meal with ID: {}", mealId);
-
-        Meal meal = mealRepository.findById(mealId)
-                .orElseThrow(() -> {
-                    log.warn("Meal not found with ID: {}", mealId);
-                    return new EntityNotFoundException("Meal not found with ID: " + mealId);
-                });
-
-        log.debug("Meal with ID {} contains {} ingredients.", mealId, meal.getMealIngredients().size());
-        Map<Long, Map<String, NutrientInfoDTO>> nutrientsPerFoodItem =
-                NutrientCalculatorUtil.calculateNutrientsPerFoodItem(meal.getMealIngredients());
-        log.info("Nutrient calculation per food item completed for meal ID: {}.", mealId);
-        return nutrientsPerFoodItem;
     }
 }
