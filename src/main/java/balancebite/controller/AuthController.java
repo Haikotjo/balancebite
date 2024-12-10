@@ -124,13 +124,14 @@ public class AuthController {
 
         String refreshToken = request.get("refreshToken");
         if (refreshToken == null || !jwtService.validateRefreshToken(refreshToken)) {
-            log.warn("Invalid or expired refresh token.");
+            log.warn("Invalid or expired refresh token: {}",
+                    refreshToken != null ? refreshToken.substring(0, 5) + "..." : "null");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Invalid or expired refresh token"));
         }
 
         try {
             Long userId = jwtService.extractUserId(refreshToken);
-            log.info("Extracted userId from refresh token.");
+            log.info("Extracted userId {} from refresh token.", userId);
 
             User user = userRepository.findById(userId).orElseThrow(() -> {
                 log.warn("User with ID {} not found.", userId);
@@ -141,7 +142,8 @@ public class AuthController {
             List<String> roles = userDetails.getRoles();
             String newAccessToken = jwtService.generateAccessToken(userDetails.getId(), roles);
 
-            log.info("Access token refreshed successfully.");
+            log.info("Access token refreshed successfully for userId {}. New token starts with: {}",
+                    userId, newAccessToken.substring(0, 5) + "...");
 
             return ResponseEntity.ok(Map.of(
                     "message", "Access token refreshed successfully",
@@ -152,6 +154,7 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "Could not refresh access token"));
         }
     }
+
 
 
     /**
