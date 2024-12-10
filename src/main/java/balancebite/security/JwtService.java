@@ -23,7 +23,7 @@ import java.util.function.Function;
 @Service
 public class JwtService {
 
-    private final static String SECRET_KEY = "yabbadabbadooyabbadabbadooyabbadabbadooyabbadabbadoo";
+    private final static String SECRET_KEY = "7uPe3TdZfsEFcA4QAb7w1wKWinYC4cevX8lWTKxj2t2kvoEyVHJatm6RFWKwe9k7DTnmLFI2HzuEoz27AGE2KfJYDTPYJoqX683XDT7aFU5DL7FhnTzyrW73ZVFvf54K";
 
     private final static long ACCESS_TOKEN_VALIDITY = 1000 * 60 * 60; // 1 hour
     private final static long REFRESH_TOKEN_VALIDITY = 1000L * 60 * 60 * 24 * 30; // 30 days

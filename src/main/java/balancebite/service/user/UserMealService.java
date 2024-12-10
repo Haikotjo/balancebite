@@ -244,12 +244,17 @@ public class UserMealService implements IUserMealService {
     public List<MealDTO> getAllMealsForUser(Long userId) {
         log.info("Retrieving all meals for user ID: {}", userId);
 
-        // Find the user by ID and fetch their meals
+        // Fetch the user and their meals without filtering by isTemplate
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("User not found with ID: " + userId));
 
-        // Map the user's meals to MealDTOs
-        return user.getMeals().stream().map(mealMapper::toDTO).toList();
+        // Map meals to DTOs and log the result
+        List<MealDTO> meals = user.getMeals().stream()
+                .map(mealMapper::toDTO) // Map without checking isTemplate
+                .toList();
+
+        log.info("Retrieved {} meals for user ID: {}", meals.size(), userId);
+        return meals;
     }
 
     /**

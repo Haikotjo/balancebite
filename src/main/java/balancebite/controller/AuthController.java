@@ -15,6 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -117,43 +118,41 @@ public class AuthController {
         }
     }
 
-    /**
-     * Refreshes the access token using a valid refresh token.
-     *
-     * @param refreshToken The refresh token provided by the client.
-     * @return A ResponseEntity containing the new access token or an error message.
-     */
     @PostMapping("/refresh")
-    public ResponseEntity<Object> refreshAccessToken(@RequestParam String refreshToken) {
+    public ResponseEntity<Object> refreshAccessToken(@RequestBody Map<String, String> request) {
         log.info("Refreshing access token using provided refresh token.");
 
-        if (!jwtService.validateRefreshToken(refreshToken)) {
+        String refreshToken = request.get("refreshToken");
+        if (refreshToken == null || !jwtService.validateRefreshToken(refreshToken)) {
             log.warn("Invalid or expired refresh token.");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Invalid or expired refresh token"));
         }
 
-        Long userId = jwtService.extractUserId(refreshToken);
-        log.info("Extracted userId {} from refresh token.", userId);
+        try {
+            Long userId = jwtService.extractUserId(refreshToken);
+            log.info("Extracted userId from refresh token.");
 
-        Optional<User> optionalUser = userRepository.findById(userId);
-        if (optionalUser.isEmpty()) {
-            log.warn("User with ID {} not found.", userId);
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "User not found."));
+            User user = userRepository.findById(userId).orElseThrow(() -> {
+                log.warn("User with ID {} not found.", userId);
+                return new UsernameNotFoundException("User not found");
+            });
+
+            MyUserDetails userDetails = new MyUserDetails(user);
+            List<String> roles = userDetails.getRoles();
+            String newAccessToken = jwtService.generateAccessToken(userDetails.getId(), roles);
+
+            log.info("Access token refreshed successfully.");
+
+            return ResponseEntity.ok(Map.of(
+                    "message", "Access token refreshed successfully",
+                    "accessToken", newAccessToken
+            ));
+        } catch (Exception e) {
+            log.error("Error during token refresh:", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "Could not refresh access token"));
         }
-
-        User user = optionalUser.get();
-        MyUserDetails userDetails = new MyUserDetails(user);
-
-        List<String> roles = userDetails.getRoles(); // Extract roles for token
-        String newAccessToken = jwtService.generateAccessToken(userDetails.getId(), roles);
-
-        log.info("Access token refreshed successfully for userId: {}", userId);
-
-        return ResponseEntity.ok(Map.of(
-                "message", "Access token refreshed successfully",
-                "accessToken", newAccessToken
-        ));
     }
+
 
     /**
      * Handles user logout requests.
