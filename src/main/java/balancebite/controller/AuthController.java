@@ -155,8 +155,6 @@ public class AuthController {
         }
     }
 
-
-
     /**
      * Handles user logout requests.
      * Invalidates the access token by adding it to the blacklist with an expiry time.
