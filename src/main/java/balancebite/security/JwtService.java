@@ -5,7 +5,6 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import java.security.Key;
@@ -25,7 +24,7 @@ public class JwtService {
 
     private final static String SECRET_KEY = "7uPe3TdZfsEFcA4QAb7w1wKWinYC4cevX8lWTKxj2t2kvoEyVHJatm6RFWKwe9k7DTnmLFI2HzuEoz27AGE2KfJYDTPYJoqX683XDT7aFU5DL7FhnTzyrW73ZVFvf54K";
 
-    private final static long ACCESS_TOKEN_VALIDITY = 1000 * 60 * 60; // 1 hour
+    private final static long ACCESS_TOKEN_VALIDITY = 1000 * 60 * 2; // 1 hour
     private final static long REFRESH_TOKEN_VALIDITY = 1000L * 60 * 60 * 24 * 30; // 30 days
 
     private final TokenBlacklistService tokenBlacklistService;
@@ -168,7 +167,7 @@ public class JwtService {
      * @return true if the token is valid, of type access, and not expired
      */
     public Boolean validateAccessToken(String token) {
-        if (isTokenExpired(token)) {
+        if (isTokenExpired(token) || isTokenBlacklisted(token)) {
             return false;
         }
         final Claims claims = extractAllClaims(token);
@@ -182,7 +181,7 @@ public class JwtService {
      * @return true if the token is valid, of type refresh, and not expired
      */
     public Boolean validateRefreshToken(String token) {
-        if (isTokenExpired(token)) {
+        if (isTokenExpired(token) || isTokenBlacklisted(token)) {
             return false;
         }
         final Claims claims = extractAllClaims(token);

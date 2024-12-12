@@ -6,6 +6,7 @@ import balancebite.security.*;
 import balancebite.service.user.RegistrationService;
 import balancebite.model.user.User;
 import balancebite.repository.UserRepository;
+import balancebite.service.user.UserService;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,6 +36,7 @@ public class AuthController {
     private final LoginService loginService;
     private final UserRepository userRepository;
     private final TokenBlacklistService tokenBlacklistService;
+    private final UserService userService;
 
     private static final Logger log = LoggerFactory.getLogger(AuthController.class);
 
@@ -50,41 +52,41 @@ public class AuthController {
      */
     public AuthController(AuthenticationManager authenticationManager, JwtService jwtService,
                           RegistrationService registrationService, LoginService loginService,
-                          UserRepository userRepository, TokenBlacklistService tokenBlacklistService) {
+                          UserRepository userRepository, TokenBlacklistService tokenBlacklistService, UserService userService) {
         this.authenticationManager = authenticationManager;
         this.jwtService = jwtService;
         this.registrationService = registrationService;
         this.loginService = loginService;
         this.userRepository = userRepository;
         this.tokenBlacklistService = tokenBlacklistService;
+        this.userService = userService;
     }
 
     /**
-     * Handles user registration.
-     * Accepts registration details, processes them, and returns a success or failure response.
+     * Registers a new user and provides JWT tokens for immediate login.
      *
      * @param registrationDTO The DTO containing user registration details.
-     * @return A ResponseEntity indicating success or failure.
+     * @return A ResponseEntity containing the access and refresh tokens.
      */
     @PostMapping("/register")
-    public ResponseEntity<Object> registerUser(@Valid @RequestBody UserRegistrationInputDTO registrationDTO) {
-        log.info("Processing user registration for email: {}", registrationDTO.getEmail());
+    public ResponseEntity<Object> registerAndLoginUser(@Valid @RequestBody UserRegistrationInputDTO registrationDTO) {
+        log.info("Processing registration for email: {}", registrationDTO.getEmail());
 
         try {
-            registrationService.registerUser(registrationDTO);
+            Map<String, String> tokens = registrationService.registerUser(registrationDTO);
 
-            Map<String, Object> response = Map.of(
-                    "message", "User registered successfully!",
-                    "email", registrationDTO.getEmail(),
-                    "userName", registrationDTO.getUserName(),
-                    "roles", registrationDTO.getRoles()
-            );
+            log.info("Registration and login successful for email '{}'", registrationDTO.getEmail());
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + tokens.get("accessToken"))
+                    .body(Map.of(
+                            "message", "Registration and login successful",
+                            "accessToken", tokens.get("accessToken"),
+                            "refreshToken", tokens.get("refreshToken")
+                    ));
 
-            log.info("User registered successfully with email: {}", registrationDTO.getEmail());
-            return ResponseEntity.status(HttpStatus.CREATED).body(response);
-        } catch (Exception e) {
-            log.error("Error during registration for email '{}': {}", registrationDTO.getEmail(), e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", e.getMessage()));
+        } catch (RuntimeException e) {
+            log.warn("Registration and login failed for email '{}': {}", registrationDTO.getEmail(), e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
         }
     }
 

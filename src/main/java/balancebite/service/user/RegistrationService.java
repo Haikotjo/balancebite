@@ -7,6 +7,7 @@ import balancebite.model.user.User;
 import balancebite.model.user.UserRole;
 import balancebite.repository.RoleRepository;
 import balancebite.repository.UserRepository;
+import balancebite.security.JwtService;
 import balancebite.security.MyUserDetails;
 import balancebite.service.interfaces.IRegistrationService;
 import org.slf4j.Logger;
@@ -17,8 +18,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Collections;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -32,6 +32,7 @@ public class RegistrationService implements IRegistrationService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JwtService jwtService;
 
     /**
      * Constructor for RegistrationService.
@@ -40,22 +41,25 @@ public class RegistrationService implements IRegistrationService {
      * @param roleRepository  The repository for managing Role entities.
      * @param passwordEncoder The encoder for hashing passwords.
      */
-    public RegistrationService(UserRepository userRepository, RoleRepository roleRepository, PasswordEncoder passwordEncoder) {
+    public RegistrationService(UserRepository userRepository, RoleRepository roleRepository, PasswordEncoder passwordEncoder, JwtService jwtService) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;
+        this.jwtService = jwtService;
     }
 
     /**
-     * Registers a new user using the provided UserRegistrationInputDTO.
+     * Registers a new user and logs them in upon successful registration.
+     * If the email already exists, it throws an EntityAlreadyExistsException.
      *
      * @param registrationDTO The DTO containing user registration details.
+     * @return A map containing access and refresh tokens.
      */
     @Override
-    public void registerUser(UserRegistrationInputDTO registrationDTO) {
+    public Map<String, String> registerUser(UserRegistrationInputDTO registrationDTO) {
         log.info("Attempting to register user with email: {}", registrationDTO.getEmail());
 
-        // Check if the email already exists in the system
+        // Check if the email already exists
         if (userRepository.existsByEmail(registrationDTO.getEmail())) {
             log.warn("Registration failed: Email '{}' already exists.", registrationDTO.getEmail());
             throw new EntityAlreadyExistsException("A user with email " + registrationDTO.getEmail() + " already exists.");
@@ -76,29 +80,33 @@ public class RegistrationService implements IRegistrationService {
 
         // Handle roles: assign roles from DTO or default to USER role
         if (registrationDTO.getRoles() != null && !registrationDTO.getRoles().isEmpty()) {
-            // Convert role names (String) from DTO into Role entities
             Set<Role> roles = registrationDTO.getRoles().stream()
-                    .map(roleName -> new Role(UserRole.valueOf(roleName))) // Convert String to Role
+                    .map(roleName -> new Role(UserRole.valueOf(roleName)))
                     .collect(Collectors.toSet());
             user.setRoles(roles);
         } else {
             user.setRoles(Collections.singleton(new Role(UserRole.USER))); // Default to USER role
         }
 
-        // Process verification token for elevated roles
-        if (registrationDTO.getVerificationToken() != null) {
-            log.info("Processing verification token for user with email: {}", registrationDTO.getEmail());
-            // Add your verification token logic here
-        }
+        // Save the user to the database
+        userRepository.save(user);
 
-        try {
-            // Save the user to the database
-            userRepository.save(user);
-            log.info("Successfully registered user with email: {}", registrationDTO.getEmail());
-        } catch (Exception e) {
-            log.error("Unexpected error during user registration for email '{}': {}", registrationDTO.getEmail(), e.getMessage(), e);
-            throw new RuntimeException("An unexpected error occurred while registering the user. Please try again.");
-        }
+        log.info("User registered successfully with email: {}", registrationDTO.getEmail());
+
+        // Generate JWT tokens (direct login)
+        MyUserDetails userDetails = new MyUserDetails(user);
+        List<String> roles = userDetails.getRoles();
+
+        String accessToken = jwtService.generateAccessToken(user.getId(), roles);
+        String refreshToken = jwtService.generateRefreshToken(user.getId());
+
+        log.info("JWT tokens generated for userId: {}", user.getId());
+
+        // Return tokens
+        Map<String, String> tokens = new HashMap<>();
+        tokens.put("accessToken", accessToken);
+        tokens.put("refreshToken", refreshToken);
+        return tokens;
     }
 
     /**
