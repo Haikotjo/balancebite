@@ -213,4 +213,23 @@ public class FoodItemService implements IFoodItemService {
             throw new EntityNotFoundException("Food item with ID " + id + " not found.");
         }
     }
+
+
+    /**
+     * Retrieves a list of FoodItems whose names start with the given prefix.
+     *
+     * @param prefix The prefix to search for.
+     * @return A list of FoodItemDTOs that match the criteria.
+     */
+    public List<FoodItemDTO> getFoodItemsByNamePrefix(String prefix) {
+        log.info("Searching for food items with names starting with: {}", prefix);
+        List<FoodItem> foodItems = foodItemRepository.findByNameStartingWithIgnoreCase(prefix);
+        if (foodItems.isEmpty()) {
+            log.warn("No food items found with names starting with: {}", prefix);
+            throw new EntityNotFoundException("No food items found with names starting with: " + prefix);
+        }
+        return foodItems.stream()
+                .map(foodItemMapper::toDTO)
+                .collect(Collectors.toList());
+    }
 }

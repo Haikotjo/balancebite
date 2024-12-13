@@ -14,13 +14,13 @@ import java.util.List;
  */
 public interface FoodItemRepository extends JpaRepository<FoodItem, Long> {
 
-//    /**
-//     * Finds a list of FoodItems by name, ignoring case.
-//     *
-//     * @param name The name to search for.
-//     * @return A list of FoodItems that contain the specified name.
-//     */
-//    List<FoodItem> findByNameContainingIgnoreCase(String name);
+    /**
+     * Finds a list of FoodItems by name that starts with the specified prefix, ignoring case.
+     *
+     * @param prefix The prefix to search for.
+     * @return A list of FoodItems whose names start with the specified prefix.
+     */
+    List<FoodItem> findByNameStartingWithIgnoreCase(String prefix);
 
     /**
      * Checks if a FoodItem with the specified name exists.

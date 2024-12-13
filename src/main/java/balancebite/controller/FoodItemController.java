@@ -146,4 +146,25 @@ public class FoodItemController {
                     .body(Map.of("error", "An unexpected error occurred."));
         }
     }
+
+    /**
+     * Endpoint to retrieve FoodItems by a prefix of their name.
+     *
+     * @param prefix The prefix to search for.
+     * @return A ResponseEntity with the list of FoodItemDTOs that match the criteria.
+     */
+    @GetMapping("/search-by-name")
+    public ResponseEntity<?> getFoodItemsByNamePrefix(@RequestParam String prefix) {
+        log.info("Fetching food items with names starting with: {}", prefix);
+        try {
+            List<FoodItemDTO> foodItems = foodItemService.getFoodItemsByNamePrefix(prefix);
+            return ResponseEntity.ok(foodItems);
+        } catch (EntityNotFoundException e) {
+            log.warn("No food items found with names starting with: {}", prefix);
+            return ResponseEntity.status(404).body(e.getMessage());
+        } catch (Exception e) {
+            log.error("Unexpected error while fetching food items with prefix: {}", prefix, e);
+            return ResponseEntity.status(500).body("An unexpected error occurred.");
+        }
+    }
 }

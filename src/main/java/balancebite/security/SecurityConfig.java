@@ -114,6 +114,10 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PATCH, "/meals-admin/add-meal/{mealId}").hasAnyRole("ADMIN", "CHEF")
                         .requestMatchers(HttpMethod.DELETE, "/meals-admin/delete-meal/").hasAnyRole("ADMIN", "CHEF")
 
+                        // foodItem entity endpoints
+                        .requestMatchers(HttpMethod.GET, "/fooditems/search-by-name").permitAll()
+
+
                         .anyRequest().authenticated()
                 )
                 .exceptionHandling(exception -> exception.authenticationEntryPoint(customAuthenticationEntryPoint))
