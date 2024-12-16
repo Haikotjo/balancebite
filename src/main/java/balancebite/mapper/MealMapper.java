@@ -11,6 +11,7 @@ import balancebite.model.Meal;
 import balancebite.model.MealIngredient;
 import balancebite.model.user.User;
 import balancebite.repository.FoodItemRepository;
+import balancebite.service.FileStorageService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -30,10 +31,12 @@ public class MealMapper {
 
     private final FoodItemRepository foodItemRepository;
     private final MealIngredientMapper mealIngredientMapper;
+    private final FileStorageService fileStorageService;
 
-    public MealMapper(FoodItemRepository foodItemRepository, MealIngredientMapper mealIngredientMapper) {
+    public MealMapper(FoodItemRepository foodItemRepository, MealIngredientMapper mealIngredientMapper, FileStorageService fileStorageService) {
         this.foodItemRepository = foodItemRepository;
         this.mealIngredientMapper = mealIngredientMapper;
+        this.fileStorageService = fileStorageService;
     }
 
     /**
@@ -82,8 +85,16 @@ public class MealMapper {
                     Meal meal = new Meal();
                     meal.setName(dto.getName());
                     meal.setMealDescription(dto.getMealDescription());
-                    meal.setImage(dto.getImage()); // Map optional Base64 image
-                    meal.setImageUrl(dto.getImageUrl()); // Map optional image URL
+
+                    // Verwerk Base64 of URL afbeelding
+                    if (dto.getImageFile() != null && !dto.getImageFile().isEmpty()) {
+                        String imageUrl = fileStorageService.saveFile(dto.getImageFile());
+                        meal.setImageUrl(imageUrl);
+                    } else if (dto.getImage() != null) {
+                        meal.setImage(dto.getImage());
+                    } else if (dto.getImageUrl() != null) {
+                        meal.setImageUrl(dto.getImageUrl()); // Zet expliciet de imageUrl
+                    }
 
                     List<MealIngredient> mealIngredients = dto.getMealIngredients().stream()
                             .map(input -> mealIngredientMapper.toEntity(input, meal))

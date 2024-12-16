@@ -52,6 +52,13 @@ spring:
     api:
       key: ${USDA_API_KEY}
 
+      file:
+        # Directory where uploaded files will be stored.
+        # IMPORTANT: Change this path to a suitable directory when deploying to a live server.
+        # Example for production: /var/www/uploads/
+        upload-dir: uploads/
+
+
 food:
   fdcIds:
     - "170513"

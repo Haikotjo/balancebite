@@ -79,6 +79,8 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(authz -> authz
 
+                        .requestMatchers(HttpMethod.GET, "/uploads/**").permitAll()
+
                         // register endpoints
                         .requestMatchers(HttpMethod.POST, "/auth/**").permitAll()
 
@@ -116,6 +118,7 @@ public class SecurityConfig {
 
                         // foodItem entity endpoints
                         .requestMatchers(HttpMethod.GET, "/fooditems/search-by-name").permitAll()
+
 
 
                         .anyRequest().authenticated()

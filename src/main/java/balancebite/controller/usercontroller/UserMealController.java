@@ -7,12 +7,16 @@ import balancebite.errorHandling.*;
 import balancebite.security.JwtService;
 import balancebite.service.user.ConsumeMealService;
 import balancebite.service.user.UserMealService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Map;
@@ -42,47 +46,38 @@ public class UserMealController {
         this.consumeMealService = consumeMealService;
         this.jwtService = jwtService;
     }
-
-    /**
-     * Creates a new Meal entity for the authenticated user based on the provided MealInputDTO.
-     *
-     * @param mealInputDTO The DTO containing the input data for creating a Meal.
-     * @param authorizationHeader The Authorization header containing the JWT token.
-     * @return ResponseEntity containing the created MealDTO with the persisted meal information,
-     *         or an error response with an appropriate status.
-     */
-    @PostMapping("/create-meal")
+    @PostMapping(value = "/create-meal", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> createMealForAuthenticatedUser(
-            @RequestBody MealInputDTO mealInputDTO,
+            @RequestPart("mealInputDTO") String mealInputDTOJson,
+            @RequestPart(value = "imageFile", required = false) MultipartFile imageFile,
             @RequestHeader("Authorization") String authorizationHeader) {
         try {
             log.info("Received request to create a new meal for the authenticated user.");
 
-            // Extract userId from the token
+            // Parse JSON string to MealInputDTO
+            ObjectMapper objectMapper = new ObjectMapper();
+            MealInputDTO mealInputDTO = objectMapper.readValue(mealInputDTOJson, MealInputDTO.class);
+
+            // Attach the file if present
+            if (imageFile != null && !imageFile.isEmpty()) {
+                mealInputDTO.setImageFile(imageFile);
+            }
+
+            // Extract user ID from token
             String token = authorizationHeader.substring(7); // Remove "Bearer " prefix
             Long userId = jwtService.extractUserId(token);
 
-            // Call the service method
+            // Call the service layer
             MealDTO createdMeal = userMealService.createMealForUser(mealInputDTO, userId);
 
             log.info("Successfully created meal for user ID: {}", userId);
             return ResponseEntity.status(HttpStatus.CREATED).body(createdMeal);
-
         } catch (EntityNotFoundException e) {
             log.warn("User not found or invalid: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
-
-        } catch (DuplicateMealException e) {
-            log.warn("Duplicate meal detected: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", e.getMessage()));
-
-        } catch (InvalidFoodItemException e) {
-            log.warn("Invalid food item detected: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
-
         } catch (Exception e) {
             log.error("Unexpected error occurred during meal creation: {}", e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "An unexpected error occurred."));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", e.getMessage()));
         }
     }
 

@@ -6,6 +6,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Size;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -52,6 +53,12 @@ public class MealInputDTO {
     private String imageUrl;
 
     /**
+     * MultipartFile for handling direct file uploads of the meal's image.
+     * This field is optional.
+     */
+    private MultipartFile imageFile;
+
+    /**
      * The user who created this meal (if applicable).
      * This field is managed by the system and should not be set by the client directly.
      */
@@ -71,6 +78,7 @@ public class MealInputDTO {
      * @param mealDescription The description of the meal (optional). Must not exceed 1000 characters.
      * @param image           Base64-encoded image of the meal (optional).
      * @param imageUrl        URL of the image representing the meal (optional).
+     * @param imageFile       MultipartFile for direct file uploads (optional).
      * @param createdBy       The user who created the meal (optional).
      */
     public MealInputDTO(
@@ -81,12 +89,14 @@ public class MealInputDTO {
             @Size(max = 1000, message = "The meal description must not exceed 1000 characters.") String mealDescription,
             @Size(max = 500000, message = "Image size must not exceed 500 KB.") String image,
             @Size(max = 500, message = "Image URL must not exceed 500 characters.") String imageUrl,
+            MultipartFile imageFile,
             @Valid UserDTO createdBy) {
         this.name = name;
         this.mealIngredients = mealIngredients;
         this.mealDescription = mealDescription;
         this.image = image;
         this.imageUrl = imageUrl;
+        this.imageFile = imageFile;
         this.createdBy = createdBy;
     }
 
@@ -178,6 +188,24 @@ public class MealInputDTO {
      */
     public void setImageUrl(String imageUrl) {
         this.imageUrl = imageUrl;
+    }
+
+    /**
+     * Gets the uploaded file of the image.
+     *
+     * @return The MultipartFile containing the uploaded image.
+     */
+    public MultipartFile getImageFile() {
+        return imageFile;
+    }
+
+    /**
+     * Sets the uploaded file of the image.
+     *
+     * @param imageFile The MultipartFile containing the uploaded image.
+     */
+    public void setImageFile(MultipartFile imageFile) {
+        this.imageFile = imageFile;
     }
 
     /**

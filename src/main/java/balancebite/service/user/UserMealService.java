@@ -16,6 +16,7 @@ import balancebite.model.user.User;
 import balancebite.repository.MealRepository;
 import balancebite.repository.UserRepository;
 import balancebite.security.JwtService;
+import balancebite.service.FileStorageService;
 import balancebite.service.interfaces.user.IUserMealService;
 import balancebite.utils.CheckForDuplicateTemplateMealUtil;
 import balancebite.utils.UserUpdateHelper;
@@ -46,10 +47,11 @@ public class UserMealService implements IUserMealService {
     private final CheckForDuplicateTemplateMealUtil checkForDuplicateTemplateMeal;
     private final UserUpdateHelper userUpdateHelper;
     private final JwtService jwtService;
+    private final FileStorageService fileStorageService;
 
     public UserMealService(UserRepository userRepository, MealRepository mealRepository, UserMapper userMapper,
                            MealMapper mealMapper, MealIngredientMapper mealIngredientMapper,
-                           CheckForDuplicateTemplateMealUtil checkForDuplicateTemplateMeal, UserUpdateHelper userUpdateHelper, JwtService jwtService) {
+                           CheckForDuplicateTemplateMealUtil checkForDuplicateTemplateMeal, UserUpdateHelper userUpdateHelper, JwtService jwtService, FileStorageService fileStorageService) {
         this.userRepository = userRepository;
         this.mealRepository = mealRepository;
         this.userMapper = userMapper;
@@ -58,6 +60,7 @@ public class UserMealService implements IUserMealService {
         this.checkForDuplicateTemplateMeal = checkForDuplicateTemplateMeal;
         this.userUpdateHelper = userUpdateHelper;
         this.jwtService = jwtService;
+        this.fileStorageService = fileStorageService;
     }
 
     /**
@@ -79,15 +82,17 @@ public class UserMealService implements IUserMealService {
 
         // Convert DTO to Meal entity
         Meal meal = mealMapper.toEntity(mealInputDTO);
-        log.debug("Meal converted from DTO: {}", meal);
+
+        // Process image from the DTO only if not already handled in the mapper
+        if (meal.getImageUrl() == null && mealInputDTO.getImageFile() != null && !mealInputDTO.getImageFile().isEmpty()) {
+            String imageUrl = fileStorageService.saveFile(mealInputDTO.getImageFile());
+            meal.setImageUrl(imageUrl);
+        }
 
         // Validate and check for duplicate ingredients
         List<Long> foodItemIds = meal.getMealIngredients().stream()
                 .map(ingredient -> ingredient.getFoodItem().getId())
                 .collect(Collectors.toList());
-        log.debug("Collected food item IDs for duplicate check: {}", foodItemIds);
-
-        // Validate for duplicate template meals
         checkForDuplicateTemplateMeal.checkForDuplicateTemplateMeal(foodItemIds, null);
 
         // Retrieve user or throw exception
