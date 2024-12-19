@@ -97,8 +97,18 @@ public class RegistrationService implements IRegistrationService {
         MyUserDetails userDetails = new MyUserDetails(user);
         List<String> roles = userDetails.getRoles();
 
-        String accessToken = jwtService.generateAccessToken(user.getId(), roles);
-        String refreshToken = jwtService.generateRefreshToken(user.getId());
+        String accessToken = jwtService.generateAccessToken(
+                user.getId(),
+                roles,
+                user.getUserName(), // Voeg de username toe
+                user.getEmail() // Voeg de email toe
+        );
+
+        String refreshToken = jwtService.generateRefreshToken(
+                user.getId(),
+                user.getUserName(), // Voeg de username toe
+                user.getEmail() // Voeg de email toe
+        );
 
         log.info("JWT tokens generated for userId: {}", user.getId());
 

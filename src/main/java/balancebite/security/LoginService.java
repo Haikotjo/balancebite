@@ -76,8 +76,19 @@ public class LoginService {
 
             // Generate JWT tokens using userId and roles
             Long userId = user.getId();
-            String accessToken = jwtService.generateAccessToken(userId, roles);
-            String refreshToken = jwtService.generateRefreshToken(userId);
+            String accessToken = jwtService.generateAccessToken(
+                    userId,
+                    roles,
+                    user.getUserName(),
+                    user.getEmail()
+            );
+
+            String refreshToken = jwtService.generateRefreshToken(
+                    userId,
+                    user.getUserName(),
+                    user.getEmail()
+            );
+
 
             log.info("JWT tokens generated successfully for userId: {}", userId);
 

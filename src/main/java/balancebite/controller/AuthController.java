@@ -142,7 +142,13 @@ public class AuthController {
 
             MyUserDetails userDetails = new MyUserDetails(user);
             List<String> roles = userDetails.getRoles();
-            String newAccessToken = jwtService.generateAccessToken(userDetails.getId(), roles);
+            String newAccessToken = jwtService.generateAccessToken(
+                    userDetails.getId(),
+                    roles,
+                    user.getUserName(),
+                    user.getEmail()
+            );
+
 
             log.info("Access token refreshed successfully for userId {}. New token starts with: {}",
                     userId, newAccessToken.substring(0, 5) + "...");

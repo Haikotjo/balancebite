@@ -69,6 +69,28 @@ public class JwtService {
     }
 
     /**
+     * Extracts username from the JWT token.
+     *
+     * @param token the JWT token
+     * @return the username extracted from the token
+     */
+    public String extractUsername(String token) {
+        Claims claims = extractAllClaims(token);
+        return claims.get("username", String.class);
+    }
+
+    /**
+     * Extracts email from the JWT token.
+     *
+     * @param token the JWT token
+     * @return the email extracted from the token
+     */
+    public String extractEmail(String token) {
+        Claims claims = extractAllClaims(token);
+        return claims.get("email", String.class);
+    }
+
+    /**
      * Extracts all claims from a JWT token.
      *
      * @param token the JWT token
@@ -116,16 +138,20 @@ public class JwtService {
     }
 
     /**
-     * Generates an access token for the given user ID and roles.
+     * Generates an access token for the given user ID, roles, username, and email.
      *
      * @param userId the ID of the user
      * @param roles the roles of the user
+     * @param username the username of the user
+     * @param email the email of the user
      * @return the generated access token
      */
-    public String generateAccessToken(Long userId, List<String> roles) {
+    public String generateAccessToken(Long userId, List<String> roles, String username, String email) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("type", "access");
         claims.put("roles", roles); // Add roles to the token
+        claims.put("username", username); // Add username to the token
+        claims.put("email", email); // Add email to the token
         return createToken(claims, String.valueOf(userId), ACCESS_TOKEN_VALIDITY);
     }
 
@@ -135,9 +161,11 @@ public class JwtService {
      * @param userId the ID of the user
      * @return the generated refresh token
      */
-    public String generateRefreshToken(Long userId) {
+    public String generateRefreshToken(Long userId, String username, String email) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("type", "refresh");
+        claims.put("username", username); // Add username to the token
+        claims.put("email", email); // Add email to the token
         return createToken(claims, String.valueOf(userId), REFRESH_TOKEN_VALIDITY);
     }
 
