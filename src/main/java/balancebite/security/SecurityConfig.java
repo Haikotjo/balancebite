@@ -86,6 +86,8 @@ public class SecurityConfig {
 
                         // user entity endpoints
                         .requestMatchers(HttpMethod.GET, "/users/**").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/users/profile").authenticated()
+                        .requestMatchers(HttpMethod.PATCH, "/users/basic-info").authenticated()
 
                         .requestMatchers(HttpMethod.POST, "/users/create-meal").authenticated()
                         .requestMatchers(HttpMethod.PATCH, "/users/update-meal/{mealId}").authenticated()
@@ -102,6 +104,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PATCH, "/users/**").authenticated()
                         .requestMatchers(HttpMethod.PUT, "/users/**").authenticated()
                         .requestMatchers(HttpMethod.GET, "/admins/**").hasRole("ADMIN")
+
+                        .requestMatchers(HttpMethod.POST, "/daily-intake/user").authenticated()
 
                         // meal entity endpoints
                         .requestMatchers(HttpMethod.GET, "/meals").permitAll()

@@ -4,12 +4,15 @@ import balancebite.dto.recommendeddailyintake.RecommendedDailyIntakeDTO;
 import balancebite.errorHandling.DailyIntakeNotFoundException;
 import balancebite.errorHandling.MissingUserInformationException;
 import balancebite.errorHandling.UserNotFoundException;
+import balancebite.security.JwtService;
 import balancebite.service.RecommendedDailyIntakeService;
+import balancebite.service.user.UserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -25,37 +28,48 @@ public class RecommendedDailyIntakeController {
     private static final Logger log = LoggerFactory.getLogger(RecommendedDailyIntakeController.class);
 
     private final RecommendedDailyIntakeService recommendedDailyIntakeService;
+    private final JwtService jwtService;
 
     /**
      * Constructor to initialize the RecommendedDailyIntakeController with its service dependency.
      *
      * @param recommendedDailyIntakeService The service responsible for recommended daily intake logic.
      */
-    public RecommendedDailyIntakeController(RecommendedDailyIntakeService recommendedDailyIntakeService) {
+    public RecommendedDailyIntakeController(RecommendedDailyIntakeService recommendedDailyIntakeService, JwtService jwtService) {
         this.recommendedDailyIntakeService = recommendedDailyIntakeService;
+        this.jwtService = jwtService;
     }
 
     /**
-     * Endpoint to create or retrieve the recommended daily intake for a specific user.
+     * Endpoint to create or retrieve the recommended daily intake for the authenticated user.
      *
-     * @param userId The ID of the user for whom to retrieve or create the recommended daily intake.
+     * @param authorizationHeader The Authorization header containing the JWT token.
      * @return ResponseEntity containing the RecommendedDailyIntakeDTO with a 200 status if successful,
      *         or a detailed error message if user information is missing or user is not found.
      */
-    @PostMapping("/user/{userId}")
-    public ResponseEntity<Object> createRecommendedDailyIntakeForUser(@PathVariable Long userId) {
+    @PreAuthorize("isAuthenticated()")
+    @PostMapping("/user")
+    public ResponseEntity<Object> createRecommendedDailyIntakeForAuthenticatedUser(@RequestHeader("Authorization") String authorizationHeader) {
         try {
-            log.info("Creating or retrieving daily intake for user ID: {}", userId);
+            log.info("Creating or retrieving daily intake for the authenticated user.");
+
+            // Extract user ID from the token
+            String token = authorizationHeader.substring(7); // Remove "Bearer " prefix
+            Long userId = jwtService.extractUserId(token);
+
+            // Retrieve or create daily intake
             RecommendedDailyIntakeDTO dailyIntake = recommendedDailyIntakeService.getOrCreateDailyIntakeForUser(userId);
+
+            log.info("Successfully created or retrieved daily intake for user ID: {}", userId);
             return ResponseEntity.ok(dailyIntake);
         } catch (MissingUserInformationException e) {
-            log.warn("User information missing for ID {}: {}", userId, e.getMessage());
+            log.warn("User information missing: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
         } catch (UserNotFoundException e) {
             log.warn("User not found: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
-            log.error("Unexpected error during daily intake creation for user ID {}: {}", userId, e.getMessage(), e);
+            log.error("Unexpected error during daily intake creation: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "An unexpected error occurred."));
         }
     }
