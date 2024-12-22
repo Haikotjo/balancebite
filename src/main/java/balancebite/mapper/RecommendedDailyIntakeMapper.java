@@ -34,4 +34,5 @@ public class RecommendedDailyIntakeMapper {
                 recommendedDailyIntake.getCreatedAt()  // Creation date to be formatted in the DTO
         );
     }
+
 }

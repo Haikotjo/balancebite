@@ -106,6 +106,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/admins/**").hasRole("ADMIN")
 
                         .requestMatchers(HttpMethod.POST, "/daily-intake/user").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/user/profile").authenticated()
 
                         // meal entity endpoints
                         .requestMatchers(HttpMethod.GET, "/meals").permitAll()

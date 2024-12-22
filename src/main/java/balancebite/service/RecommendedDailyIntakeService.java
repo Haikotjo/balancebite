@@ -45,40 +45,32 @@ public class RecommendedDailyIntakeService implements IRecommendedDailyIntakeSer
     }
 
     /**
-     * Retrieves or creates the recommended daily intake for a specific user for the current date.
-     * Ensures the user has provided all necessary information before calculating.
+     * Retrieves the recommended daily intake for a specific user for the current date.
      *
-     * @param userId The ID of the user for whom the recommended daily intake is retrieved or created.
+     * @param userId The ID of the user for whom the recommended daily intake is retrieved.
      * @return A DTO containing the recommended daily intake values.
      */
     @Override
-    public RecommendedDailyIntakeDTO getOrCreateDailyIntakeForUser(Long userId) {
-        log.info("Attempting to retrieve or create recommended daily intake for user with ID: {}", userId);
+    public RecommendedDailyIntakeDTO getDailyIntakeForUser(Long userId) {
+        log.info("Attempting to retrieve recommended daily intake for user with ID: {}", userId);
 
-        // Fetch the user and validate their information.
+        // Fetch the user to ensure they exist.
         User user = findUserById(userId);
-        UserValidationUtil.validateUserInformation(user);
+        log.info("Fetched user: ID={}, Gender={}, ActivityLevel={}, Goal={}",
+                user.getId(), user.getGender(), user.getActivityLevel(), user.getGoal());
 
-        // Check if an intake already exists for today.
+        // Check if an intake exists for today.
         Optional<RecommendedDailyIntake> existingIntake = recommendedDailyIntakeRepository.findByUser_IdAndCreatedAt(user.getId(), LocalDate.now());
         if (existingIntake.isPresent()) {
             log.info("Found existing RecommendedDailyIntake for user ID {} on date {}", userId, LocalDate.now());
+            log.info("Existing intake details: ID={}, UserId={}, CreatedAt={}",
+                    existingIntake.get().getId(), existingIntake.get().getUser().getId(), existingIntake.get().getCreatedAt());
             return recommendedDailyIntakeMapper.toDTO(existingIntake.get());
+        } else {
+            log.warn("No RecommendedDailyIntake found for user ID {} on date {}", userId, LocalDate.now());
+            throw new DailyIntakeNotFoundException("No daily intake found for user ID: " + userId);
         }
-
-        // Calculate a new intake if none exists.
-        log.info("No existing RecommendedDailyIntake found for user ID {} on date {}. Calculating a new intake.", userId, LocalDate.now());
-        RecommendedDailyIntake recommendedDailyIntake = DailyIntakeCalculatorUtil.getOrCreateDailyIntakeForUser(user);
-        recommendedDailyIntake.setUser(user);
-        recommendedDailyIntake.setCreatedAt(LocalDate.now());
-
-        // Save the newly calculated intake.
-        recommendedDailyIntakeRepository.save(recommendedDailyIntake);
-        log.info("Successfully created and saved RecommendedDailyIntake for user ID {} on date {}", userId, LocalDate.now());
-
-        return recommendedDailyIntakeMapper.toDTO(recommendedDailyIntake);
     }
-
 
     /**
      * Retrieves the cumulative weekly nutrient intake for a specific user.

@@ -6,12 +6,14 @@ import balancebite.dto.user.UserDetailsInputDTO;
 import balancebite.errorHandling.UserNotFoundException;
 import balancebite.mapper.UserMapper;
 import balancebite.model.Meal;
+import balancebite.model.RecommendedDailyIntake;
 import balancebite.model.user.User;
 import balancebite.repository.MealRepository;
 import balancebite.repository.RecommendedDailyIntakeRepository;
 import balancebite.repository.UserRepository;
 import balancebite.service.RecommendedDailyIntakeService;
 import balancebite.service.interfaces.user.IUserService;
+import balancebite.utils.DailyIntakeCalculatorUtil;
 import balancebite.utils.UserUpdateHelper;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -20,8 +22,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Service class responsible for managing users.
@@ -114,16 +118,40 @@ public class UserService implements IUserService {
 
         // Update user entity with details
         userMapper.updateDetailsFromDTO(existingUser, userDetailsInputDTO);
+        userRepository.save(existingUser);
 
-        // Save the updated user
-        User updatedUser = userRepository.save(existingUser);
-        log.info("Successfully updated detailed info for user with ID: {}", id);
+        // Fetch the updated user to ensure changes are persisted
+        User updatedUser = userRepository.findById(id)
+                .orElseThrow(() -> new UserNotFoundException("Failed to fetch updated user details"));
 
-        // Ensure recommended daily intake is updated
-        recommendedDailyIntakeService.getOrCreateDailyIntakeForUser(id);
+        log.info("Updated user details: Gender={}, ActivityLevel={}, Goal={}, Height={}, Weight={}",
+                updatedUser.getGender(), updatedUser.getActivityLevel(), updatedUser.getGoal(),
+                updatedUser.getHeight(), updatedUser.getWeight());
+
+        // Check if an intake exists for today
+        Optional<RecommendedDailyIntake> existingIntake = recommendedDailyIntakeRepository.findByUser_IdAndCreatedAt(id, LocalDate.now());
+        RecommendedDailyIntake newOrUpdatedIntake;
+
+        if (existingIntake.isPresent()) {
+            log.info("Overwriting existing RecommendedDailyIntake for user ID {} on date {}", id, LocalDate.now());
+            // Force a new calculation
+            newOrUpdatedIntake = DailyIntakeCalculatorUtil.calculateDailyIntake(updatedUser);
+            newOrUpdatedIntake.setId(existingIntake.get().getId());
+            newOrUpdatedIntake.setUser(updatedUser);
+            newOrUpdatedIntake.setCreatedAt(LocalDate.now());
+        } else {
+            log.info("Creating new RecommendedDailyIntake for user ID {} on date {}", id, LocalDate.now());
+            newOrUpdatedIntake = DailyIntakeCalculatorUtil.calculateDailyIntake(updatedUser);
+            newOrUpdatedIntake.setCreatedAt(LocalDate.now());
+            newOrUpdatedIntake.setUser(updatedUser);
+        }
+
+        // Save the intake
+        recommendedDailyIntakeRepository.save(newOrUpdatedIntake);
+        log.info("Successfully saved intake for user ID {} on date {}", id, LocalDate.now());
+
         return userMapper.toDTO(updatedUser);
     }
-
 
     /**
      * Retrieves the currently logged-in user's details.

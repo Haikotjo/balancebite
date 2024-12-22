@@ -1,7 +1,9 @@
 package balancebite.service.interfaces;
 
 import balancebite.dto.recommendeddailyintake.RecommendedDailyIntakeDTO;
+import balancebite.errorHandling.DailyIntakeNotFoundException;
 import balancebite.errorHandling.MissingUserInformationException;
+import balancebite.errorHandling.UserNotFoundException;
 
 import java.time.LocalDate;
 import java.util.Map;
@@ -14,18 +16,15 @@ import java.util.Map;
 public interface IRecommendedDailyIntakeService {
 
     /**
-     * Retrieves or creates the recommended daily intake for a specific user for the current date.
-     * Ensures that the user has provided all necessary information for calculation, including
-     * weight, height, age, gender, activity level, and goal.
+     * Retrieves the recommended daily intake for a specific user for the current date.
      *
-     * @param userId The ID of the user for whom the recommended daily intake is retrieved or created.
-     * @return The {@link RecommendedDailyIntakeDTO} containing the calculated intake values for energy,
-     *         protein, fat, saturated fat, and unsaturated fat.
-     * @throws MissingUserInformationException If the user has not provided all the required information
-     *         (weight, height, age, gender, activity level, goal).
-     * @throws IllegalArgumentException If the user with the given ID does not exist in the system.
+     * @param userId The ID of the user for whom the recommended daily intake is retrieved.
+     * @return A DTO containing the recommended daily intake values.
+     * @throws DailyIntakeNotFoundException If no intake exists for the user on the current date.
+     * @throws UserNotFoundException If the user with the specified ID does not exist.
      */
-    RecommendedDailyIntakeDTO getOrCreateDailyIntakeForUser(Long userId);
+    RecommendedDailyIntakeDTO getDailyIntakeForUser(Long userId) throws DailyIntakeNotFoundException, UserNotFoundException;
+
 
     /**
      * Calculates and retrieves the cumulative recommended nutrient intake for the current week for a specific user.

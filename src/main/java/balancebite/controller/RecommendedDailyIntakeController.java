@@ -41,35 +41,35 @@ public class RecommendedDailyIntakeController {
     }
 
     /**
-     * Endpoint to create or retrieve the recommended daily intake for the authenticated user.
+     * Endpoint to retrieve the recommended daily intake for the authenticated user.
      *
      * @param authorizationHeader The Authorization header containing the JWT token.
      * @return ResponseEntity containing the RecommendedDailyIntakeDTO with a 200 status if successful,
-     *         or a detailed error message if user information is missing or user is not found.
+     *         or a detailed error message if no intake is found or user is not found.
      */
     @PreAuthorize("isAuthenticated()")
-    @PostMapping("/user")
-    public ResponseEntity<Object> createRecommendedDailyIntakeForAuthenticatedUser(@RequestHeader("Authorization") String authorizationHeader) {
+    @GetMapping("/user")
+    public ResponseEntity<Object> getRecommendedDailyIntakeForAuthenticatedUser(@RequestHeader("Authorization") String authorizationHeader) {
         try {
-            log.info("Creating or retrieving daily intake for the authenticated user.");
+            log.info("Retrieving daily intake for the authenticated user.");
 
             // Extract user ID from the token
             String token = authorizationHeader.substring(7); // Remove "Bearer " prefix
             Long userId = jwtService.extractUserId(token);
 
-            // Retrieve or create daily intake
-            RecommendedDailyIntakeDTO dailyIntake = recommendedDailyIntakeService.getOrCreateDailyIntakeForUser(userId);
+            // Retrieve daily intake
+            RecommendedDailyIntakeDTO dailyIntake = recommendedDailyIntakeService.getDailyIntakeForUser(userId);
 
-            log.info("Successfully created or retrieved daily intake for user ID: {}", userId);
+            log.info("Successfully retrieved daily intake for user ID: {}", userId);
             return ResponseEntity.ok(dailyIntake);
-        } catch (MissingUserInformationException e) {
-            log.warn("User information missing: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
+        } catch (DailyIntakeNotFoundException e) {
+            log.warn("Daily intake not found: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
         } catch (UserNotFoundException e) {
             log.warn("User not found: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
-            log.error("Unexpected error during daily intake creation: {}", e.getMessage(), e);
+            log.error("Unexpected error during daily intake retrieval: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "An unexpected error occurred."));
         }
     }
