@@ -21,4 +21,13 @@ public interface RecommendedDailyIntakeRepository extends JpaRepository<Recommen
      * @return An Optional containing the RecommendedDailyIntake if found, or empty if not found.
      */
     Optional<RecommendedDailyIntake> findByUser_IdAndCreatedAt(Long userId, LocalDate createdAt);
+
+    /**
+     * Checks if a RecommendedDailyIntake exists for a specific user on a specific date.
+     *
+     * @param userId The ID of the user to check.
+     * @param createdAt The date to check for an existing RecommendedDailyIntake.
+     * @return True if a RecommendedDailyIntake exists for the specified user and date, otherwise false.
+     */
+    boolean existsByUser_IdAndCreatedAt(Long userId, LocalDate createdAt);
 }

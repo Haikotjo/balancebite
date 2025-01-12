@@ -11,9 +11,11 @@ import balancebite.service.interfaces.IRecommendedDailyIntakeService;
 import balancebite.utils.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -173,5 +175,49 @@ public class RecommendedDailyIntakeService implements IRecommendedDailyIntakeSer
                     log.error("User with ID {} not found", userId);
                     throw new UserNotFoundException("User with ID " + userId + " not found");
                 });
+    }
+
+    /**
+     * Scheduled method to create daily Recommended Daily Intake (RDI) entries for users.
+     *
+     * This method runs every day at 00:00 and performs the following:
+     * 1. Retrieves all users from the database.
+     * 2. Skips users who have not provided all required details (weight, height, goal, activity level).
+     * 3. Checks if an RDI already exists for the current day for each user.
+     * 4. Creates a new RDI entry for users who do not have one for the current day.
+     *
+     * The new RDI is calculated using the user's details and saved to the database.
+     */
+    @Scheduled(cron = "0 1 0 * * ?") // Executes daily at 00:00
+    public void createDailyIntakesForUsers() {
+        log.info("Start creating daily intakes for users.");
+
+        // Retrieve all users from the database
+        List<User> users = userRepository.findAll();
+
+        for (User user : users) {
+            // Skip users who have not provided all required details
+            if (user.getWeight() == null || user.getHeight() == null || user.getGoal() == null || user.getActivityLevel() == null) {
+                log.warn("Skipping user ID {}: required details are missing.", user.getId());
+                continue;
+            }
+
+            // Check if a Recommended Daily Intake already exists for today
+            LocalDate today = LocalDate.now();
+            boolean hasTodayIntake = recommendedDailyIntakeRepository.existsByUser_IdAndCreatedAt(user.getId(), today);
+
+            if (!hasTodayIntake) {
+                // Create a new Recommended Daily Intake for the user
+                log.info("Creating new RecommendedDailyIntake for user ID {} on date {}", user.getId(), today);
+                RecommendedDailyIntake newIntake = DailyIntakeCalculatorUtil.calculateDailyIntake(user); // Calculate RDI
+                newIntake.setCreatedAt(today);
+                newIntake.setUser(user);
+                recommendedDailyIntakeRepository.save(newIntake);
+            } else {
+                log.info("User ID {} already has an intake for today: {}", user.getId());
+            }
+        }
+
+        log.info("Completed creating daily intakes for users.");
     }
 }
