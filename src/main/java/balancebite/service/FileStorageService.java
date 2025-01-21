@@ -25,10 +25,10 @@ public class FileStorageService {
     private String baseUrl;
 
     /**
-     * Saves the uploaded file to the specified directory.
+     * Saves the uploaded file to the specified directory and returns its full URL.
      *
      * @param file the uploaded file.
-     * @return the relative file path as a String.
+     * @return the full URL of the uploaded file as a String.
      */
     public String saveFile(MultipartFile file) {
         try {
@@ -40,24 +40,21 @@ public class FileStorageService {
             log.info("Ensuring directory exists: {}", filePath.getParent().toAbsolutePath());
             Files.createDirectories(filePath.getParent());
 
-            // Check if the file is already written
-            if (Files.exists(filePath)) {
-                log.warn("File already exists: {}", filePath.toAbsolutePath());
-                return uniqueFileName;
-            }
-
             // Write the file to the specified directory
             log.info("Writing file to path: {}", filePath.toAbsolutePath());
             Files.write(filePath, file.getBytes());
             log.info("File written successfully: {}", filePath.toAbsolutePath());
 
-            // Return the relative file name
-            return uniqueFileName;
+            // Generate and return the full URL
+            String fullUrl = getFullUrl(uniqueFileName); // Gebruik jouw bestaande getFullUrl()
+            log.info("Generated full URL for uploaded file: {}", fullUrl);
+            return fullUrl;
         } catch (IOException e) {
             log.error("Failed to store file: {}", e.getMessage());
             throw new FileStorageException("Failed to store file: " + e.getMessage(), e);
         }
     }
+
 
     /**
      * Generates the full URL for accessing the uploaded file.
