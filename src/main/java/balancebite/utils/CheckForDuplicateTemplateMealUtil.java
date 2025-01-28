@@ -1,7 +1,7 @@
 package balancebite.utils;
 
 import balancebite.errorHandling.DuplicateMealException;
-import balancebite.model.Meal;
+import balancebite.model.meal.Meal;
 import balancebite.repository.MealRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

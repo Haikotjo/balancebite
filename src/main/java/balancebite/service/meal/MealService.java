@@ -1,16 +1,10 @@
 package balancebite.service.meal;
 
 import balancebite.dto.meal.MealDTO;
-import balancebite.dto.meal.MealInputDTO;
 import balancebite.dto.NutrientInfoDTO;
-import balancebite.dto.mealingredient.MealIngredientInputDTO;
-import balancebite.errorHandling.DuplicateMealException;
-import balancebite.errorHandling.InvalidFoodItemException;
 import balancebite.mapper.MealIngredientMapper;
 import balancebite.mapper.MealMapper;
-import balancebite.model.Meal;
-import balancebite.model.MealIngredient;
-import balancebite.model.user.User;
+import balancebite.model.meal.Meal;
 import balancebite.repository.FoodItemRepository;
 import balancebite.repository.MealRepository;
 import balancebite.repository.UserRepository;
@@ -24,7 +18,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * Service class for managing Meal entities.
@@ -218,37 +211,6 @@ public class MealService implements IMealService {
         log.info("Successfully retrieved template meal with ID: {}", id);
         return mealDTO;
     }
-
-//    /**
-//     * Deletes a specific meal from the repository.
-//     *
-//     * @param mealId The ID of the meal to be deleted.
-//     * @throws EntityNotFoundException if the meal with the given ID is not found.
-//     */
-//    @Override
-//    @Transactional
-//    public void deleteMeal(Long mealId) {
-//        log.info("Attempting to delete meal with ID: {}", mealId);
-//
-//        // Retrieve the meal or throw an exception if not found
-//        Meal meal = mealRepository.findById(mealId)
-//                .orElseThrow(() -> new EntityNotFoundException("Meal not found with ID: " + mealId));
-//
-//        // Loop through users associated with the meal and remove the association
-//        List<User> associatedUsers = userRepository.findAllByMealsContaining(meal);
-//        for (User user : associatedUsers) {
-//            log.info("Removing association between User ID: {} and Meal ID: {}", user.getId(), meal.getId());
-//            user.getMeals().remove(meal);
-//        }
-//
-//        // Save updated users back to the database to ensure association is removed
-//        userRepository.saveAll(associatedUsers);
-//
-//        // Delete the meal after cleaning up the relationships
-//        mealRepository.delete(meal);
-//        log.info("Successfully deleted meal with ID: {}", mealId);
-//    }
-
 
     /**
      * Retrieves the total nutrients for a given Meal by its ID.

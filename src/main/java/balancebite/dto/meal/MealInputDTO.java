@@ -2,6 +2,9 @@ package balancebite.dto.meal;
 
 import balancebite.dto.mealingredient.MealIngredientInputDTO;
 import balancebite.dto.user.UserDTO;
+import balancebite.model.meal.references.Cuisine;
+import balancebite.model.meal.references.Diet;
+import balancebite.model.meal.references.MealType;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
@@ -66,6 +69,24 @@ public class MealInputDTO {
     private UserDTO createdBy;
 
     /**
+     * The type of meal (e.g., breakfast, lunch, dinner, or snack).
+     * This field is optional.
+     */
+    private MealType mealType;
+
+    /**
+     * The cuisine type of the meal (e.g., Italian, French, Japanese).
+     * This field is optional.
+     */
+    private Cuisine cuisine;
+
+    /**
+     * The dietary category of the meal (e.g., vegetarian, vegan, gluten-free).
+     * This field is optional.
+     */
+    private Diet diet;
+
+    /**
      * Default constructor for frameworks that require a no-argument constructor.
      */
     public MealInputDTO() {}
@@ -76,10 +97,13 @@ public class MealInputDTO {
      * @param name            The name of the meal. Must not be blank and must not exceed 100 characters.
      * @param mealIngredients The list of ingredients that make up the meal. Must not be empty.
      * @param mealDescription The description of the meal (optional). Must not exceed 1000 characters.
-     * @param image           Base64-encoded image of the meal (optional).
-     * @param imageUrl        URL of the image representing the meal (optional).
-     * @param imageFile       MultipartFile for direct file uploads (optional).
-     * @param createdBy       The user who created the meal (optional).
+     * @param image           Base64-encoded image of the meal (optional). Maximum size: 500 KB.
+     * @param imageUrl        URL of the image representing the meal (optional). Maximum length: 500 characters.
+     * @param imageFile       MultipartFile for direct file uploads of the meal's image (optional).
+     * @param createdBy       The user who created the meal (optional). Managed by the system.
+     * @param mealType        The type of meal (optional). Defines if the meal is breakfast, lunch, dinner, or snack.
+     * @param cuisine         The cuisine type of the meal (optional). Represents the cultural or regional origin.
+     * @param diet            The dietary category of the meal (optional). Used for filtering meals based on diet.
      */
     public MealInputDTO(
             @NotBlank(message = "The name of the meal cannot be blank. Please provide a valid name.")
@@ -90,7 +114,10 @@ public class MealInputDTO {
             @Size(max = 500000, message = "Image size must not exceed 500 KB.") String image,
             @Size(max = 500, message = "Image URL must not exceed 500 characters.") String imageUrl,
             MultipartFile imageFile,
-            @Valid UserDTO createdBy) {
+            @Valid UserDTO createdBy,
+            MealType mealType,
+            Cuisine cuisine,
+            Diet diet) {
         this.name = name;
         this.mealIngredients = mealIngredients;
         this.mealDescription = mealDescription;
@@ -98,6 +125,9 @@ public class MealInputDTO {
         this.imageUrl = imageUrl;
         this.imageFile = imageFile;
         this.createdBy = createdBy;
+        this.mealType = mealType;
+        this.cuisine = cuisine;
+        this.diet = diet;
     }
 
     /**
@@ -225,5 +255,66 @@ public class MealInputDTO {
      */
     public void setCreatedBy(UserDTO createdBy) {
         this.createdBy = createdBy;
+    }
+
+    /**
+     * Gets the type of meal (e.g., breakfast, lunch, dinner, or snack).
+     * This enum helps categorize meals based on the time of day or purpose.
+     *
+     * @return the meal type.
+     */
+    public MealType getMealType() {
+        return mealType;
+    }
+
+    /**
+     * Sets the type of meal (e.g., breakfast, lunch, dinner, or snack).
+     * This allows categorization of meals based on their intended meal time.
+     *
+     * @param mealType the meal type to set for the meal.
+     */
+    public void setMealType(MealType mealType) {
+        this.mealType = mealType;
+    }
+
+
+    /**
+     * Gets the cuisine type of the meal.
+     * Represents the cultural or regional origin of the meal (e.g., Italian, French, Japanese).
+     *
+     * @return The cuisine type of the meal.
+     */
+    public Cuisine getCuisine() {
+        return cuisine;
+    }
+
+    /**
+     * Sets the cuisine type of the meal.
+     * This defines the cultural or regional origin of the meal.
+     *
+     * @param cuisine The cuisine type to set for the meal.
+     */
+    public void setCuisine(Cuisine cuisine) {
+        this.cuisine = cuisine;
+    }
+
+    /**
+     * Gets the dietary category of the meal.
+     * Used for filtering meals based on dietary restrictions or preferences (e.g., vegetarian, vegan, gluten-free).
+     *
+     * @return The diet type of the meal.
+     */
+    public Diet getDiet() {
+        return diet;
+    }
+
+    /**
+     * Sets the dietary category of the meal.
+     * This allows meals to be categorized based on dietary restrictions or preferences.
+     *
+     * @param diet The diet type to set for the meal.
+     */
+    public void setDiet(Diet diet) {
+        this.diet = diet;
     }
 }

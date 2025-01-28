@@ -25,6 +25,16 @@ public interface IRecommendedDailyIntakeService {
      */
     RecommendedDailyIntakeDTO getDailyIntakeForUser(Long userId) throws DailyIntakeNotFoundException, UserNotFoundException;
 
+    /**
+     * Retrieves the base recommended daily intake for a specific user.
+     * This represents the initially calculated intake before any modifications.
+     *
+     * @param userId The ID of the user for whom the base recommended daily intake is retrieved.
+     * @return A DTO containing the base recommended daily intake values.
+     * @throws DailyIntakeNotFoundException If no base intake exists for the user.
+     * @throws UserNotFoundException If the user with the specified ID does not exist.
+     */
+    RecommendedDailyIntakeDTO getBaseDailyIntakeForUser(Long userId) throws DailyIntakeNotFoundException, UserNotFoundException;
 
     /**
      * Calculates and retrieves the cumulative recommended nutrient intake for the current week for a specific user.

@@ -5,7 +5,7 @@ import balancebite.dto.user.UserDTO;
 import balancebite.dto.user.UserDetailsInputDTO;
 import balancebite.errorHandling.UserNotFoundException;
 import balancebite.mapper.UserMapper;
-import balancebite.model.Meal;
+import balancebite.model.meal.Meal;
 import balancebite.model.RecommendedDailyIntake;
 import balancebite.model.user.User;
 import balancebite.repository.MealRepository;
@@ -134,7 +134,6 @@ public class UserService implements IUserService {
 
         if (existingIntake.isPresent()) {
             log.info("Overwriting existing RecommendedDailyIntake for user ID {} on date {}", id, LocalDate.now());
-            // Force a new calculation
             newOrUpdatedIntake = DailyIntakeCalculatorUtil.calculateDailyIntake(updatedUser);
             newOrUpdatedIntake.setId(existingIntake.get().getId());
             newOrUpdatedIntake.setUser(updatedUser);
@@ -146,12 +145,27 @@ public class UserService implements IUserService {
             newOrUpdatedIntake.setUser(updatedUser);
         }
 
-        // Save the intake
+        // Save the new RDI
         recommendedDailyIntakeRepository.save(newOrUpdatedIntake);
-        log.info("Successfully saved intake for user ID {} on date {}", id, LocalDate.now());
+
+        // Check if user already has a BaseRDI
+        if (updatedUser.getBaseRecommendedDailyIntake() == null) {
+            log.info("Creating BaseRecommendedDailyIntake for user ID {}", id);
+            RecommendedDailyIntake baseRDI = DailyIntakeCalculatorUtil.calculateDailyIntake(updatedUser);
+            baseRDI.setCreatedAt(LocalDate.now());
+            baseRDI.setUser(updatedUser);
+
+            // Save BaseRDI
+            recommendedDailyIntakeRepository.save(baseRDI);
+            updatedUser.setBaseRecommendedDailyIntake(baseRDI);
+            userRepository.save(updatedUser);
+        }
+
+        log.info("Successfully saved intake and BaseRDI for user ID {}", id);
 
         return userMapper.toDTO(updatedUser);
     }
+
 
     /**
      * Retrieves the currently logged-in user's details.

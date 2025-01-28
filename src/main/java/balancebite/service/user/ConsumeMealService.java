@@ -5,7 +5,7 @@ import balancebite.errorHandling.DailyIntakeNotFoundException;
 import balancebite.errorHandling.DailyIntakeUpdateException;
 import balancebite.errorHandling.MealNotFoundException;
 import balancebite.errorHandling.UserNotFoundException;
-import balancebite.model.Meal;
+import balancebite.model.meal.Meal;
 import balancebite.model.Nutrient;
 import balancebite.model.RecommendedDailyIntake;
 import balancebite.model.user.User;

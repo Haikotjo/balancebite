@@ -1,6 +1,11 @@
-package balancebite.model;
+package balancebite.model.meal;
 
+import balancebite.model.MealIngredient;
+import balancebite.model.meal.references.Cuisine;
+import balancebite.model.meal.references.Diet;
+import balancebite.model.meal.references.MealType;
 import balancebite.model.user.User;
+import balancebite.model.user.userenums.ActivityLevel;
 import jakarta.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -83,6 +88,28 @@ public class Meal {
      */
     @Column(name = "is_template", nullable = false)
     private boolean isTemplate = true;
+
+    /**
+     * The type of meal (e.g., breakfast, lunch, dinner, or snack).
+     * This enum helps categorize meals based on the time of day or purpose.
+     */
+    @Enumerated(EnumType.STRING)
+    private MealType mealType;
+
+    /**
+     * The cuisine type of the meal (e.g., Italian, French, Japanese).
+     * This enum represents the regional or cultural origin of the meal.
+     */
+    @Enumerated(EnumType.STRING)
+    private Cuisine cuisine;
+
+    /**
+     * The dietary category of the meal (e.g., vegetarian, vegan, gluten-free).
+     * This enum helps users filter meals based on dietary restrictions or preferences.
+     */
+    @Enumerated(EnumType.STRING)
+    private Diet diet;
+
 
     /**
      * No-argument constructor required by JPA.
@@ -295,4 +322,59 @@ public class Meal {
     public void setIsTemplate(boolean isTemplate) {
         this.isTemplate = isTemplate;
     }
+
+    /**
+     * Gets the dietary category of the meal.
+     *
+     * @return the diet type of the meal.
+     */
+    public Diet getDiet() {
+        return diet;
+    }
+
+    /**
+     * Sets the dietary category of the meal.
+     *
+     * @param diet the diet type to set for the meal.
+     */
+    public void setDiet(Diet diet) {
+        this.diet = diet;
+    }
+
+    /**
+     * Gets the type of meal (e.g., breakfast, lunch, dinner, or snack).
+     *
+     * @return the meal type.
+     */
+    public MealType getMealType() {
+        return mealType;
+    }
+
+    /**
+     * Sets the type of meal (e.g., breakfast, lunch, dinner, or snack).
+     *
+     * @param mealType the meal type to set.
+     */
+    public void setMealType(MealType mealType) {
+        this.mealType = mealType;
+    }
+
+    /**
+     * Gets the cuisine type of the meal (e.g., Italian, French, Japanese).
+     *
+     * @return the cuisine type of the meal.
+     */
+    public Cuisine getCuisine() {
+        return cuisine;
+    }
+
+    /**
+     * Sets the cuisine type of the meal (e.g., Italian, French, Japanese).
+     *
+     * @param cuisine the cuisine type to set.
+     */
+    public void setCuisine(Cuisine cuisine) {
+        this.cuisine = cuisine;
+    }
+
 }

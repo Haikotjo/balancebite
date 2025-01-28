@@ -11,7 +11,7 @@ import balancebite.errorHandling.UserNotFoundException;
 import balancebite.mapper.MealIngredientMapper;
 import balancebite.mapper.MealMapper;
 import balancebite.mapper.UserMapper;
-import balancebite.model.Meal;
+import balancebite.model.meal.Meal;
 import balancebite.model.MealIngredient;
 import balancebite.model.user.User;
 import balancebite.repository.FoodItemRepository;

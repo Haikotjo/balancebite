@@ -4,7 +4,7 @@ import balancebite.dto.mealingredient.MealIngredientDTO;
 import balancebite.dto.mealingredient.MealIngredientInputDTO;
 import balancebite.errorHandling.InvalidFoodItemException;
 import balancebite.model.FoodItem;
-import balancebite.model.Meal;
+import balancebite.model.meal.Meal;
 import balancebite.model.MealIngredient;
 import balancebite.repository.FoodItemRepository;
 import org.slf4j.Logger;

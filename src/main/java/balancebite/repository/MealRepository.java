@@ -1,6 +1,6 @@
 package balancebite.repository;
 
-import balancebite.model.Meal;
+import balancebite.model.meal.Meal;
 import balancebite.model.user.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;

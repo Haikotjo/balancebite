@@ -4,7 +4,7 @@ import balancebite.dto.user.UserDTO;
 import balancebite.dto.user.UserRegistrationInputDTO;
 import balancebite.errorHandling.UserNotFoundException;
 import balancebite.mapper.UserMapper;
-import balancebite.model.Meal;
+import balancebite.model.meal.Meal;
 import balancebite.model.user.Role;
 import balancebite.model.user.User;
 import balancebite.model.user.UserRole;

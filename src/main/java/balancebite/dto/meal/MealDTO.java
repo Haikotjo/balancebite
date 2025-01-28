@@ -2,6 +2,9 @@ package balancebite.dto.meal;
 
 import balancebite.dto.mealingredient.MealIngredientDTO;
 import balancebite.dto.user.UserDTO;
+import balancebite.model.meal.references.Cuisine;
+import balancebite.model.meal.references.Diet;
+import balancebite.model.meal.references.MealType;
 
 import java.util.List;
 
@@ -61,6 +64,25 @@ public class MealDTO {
     private final UserDTO adjustedBy;
 
     /**
+     * The type of meal (e.g., breakfast, lunch, dinner, or snack).
+     * This enum helps categorize meals based on the time of day or purpose.
+     */
+    private final MealType mealType;
+
+    /**
+     * The cuisine type of the meal (e.g., Italian, French, Japanese).
+     * This enum represents the cultural or regional origin of the meal.
+     */
+    private final Cuisine cuisine;
+
+    /**
+     * The dietary category of the meal (e.g., vegetarian, vegan, gluten-free).
+     * This enum helps users filter meals based on dietary restrictions or preferences.
+     */
+    private final Diet diet;
+
+
+    /**
      * Constructor for creating a MealDTO with essential meal information.
      *
      * @param id               the unique identifier of the meal.
@@ -72,8 +94,11 @@ public class MealDTO {
      * @param userCount        the count of users who have added the meal.
      * @param createdBy        the user who originally created the meal.
      * @param adjustedBy       the user who adjusted the meal (if applicable).
+     * @param mealType         the type of meal (optional). Defines if the meal is breakfast, lunch, dinner, or snack.
+     * @param cuisine          the cuisine type of the meal (optional). Represents the cultural or regional origin.
+     * @param diet             the dietary category of the meal (optional). Used for filtering meals based on diet.
      */
-    public MealDTO(Long id, String name, String mealDescription, String image, String imageUrl, List<MealIngredientDTO> mealIngredients, int userCount, UserDTO createdBy, UserDTO adjustedBy) {
+    public MealDTO(Long id, String name, String mealDescription, String image, String imageUrl, List<MealIngredientDTO> mealIngredients, int userCount, UserDTO createdBy, UserDTO adjustedBy, MealType mealType, Cuisine cuisine, Diet diet) {
         this.id = id;
         this.name = name;
         this.mealDescription = mealDescription;
@@ -83,6 +108,9 @@ public class MealDTO {
         this.userCount = userCount;
         this.createdBy = createdBy;
         this.adjustedBy = adjustedBy;
+        this.mealType = mealType;
+        this.cuisine = cuisine;
+        this.diet = diet;
     }
 
     /**
@@ -165,5 +193,35 @@ public class MealDTO {
      */
     public UserDTO getAdjustedBy() {
         return adjustedBy;
+    }
+
+    /**
+     * Gets the type of meal (e.g., breakfast, lunch, dinner, or snack).
+     * This enum helps categorize meals based on the time of day or purpose.
+     *
+     * @return the meal type.
+     */
+    public MealType getMealType() {
+        return mealType;
+    }
+
+    /**
+     * Gets the cuisine type of the meal.
+     * Represents the cultural or regional origin of the meal (e.g., Italian, French, Japanese).
+     *
+     * @return the cuisine type of the meal.
+     */
+    public Cuisine getCuisine() {
+        return cuisine;
+    }
+
+    /**
+     * Gets the dietary category of the meal.
+     * Used for filtering meals based on dietary restrictions or preferences (e.g., vegetarian, vegan, gluten-free).
+     *
+     * @return the diet type of the meal.
+     */
+    public Diet getDiet() {
+        return diet;
     }
 }

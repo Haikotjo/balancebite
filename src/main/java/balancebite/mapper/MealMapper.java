@@ -7,7 +7,7 @@ import balancebite.dto.mealingredient.MealIngredientInputDTO;
 import balancebite.dto.user.UserDTO;
 import balancebite.errorHandling.InvalidFoodItemException;
 import balancebite.model.FoodItem;
-import balancebite.model.Meal;
+import balancebite.model.meal.Meal;
 import balancebite.model.MealIngredient;
 import balancebite.model.user.User;
 import balancebite.repository.FoodItemRepository;
@@ -64,7 +64,10 @@ public class MealMapper {
                         .collect(Collectors.toList()),
                 meal.getUserCount(),
                 meal.getCreatedBy() != null ? toUserDTO(meal.getCreatedBy()) : null,
-                meal.getAdjustedBy() != null ? toUserDTO(meal.getAdjustedBy()) : null
+                meal.getAdjustedBy() != null ? toUserDTO(meal.getAdjustedBy()) : null,
+                meal.getMealType(),
+                meal.getCuisine(),
+                meal.getDiet()
         );
         log.debug("Finished converting Meal entity to MealDTO: {}", dto);
         return dto;
@@ -85,6 +88,9 @@ public class MealMapper {
                     Meal meal = new Meal();
                     meal.setName(dto.getName());
                     meal.setMealDescription(dto.getMealDescription());
+                    meal.setMealType(dto.getMealType());
+                    meal.setCuisine(dto.getCuisine());
+                    meal.setDiet(dto.getDiet());
 
                     // Verwerk Base64 of URL afbeelding
                     if (dto.getImageFile() != null && !dto.getImageFile().isEmpty()) {

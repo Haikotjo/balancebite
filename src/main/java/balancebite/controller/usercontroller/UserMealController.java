@@ -46,6 +46,7 @@ public class UserMealController {
         this.consumeMealService = consumeMealService;
         this.jwtService = jwtService;
     }
+
     @PostMapping(value = "/create-meal", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> createMealForAuthenticatedUser(
             @RequestPart("mealInputDTO") String mealInputDTOJson,

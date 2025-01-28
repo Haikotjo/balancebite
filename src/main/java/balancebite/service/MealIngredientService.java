@@ -2,7 +2,7 @@ package balancebite.service;
 
 import balancebite.dto.mealingredient.MealIngredientInputDTO;
 import balancebite.mapper.MealIngredientMapper;
-import balancebite.model.Meal;
+import balancebite.model.meal.Meal;
 import balancebite.model.MealIngredient;
 import balancebite.repository.MealIngredientRepository;
 import balancebite.repository.MealRepository;

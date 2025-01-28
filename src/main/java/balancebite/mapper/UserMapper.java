@@ -42,7 +42,7 @@ public class UserMapper {
 
     /**
      * Converts a User entity to a UserDTO.
-     * Includes associated meals and recommended daily intakes.
+     * Includes associated meals, recommended daily intakes, and base recommended daily intake.
      *
      * @param user The User entity to convert.
      * @return The converted UserDTO or null if the input is null.
@@ -66,6 +66,10 @@ public class UserMapper {
                 .collect(Collectors.toList())
                 : List.of();
 
+        RecommendedDailyIntakeDTO baseRecommendedDailyIntakeDTO = user.getBaseRecommendedDailyIntake() != null
+                ? recommendedDailyIntakeMapper.toDTO(user.getBaseRecommendedDailyIntake())
+                : null;
+
         return new UserDTO(
                 user.getId(),
                 user.getUserName(),
@@ -78,7 +82,8 @@ public class UserMapper {
                 user.getGoal(),
                 mealDTOs,
                 user.getRoles(),
-                recommendedDailyIntakeDTOs
+                recommendedDailyIntakeDTOs,
+                baseRecommendedDailyIntakeDTO
         );
     }
 

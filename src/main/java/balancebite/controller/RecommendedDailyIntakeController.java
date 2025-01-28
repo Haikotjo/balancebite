@@ -75,6 +75,41 @@ public class RecommendedDailyIntakeController {
     }
 
     /**
+     * Endpoint to retrieve the base recommended daily intake for the authenticated user.
+     *
+     * @param authorizationHeader The Authorization header containing the JWT token.
+     * @return ResponseEntity containing the RecommendedDailyIntakeDTO with a 200 status if successful,
+     *         or a detailed error message if no base intake is found or user is not found.
+     */
+    @PreAuthorize("isAuthenticated()")
+    @GetMapping("/user/base")
+    public ResponseEntity<Object> getBaseRecommendedDailyIntakeForAuthenticatedUser(@RequestHeader("Authorization") String authorizationHeader) {
+        try {
+            log.info("Retrieving base daily intake for the authenticated user.");
+
+            // Extract user ID from the token
+            String token = authorizationHeader.substring(7); // Remove "Bearer " prefix
+            Long userId = jwtService.extractUserId(token);
+
+            // Retrieve base daily intake
+            RecommendedDailyIntakeDTO baseDailyIntake = recommendedDailyIntakeService.getBaseDailyIntakeForUser(userId);
+
+            log.info("Successfully retrieved base daily intake for user ID: {}", userId);
+            return ResponseEntity.ok(baseDailyIntake);
+        } catch (DailyIntakeNotFoundException e) {
+            log.warn("Base daily intake not found: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+        } catch (UserNotFoundException e) {
+            log.warn("User not found: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            log.error("Unexpected error during base daily intake retrieval: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "An unexpected error occurred."));
+        }
+    }
+
+
+    /**
      * Endpoint to retrieve the cumulative recommended nutrient intake for the current week for a specific user.
      *
      * @param userId The ID of the user to retrieve the weekly recommended intake.

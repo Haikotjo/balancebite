@@ -75,6 +75,33 @@ public class RecommendedDailyIntakeService implements IRecommendedDailyIntakeSer
     }
 
     /**
+     * Retrieves the base recommended daily intake for a specific user.
+     *
+     * @param userId The ID of the user for whom the base recommended daily intake is retrieved.
+     * @return A DTO containing the base recommended daily intake values.
+     * @throws DailyIntakeNotFoundException If no base recommended daily intake is found for the user.
+     */
+    @Override
+    public RecommendedDailyIntakeDTO getBaseDailyIntakeForUser(Long userId) {
+        log.info("Attempting to retrieve base recommended daily intake for user with ID: {}", userId);
+
+        // Fetch the user to ensure they exist.
+        User user = findUserById(userId);
+        log.info("Fetched user: ID={}, Gender={}, ActivityLevel={}, Goal={}",
+                user.getId(), user.getGender(), user.getActivityLevel(), user.getGoal());
+
+        // Retrieve the Base RDI
+        RecommendedDailyIntake baseRDI = user.getBaseRecommendedDailyIntake();
+        if (baseRDI != null) {
+            log.info("Found BaseRecommendedDailyIntake for user ID {} with ID {}", userId, baseRDI.getId());
+            return recommendedDailyIntakeMapper.toDTO(baseRDI);
+        } else {
+            log.warn("No BaseRecommendedDailyIntake found for user ID {}", userId);
+            throw new DailyIntakeNotFoundException("No base daily intake found for user ID: " + userId);
+        }
+    }
+
+    /**
      * Retrieves the cumulative weekly nutrient intake for a specific user.
      *
      * @param userId The ID of the user whose weekly intake is being retrieved.
