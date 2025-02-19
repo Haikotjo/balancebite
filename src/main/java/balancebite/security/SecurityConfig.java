@@ -115,6 +115,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/meals/{id}").permitAll()
                         .requestMatchers(HttpMethod.GET, "/meals/nutrients/{id}").permitAll()
                         .requestMatchers(HttpMethod.GET, "/meals/nutrients-per-food-item/{id}").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/meals/sorted").permitAll()
 
                         .requestMatchers(HttpMethod.POST, "/meals-admin/create-meal").hasAnyRole("ADMIN", "CHEF")
                         .requestMatchers(HttpMethod.PATCH, "/meals-admin/update-meal").hasAnyRole("ADMIN", "CHEF")

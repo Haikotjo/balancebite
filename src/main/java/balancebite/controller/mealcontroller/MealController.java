@@ -37,59 +37,6 @@ public class MealController {
         this.mealService = mealService;
     }
 
-//    /**
-//     * Creates a new Meal entity based on the provided MealInputDTO.
-//     *
-//     * @param mealInputDTO The input data for creating the meal.
-//     * @return ResponseEntity containing the created MealDTO with 201 status code, or an error response with an appropriate status.
-//     */
-//    @PostMapping
-//    public ResponseEntity<?> createMealNoUser(@RequestBody MealInputDTO mealInputDTO) {
-//        try {
-//            log.info("Creating new meal with name: {}", mealInputDTO.getName());
-//            MealDTO createdMeal = mealService.createMealNoUser(mealInputDTO);
-//            return ResponseEntity.status(HttpStatus.CREATED).body(createdMeal);
-//        } catch (DuplicateMealException e) {
-//            log.warn("Duplicate meal detected for meal name {}: {}", mealInputDTO.getName(), e.getMessage());
-//            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", e.getMessage()));
-//        } catch (InvalidFoodItemException e) {
-//            log.warn("Invalid food item for meal creation: {}", e.getMessage());
-//            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
-//        } catch (Exception e) {
-//            log.error("Unexpected error during meal creation: {}", e.getMessage(), e);
-//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "An unexpected error occurred."));
-//        }
-//    }
-
-
-//    /**
-//     * Updates an existing Meal entity by its ID with the provided MealInputDTO.
-//     *
-//     * @param id           The ID of the meal to update.
-//     * @param mealInputDTO The new details of the meal.
-//     * @return ResponseEntity containing the updated MealDTO with 200 status code, or an error response with an appropriate status.
-//     */
-//    @PatchMapping("/{id}")
-//    public ResponseEntity<?> updateMeal(@PathVariable Long id, @RequestBody MealInputDTO mealInputDTO) {
-//        try {
-//            log.info("Updating meal with ID: {}", id);
-//            MealDTO updatedMeal = mealService.updateMeal(id, mealInputDTO);
-//            return ResponseEntity.ok(updatedMeal);
-//        } catch (DuplicateMealException e) {
-//            log.warn("Duplicate meal detected during update for meal ID {}: {}", id, e.getMessage());
-//            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", e.getMessage()));
-//        } catch (EntityNotFoundException e) {
-//            log.warn("Meal not found with ID {}: {}", id, e.getMessage());
-//            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
-//        } catch (InvalidFoodItemException e) {
-//            log.warn("Invalid food item in meal update: {}", e.getMessage());
-//            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
-//        } catch (Exception e) {
-//            log.error("Unexpected error during meal update for ID {}: {}", id, e.getMessage(), e);
-//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "An unexpected error occurred."));
-//        }
-//    }
-
     /**
      * Retrieves all template Meal entities from the repository.
      *
@@ -138,27 +85,6 @@ public class MealController {
         }
     }
 
-//    /**
-//     * Deletes a specific Meal entity by its ID.
-//     *
-//     * @param mealId The ID of the meal to delete.
-//     * @return ResponseEntity with 204 NO CONTENT status if deletion is successful, or an error response with an appropriate status.
-//     */
-//    @DeleteMapping("/{mealId}")
-//    public ResponseEntity<?> deleteMeal(@PathVariable Long mealId) {
-//        try {
-//            log.info("Deleting meal with ID: {}", mealId);
-//            mealService.deleteMeal(mealId);
-//            return ResponseEntity.noContent().build();
-//        } catch (EntityNotFoundException e) {
-//            log.warn("Meal not found for deletion with ID: {}", mealId, e.getMessage());
-//            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
-//        } catch (Exception e) {
-//            log.error("Unexpected error during meal deletion for ID {}: {}", mealId, e.getMessage(), e);
-//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "An unexpected error occurred."));
-//        }
-//    }
-
     /**
      * Retrieves nutrient information per food item for a specific meal by its ID.
      *
@@ -200,6 +126,38 @@ public class MealController {
         } catch (Exception e) {
             log.error("Unexpected error during total nutrient calculation for meal ID {}: {}", id, e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "An unexpected error occurred."));
+        }
+    }
+
+    /**
+     * Retrieves and returns all template meals sorted by a specific nutrient.
+     *
+     * @param sortField The nutrient name to sort by (e.g., "Energy", "Protein", "Total lipid (fat)").
+     * @param sortOrder The sorting order ("asc" for ascending, "desc" for descending").
+     * @return ResponseEntity containing a sorted list of MealDTOs, or an error response with an appropriate status.
+     */
+    @GetMapping("/sorted")
+    public ResponseEntity<?> getSortedMeals(
+            @RequestParam String sortField,
+            @RequestParam(defaultValue = "desc") String sortOrder
+    ) {
+        log.info("Received request to retrieve and sort template meals by {} in {} order.", sortField, sortOrder);
+
+        try {
+            List<MealDTO> sortedMeals = mealService.getSortedMeals(sortField, sortOrder);
+
+            if (sortedMeals.isEmpty()) {
+                log.info("No meals found for sorting by {}.", sortField);
+                return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+            }
+
+            log.info("Successfully retrieved {} meals sorted by {}.", sortedMeals.size(), sortField);
+            return ResponseEntity.ok(sortedMeals);
+
+        } catch (Exception e) {
+            log.error("Unexpected error during sorted meal retrieval: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "An unexpected error occurred."));
         }
     }
 }

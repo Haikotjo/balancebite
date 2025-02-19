@@ -52,118 +52,6 @@ public class MealService implements IMealService {
         this.checkForDuplicateTemplateMeal = checkForDuplicateTemplateMeal;
     }
 
-//    /**
-//     * Creates a new Meal entity based on the provided MealInputDTO.
-//     * This method converts the input DTO to a Meal entity, checks the validity of each FoodItem in the meal,
-//     * persists the entity, and then converts the result back to a DTO.
-//     *
-//     * @param mealInputDTO The DTO containing the input data for creating a Meal.
-//     * @return The created MealDTO with the persisted meal information.
-//     * @throws InvalidFoodItemException if any food item in the input is invalid.
-//     * @throws DuplicateMealException if a template meal with the same ingredients already exists.
-//     */
-//    @Override
-//    @Transactional
-//    public MealDTO createMealNoUser(MealInputDTO mealInputDTO) {
-//        log.info("Attempting to create a new meal with name: {}", mealInputDTO.getName());
-//
-//        // Controleer of zowel image als imageUrl is ingevuld
-//        if (mealInputDTO.getImage() != null && mealInputDTO.getImageUrl() != null) {
-//            log.error("Both image and imageUrl provided. Only one of them is allowed.");
-//            throw new IllegalArgumentException("You can only provide either an image or an imageUrl, not both.");
-//        }
-//
-//        // Convert input DTO to Meal entity
-//        Meal meal = mealMapper.toEntity(mealInputDTO);
-//
-//        // Handle image and imageUrl logic
-//        if (mealInputDTO.getImage() != null) {
-//            log.info("Using uploaded image for the meal.");
-//            meal.setImage(mealInputDTO.getImage());
-//        } else if (mealInputDTO.getImageUrl() != null) {
-//            log.info("Using provided image URL for the meal.");
-//            meal.setImageUrl(mealInputDTO.getImageUrl());
-//        } else {
-//            log.info("No image or imageUrl provided for the meal.");
-//        }
-//
-//        // Collect all FoodItem IDs from the Meal's ingredients
-//        List<Long> foodItemIds = meal.getMealIngredients().stream()
-//                .map(mi -> mi.getFoodItem().getId())
-//                .collect(Collectors.toList());
-//        log.debug("Collected food item IDs for duplicate check: {}", foodItemIds);
-//
-//        // Validate each FoodItem ID to ensure it exists in the database
-//        for (Long foodItemId : foodItemIds) {
-//            if (!foodItemRepository.existsById(foodItemId)) {
-//                log.error("Invalid food item ID: {}", foodItemId);
-//                throw new InvalidFoodItemException("Invalid food item ID: " + foodItemId);
-//            }
-//        }
-//
-//        // Use CheckForDuplicateTemplateMealUtil to check for duplicate template meals
-//        checkForDuplicateTemplateMeal.checkForDuplicateTemplateMeal(foodItemIds, null);
-//
-//        // Prepare the meal for saving and log the action
-//        log.debug("Meal prepared for saving: {}", meal);
-//        Meal savedMeal = mealRepository.save(meal);
-//        log.info("Successfully created a new meal with ID: {}", savedMeal.getId());
-//
-//        // Convert saved Meal entity to DTO for the response
-//        return mealMapper.toDTO(savedMeal);
-//    }
-
-//    /**
-//     * Updates an existing Meal entity with new information.
-//     * If the meal is a template (isTemplate = true), it checks to ensure no duplicate ingredient lists.
-//     * The user relationship remains unchanged during this update.
-//     *
-//     * @param id           the ID of the meal to be updated.
-//     * @param mealInputDTO the DTO containing the updated meal information.
-//     * @return the updated MealDTO containing the new meal data.
-//     * @throws EntityNotFoundException if the meal with the given ID is not found.
-//     * @throws InvalidFoodItemException if any food item ID in the ingredients is invalid.
-//     * @throws DuplicateMealException   if updating would create a duplicate template meal.
-//     */
-//    @Override
-//    @Transactional
-//    public MealDTO updateMeal(Long id, MealInputDTO mealInputDTO) {
-//        log.info("Updating meal with ID: {}", id);
-//        Meal existingMeal = mealRepository.findById(id)
-//                .orElseThrow(() -> new EntityNotFoundException("Meal not found with ID: " + id));
-//
-//        // Duplicate check for template meals (isTemplate = true)
-//        if (existingMeal.isTemplate() && mealInputDTO.getMealIngredients() != null) {
-//            List<Long> foodItemIds = mealInputDTO.getMealIngredients().stream()
-//                    .map(MealIngredientInputDTO::getFoodItemId)
-//                    .toList();
-//
-//            // Use CheckForDuplicateTemplateMealUtil to check for duplicate template meals, passing the current meal ID
-//            checkForDuplicateTemplateMeal.checkForDuplicateTemplateMeal(foodItemIds, id);
-//        }
-//
-//        // Proceed with updating the meal fields
-//        if (mealInputDTO.getName() != null) {
-//            existingMeal.setName(mealInputDTO.getName());
-//        }
-//        if (mealInputDTO.getMealDescription() != null) {
-//            existingMeal.setMealDescription(mealInputDTO.getMealDescription());
-//        }
-//
-//        if (mealInputDTO.getMealIngredients() != null) {
-//            // Clear existing ingredients only if we have a new list to replace them with
-//            existingMeal.getMealIngredients().clear();
-//            List<MealIngredient> updatedIngredients = mealInputDTO.getMealIngredients().stream()
-//                    .map(inputDTO -> mealIngredientMapper.toEntity(inputDTO, existingMeal))
-//                    .toList();
-//            existingMeal.addMealIngredients(updatedIngredients);
-//        }
-//
-//        Meal savedMeal = mealRepository.save(existingMeal);
-//        log.info("Successfully updated meal with ID: {}", id);
-//        return mealMapper.toDTO(savedMeal);
-//    }
-
     /**
      * Retrieves all template Meals from the repository (isTemplate = true).
      *
@@ -257,5 +145,61 @@ public class MealService implements IMealService {
                 NutrientCalculatorUtil.calculateNutrientsPerFoodItem(meal.getMealIngredients());
         log.info("Nutrient calculation per food item completed for meal ID: {}.", mealId);
         return nutrientsPerFoodItem;
+    }
+
+    /**
+     * Retrieves all template meals, calculates their total nutrient values dynamically, and sorts them.
+     *
+     * @param sortField The nutrient name to sort by (e.g., "Energy", "Protein", "Total lipid (fat)").
+     * @param sortOrder The sorting order ("asc" for ascending, "desc" for descending").
+     * @return A sorted list of MealDTOs containing meals and their total nutrients.
+     */
+    @Transactional(readOnly = true)
+    public List<MealDTO> getSortedMeals(String sortField, String sortOrder) {
+        log.info("Retrieving and sorting all template meals based on nutrient: {} in {} order.", sortField, sortOrder);
+
+        sortField = switch (sortField.toLowerCase()) {
+            case "protein" -> "Protein g";
+            case "fat" -> "Total lipid (fat)";
+            case "carbs" -> "Carbohydrates g";
+            case "calories" -> "Energy kcal";
+            default -> sortField; // Laat originele waarde als het niet in de lijst staat
+        };
+
+        // Haal alle template meals op
+        List<Meal> templateMeals = mealRepository.findAllTemplateMeals();
+        if (templateMeals.isEmpty()) {
+            log.info("No template meals found.");
+            return Collections.emptyList();
+        }
+
+        // Bereken en log nutrientwaarden VOORDAT er gesorteerd wordt
+        Map<Long, Double> mealNutrientValues = new HashMap<>();
+
+        for (Meal meal : templateMeals) {
+            double nutrientValue = calculateNutrients(meal.getId())
+                    .getOrDefault(sortField, new NutrientInfoDTO(sortField, 0.0, ""))
+                    .getValue();
+
+            mealNutrientValues.put(meal.getId(), nutrientValue);
+            log.info("Meal ID: {}, Name: {}, {}: {}", meal.getId(), meal.getName(), sortField, nutrientValue);
+        }
+
+        // Sorteer meals op opgegeven nutrientwaarde
+        Comparator<Meal> comparator = Comparator.comparing(meal -> mealNutrientValues.getOrDefault(meal.getId(), 0.0));
+
+        if ("desc".equalsIgnoreCase(sortOrder)) {
+            comparator = comparator.reversed();
+        }
+
+        templateMeals.sort(comparator);
+
+        // Map meals naar DTO zonder setters
+        List<MealDTO> sortedMealDTOs = templateMeals.stream()
+                .map(mealMapper::toDTO)
+                .toList();
+
+        log.info("Successfully sorted {} meals by {} in {} order.", sortedMealDTOs.size(), sortField, sortOrder);
+        return sortedMealDTOs;
     }
 }

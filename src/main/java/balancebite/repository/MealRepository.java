@@ -93,4 +93,6 @@ public interface MealRepository extends JpaRepository<Meal, Long> {
      */
     @Query("SELECT m FROM Meal m WHERE m.createdBy = :user OR m.adjustedBy = :user")
     List<Meal> findByCreatedByOrAdjustedBy(@Param("user") User user);
+
 }
+
