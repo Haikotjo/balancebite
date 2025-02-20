@@ -81,6 +81,31 @@ public class MealDTO {
      */
     private final Diet diet;
 
+    /**
+     * Total calculated calories of the meal.
+     */
+    private final double totalCalories;
+
+    /**
+     * Total calculated protein content of the meal (grams).
+     */
+    private final double totalProtein;
+
+    /**
+     * Total calculated carbohydrate content of the meal (grams).
+     */
+    private final double totalCarbs;
+
+    /**
+     * Total calculated fat content of the meal (grams).
+     */
+    private final double totalFat;
+
+    /**
+     * A concatenated string of food item names in the meal.
+     * This allows for searching and sorting based on included food items.
+     */
+    private final String foodItemsString;
 
     /**
      * Constructor for creating a MealDTO with essential meal information.
@@ -97,8 +122,17 @@ public class MealDTO {
      * @param mealType         the type of meal (optional). Defines if the meal is breakfast, lunch, dinner, or snack.
      * @param cuisine          the cuisine type of the meal (optional). Represents the cultural or regional origin.
      * @param diet             the dietary category of the meal (optional). Used for filtering meals based on diet.
+     * @param totalCalories    the total calculated calorie count of the meal.
+     * @param totalProtein     the total calculated protein content of the meal (grams).
+     * @param totalCarbs       the total calculated carbohydrate content of the meal (grams).
+     * @param totalFat         the total calculated fat content of the meal (grams).
+     * @param foodItemsString  the concatenated string of food items in the meal.
      */
-    public MealDTO(Long id, String name, String mealDescription, String image, String imageUrl, List<MealIngredientDTO> mealIngredients, int userCount, UserDTO createdBy, UserDTO adjustedBy, MealType mealType, Cuisine cuisine, Diet diet) {
+    public MealDTO(Long id, String name, String mealDescription, String image, String imageUrl,
+                   List<MealIngredientDTO> mealIngredients, int userCount, UserDTO createdBy,
+                   UserDTO adjustedBy, MealType mealType, Cuisine cuisine, Diet diet,
+                   double totalCalories, double totalProtein, double totalCarbs,
+                   double totalFat, String foodItemsString) {
         this.id = id;
         this.name = name;
         this.mealDescription = mealDescription;
@@ -111,6 +145,11 @@ public class MealDTO {
         this.mealType = mealType;
         this.cuisine = cuisine;
         this.diet = diet;
+        this.totalCalories = totalCalories;
+        this.totalProtein = totalProtein;
+        this.totalCarbs = totalCarbs;
+        this.totalFat = totalFat;
+        this.foodItemsString = foodItemsString;
     }
 
     /**
@@ -223,5 +262,50 @@ public class MealDTO {
      */
     public Diet getDiet() {
         return diet;
+    }
+
+    /**
+     * Gets the total calculated calories of the meal.
+     *
+     * @return the total calories.
+     */
+    public double getTotalCalories() {
+        return totalCalories;
+    }
+
+    /**
+     * Gets the total calculated protein content of the meal (grams).
+     *
+     * @return the total protein.
+     */
+    public double getTotalProtein() {
+        return totalProtein;
+    }
+
+    /**
+     * Gets the total calculated carbohydrate content of the meal (grams).
+     *
+     * @return the total carbohydrates.
+     */
+    public double getTotalCarbs() {
+        return totalCarbs;
+    }
+
+    /**
+     * Gets the total calculated fat content of the meal (grams).
+     *
+     * @return the total fat.
+     */
+    public double getTotalFat() {
+        return totalFat;
+    }
+
+    /**
+     * Gets the concatenated string of food items in the meal.
+     *
+     * @return the food items string.
+     */
+    public String getFoodItemsString() {
+        return foodItemsString;
     }
 }

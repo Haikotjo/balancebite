@@ -67,7 +67,12 @@ public class MealMapper {
                 meal.getAdjustedBy() != null ? toUserDTO(meal.getAdjustedBy()) : null,
                 meal.getMealType(),
                 meal.getCuisine(),
-                meal.getDiet()
+                meal.getDiet(),
+                meal.getTotalCalories(),
+                meal.getTotalProtein(),
+                meal.getTotalCarbs(),
+                meal.getTotalFat(),
+                meal.getFoodItemsString()
         );
         log.debug("Finished converting Meal entity to MealDTO: {}", dto);
         return dto;

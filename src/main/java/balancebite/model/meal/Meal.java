@@ -9,6 +9,7 @@ import balancebite.model.user.userenums.ActivityLevel;
 import jakarta.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Entity class representing a meal.
@@ -110,11 +111,96 @@ public class Meal {
     @Enumerated(EnumType.STRING)
     private Diet diet;
 
+    /**
+     * Stores the total calorie count of the meal.
+     * This value is updated whenever meal ingredients change.
+     */
+    @Column(name = "total_calories", nullable = false)
+    private double totalCalories = 0.0;
+
+    /**
+     * Stores the total protein content of the meal (grams).
+     */
+    @Column(name = "total_protein", nullable = false)
+    private double totalProtein = 0.0;
+
+    /**
+     * Stores the total carbohydrate content of the meal (grams).
+     */
+    @Column(name = "total_carbs", nullable = false)
+    private double totalCarbs = 0.0;
+
+    /**
+     * Stores the total fat content of the meal (grams).
+     */
+    @Column(name = "total_fat", nullable = false)
+    private double totalFat = 0.0;
+
+    /**
+     * Stores a concatenated string of food item names in the meal.
+     * This allows for searching and sorting based on included food items.
+     */
+    @Column(name = "food_items_string", length = 500)
+    private String foodItemsString = "";
 
     /**
      * No-argument constructor required by JPA.
      */
     public Meal() {}
+
+    /**
+     * Updates the total nutrient values based on the meal's ingredients.
+     * This method should be called whenever meal ingredients change.
+     */
+    public void updateNutrients() {
+        if (mealIngredients == null || mealIngredients.isEmpty()) {
+            this.totalCalories = 0.0;
+            this.totalProtein = 0.0;
+            this.totalCarbs = 0.0;
+            this.totalFat = 0.0;
+            this.foodItemsString = "";
+            return;
+        }
+
+        this.totalCalories = mealIngredients.stream()
+                .filter(mi -> mi.getFoodItem() != null && mi.getFoodItem().getNutrients() != null)
+                .flatMap(mi -> mi.getFoodItem().getNutrients().stream()
+                        .filter(n -> "Energy".equalsIgnoreCase(n.getNutrientName()) && n.getValue() != null)
+                        .map(n -> n.getValue() * (mi.getQuantity() / 100.0)))
+                .mapToDouble(Double::doubleValue)
+                .sum();
+
+        this.totalProtein = mealIngredients.stream()
+                .filter(mi -> mi.getFoodItem() != null && mi.getFoodItem().getNutrients() != null)
+                .flatMap(mi -> mi.getFoodItem().getNutrients().stream()
+                        .filter(n -> "Protein".equalsIgnoreCase(n.getNutrientName()) && n.getValue() != null)
+                        .map(n -> n.getValue() * (mi.getQuantity() / 100.0)))
+                .mapToDouble(Double::doubleValue)
+                .sum();
+
+        this.totalCarbs = mealIngredients.stream()
+                .filter(mi -> mi.getFoodItem() != null && mi.getFoodItem().getNutrients() != null)
+                .flatMap(mi -> mi.getFoodItem().getNutrients().stream()
+                        .filter(n -> "Carbohydrates".equalsIgnoreCase(n.getNutrientName()) && n.getValue() != null)
+                        .map(n -> n.getValue() * (mi.getQuantity() / 100.0)))
+                .mapToDouble(Double::doubleValue)
+                .sum();
+
+        this.totalFat = mealIngredients.stream()
+                .filter(mi -> mi.getFoodItem() != null && mi.getFoodItem().getNutrients() != null)
+                .flatMap(mi -> mi.getFoodItem().getNutrients().stream()
+                        .filter(n -> "Total lipid (fat)".equalsIgnoreCase(n.getNutrientName()) && n.getValue() != null)
+                        .map(n -> n.getValue() * (mi.getQuantity() / 100.0)))
+                .mapToDouble(Double::doubleValue)
+                .sum();
+
+        this.foodItemsString = mealIngredients.stream()
+                .filter(mi -> mi.getFoodItem() != null)
+                .map(mi -> mi.getFoodItem().getName())
+                .distinct()
+                .sorted()
+                .collect(Collectors.joining(", "));
+    }
 
     /**
      * Constructor to initialize a Meal with a name and description.
@@ -377,4 +463,13 @@ public class Meal {
         this.cuisine = cuisine;
     }
 
+    public double getTotalCalories() { return totalCalories; }
+
+    public double getTotalProtein() { return totalProtein; }
+
+    public double getTotalCarbs() { return totalCarbs; }
+
+    public double getTotalFat() { return totalFat; }
+
+    public String getFoodItemsString() { return foodItemsString; }
 }

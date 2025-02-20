@@ -38,23 +38,33 @@ public class MealController {
     }
 
     /**
-     * Retrieves all template Meal entities from the repository.
+     * Retrieves all template Meal entities from the repository with optional sorting.
      *
-     * @return ResponseEntity containing a list of MealDTO objects representing all template meals, or a 204 NO CONTENT if no templates are found.
+     * @param sortBy (Optional) The field to sort by ("calories", "protein", "fat", "carbs", or "foodItem").
+     * @param sortOrder (Optional) The sorting order ("asc" for ascending, "desc" for descending").
+     * @return ResponseEntity containing a list of MealDTO objects representing all template meals,
+     * or a 204 NO CONTENT if no templates are found.
      */
     @GetMapping
-    public ResponseEntity<?> getAllMeals() {
+    public ResponseEntity<?> getAllMeals(
+            @RequestParam(required = false) String sortBy,
+            @RequestParam(required = false, defaultValue = "asc") String sortOrder
+    ) {
         try {
-            log.info("Retrieving all template meals.");
-            List<MealDTO> mealDTOs = mealService.getAllMeals(); // Now returns only template meals
+            log.info("Retrieving all template meals with sorting. sortBy: {}, sortOrder: {}", sortBy, sortOrder);
+
+            List<MealDTO> mealDTOs = mealService.getAllMeals(sortBy, sortOrder);
+
             if (mealDTOs.isEmpty()) {
                 log.info("No template meals found.");
                 return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
             }
+
             return ResponseEntity.ok(mealDTOs);
         } catch (Exception e) {
             log.error("Unexpected error during retrieval of all template meals: {}", e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "An unexpected error occurred."));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "An unexpected error occurred."));
         }
     }
 
@@ -126,38 +136,6 @@ public class MealController {
         } catch (Exception e) {
             log.error("Unexpected error during total nutrient calculation for meal ID {}: {}", id, e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "An unexpected error occurred."));
-        }
-    }
-
-    /**
-     * Retrieves and returns all template meals sorted by a specific nutrient.
-     *
-     * @param sortField The nutrient name to sort by (e.g., "Energy", "Protein", "Total lipid (fat)").
-     * @param sortOrder The sorting order ("asc" for ascending, "desc" for descending").
-     * @return ResponseEntity containing a sorted list of MealDTOs, or an error response with an appropriate status.
-     */
-    @GetMapping("/sorted")
-    public ResponseEntity<?> getSortedMeals(
-            @RequestParam String sortField,
-            @RequestParam(defaultValue = "desc") String sortOrder
-    ) {
-        log.info("Received request to retrieve and sort template meals by {} in {} order.", sortField, sortOrder);
-
-        try {
-            List<MealDTO> sortedMeals = mealService.getSortedMeals(sortField, sortOrder);
-
-            if (sortedMeals.isEmpty()) {
-                log.info("No meals found for sorting by {}.", sortField);
-                return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
-            }
-
-            log.info("Successfully retrieved {} meals sorted by {}.", sortedMeals.size(), sortField);
-            return ResponseEntity.ok(sortedMeals);
-
-        } catch (Exception e) {
-            log.error("Unexpected error during sorted meal retrieval: {}", e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "An unexpected error occurred."));
         }
     }
 }

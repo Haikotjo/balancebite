@@ -1,11 +1,16 @@
 package balancebite.repository;
 
+import balancebite.dto.NutrientInfoDTO;
+import balancebite.dto.meal.MealDTO;
 import balancebite.model.meal.Meal;
 import balancebite.model.user.User;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
@@ -94,5 +99,28 @@ public interface MealRepository extends JpaRepository<Meal, Long> {
     @Query("SELECT m FROM Meal m WHERE m.createdBy = :user OR m.adjustedBy = :user")
     List<Meal> findByCreatedByOrAdjustedBy(@Param("user") User user);
 
+    /**
+     * Retrieves all meals that match the given filters and applies sorting and pagination.
+     *
+     * @param createdByUserId Optional user ID to filter meals by creator.
+     * @param cuisine Optional cuisine type to filter meals.
+     * @param diet Optional diet type to filter meals.
+     * @param mealType Optional meal type to filter meals (e.g., "Breakfast", "Lunch").
+     * @param pageable Pageable object for sorting and paginating results.
+     * @return A paginated and sorted list of Meal objects.
+     */
+    @Query("SELECT m FROM Meal m " +
+            "LEFT JOIN FETCH m.mealIngredients mi " + // Koppel mealIngredients om nutrients te kunnen berekenen later
+            "WHERE (:createdByUserId IS NULL OR m.createdBy.id = :createdByUserId) " +
+            "AND (:cuisine IS NULL OR m.cuisine = :cuisine) " +
+            "AND (:diet IS NULL OR m.diet = :diet) " +
+            "AND (:mealType IS NULL OR m.mealType = :mealType)")
+    Page<Meal> findMealsWithFilters(
+            @Param("createdByUserId") Long createdByUserId,
+            @Param("cuisine") String cuisine,
+            @Param("diet") String diet,
+            @Param("mealType") String mealType,
+            Pageable pageable
+    );
 }
 

@@ -53,21 +53,61 @@ public class MealService implements IMealService {
     }
 
     /**
-     * Retrieves all template Meals from the repository (isTemplate = true).
+     * Retrieves all template meals and applies optional sorting.
      *
-     * @return a list of MealDTOs representing all template meals, or an empty list if no templates are found.
+     * Meals can be sorted based on nutrients (calories, protein, fat, carbs) or
+     * based on the first alphabetically sorted food item name in the meal ingredients.
+     *
+     * @param sortBy The field to sort by ("calories", "protein", "fat", "carbs", or "foodItem").
+     * @param sortOrder The sorting order ("asc" for ascending, "desc" for descending).
+     * @return A list of MealDTOs representing all template meals, sorted as requested.
      */
     @Override
     @Transactional(readOnly = true)
-    public List<MealDTO> getAllMeals() {
-        log.info("Retrieving all template meals from the system.");
-        List<Meal> templateMeals = mealRepository.findAllTemplateMeals(); // Only fetch meals with isTemplate = true
-        if (templateMeals.isEmpty()) {
-            log.info("No template meals found in the system.");
-        } else {
-            log.info("Found {} template meals in the system.", templateMeals.size());
+    public List<MealDTO> getAllMeals(String sortBy, String sortOrder) {
+        log.info("Retrieving all template meals with sorting on: {} in {} order.", sortBy, sortOrder);
+
+        // Haal meals op met filtering
+        List<Meal> meals = mealRepository.findAllTemplateMeals();
+
+        // Nutrient sorting gebeurt hier (omdat nutrienten berekend moeten worden)
+        if ("calories".equalsIgnoreCase(sortBy) ||
+                "protein".equalsIgnoreCase(sortBy) ||
+                "fat".equalsIgnoreCase(sortBy) ||
+                "carbs".equalsIgnoreCase(sortBy)) {
+
+            Map<Long, Double> mealNutrientValues = new HashMap<>();
+            for (Meal meal : meals) {
+                double nutrientValue = calculateNutrients(meal.getId())
+                        .getOrDefault(sortBy, new NutrientInfoDTO(sortBy, 0.0, ""))
+                        .getValue();
+                mealNutrientValues.put(meal.getId(), nutrientValue);
+            }
+
+            meals.sort(Comparator.comparing(meal -> mealNutrientValues.getOrDefault(meal.getId(), 0.0)));
+
+            if ("desc".equalsIgnoreCase(sortOrder)) {
+                Collections.reverse(meals);
+            }
         }
-        return templateMeals.stream().map(mealMapper::toDTO).toList();
+
+        // Sorting op food item name (mealIngredients)
+        else if ("foodItem".equalsIgnoreCase(sortBy)) {
+            meals.sort(Comparator.comparing(meal ->
+                    meal.getMealIngredients().stream()
+                            .map(mi -> mi.getFoodItem().getName())
+                            .sorted()
+                            .findFirst()
+                            .orElse("")
+            ));
+
+            if ("desc".equalsIgnoreCase(sortOrder)) {
+                Collections.reverse(meals);
+            }
+        }
+
+        log.info("Successfully retrieved and sorted {} meals.", meals.size());
+        return meals.stream().map(mealMapper::toDTO).toList();
     }
 
     /**
@@ -145,61 +185,5 @@ public class MealService implements IMealService {
                 NutrientCalculatorUtil.calculateNutrientsPerFoodItem(meal.getMealIngredients());
         log.info("Nutrient calculation per food item completed for meal ID: {}.", mealId);
         return nutrientsPerFoodItem;
-    }
-
-    /**
-     * Retrieves all template meals, calculates their total nutrient values dynamically, and sorts them.
-     *
-     * @param sortField The nutrient name to sort by (e.g., "Energy", "Protein", "Total lipid (fat)").
-     * @param sortOrder The sorting order ("asc" for ascending, "desc" for descending").
-     * @return A sorted list of MealDTOs containing meals and their total nutrients.
-     */
-    @Transactional(readOnly = true)
-    public List<MealDTO> getSortedMeals(String sortField, String sortOrder) {
-        log.info("Retrieving and sorting all template meals based on nutrient: {} in {} order.", sortField, sortOrder);
-
-        sortField = switch (sortField.toLowerCase()) {
-            case "protein" -> "Protein g";
-            case "fat" -> "Total lipid (fat)";
-            case "carbs" -> "Carbohydrates g";
-            case "calories" -> "Energy kcal";
-            default -> sortField; // Laat originele waarde als het niet in de lijst staat
-        };
-
-        // Haal alle template meals op
-        List<Meal> templateMeals = mealRepository.findAllTemplateMeals();
-        if (templateMeals.isEmpty()) {
-            log.info("No template meals found.");
-            return Collections.emptyList();
-        }
-
-        // Bereken en log nutrientwaarden VOORDAT er gesorteerd wordt
-        Map<Long, Double> mealNutrientValues = new HashMap<>();
-
-        for (Meal meal : templateMeals) {
-            double nutrientValue = calculateNutrients(meal.getId())
-                    .getOrDefault(sortField, new NutrientInfoDTO(sortField, 0.0, ""))
-                    .getValue();
-
-            mealNutrientValues.put(meal.getId(), nutrientValue);
-            log.info("Meal ID: {}, Name: {}, {}: {}", meal.getId(), meal.getName(), sortField, nutrientValue);
-        }
-
-        // Sorteer meals op opgegeven nutrientwaarde
-        Comparator<Meal> comparator = Comparator.comparing(meal -> mealNutrientValues.getOrDefault(meal.getId(), 0.0));
-
-        if ("desc".equalsIgnoreCase(sortOrder)) {
-            comparator = comparator.reversed();
-        }
-
-        templateMeals.sort(comparator);
-
-        // Map meals naar DTO zonder setters
-        List<MealDTO> sortedMealDTOs = templateMeals.stream()
-                .map(mealMapper::toDTO)
-                .toList();
-
-        log.info("Successfully sorted {} meals by {} in {} order.", sortedMealDTOs.size(), sortField, sortOrder);
-        return sortedMealDTOs;
     }
 }

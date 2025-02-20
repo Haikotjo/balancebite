@@ -62,11 +62,10 @@ public class UserMealService implements IUserMealService {
         this.jwtService = jwtService;
         this.fileStorageService = fileStorageService;
     }
-
     /**
      * Creates a new Meal entity for a specific user based on the provided MealInputDTO.
      * Converts the input DTO to a Meal entity, validates the meal, associates it with the user,
-     * persists the entity, and returns the resulting DTO.
+     * updates nutrient calculations, persists the entity, and returns the resulting DTO.
      *
      * @param mealInputDTO The DTO containing the input data for creating the Meal.
      * @param userId       The ID of the user to whom the meal will be associated.
@@ -111,6 +110,9 @@ public class UserMealService implements IUserMealService {
         meal.setCreatedBy(user);
         meal.incrementUserCount();
         user.getMeals().add(meal);
+
+        // 🔥 **BELANGRIJK:** Update de voedingswaarden vóór opslaan!
+        meal.updateNutrients();
 
         // Save meal and user
         Meal savedMeal = mealRepository.save(meal);

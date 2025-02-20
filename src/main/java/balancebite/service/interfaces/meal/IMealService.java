@@ -37,11 +37,16 @@ public interface IMealService {
 //    MealDTO updateMeal(Long id, MealInputDTO mealInputDTO) throws EntityNotFoundException, InvalidFoodItemException;
 
     /**
-     * Retrieves all Meals from the repository.
+     * Retrieves all template meals and applies optional sorting.
      *
-     * @return A list of MealDTOs, or an empty list if no meals are found.
+     * Meals can be sorted based on calculated nutrient values (calories, protein, fat, carbs)
+     * or by the first alphabetically sorted food item name.
+     *
+     * @param sortBy The field to sort by ("calories", "protein", "fat", "carbs", or "foodItem").
+     * @param sortOrder The sorting order ("asc" for ascending, "desc" for descending).
+     * @return A list of MealDTOs representing all template meals, sorted accordingly.
      */
-    List<MealDTO> getAllMeals();
+    List<MealDTO> getAllMeals(String sortBy, String sortOrder);
 
     /**
      * Retrieves a Meal by its ID, only if it is a template.
