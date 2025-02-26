@@ -100,26 +100,29 @@ public interface MealRepository extends JpaRepository<Meal, Long> {
     List<Meal> findByCreatedByOrAdjustedBy(@Param("user") User user);
 
     /**
-     * Retrieves all meals that match the given filters and applies sorting and pagination.
+     * Retrieves all meals that match the given filters, including filtering by food items, and applies sorting and pagination.
      *
      * @param createdByUserId Optional user ID to filter meals by creator.
      * @param cuisine Optional cuisine type to filter meals.
      * @param diet Optional diet type to filter meals.
      * @param mealType Optional meal type to filter meals (e.g., "Breakfast", "Lunch").
+     * @param foodItems Optional list of food items to filter meals by (must contain at least one).
      * @param pageable Pageable object for sorting and paginating results.
      * @return A paginated and sorted list of Meal objects.
      */
-    @Query("SELECT m FROM Meal m " +
-            "LEFT JOIN FETCH m.mealIngredients mi " + // Koppel mealIngredients om nutrients te kunnen berekenen later
+    @Query("SELECT DISTINCT m FROM Meal m " +
+            "JOIN m.mealIngredients mi " + // Regular JOIN to prevent duplicates
             "WHERE (:createdByUserId IS NULL OR m.createdBy.id = :createdByUserId) " +
             "AND (:cuisine IS NULL OR m.cuisine = :cuisine) " +
             "AND (:diet IS NULL OR m.diet = :diet) " +
-            "AND (:mealType IS NULL OR m.mealType = :mealType)")
+            "AND (:mealType IS NULL OR m.mealType = :mealType) " +
+            "AND (:foodItems IS NULL OR mi.foodItem.name IN :foodItems)")
     Page<Meal> findMealsWithFilters(
             @Param("createdByUserId") Long createdByUserId,
             @Param("cuisine") String cuisine,
             @Param("diet") String diet,
             @Param("mealType") String mealType,
+            @Param("foodItems") List<String> foodItems,
             Pageable pageable
     );
 }

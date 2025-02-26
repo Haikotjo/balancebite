@@ -14,6 +14,9 @@ import balancebite.utils.CheckForDuplicateTemplateMealUtil;
 import jakarta.persistence.EntityNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -53,61 +56,84 @@ public class MealService implements IMealService {
     }
 
     /**
-     * Retrieves all template meals and applies optional sorting.
+     * Retrieves paginated and sorted template meals with optional filtering.
      *
-     * Meals can be sorted based on nutrients (calories, protein, fat, carbs) or
-     * based on the first alphabetically sorted food item name in the meal ingredients.
+     * Users can filter meals by cuisine, diet, meal type, and food items.
+     * Meals can be sorted by name, total calories, protein, fat, or carbs.
+     * Results are paginated.
      *
-     * @param sortBy The field to sort by ("calories", "protein", "fat", "carbs", or "foodItem").
-     * @param sortOrder The sorting order ("asc" for ascending, "desc" for descending).
-     * @return A list of MealDTOs representing all template meals, sorted as requested.
+     * @param cuisine Optional filter for meal cuisine.
+     * @param diet Optional filter for meal diet.
+     * @param mealType Optional filter for meal type (BREAKFAST, LUNCH, etc.).
+     * @param foodItems List of food items to filter meals by (e.g., "Banana", "Peas").
+     * @param sortBy Sorting field (calories, protein, fat, carbs, name).
+     * @param sortOrder Sorting order ("asc" for ascending, "desc" for descending).
+     * @param pageable Pageable object for pagination and sorting.
+     * @return A paginated and sorted list of MealDTOs that match the filters.
      */
     @Override
     @Transactional(readOnly = true)
-    public List<MealDTO> getAllMeals(String sortBy, String sortOrder) {
-        log.info("Retrieving all template meals with sorting on: {} in {} order.", sortBy, sortOrder);
+    public Page<MealDTO> getAllMeals(
+            String cuisine,
+            String diet,
+            String mealType,
+            List<String> foodItems,
+            String sortBy,
+            String sortOrder,
+            Pageable pageable
+    ) {
+        log.info("Retrieving paginated template meals with filters and sorting.");
 
-        // Haal meals op met filtering
+        // Retrieve all template meals
         List<Meal> meals = mealRepository.findAllTemplateMeals();
 
-        // Nutrient sorting gebeurt hier (omdat nutrienten berekend moeten worden)
-        if ("calories".equalsIgnoreCase(sortBy) ||
-                "protein".equalsIgnoreCase(sortBy) ||
-                "fat".equalsIgnoreCase(sortBy) ||
-                "carbs".equalsIgnoreCase(sortBy)) {
-
-            Map<Long, Double> mealNutrientValues = new HashMap<>();
-            for (Meal meal : meals) {
-                double nutrientValue = calculateNutrients(meal.getId())
-                        .getOrDefault(sortBy, new NutrientInfoDTO(sortBy, 0.0, ""))
-                        .getValue();
-                mealNutrientValues.put(meal.getId(), nutrientValue);
-            }
-
-            meals.sort(Comparator.comparing(meal -> mealNutrientValues.getOrDefault(meal.getId(), 0.0)));
-
-            if ("desc".equalsIgnoreCase(sortOrder)) {
-                Collections.reverse(meals);
-            }
+        // ✅ **Filtering on cuisine, diet, and mealType**
+        if (cuisine != null) {
+            meals.removeIf(meal -> !meal.getCuisine().toString().equalsIgnoreCase(cuisine));
+        }
+        if (diet != null) {
+            meals.removeIf(meal -> !meal.getDiet().toString().equalsIgnoreCase(diet));
+        }
+        if (mealType != null) {
+            meals.removeIf(meal -> !meal.getMealType().toString().equalsIgnoreCase(mealType));
         }
 
-        // Sorting op food item name (mealIngredients)
-        else if ("foodItem".equalsIgnoreCase(sortBy)) {
-            meals.sort(Comparator.comparing(meal ->
-                    meal.getMealIngredients().stream()
-                            .map(mi -> mi.getFoodItem().getName())
-                            .sorted()
-                            .findFirst()
-                            .orElse("")
+        // ✅ **Filtering on food items (must contain at least one of the selected food items)**
+        if (foodItems != null && !foodItems.isEmpty()) {
+            meals.removeIf(meal -> foodItems.stream().noneMatch(item ->
+                    Arrays.asList(meal.getFoodItemsString().split(" \\| ")).contains(item)
             ));
-
-            if ("desc".equalsIgnoreCase(sortOrder)) {
-                Collections.reverse(meals);
-            }
         }
 
-        log.info("Successfully retrieved and sorted {} meals.", meals.size());
-        return meals.stream().map(mealMapper::toDTO).toList();
+        // ✅ **Sorting**
+        Comparator<Meal> comparator = switch (sortBy != null ? sortBy.toLowerCase() : "") {
+            case "calories" -> Comparator.comparing(Meal::getTotalCalories);
+            case "protein" -> Comparator.comparing(Meal::getTotalProtein);
+            case "fat" -> Comparator.comparing(Meal::getTotalFat);
+            case "carbs" -> Comparator.comparing(Meal::getTotalCarbs);
+            default -> Comparator.comparing(Meal::getName); // Default: sort by name
+        };
+
+        if ("desc".equalsIgnoreCase(sortOrder)) {
+            comparator = comparator.reversed();
+        }
+        meals.sort(comparator);
+
+        // ✅ **Pagination**
+        int pageSize = pageable.getPageSize();
+        int currentPage = pageable.getPageNumber();
+        int startItem = currentPage * pageSize;
+        List<Meal> pagedMeals;
+
+        if (meals.size() < startItem) {
+            pagedMeals = Collections.emptyList();
+        } else {
+            int toIndex = Math.min(startItem + pageSize, meals.size());
+            pagedMeals = meals.subList(startItem, toIndex);
+        }
+
+        log.info("Returning {} meals after filtering, sorting, and pagination.", pagedMeals.size());
+        return new PageImpl<>(pagedMeals.stream().map(mealMapper::toDTO).toList(), pageable, meals.size());
     }
 
     /**

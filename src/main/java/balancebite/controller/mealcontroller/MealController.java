@@ -9,6 +9,8 @@ import balancebite.service.meal.MealService;
 import jakarta.persistence.EntityNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -38,33 +40,50 @@ public class MealController {
     }
 
     /**
-     * Retrieves all template Meal entities from the repository with optional sorting.
+     * Retrieves paginated and sorted template meals with optional filtering.
      *
-     * @param sortBy (Optional) The field to sort by ("calories", "protein", "fat", "carbs", or "foodItem").
-     * @param sortOrder (Optional) The sorting order ("asc" for ascending, "desc" for descending").
-     * @return ResponseEntity containing a list of MealDTO objects representing all template meals,
-     * or a 204 NO CONTENT if no templates are found.
+     * Users can filter meals by cuisine, diet, meal type, and food items.
+     * Meals can be sorted by name, total calories, protein, fat, or carbs.
+     * Results are paginated.
+     *
+     * @param cuisine (Optional) Filter for meal cuisine.
+     * @param diet (Optional) Filter for meal diet.
+     * @param mealType (Optional) Filter for meal type (BREAKFAST, LUNCH, etc.).
+     * @param foodItems (Optional) List of food items to filter meals by (comma-separated).
+     * @param sortBy (Optional) Sorting field (calories, protein, fat, carbs, name).
+     * @param sortOrder (Optional) Sorting order ("asc" for ascending, "desc" for descending).
+     * @param pageable Pageable object for pagination and sorting.
+     * @return ResponseEntity containing a paginated list of MealDTO objects matching the filters.
      */
     @GetMapping
-    public ResponseEntity<?> getAllMeals(
+    public ResponseEntity<Page<MealDTO>> getAllMeals(
+            @RequestParam(required = false) String cuisine,
+            @RequestParam(required = false) String diet,
+            @RequestParam(required = false) String mealType,
+            @RequestParam(required = false) List<String> foodItems,
             @RequestParam(required = false) String sortBy,
-            @RequestParam(required = false, defaultValue = "asc") String sortOrder
+            @RequestParam(required = false, defaultValue = "asc") String sortOrder,
+            Pageable pageable
     ) {
         try {
-            log.info("Retrieving all template meals with sorting. sortBy: {}, sortOrder: {}", sortBy, sortOrder);
+            log.info("Retrieving paginated template meals with filters and sorting. sortBy: {}, sortOrder: {}, page: {}, size: {}",
+                    sortBy, sortOrder, pageable.getPageNumber(), pageable.getPageSize());
 
-            List<MealDTO> mealDTOs = mealService.getAllMeals(sortBy, sortOrder);
+            // Haal gefilterde, gesorteerde en gepagineerde maaltijden op
+            Page<MealDTO> mealDTOs = mealService.getAllMeals(
+                    cuisine, diet, mealType, foodItems, sortBy, sortOrder, pageable
+            );
 
             if (mealDTOs.isEmpty()) {
-                log.info("No template meals found.");
+                log.info("No matching meals found.");
                 return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
             }
 
             return ResponseEntity.ok(mealDTOs);
         } catch (Exception e) {
-            log.error("Unexpected error during retrieval of all template meals: {}", e.getMessage(), e);
+            log.error("Unexpected error during retrieval of meals: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "An unexpected error occurred."));
+                    .body(Page.empty());
         }
     }
 

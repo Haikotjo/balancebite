@@ -5,6 +5,8 @@ import balancebite.dto.meal.MealInputDTO;
 import balancebite.dto.NutrientInfoDTO;
 import balancebite.errorHandling.InvalidFoodItemException;
 import jakarta.persistence.EntityNotFoundException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 import java.util.Map;
@@ -16,37 +18,31 @@ import java.util.Map;
  */
 public interface IMealService {
 
-//    /**
-//     * Creates a new Meal entity based on the provided MealInputDTO.
-//     *
-//     * @param mealInputDTO The DTO containing the input data for creating a Meal.
-//     * @return The created MealDTO with the persisted meal information.
-//     * @throws InvalidFoodItemException If any food item in the input is invalid.
-//     */
-//    MealDTO createMealNoUser(MealInputDTO mealInputDTO) throws InvalidFoodItemException;
-
-//    /**
-//     * Updates an existing Meal entity with new information.
-//     *
-//     * @param id           The ID of the meal to be updated.
-//     * @param mealInputDTO The DTO containing the updated meal information.
-//     * @return The updated MealDTO containing the new meal data.
-//     * @throws EntityNotFoundException  If the meal with the given ID is not found.
-//     * @throws InvalidFoodItemException If any food item ID in the ingredients is invalid.
-//     */
-//    MealDTO updateMeal(Long id, MealInputDTO mealInputDTO) throws EntityNotFoundException, InvalidFoodItemException;
-
     /**
-     * Retrieves all template meals and applies optional sorting.
+     * Retrieves paginated and sorted template meals with optional filtering.
      *
-     * Meals can be sorted based on calculated nutrient values (calories, protein, fat, carbs)
-     * or by the first alphabetically sorted food item name.
+     * Users can filter meals by cuisine, diet, meal type, and food items.
+     * Meals can be sorted by name, total calories, protein, fat, or carbs.
+     * Results are paginated.
      *
-     * @param sortBy The field to sort by ("calories", "protein", "fat", "carbs", or "foodItem").
-     * @param sortOrder The sorting order ("asc" for ascending, "desc" for descending).
-     * @return A list of MealDTOs representing all template meals, sorted accordingly.
+     * @param cuisine Optional filter for meal cuisine.
+     * @param diet Optional filter for meal diet.
+     * @param mealType Optional filter for meal type (BREAKFAST, LUNCH, etc.).
+     * @param foodItems List of food items to filter meals by (e.g., "Banana", "Peas").
+     * @param sortBy Sorting field (calories, protein, fat, carbs, name).
+     * @param sortOrder Sorting order ("asc" for ascending, "desc" for descending).
+     * @param pageable Pageable object for pagination and sorting.
+     * @return A paginated and sorted list of MealDTOs that match the filters.
      */
-    List<MealDTO> getAllMeals(String sortBy, String sortOrder);
+    Page<MealDTO> getAllMeals(
+            String cuisine,
+            String diet,
+            String mealType,
+            List<String> foodItems,
+            String sortBy,
+            String sortOrder,
+            Pageable pageable
+    );
 
     /**
      * Retrieves a Meal by its ID, only if it is a template.
@@ -57,14 +53,6 @@ public interface IMealService {
      *                                 or if the meal is not a template.
      */
     MealDTO getMealById(Long id) throws EntityNotFoundException;
-
-//    /**
-//     * Deletes a specific meal from the repository.
-//     *
-//     * @param mealId The ID of the meal to be deleted.
-//     * @throws EntityNotFoundException If the meal with the given ID is not found.
-//     */
-//    void deleteMeal(Long mealId) throws EntityNotFoundException;
 
     /**
      * Retrieves the total nutrients for a given Meal by its ID.

@@ -19,36 +19,29 @@ INSERT INTO user_roles (user_id, roles_rolename) VALUES (4, 'ADMIN');
 INSERT INTO user_roles (user_id, roles_rolename) VALUES (5, 'ADMIN');
 INSERT INTO user_roles (user_id, roles_rolename) VALUES (6, 'CHEF');
 
--- Voeg de maaltijden toe voor John Doe
--- Ontbijt (Breakfast)
-INSERT INTO meals (name, meal_description, user_count, is_template, created_by_user_id, image_url, total_calories, total_protein, total_carbs, total_fat)
-VALUES ('Breakfast',
-        'Start your day right with a nutritious breakfast featuring fresh bananas, creamy nonfat milk, and a slice of wholesome whole-wheat bread. Perfectly balanced for sustained energy.',
-        1,
-        true,
-        1,
-        'https://images.unsplash.com/photo-1473093295043-cdd812d0e601?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
-        0.0, 0.0, 0.0, 0.0);
+-- Add meals for John Doe
+INSERT INTO meals (name, meal_description, user_count, is_template, created_by_user_id, image_url, total_calories, total_protein, total_carbs, total_fat, meal_type, cuisine, diet)
+VALUES
+    ('Breakfast',
+     'Start your day with a nutritious breakfast featuring bananas, nonfat milk, and whole-wheat bread.',
+     1, true, 1,
+     'https://images.unsplash.com/photo-1473093295043-cdd812d0e601?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+     267, 13, 53, 2,
+     'BREAKFAST', 'AMERICAN', 'VEGETARIAN'),
 
--- Lunch
-INSERT INTO meals (name, meal_description, user_count, is_template, created_by_user_id, image_url, total_calories, total_protein, total_carbs, total_fat)
-VALUES ('Lunch',
-        'Enjoy a vibrant lunch packed with peas and carrots, nutritious spinach, juicy strawberries, and creamy avocado. A wholesome choice for your midday meal.',
-        1,
-        true,
-        1,
-        'https://images.unsplash.com/photo-1485451456034-3f9391c6f769?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
-        0.0, 0.0, 0.0, 0.0);
+    ('Lunch',
+     'A vibrant lunch with peas, carrots, spinach, strawberries, and avocado.',
+     1, true, 1,
+     'https://images.unsplash.com/photo-1485451456034-3f9391c6f769?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+     584, 25, 76, 37,
+     'LUNCH', 'ITALIAN', 'VEGETARIAN'),
 
--- Dinner
-INSERT INTO meals (name, meal_description, user_count, is_template, created_by_user_id, image_url, total_calories, total_protein, total_carbs, total_fat)
-VALUES ('Dinner',
-        'A hearty dinner featuring sweet corn, tender cauliflower, and protein-packed hard-boiled eggs. A perfect balance to end your day.',
-        1,
-        true,
-        1,
-        'https://images.unsplash.com/photo-1505932049984-db368d92fa63?q=80&w=1936&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
-        0.0, 0.0, 0.0, 0.0);
+    ('Dinner',
+     'A hearty dinner with sweet corn, cauliflower, and hard-boiled eggs.',
+     1, true, 1,
+     'https://images.unsplash.com/photo-1505932049984-db368d92fa63?q=80&w=1936&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+     125, 8, 24, 4,
+     'DINNER', 'JAPANESE', 'PESCATARIAN');
 
 -- Voeg de ingrediënten voor het ontbijt (Breakfast) toe
 INSERT INTO meal_ingredients (meal_id, food_item_id, quantity, food_item_name)
@@ -69,35 +62,29 @@ INSERT INTO meal_ingredients (meal_id, food_item_id, food_item_name, quantity) V
 INSERT INTO meal_ingredients (meal_id, food_item_id, food_item_name, quantity) VALUES (3, 8, 'Cauliflower, raw', 100);
 INSERT INTO meal_ingredients (meal_id, food_item_id, food_item_name, quantity) VALUES (3, 14, 'Egg, whole, cooked, hard-boiled', 25.5);
 
--- Voeg de maaltijden toe voor Jane Smith
-INSERT INTO meals (name, meal_description, user_count, is_template, created_by_user_id, image_url, total_calories, total_protein, total_carbs, total_fat)
-VALUES ('Snack',
-        'A delightful snack of fresh, crisp apples and crunchy almonds. Ideal for a quick energy boost.',
-        1,
-        true,
-        2,
-        'https://plus.unsplash.com/premium_photo-1678481245533-3b5c7a5e3d37?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
-        0.0, 0.0, 0.0, 0.0);
+-- Add meals for Jane Smith
+INSERT INTO meals (name, meal_description, user_count, is_template, created_by_user_id, image_url, total_calories, total_protein, total_carbs, total_fat, meal_type, cuisine, diet)
+VALUES
+    ('Snack',
+     'A delightful snack of fresh apples and crunchy almonds.',
+     1, true, 2,
+     'https://plus.unsplash.com/premium_photo-1678481245533-3b5c7a5e3d37?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+     81, 6, 12, 3,
+     'SNACK', 'GREEK', 'VEGAN'),
 
--- Salad
-INSERT INTO meals (name, meal_description, user_count, is_template, created_by_user_id, image_url, total_calories, total_protein, total_carbs, total_fat)
-VALUES ('Salad',
-        'A refreshing salad with crisp romaine lettuce, ripe tomatoes, and crunchy cucumbers. A light and healthy option.',
-        1,
-        true,
-        2,
-        'https://images.unsplash.com/photo-1505253716362-afaea1d3d1af?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
-        0.0, 0.0, 0.0, 0.0);
+    ('Salad',
+     'A refreshing salad with romaine lettuce, tomatoes, and cucumbers.',
+     1, true, 2,
+     'https://images.unsplash.com/photo-1505253716362-afaea1d3d1af?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+     200, 5, 30, 5,
+     'LUNCH', 'ITALIAN', 'LOW_FAT'),
 
--- Dinner Special
-INSERT INTO meals (name, meal_description, user_count, is_template, created_by_user_id, image_url, total_calories, total_protein, total_carbs, total_fat)
-VALUES ('Dinner Special',
-        'A special dinner featuring roasted chicken, fluffy white rice, and fresh broccoli. A comforting and nourishing choice.',
-        1,
-        true,
-        2,
-        'https://images.unsplash.com/photo-1605926637512-c8b131444a4b?q=80&w=2080&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
-        0.0, 0.0, 0.0, 0.0);
+    ('Dinner Special',
+     'A special dinner featuring roasted chicken, white rice, and broccoli.',
+     1, true, 2,
+     'https://images.unsplash.com/photo-1605926637512-c8b131444a4b?q=80&w=2080&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+     658, 22, 36, 48,
+     'DINNER', 'AMERICAN', 'HIGH_PROTEIN');
 
 -- Voeg de ingrediënten voor het Dinner Special toe
 INSERT INTO meal_ingredients (meal_id, food_item_id, food_item_name, quantity) VALUES (6, 13, 'Chicken, cooked, roasted', 140);
