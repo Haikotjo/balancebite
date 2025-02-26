@@ -12,6 +12,8 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -163,23 +165,44 @@ public class UserMealController {
     }
 
     /**
-     * Retrieves all meals for the authenticated user.
+     * Retrieves paginated and sorted meals for the authenticated user with optional filtering.
+     *
+     * Users can filter meals by cuisine, diet, meal type, and food items.
+     * Meals can be sorted by name, total calories, protein, fat, or carbs.
+     * Results are paginated.
      *
      * @param authorizationHeader The Authorization header containing the JWT token.
-     * @return ResponseEntity containing a list of MealDTO objects representing the user's meals,
-     *         or a 204 NO CONTENT if no meals are found for the user.
+     * @param cuisine (Optional) Filter for meal cuisine.
+     * @param diet (Optional) Filter for meal diet.
+     * @param mealType (Optional) Filter for meal type (BREAKFAST, LUNCH, etc.).
+     * @param foodItems (Optional) List of food items to filter meals by (comma-separated).
+     * @param sortBy (Optional) Sorting field (calories, protein, fat, carbs, name).
+     * @param sortOrder (Optional) Sorting order ("asc" for ascending, "desc" for descending).
+     * @param pageable Pageable object for pagination and sorting.
+     * @return ResponseEntity containing a paginated list of MealDTO objects matching the filters.
      */
     @GetMapping("/meals")
-    public ResponseEntity<?> getAllMealsForAuthenticatedUser(@RequestHeader("Authorization") String authorizationHeader) {
+    public ResponseEntity<Page<MealDTO>> getAllMealsForAuthenticatedUser(
+            @RequestHeader("Authorization") String authorizationHeader,
+            @RequestParam(required = false) String cuisine,
+            @RequestParam(required = false) String diet,
+            @RequestParam(required = false) String mealType,
+            @RequestParam(required = false) List<String> foodItems,
+            @RequestParam(required = false) String sortBy,
+            @RequestParam(required = false, defaultValue = "asc") String sortOrder,
+            Pageable pageable
+    ) {
         try {
-            log.info("Retrieving all meals for the authenticated user.");
+            log.info("Retrieving meals for authenticated user with filters and sorting.");
 
-            // Extract userId from the token
+            // Extract userId from the JWT token
             String token = authorizationHeader.substring(7); // Remove "Bearer " prefix
             Long userId = jwtService.extractUserId(token);
 
-            // Call the service method
-            List<MealDTO> mealDTOs = userMealService.getAllMealsForUser(userId);
+            // Fetch meals with filtering, sorting, and pagination
+            Page<MealDTO> mealDTOs = userMealService.getAllMealsForUser(
+                    userId, cuisine, diet, mealType, foodItems, sortBy, sortOrder, pageable
+            );
 
             if (mealDTOs.isEmpty()) {
                 log.info("No meals found for authenticated user ID: {}", userId);
@@ -191,31 +214,53 @@ public class UserMealController {
 
         } catch (UserNotFoundException e) {
             log.warn("User not found during meal retrieval: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
-        } catch (Exception e) {
-            log.error("Unexpected error during meal retrieval for authenticated user: {}", e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "An unexpected error occurred."));
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Page.empty());
+        }
+        catch (Exception e) {
+            log.error("Unexpected error during meal retrieval: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Page.empty());
         }
     }
 
     /**
-     * Retrieves all meals created by the authenticated user.
+     * Retrieves paginated and sorted meals created by the authenticated user with optional filtering.
+     *
+     * Users can filter meals by cuisine, diet, meal type, and food items.
+     * Meals can be sorted by name, total calories, protein, fat, or carbs.
+     * Results are paginated.
      *
      * @param authorizationHeader The Authorization header containing the JWT token.
-     * @return ResponseEntity containing a list of MealDTO objects representing meals created by the user,
-     *         or a 204 NO CONTENT if no such meals are found.
+     * @param cuisine (Optional) Filter for meal cuisine.
+     * @param diet (Optional) Filter for meal diet.
+     * @param mealType (Optional) Filter for meal type (BREAKFAST, LUNCH, etc.).
+     * @param foodItems (Optional) List of food items to filter meals by (comma-separated).
+     * @param sortBy (Optional) Sorting field (calories, protein, fat, carbs, name).
+     * @param sortOrder (Optional) Sorting order ("asc" for ascending, "desc" for descending).
+     * @param pageable Pageable object for pagination and sorting.
+     * @return ResponseEntity containing a paginated list of MealDTO objects matching the filters.
      */
     @GetMapping("/created-meals")
-    public ResponseEntity<?> getMealsCreatedByAuthenticatedUser(@RequestHeader("Authorization") String authorizationHeader) {
+    public ResponseEntity<Page<MealDTO>> getMealsCreatedByAuthenticatedUser(
+            @RequestHeader("Authorization") String authorizationHeader,
+            @RequestParam(required = false) String cuisine,
+            @RequestParam(required = false) String diet,
+            @RequestParam(required = false) String mealType,
+            @RequestParam(required = false) List<String> foodItems,
+            @RequestParam(required = false) String sortBy,
+            @RequestParam(required = false, defaultValue = "asc") String sortOrder,
+            Pageable pageable
+    ) {
         try {
-            log.info("Retrieving meals created by the authenticated user.");
+            log.info("Retrieving meals created by the authenticated user with filters and sorting.");
 
-            // Extract userId from the token
+            // Extract userId from the JWT token
             String token = authorizationHeader.substring(7); // Remove "Bearer " prefix
             Long userId = jwtService.extractUserId(token);
 
-            // Call the service method
-            List<MealDTO> mealDTOs = userMealService.getMealsCreatedByUser(userId);
+            // Fetch meals with filtering, sorting, and pagination
+            Page<MealDTO> mealDTOs = userMealService.getMealsCreatedByUser(
+                    userId, cuisine, diet, mealType, foodItems, sortBy, sortOrder, pageable
+            );
 
             if (mealDTOs.isEmpty()) {
                 log.info("No meals created by authenticated user ID: {}", userId);
@@ -227,10 +272,11 @@ public class UserMealController {
 
         } catch (UserNotFoundException e) {
             log.warn("User not found during meal retrieval: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
-        } catch (Exception e) {
-            log.error("Unexpected error during meal retrieval for authenticated user: {}", e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "An unexpected error occurred."));
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Page.empty());
+        }
+        catch (Exception e) {
+            log.error("Unexpected error during meal retrieval: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Page.empty());
         }
     }
 

@@ -93,7 +93,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PATCH, "/users/update-meal/{mealId}").authenticated()
                         .requestMatchers(HttpMethod.PATCH, "/users/add-meal/{mealId}").authenticated()
 
-                        .requestMatchers(HttpMethod.GET, "/users/meals").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/users/meals**").authenticated()
                         .requestMatchers(HttpMethod.GET, "/users/created-meals").permitAll()
                         .requestMatchers(HttpMethod.GET, "/users/meal/{mealId}").authenticated()
 

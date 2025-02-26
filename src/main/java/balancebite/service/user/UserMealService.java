@@ -23,10 +23,13 @@ import balancebite.utils.UserUpdateHelper;
 import jakarta.persistence.EntityNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -213,54 +216,169 @@ public class UserMealService implements IUserMealService {
     }
 
     /**
-     * Retrieves all meals for a specific user by user ID.
+     * Retrieves paginated and sorted meals saved by a specific user with optional filtering.
      *
-     * @param userId The ID of the user whose meals are to be retrieved.
-     * @return A list of MealDTOs representing the user's meals, or an empty list if no meals are found.
+     * Users can filter meals by cuisine, diet, meal type, and food items.
+     * Meals can be sorted by name, total calories, protein, fat, or carbs.
+     * Results are paginated.
+     *
+     * @param userId The ID of the user whose saved meals are to be retrieved.
+     * @param cuisine Optional filter for meal cuisine.
+     * @param diet Optional filter for meal diet.
+     * @param mealType Optional filter for meal type (BREAKFAST, LUNCH, etc.).
+     * @param foodItems Optional list of food items to filter meals by (e.g., "Banana", "Peas").
+     * @param sortBy Sorting field (calories, protein, fat, carbs, name).
+     * @param sortOrder Sorting order ("asc" for ascending, "desc" for descending).
+     * @param pageable Pageable object for pagination and sorting.
+     * @return A paginated and sorted list of MealDTOs that match the filters.
      */
     @Transactional(readOnly = true)
-    public List<MealDTO> getAllMealsForUser(Long userId) {
-        log.info("Retrieving all meals for user ID: {}", userId);
+    public Page<MealDTO> getAllMealsForUser(
+            Long userId,
+            String cuisine,
+            String diet,
+            String mealType,
+            List<String> foodItems,
+            String sortBy,
+            String sortOrder,
+            Pageable pageable
+    ) {
+        log.info("Retrieving paginated user meals for user ID: {} with filters and sorting.", userId);
 
-        // Fetch the user and their meals without filtering by isTemplate
+        // Fetch user and their saved meals
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("User not found with ID: " + userId));
 
-        // Map meals to DTOs and log the result
-        List<MealDTO> meals = user.getMeals().stream()
-                .map(mealMapper::toDTO) // Map without checking isTemplate
-                .toList();
+        List<Meal> meals = new ArrayList<>(user.getMeals());
 
-        log.info("Retrieved {} meals for user ID: {}", meals.size(), userId);
-        return meals;
+        // ✅ **Apply filters**
+        if (cuisine != null) {
+            meals.removeIf(meal -> !meal.getCuisine().toString().equalsIgnoreCase(cuisine));
+        }
+        if (diet != null) {
+            meals.removeIf(meal -> !meal.getDiet().toString().equalsIgnoreCase(diet));
+        }
+        if (mealType != null) {
+            meals.removeIf(meal -> !meal.getMealType().toString().equalsIgnoreCase(mealType));
+        }
+        if (foodItems != null && !foodItems.isEmpty()) {
+            meals.removeIf(meal -> foodItems.stream().noneMatch(item ->
+                    Arrays.asList(meal.getFoodItemsString().split(" \\| ")).contains(item)
+            ));
+        }
+
+        // ✅ **Apply sorting**
+        Comparator<Meal> comparator = switch (sortBy != null ? sortBy.toLowerCase() : "") {
+            case "calories" -> Comparator.comparing(Meal::getTotalCalories);
+            case "protein" -> Comparator.comparing(Meal::getTotalProtein);
+            case "fat" -> Comparator.comparing(Meal::getTotalFat);
+            case "carbs" -> Comparator.comparing(Meal::getTotalCarbs);
+            default -> Comparator.comparing(Meal::getName);
+        };
+
+        if ("desc".equalsIgnoreCase(sortOrder)) {
+            comparator = comparator.reversed();
+        }
+        meals.sort(comparator);
+
+        // ✅ **Apply pagination**
+        int pageSize = pageable.getPageSize();
+        int currentPage = pageable.getPageNumber();
+        int startItem = currentPage * pageSize;
+        List<Meal> pagedMeals;
+
+        if (meals.size() < startItem) {
+            pagedMeals = Collections.emptyList();
+        } else {
+            int toIndex = Math.min(startItem + pageSize, meals.size());
+            pagedMeals = meals.subList(startItem, toIndex);
+        }
+
+        log.info("Returning {} meals for user ID: {} after filtering, sorting, and pagination.", pagedMeals.size(), userId);
+        return new PageImpl<>(pagedMeals.stream().map(mealMapper::toDTO).toList(), pageable, meals.size());
     }
 
+
     /**
-     * Retrieves all meals created by a specific user by user ID.
-     * Filters meals where the `createdBy` field matches the user ID.
+     * Retrieves paginated and sorted meals created by a specific user with optional filtering.
+     *
+     * Users can filter meals by cuisine, diet, meal type, and food items.
+     * Meals can be sorted by name, total calories, protein, fat, or carbs.
+     * Results are paginated.
      *
      * @param userId The ID of the user whose created meals are to be retrieved.
-     * @return A list of MealDTOs representing meals created by the user.
+     * @param cuisine Optional filter for meal cuisine.
+     * @param diet Optional filter for meal diet.
+     * @param mealType Optional filter for meal type (BREAKFAST, LUNCH, etc.).
+     * @param foodItems Optional list of food items to filter meals by (e.g., "Banana", "Peas").
+     * @param sortBy Sorting field (calories, protein, fat, carbs, name).
+     * @param sortOrder Sorting order ("asc" for ascending, "desc" for descending).
+     * @param pageable Pageable object for pagination and sorting.
+     * @return A paginated and sorted list of MealDTOs that match the filters.
      */
     @Transactional(readOnly = true)
-    public List<MealDTO> getMealsCreatedByUser(Long userId) {
-        log.info("Retrieving all meals created by user ID: {}", userId);
+    public Page<MealDTO> getMealsCreatedByUser(
+            Long userId,
+            String cuisine,
+            String diet,
+            String mealType,
+            List<String> foodItems,
+            String sortBy,
+            String sortOrder,
+            Pageable pageable
+    ) {
+        log.info("Retrieving paginated meals created by user ID: {} with filters and sorting.", userId);
 
         // Fetch meals where createdBy matches the user ID
         List<Meal> createdMeals = mealRepository.findByCreatedBy_Id(userId);
 
-        if (createdMeals.isEmpty()) {
-            log.info("No meals found created by user ID: {}", userId);
+        // ✅ **Apply filters**
+        if (cuisine != null) {
+            createdMeals.removeIf(meal -> !meal.getCuisine().toString().equalsIgnoreCase(cuisine));
+        }
+        if (diet != null) {
+            createdMeals.removeIf(meal -> !meal.getDiet().toString().equalsIgnoreCase(diet));
+        }
+        if (mealType != null) {
+            createdMeals.removeIf(meal -> !meal.getMealType().toString().equalsIgnoreCase(mealType));
+        }
+        if (foodItems != null && !foodItems.isEmpty()) {
+            createdMeals.removeIf(meal -> foodItems.stream().noneMatch(item ->
+                    Arrays.asList(meal.getFoodItemsString().split(" \\| ")).contains(item)
+            ));
         }
 
-        // Convert meals to DTOs
-        List<MealDTO> mealDTOs = createdMeals.stream()
-                .map(mealMapper::toDTO)
-                .collect(Collectors.toList());
+        // ✅ **Apply sorting**
+        Comparator<Meal> comparator = switch (sortBy != null ? sortBy.toLowerCase() : "") {
+            case "calories" -> Comparator.comparing(Meal::getTotalCalories);
+            case "protein" -> Comparator.comparing(Meal::getTotalProtein);
+            case "fat" -> Comparator.comparing(Meal::getTotalFat);
+            case "carbs" -> Comparator.comparing(Meal::getTotalCarbs);
+            default -> Comparator.comparing(Meal::getName);
+        };
 
-        log.info("Successfully retrieved {} meals created by user ID: {}", mealDTOs.size(), userId);
-        return mealDTOs;
+        if ("desc".equalsIgnoreCase(sortOrder)) {
+            comparator = comparator.reversed();
+        }
+        createdMeals.sort(comparator);
+
+        // ✅ **Apply pagination**
+        int pageSize = pageable.getPageSize();
+        int currentPage = pageable.getPageNumber();
+        int startItem = currentPage * pageSize;
+        List<Meal> pagedMeals;
+
+        if (createdMeals.size() < startItem) {
+            pagedMeals = Collections.emptyList();
+        } else {
+            int toIndex = Math.min(startItem + pageSize, createdMeals.size());
+            pagedMeals = createdMeals.subList(startItem, toIndex);
+        }
+
+        log.info("Returning {} meals created by user ID: {} after filtering, sorting, and pagination.", pagedMeals.size(), userId);
+        return new PageImpl<>(pagedMeals.stream().map(mealMapper::toDTO).toList(), pageable, createdMeals.size());
     }
+
 
     /**
      * Retrieves a Meal by its ID, only if it belongs to the specified user.
