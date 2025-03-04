@@ -85,6 +85,42 @@ public class UserMealController {
     }
 
     /**
+     * Adds an existing meal to the authenticated user's list of meals.
+     *
+     * @param mealId The ID of the meal to be added.
+     * @param authorizationHeader The Authorization header containing the JWT token.
+     * @return ResponseEntity containing the updated UserDTO with 200 status code, or an error response.
+     */
+    @PatchMapping("/add-meal/{mealId}")
+    public ResponseEntity<?> addMealToAuthenticatedUser(@PathVariable Long mealId, @RequestHeader("Authorization") String authorizationHeader) {
+        try {
+            log.info("Received request to add meal with ID: {} to the authenticated user's list.", mealId);
+
+            // 🔥 Extract userId from the token (identiek aan createMealForUser)
+            String token = authorizationHeader.substring(7); // Remove "Bearer " prefix
+            Long userId = jwtService.extractUserId(token);
+
+            // Call the service layer with userId
+            UserDTO user = userMealService.addMealToUser(userId, mealId);
+
+            log.info("Successfully added meal with ID: {} to authenticated user ID: {}", mealId, userId);
+            return ResponseEntity.ok(user);
+
+        } catch (DuplicateMealException e) {
+            log.warn("Duplicate meal detected for authenticated user: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", e.getMessage()));
+
+        } catch (UserNotFoundException | MealNotFoundException e) {
+            log.warn("Error occurred during meal addition for authenticated user: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+
+        } catch (Exception e) {
+            log.error("Unexpected error occurred while adding meal to authenticated user: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "An unexpected error occurred."));
+        }
+    }
+
+    /**
      * Updates a user's meal by ID, only allowing updates to meals in their list.
      *
      * @param mealId       The ID of the meal to update.
@@ -124,42 +160,6 @@ public class UserMealController {
 
         } catch (Exception e) {
             log.error("Unexpected error during meal update for meal ID {}: {}", mealId, e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "An unexpected error occurred."));
-        }
-    }
-
-    /**
-     * Adds an existing meal to the authenticated user's list of meals.
-     *
-     * @param mealId The ID of the meal to be added.
-     * @param authorizationHeader The Authorization header containing the JWT token.
-     * @return ResponseEntity containing the updated UserDTO with 200 status code, or an error response with an appropriate status.
-     */
-    @PatchMapping("/add-meal/{mealId}")
-    public ResponseEntity<?> addMealToAuthenticatedUser(@PathVariable Long mealId, @RequestHeader("Authorization") String authorizationHeader) {
-        try {
-            log.info("Received request to add meal with ID: {} to the authenticated user's list.", mealId);
-
-            // Extract userId from the token
-            String token = authorizationHeader.substring(7); // Remove "Bearer " prefix
-            Long userId = jwtService.extractUserId(token);
-
-            // Call the service method
-            UserDTO user = userMealService.addMealToUser(userId, mealId);
-
-            log.info("Successfully added meal with ID: {} to authenticated user ID: {}", mealId, userId);
-            return ResponseEntity.ok(user);
-
-        } catch (DuplicateMealException e) {
-            log.warn("Duplicate meal detected for authenticated user: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", e.getMessage()));
-
-        } catch (UserNotFoundException | MealNotFoundException e) {
-            log.warn("Error occurred during meal addition for authenticated user: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
-
-        } catch (Exception e) {
-            log.error("Unexpected error occurred while adding meal to authenticated user: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "An unexpected error occurred."));
         }
     }

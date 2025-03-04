@@ -29,6 +29,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -65,6 +66,7 @@ public class UserMealService implements IUserMealService {
         this.jwtService = jwtService;
         this.fileStorageService = fileStorageService;
     }
+
     /**
      * Creates a new Meal entity for a specific user based on the provided MealInputDTO.
      * Converts the input DTO to a Meal entity, validates the meal, associates it with the user,
@@ -96,6 +98,8 @@ public class UserMealService implements IUserMealService {
             meal.setImageUrl(imageUrl);
         }
 
+        meal.setVersion(LocalDateTime.now());
+
         // Validate and check for duplicate ingredients
         List<Long> foodItemIds = meal.getMealIngredients().stream()
                 .map(ingredient -> ingredient.getFoodItem().getId())
@@ -125,6 +129,110 @@ public class UserMealService implements IUserMealService {
         // Return the saved meal as a DTO
         return mealMapper.toDTO(savedMeal);
     }
+
+    /**
+     * Adds an existing meal to a user's list of meals.
+     *
+     * The copied meal will:
+     * - Have a new unique ID
+     * - Retain the original meal's ID in `originalMealId`
+     * - Be marked as a non-template (`isTemplate = false`)
+     * - Have the original creator preserved (`createdBy` remains the same)
+     * - Be assigned to the specified user (`adjustedBy = userId`)
+     *
+     * @param mealId The ID of the meal to be copied.
+     * @param userId The ID of the user to whom the meal will be assigned.
+     * @return The updated UserDTO reflecting the newly added meal.
+     * @throws UserNotFoundException  If the user is not found.
+     * @throws MealNotFoundException  If the meal to copy is not found.
+     * @throws DuplicateMealException If the user already has a copy of the meal.
+     */
+    @Override
+    @Transactional
+    public UserDTO addMealToUser(Long userId, Long mealId) {
+        log.info("Creating a personalized copy of meal ID: {} for user ID: {}", mealId, userId);
+
+        // Retrieve the user
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("User not found with ID: " + userId));
+
+        // Retrieve the original meal
+        Meal originalMeal = mealRepository.findById(mealId)
+                .orElseThrow(() -> new MealNotFoundException("Meal not found with ID: " + mealId));
+
+// Check if the user already has a meal with the same originalMealId OR the exact same meal ID
+        boolean mealExists = user.getMeals().stream()
+                .anyMatch(meal -> (meal.getOriginalMealId() != null && meal.getOriginalMealId().equals(mealId))
+                        || meal.getId().equals(mealId));
+
+        // ✅ Check of de meal door de gebruiker zelf is gemaakt en nog steeds in de database staat
+        if (originalMeal.getCreatedBy().getId().equals(user.getId()) && originalMeal.isTemplate()) {
+            log.info("User {} originally created this meal. Restoring link instead of copying.", userId);
+
+            // Voeg de originele meal opnieuw toe aan de gebruiker zonder een kopie te maken
+            user.getMeals().add(originalMeal);
+            userRepository.save(user);
+
+            return userMapper.toDTO(user);
+        }
+
+
+        if (mealExists) {
+            log.warn("User ID {} already has a meal copy of original meal ID {}", userId, mealId);
+            throw new DuplicateMealException("Meal copy already exists in user's list.");
+        }
+
+
+        // Create a copy of the meal
+        Meal mealCopy = new Meal();
+        mealCopy.setName(originalMeal.getName());
+        mealCopy.setMealDescription(originalMeal.getMealDescription());
+        mealCopy.setImage(originalMeal.getImage());
+        mealCopy.setImageUrl(originalMeal.getImageUrl());
+        mealCopy.setMealType(originalMeal.getMealType());
+        mealCopy.setCuisine(originalMeal.getCuisine());
+        mealCopy.setDiet(originalMeal.getDiet());
+
+        // Set originalMealId and mark as non-template
+        mealCopy.setOriginalMealId(mealId);
+        mealCopy.setIsTemplate(false);
+
+        // Keep the original creator but assign the specified user as the adjuster
+        mealCopy.setCreatedBy(originalMeal.getCreatedBy());
+        mealCopy.setAdjustedBy(user);
+
+        // Copy meal ingredients and associate them with the new meal
+        List<MealIngredient> copiedIngredients = originalMeal.getMealIngredients().stream()
+                .map(ingredient -> {
+                    MealIngredient newIngredient = new MealIngredient();
+                    newIngredient.setFoodItem(ingredient.getFoodItem());
+                    newIngredient.setQuantity(ingredient.getQuantity());
+                    newIngredient.setMeal(mealCopy); // Associate with new meal
+                    return newIngredient;
+                })
+                .collect(Collectors.toList());
+
+        mealCopy.addMealIngredients(copiedIngredients);
+
+        // Set the initial version timestamp for tracking updates
+        mealCopy.setVersion(LocalDateTime.now());
+
+        // Recalculate nutrients instead of setting manually
+        mealCopy.updateNutrients();
+
+        // Save the copied meal
+        mealRepository.save(mealCopy);
+
+        // Link the copied meal to the user and save changes
+        user.getMeals().add(mealCopy);
+        userRepository.save(user);
+
+        log.info("Successfully created and linked a meal copy with ID: {} for user ID: {}", mealCopy.getId(), userId);
+
+        // Return the updated user DTO
+        return userMapper.toDTO(user);
+    }
+
 
     /**
      * Updates a user's meal by creating a modified version of an existing meal.
@@ -176,43 +284,6 @@ public class UserMealService implements IUserMealService {
 
         log.info("Updated meal created and linked to user ID: {}", userId);
         return mealMapper.toDTO(updatedMeal);
-    }
-
-    /**
-     * Links an existing meal to a user without modifying the meal.
-     * This method allows users to add meals to their personal meal list.
-     *
-     * @param userId The ID of the user to whom the meal will be linked.
-     * @param mealId The ID of the meal to be added to the user's list.
-     * @return The updated UserDTO reflecting the linked meal.
-     * @throws UserNotFoundException If the user with the specified ID does not exist.
-     * @throws MealNotFoundException If the meal with the specified ID does not exist.
-     * @throws DuplicateMealException If the user already has the specified meal linked.
-     */
-    @Override
-    @Transactional
-    public UserDTO addMealToUser(Long userId, Long mealId) {
-        log.info("Linking meal ID: {} to user ID: {}", mealId, userId);
-
-        // Retrieve the user or throw an exception if not found
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException("User not found with ID: " + userId));
-
-        // Retrieve the meal or throw an exception if not found
-        Meal meal = mealRepository.findById(mealId)
-                .orElseThrow(() -> new MealNotFoundException("Meal not found with ID: " + mealId));
-
-        // Check if the user already has this meal linked
-        if (user.getMeals().contains(meal)) {
-            throw new DuplicateMealException("User already has this meal linked.");
-        }
-
-        // Link the meal to the user and save the updated user entity
-        user.getMeals().add(meal);
-        userRepository.save(user);
-
-        log.info("Meal ID: {} successfully linked to user ID: {}", mealId, userId);
-        return userMapper.toDTO(user);
     }
 
     /**
@@ -414,20 +485,10 @@ public class UserMealService implements IUserMealService {
         return mealDTO;
     }
 
-    /**
-     * Unlinks a meal from a user's personal meal list.
-     * This method removes the association between a user and a meal without deleting the meal itself.
-     *
-     * @param userId The ID of the user from whom the meal will be removed.
-     * @param mealId The ID of the meal to be unlinked from the user's list.
-     * @return The updated UserDTO reflecting the removal of the meal.
-     * @throws UserNotFoundException If the user with the specified ID does not exist.
-     * @throws MealNotFoundException If the meal is not found in the user's list.
-     */
     @Override
     @Transactional
     public UserDTO removeMealFromUser(Long userId, Long mealId) {
-        log.info("Unlinking meal ID {} from user ID {}", mealId, userId);
+        log.info("Unlinking or deleting meal ID {} from user ID {}", mealId, userId);
 
         // Retrieve the user or throw an exception if not found
         User user = userRepository.findById(userId)
@@ -439,11 +500,21 @@ public class UserMealService implements IUserMealService {
                 .findFirst()
                 .orElseThrow(() -> new MealNotFoundException("Meal not found in user's list."));
 
-        // Remove the meal from the user's meal list and save the updated user entity
-        user.getMeals().remove(meal);
-        userRepository.save(user);
+        // If isTemplate = false remove meal completely
+        if (!meal.isTemplate()) {
+            log.info("Meal ID {} is NOT a template, deleting it permanently.", mealId);
+            user.getMeals().remove(meal);
+            mealRepository.delete(meal);
+        } else {
+            // If isTemplate = true, unlink
+            log.info("Meal ID {} is a template, unlinking from user.", mealId);
+            user.getMeals().remove(meal);
+        }
 
-        log.info("Meal ID {} successfully unlinked from user ID {}", mealId, userId);
+        userRepository.save(user);
+        log.info("Meal ID {} successfully processed for user ID {}", mealId, userId);
+
         return userMapper.toDTO(user);
     }
+
 }

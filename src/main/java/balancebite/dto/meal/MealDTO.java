@@ -6,6 +6,7 @@ import balancebite.model.meal.references.Cuisine;
 import balancebite.model.meal.references.Diet;
 import balancebite.model.meal.references.MealType;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -42,6 +43,15 @@ public class MealDTO {
      */
     private final String imageUrl;
 
+    private final Long originalMealId;
+
+    /**
+     * The version timestamp of the meal.
+     * This is updated whenever a meal is modified to keep track of changes.
+     * It helps the frontend determine if an update is available.
+     */
+    private final LocalDateTime version;
+
     /**
      * List of ingredients associated with the meal.
      */
@@ -62,6 +72,8 @@ public class MealDTO {
      * This field allows identification of customized meal copies.
      */
     private final UserDTO adjustedBy;
+
+    private final boolean isTemplate;
 
     /**
      * The type of meal (e.g., breakfast, lunch, dinner, or snack).
@@ -115,10 +127,13 @@ public class MealDTO {
      * @param mealDescription  the description of the meal.
      * @param image            the Base64-encoded image of the meal (optional).
      * @param imageUrl         the URL of the meal image (optional).
+     * @param originalMealId
+     * @param version          the version timestamp of the meal, used to track updates.
      * @param mealIngredients  the list of ingredients in the meal.
      * @param userCount        the count of users who have added the meal.
      * @param createdBy        the user who originally created the meal.
      * @param adjustedBy       the user who adjusted the meal (if applicable).
+     * @param isTemplate
      * @param mealType         the type of meal (optional). Defines if the meal is breakfast, lunch, dinner, or snack.
      * @param cuisine          the cuisine type of the meal (optional). Represents the cultural or regional origin.
      * @param diet             the dietary category of the meal (optional). Used for filtering meals based on diet.
@@ -128,9 +143,9 @@ public class MealDTO {
      * @param totalFat         the total calculated fat content of the meal (grams).
      * @param foodItemsString  the concatenated string of food items in the meal.
      */
-    public MealDTO(Long id, String name, String mealDescription, String image, String imageUrl,
-                   List<MealIngredientDTO> mealIngredients, int userCount, UserDTO createdBy,
-                   UserDTO adjustedBy, MealType mealType, Cuisine cuisine, Diet diet,
+    public MealDTO(Long id, String name, String mealDescription, String image, String imageUrl, Long originalMealId,
+                   LocalDateTime version, List<MealIngredientDTO> mealIngredients, int userCount, UserDTO createdBy,
+                   UserDTO adjustedBy,Boolean isTemplate , MealType mealType, Cuisine cuisine, Diet diet,
                    double totalCalories, double totalProtein, double totalCarbs,
                    double totalFat, String foodItemsString) {
         this.id = id;
@@ -138,10 +153,13 @@ public class MealDTO {
         this.mealDescription = mealDescription;
         this.image = image;
         this.imageUrl = imageUrl;
+        this.originalMealId = originalMealId;
+        this.version = version;
         this.mealIngredients = (mealIngredients != null) ? List.copyOf(mealIngredients) : List.of(); // Use an unmodifiable list
         this.userCount = userCount;
         this.createdBy = createdBy;
         this.adjustedBy = adjustedBy;
+        this.isTemplate = isTemplate;
         this.mealType = mealType;
         this.cuisine = cuisine;
         this.diet = diet;
@@ -151,6 +169,7 @@ public class MealDTO {
         this.totalFat = totalFat;
         this.foodItemsString = foodItemsString;
     }
+
 
     /**
      * Gets the unique identifier of the meal.
@@ -197,6 +216,18 @@ public class MealDTO {
         return imageUrl;
     }
 
+    public Long getOriginalMealId() { return originalMealId; }
+
+    /**
+     * Gets the version timestamp of the meal.
+     * This represents the last modification time of the meal.
+     *
+     * @return the LocalDateTime representing the last modification time.
+     */
+    public LocalDateTime getVersion() {
+        return version;
+    }
+
     /**
      * Gets the list of ingredients associated with the meal.
      * Returns an unmodifiable copy to maintain immutability.
@@ -233,6 +264,8 @@ public class MealDTO {
     public UserDTO getAdjustedBy() {
         return adjustedBy;
     }
+
+    public boolean getIsTemplate() {return isTemplate;}
 
     /**
      * Gets the type of meal (e.g., breakfast, lunch, dinner, or snack).

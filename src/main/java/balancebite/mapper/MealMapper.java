@@ -59,12 +59,15 @@ public class MealMapper {
                 meal.getMealDescription(),
                 meal.getImage(), // Base64 image
                 meal.getImageUrl(), // Image URL
+                meal.getOriginalMealId(),
+                meal.getVersion(),
                 meal.getMealIngredients().stream()
                         .map(this::toMealIngredientDTO)
                         .collect(Collectors.toList()),
                 meal.getUserCount(),
                 meal.getCreatedBy() != null ? toUserDTO(meal.getCreatedBy()) : null,
                 meal.getAdjustedBy() != null ? toUserDTO(meal.getAdjustedBy()) : null,
+                meal.isTemplate(),
                 meal.getMealType(),
                 meal.getCuisine(),
                 meal.getDiet(),

@@ -7,6 +7,8 @@ import balancebite.model.meal.references.MealType;
 import balancebite.model.user.User;
 import balancebite.model.user.userenums.ActivityLevel;
 import jakarta.persistence.*;
+
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -50,6 +52,18 @@ public class Meal {
      * This field is optional and can be used instead of a Base64-encoded image.
      */
     private String imageUrl;
+
+    /**
+     * The original identifier of the meal.
+     * Used to track updates and ensure the correct versioning of meals.
+     */
+    private Long originalMealId;
+
+    /**
+     * The version timestamp of the meal.
+     * This is updated whenever a meal is modified to keep track of changes.
+     */
+    private LocalDateTime version;
 
     /**
      * List of meal ingredients associated with the meal.
@@ -274,6 +288,48 @@ public class Meal {
      */
     public void setImage(String image) {
         this.image = image;
+    }
+
+    /**
+     * Gets the ID of the original meal.
+     * This field is used to track whether this meal is a copy of another meal.
+     * If this meal is an original, the value will be null.
+     *
+     * @return the ID of the original meal, or null if this meal is an original.
+     */
+    public Long getOriginalMealId() {
+        return originalMealId;
+    }
+
+    /**
+     * Sets the ID of the original meal.
+     * This should be set when creating a copy of an existing meal.
+     *
+     * @param originalMealId the ID of the original meal.
+     */
+    public void setOriginalMealId(Long originalMealId) {
+        this.originalMealId = originalMealId;
+    }
+
+    /**
+     * Gets the version timestamp of the meal.
+     * This represents the last modification time of the meal.
+     * It is used to determine whether an update is available.
+     *
+     * @return the LocalDateTime representing the last modification time.
+     */
+    public LocalDateTime getVersion() {
+        return version;
+    }
+
+    /**
+     * Sets the version timestamp of the meal.
+     * This should be updated whenever the meal is modified.
+     *
+     * @param version the new LocalDateTime representing the last modification time.
+     */
+    public void setVersion(LocalDateTime version) {
+        this.version = version;
     }
 
     /**
