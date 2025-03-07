@@ -27,7 +27,7 @@ public class UserRegistrationInputDTO {
      * <p>
      * This field is optional. If not provided, it defaults to the email address.
      */
-    @Size(min = 2, max = 50, message = "User name must be between 2 and 50 characters.")
+    @Size(min = 2, max = 20, message = "User name must be between 2 and 20 characters.")
     private String userName;
 
     /**
@@ -37,6 +37,10 @@ public class UserRegistrationInputDTO {
      */
     @NotBlank(message = "The email cannot be blank. Please provide a valid email address.")
     @Email(message = "Please provide a valid email address.")
+    @Pattern(
+            regexp = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$",
+            message = "Invalid email format. A valid email looks like 'example@domain.com'."
+    )
     private String email;
 
     /**
@@ -45,7 +49,7 @@ public class UserRegistrationInputDTO {
      * This field is mandatory and must be at least 5 characters long.
      */
     @Pattern(
-            regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[!@#$%^&*()_+=\\-])[A-Za-z\\d!@#$%^&*()_+=\\-]{6,}$",
+            regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[!@#$%^&*()_+=\\-])[A-Za-z\\d!@#$%^&*()_+=\\-]{5,}$",
             message = "Password must be at least 6 characters long, include an uppercase letter, a lowercase letter, a number, and a special character."
     )
     private String password;

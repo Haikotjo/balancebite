@@ -115,8 +115,9 @@ public class AuthController {
                     ));
 
         } catch (RuntimeException e) {
-            log.warn("Login failed for email '{}': {}", loginDTO.getEmail(), e.getMessage());
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", e.getMessage()));
+            log.warn("Login failed for email '{}'", loginDTO.getEmail()); // 🔒 Geen specifieke foutmelding in logs
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("error", "Invalid email or password."));
         }
     }
 

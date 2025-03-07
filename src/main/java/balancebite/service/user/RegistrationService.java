@@ -69,24 +69,19 @@ public class RegistrationService implements IRegistrationService {
         String hashedPassword = passwordEncoder.encode(registrationDTO.getPassword());
 
         // Create a new User entity and populate fields from DTO
-        User user = new User();
-        user.setEmail(registrationDTO.getEmail());
-        user.setPassword(hashedPassword);
-
-        // Use userName from DTO, or default to email if userName is not provided
-        user.setUserName(registrationDTO.getUserName() != null && !registrationDTO.getUserName().isBlank()
-                ? registrationDTO.getUserName()
-                : registrationDTO.getEmail());
-
-        // Handle roles: assign roles from DTO or default to USER role
-        if (registrationDTO.getRoles() != null && !registrationDTO.getRoles().isEmpty()) {
-            Set<Role> roles = registrationDTO.getRoles().stream()
-                    .map(roleName -> new Role(UserRole.valueOf(roleName)))
-                    .collect(Collectors.toSet());
-            user.setRoles(roles);
-        } else {
-            user.setRoles(Collections.singleton(new Role(UserRole.USER))); // Default to USER role
-        }
+        // Nieuwe manier: alles direct in de constructor zetten
+        User user = new User(
+                registrationDTO.getUserName() != null && !registrationDTO.getUserName().isBlank()
+                        ? registrationDTO.getUserName()
+                        : registrationDTO.getEmail(),
+                registrationDTO.getEmail(),
+                hashedPassword,
+                registrationDTO.getRoles() != null && !registrationDTO.getRoles().isEmpty()
+                        ? registrationDTO.getRoles().stream()
+                        .map(roleName -> new Role(UserRole.valueOf(roleName)))
+                        .collect(Collectors.toSet())
+                        : Collections.singleton(new Role(UserRole.USER))
+        );
 
         // Save the user to the database
         userRepository.save(user);
