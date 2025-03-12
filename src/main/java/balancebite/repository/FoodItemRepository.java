@@ -1,5 +1,6 @@
 package balancebite.repository;
 
+import balancebite.dto.fooditem.FoodItemNameDTO;
 import balancebite.model.FoodItem;
 import balancebite.model.NutrientInfo;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -38,4 +39,11 @@ public interface FoodItemRepository extends JpaRepository<FoodItem, Long> {
      */
     boolean existsByFdcId(int fdcId);
 
+    /**
+     * Retrieves all food items with only ID and name.
+     *
+     * @return A list of FoodItemNameDTOs containing only ID and name.
+     */
+    @Query("SELECT new balancebite.dto.fooditem.FoodItemNameDTO(f.id, f.name) FROM FoodItem f")
+    List<FoodItemNameDTO> findAllFoodItemNames();
 }

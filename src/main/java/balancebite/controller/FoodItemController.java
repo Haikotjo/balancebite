@@ -2,6 +2,7 @@ package balancebite.controller;
 
 import balancebite.dto.UsdaFoodResponseDTO;
 import balancebite.dto.fooditem.FoodItemDTO;
+import balancebite.dto.fooditem.FoodItemNameDTO;
 import balancebite.errorHandling.EntityAlreadyExistsException;
 import balancebite.errorHandling.EntityNotFoundException;
 import balancebite.service.FoodItemService;
@@ -166,5 +167,23 @@ public class FoodItemController {
             log.error("Unexpected error while fetching food items with prefix: {}", prefix, e);
             return ResponseEntity.status(500).body("An unexpected error occurred.");
         }
+    }
+
+    /**
+     * Endpoint to retrieve only the IDs and names of all FoodItems.
+     * This is optimized for search functionality where full food item details are not needed.
+     *
+     * @return A ResponseEntity containing a list of FoodItemDTOs with only ID and name fields.
+     */
+    @GetMapping("/names")
+    public ResponseEntity<?> getAllFoodItemNames() {
+        log.info("Fetching all food item names and IDs.");
+        List<FoodItemNameDTO> foodItemNames = foodItemService.getAllFoodItemNames(); // Correct DTO gebruiken
+
+        if (foodItemNames.isEmpty()) {
+            log.info("No food item names found.");
+            return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+        }
+        return ResponseEntity.ok(foodItemNames);
     }
 }

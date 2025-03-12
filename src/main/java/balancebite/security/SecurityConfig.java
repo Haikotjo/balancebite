@@ -125,7 +125,7 @@ public class SecurityConfig {
                         // foodItem entity endpoints
                         .requestMatchers(HttpMethod.GET, "/fooditems/search-by-name").permitAll()
                         .requestMatchers(HttpMethod.GET, "/fooditems").permitAll()
-
+                        .requestMatchers(HttpMethod.GET, "/fooditems/**").permitAll()
 
 
                         .anyRequest().authenticated()

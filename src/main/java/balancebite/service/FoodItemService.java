@@ -2,6 +2,7 @@ package balancebite.service;
 
 import balancebite.dto.fooditem.FoodItemDTO;
 import balancebite.dto.UsdaFoodResponseDTO;
+import balancebite.dto.fooditem.FoodItemNameDTO;
 import balancebite.errorHandling.EntityAlreadyExistsException;
 import balancebite.errorHandling.UsdaApiException;
 import balancebite.mapper.FoodItemMapper;
@@ -214,7 +215,6 @@ public class FoodItemService implements IFoodItemService {
         }
     }
 
-
     /**
      * Retrieves a list of FoodItems whose names start with the given prefix.
      *
@@ -231,5 +231,16 @@ public class FoodItemService implements IFoodItemService {
         return foodItems.stream()
                 .map(foodItemMapper::toDTO)
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * Retrieves a list of all FoodItems, returning only their ID and name.
+     *
+     * @return A list of FoodItemNameDTOs containing only ID and name.
+     */
+    @Override
+    public List<FoodItemNameDTO> getAllFoodItemNames() {
+        log.info("Fetching all food item names and IDs.");
+        return foodItemRepository.findAllFoodItemNames();
     }
 }

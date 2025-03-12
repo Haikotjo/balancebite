@@ -5,6 +5,9 @@ import balancebite.dto.meal.MealInputDTO;
 import balancebite.dto.NutrientInfoDTO;
 import balancebite.errorHandling.DuplicateMealException;
 import balancebite.errorHandling.InvalidFoodItemException;
+import balancebite.model.meal.references.Cuisine;
+import balancebite.model.meal.references.Diet;
+import balancebite.model.meal.references.MealType;
 import balancebite.service.meal.MealService;
 import jakarta.persistence.EntityNotFoundException;
 import org.slf4j.Logger;
@@ -15,6 +18,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -157,4 +162,21 @@ public class MealController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "An unexpected error occurred."));
         }
     }
+
+    /**
+     * Retrieves all available enum values for diet, cuisine, and meal type.
+     * This allows the frontend to dynamically fetch filtering options without hardcoding them.
+     *
+     * @return ResponseEntity containing a map with lists of enum values for diets, cuisines, and meal types.
+     */
+    @GetMapping("/enums")
+    public ResponseEntity<Map<String, List<String>>> getMealEnums() {
+        Map<String, List<String>> enums = new HashMap<>();
+        enums.put("diets", Arrays.stream(Diet.values()).map(Enum::name).toList());
+        enums.put("cuisines", Arrays.stream(Cuisine.values()).map(Enum::name).toList());
+        enums.put("mealTypes", Arrays.stream(MealType.values()).map(Enum::name).toList());
+
+        return ResponseEntity.ok(enums);
+    }
+
 }

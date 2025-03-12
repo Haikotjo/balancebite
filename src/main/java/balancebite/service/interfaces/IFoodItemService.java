@@ -2,6 +2,7 @@ package balancebite.service.interfaces;
 
 import balancebite.dto.UsdaFoodResponseDTO;
 import balancebite.dto.fooditem.FoodItemDTO;
+import balancebite.dto.fooditem.FoodItemNameDTO;
 import balancebite.errorHandling.EntityAlreadyExistsException;
 import jakarta.persistence.EntityNotFoundException;
 
@@ -58,4 +59,12 @@ public interface IFoodItemService {
      * @throws EntityNotFoundException if the food item with the specified ID does not exist.
      */
     void deleteFoodItemById(Long id);
+
+    /**
+     * Retrieves a list of all FoodItems, returning only their ID and name.
+     *
+     * @return A list of FoodItemNameDTOs containing only ID and name.
+     */
+    List<FoodItemNameDTO> getAllFoodItemNames();
+
 }
