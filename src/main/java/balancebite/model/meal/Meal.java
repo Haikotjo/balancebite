@@ -39,6 +39,7 @@ public class Meal {
     /**
      * Description of the meal.
      */
+    @Column(length = 1000)
     private String mealDescription;
 
     /**
@@ -154,7 +155,7 @@ public class Meal {
      * Stores a concatenated string of food item names in the meal.
      * This allows for searching and sorting based on included food items.
      */
-    @Column(name = "food_items_string", length = 500)
+    @Column(name = "food_items_string", length = 5000)
     private String foodItemsString = "";
 
     /**

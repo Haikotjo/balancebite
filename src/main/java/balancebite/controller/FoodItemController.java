@@ -178,7 +178,7 @@ public class FoodItemController {
     @GetMapping("/names")
     public ResponseEntity<?> getAllFoodItemNames() {
         log.info("Fetching all food item names and IDs.");
-        List<FoodItemNameDTO> foodItemNames = foodItemService.getAllFoodItemNames(); // Correct DTO gebruiken
+        List<FoodItemNameDTO> foodItemNames = foodItemService.getAllFoodItemNames();
 
         if (foodItemNames.isEmpty()) {
             log.info("No food item names found.");

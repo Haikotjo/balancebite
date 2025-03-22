@@ -44,6 +44,6 @@ public interface FoodItemRepository extends JpaRepository<FoodItem, Long> {
      *
      * @return A list of FoodItemNameDTOs containing only ID and name.
      */
-    @Query("SELECT new balancebite.dto.fooditem.FoodItemNameDTO(f.id, f.name) FROM FoodItem f")
+    @Query("SELECT DISTINCT new balancebite.dto.fooditem.FoodItemNameDTO(f.id, f.name) FROM FoodItem f")
     List<FoodItemNameDTO> findAllFoodItemNames();
 }

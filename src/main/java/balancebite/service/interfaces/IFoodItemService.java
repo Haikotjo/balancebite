@@ -66,5 +66,4 @@ public interface IFoodItemService {
      * @return A list of FoodItemNameDTOs containing only ID and name.
      */
     List<FoodItemNameDTO> getAllFoodItemNames();
-
 }

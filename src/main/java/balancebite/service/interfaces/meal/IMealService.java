@@ -3,6 +3,7 @@ package balancebite.service.interfaces.meal;
 import balancebite.dto.meal.MealDTO;
 import balancebite.dto.meal.MealInputDTO;
 import balancebite.dto.NutrientInfoDTO;
+import balancebite.dto.meal.MealNameDTO;
 import balancebite.errorHandling.InvalidFoodItemException;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.data.domain.Page;
@@ -71,4 +72,11 @@ public interface IMealService {
      * @throws EntityNotFoundException If the meal with the given ID is not found.
      */
     Map<Long, Map<String, NutrientInfoDTO>> calculateNutrientsPerFoodItem(Long mealId) throws EntityNotFoundException;
+
+    /**
+     * Retrieves a list of all Meal, returning only their ID and name.
+     *
+     * @return A list of MealNameDTOs containing only ID and name.
+     */
+    List<MealNameDTO> getAllMealNames();
 }

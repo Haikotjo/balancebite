@@ -1,7 +1,9 @@
 package balancebite.service.meal;
 
+import balancebite.dto.fooditem.FoodItemNameDTO;
 import balancebite.dto.meal.MealDTO;
 import balancebite.dto.NutrientInfoDTO;
+import balancebite.dto.meal.MealNameDTO;
 import balancebite.mapper.MealIngredientMapper;
 import balancebite.mapper.MealMapper;
 import balancebite.model.meal.Meal;
@@ -137,32 +139,25 @@ public class MealService implements IMealService {
     }
 
     /**
-     * Retrieves a Meal by its ID, only if it is a template.
+     * Retrieves a Meal by its ID.
      *
      * @param id The ID of the Meal.
      * @return The MealDTO.
-     * @throws EntityNotFoundException If the meal with the given ID is not found,
-     *                                 or if the meal is not a template.
+     * @throws EntityNotFoundException If the meal with the given ID is not found.
      */
     @Override
     @Transactional(readOnly = true)
     public MealDTO getMealById(Long id) {
-        log.info("Attempting to retrieve template meal with ID: {}", id);
+        log.info("Attempting to retrieve meal with ID: {}", id);
 
         // Fetch the meal from the repository
         Meal meal = mealRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Meal not found with ID: " + id));
 
-        // Ensure the meal is a template
-        if (!meal.isTemplate()) {
-            log.warn("Meal with ID {} is not marked as a template.", id);
-            throw new EntityNotFoundException("Meal not found or not a template.");
-        }
-
         // Map the Meal entity to a MealDTO
         MealDTO mealDTO = mealMapper.toDTO(meal);
 
-        log.info("Successfully retrieved template meal with ID: {}", id);
+        log.info("Successfully retrieved meal with ID: {}", id);
         return mealDTO;
     }
 
@@ -211,5 +206,16 @@ public class MealService implements IMealService {
                 NutrientCalculatorUtil.calculateNutrientsPerFoodItem(meal.getMealIngredients());
         log.info("Nutrient calculation per food item completed for meal ID: {}.", mealId);
         return nutrientsPerFoodItem;
+    }
+
+    /**
+     * Retrieves a list of all MealItems, returning only their ID and name.
+     *
+     * @return A list of MealNameDTOs containing only ID and name.
+     */
+    @Override
+    public List<MealNameDTO> getAllMealNames() {
+        log.info("Fetching all food item names and IDs.");
+        return mealRepository.findAllMealNames();
     }
 }

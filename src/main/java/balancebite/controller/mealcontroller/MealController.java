@@ -1,8 +1,10 @@
 package balancebite.controller.mealcontroller;
 
+import balancebite.dto.fooditem.FoodItemNameDTO;
 import balancebite.dto.meal.MealDTO;
 import balancebite.dto.meal.MealInputDTO;
 import balancebite.dto.NutrientInfoDTO;
+import balancebite.dto.meal.MealNameDTO;
 import balancebite.errorHandling.DuplicateMealException;
 import balancebite.errorHandling.InvalidFoodItemException;
 import balancebite.model.meal.references.Cuisine;
@@ -93,24 +95,24 @@ public class MealController {
     }
 
     /**
-     * Retrieves a Meal entity by its ID, only if it is marked as a template.
+     * Retrieves any Meal entity by its ID.
      *
      * @param id The ID of the Meal to retrieve.
      * @return ResponseEntity containing the MealDTO with 200 status code, or an error response with an appropriate status.
      */
     @GetMapping("/{id}")
-    public ResponseEntity<?> getTemplateMealById(@PathVariable Long id) {
+    public ResponseEntity<?> getMealById(@PathVariable Long id) {
         try {
-            log.info("Received request to retrieve template meal with ID: {}", id);
+            log.info("Received request to retrieve meal with ID: {}", id);
 
-            // Call the service method to fetch the template meal
+            // Haal de meal op, ongeacht of het een template is of niet
             MealDTO mealDTO = mealService.getMealById(id);
 
-            log.info("Successfully retrieved template meal with ID: {}", id);
+            log.info("Successfully retrieved meal with ID: {}", id);
             return ResponseEntity.ok(mealDTO);
 
         } catch (EntityNotFoundException e) {
-            log.warn("Meal with ID {} not found or not a template: {}", id, e.getMessage());
+            log.warn("Meal with ID {} not found: {}", id, e.getMessage());
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
 
         } catch (Exception e) {
@@ -118,6 +120,7 @@ public class MealController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "An unexpected error occurred."));
         }
     }
+
 
     /**
      * Retrieves nutrient information per food item for a specific meal by its ID.
@@ -179,4 +182,21 @@ public class MealController {
         return ResponseEntity.ok(enums);
     }
 
+    /**
+     * Endpoint to retrieve only the IDs and names of all FoodItems.
+     * This is optimized for search functionality where full food item details are not needed.
+     *
+     * @return A ResponseEntity containing a list of FoodItemDTOs with only ID and name fields.
+     */
+    @GetMapping("/names")
+    public ResponseEntity<?> getAllMealNames() {
+        log.info("Fetching all meal names and IDs.");
+        List<MealNameDTO> mealNames = mealService.getAllMealNames();
+
+        if (mealNames.isEmpty()) {
+            log.info("No meal names found.");
+            return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+        }
+        return ResponseEntity.ok(mealNames);
+    }
 }

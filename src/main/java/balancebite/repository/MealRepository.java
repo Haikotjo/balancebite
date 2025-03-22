@@ -1,7 +1,9 @@
 package balancebite.repository;
 
 import balancebite.dto.NutrientInfoDTO;
+import balancebite.dto.fooditem.FoodItemNameDTO;
 import balancebite.dto.meal.MealDTO;
+import balancebite.dto.meal.MealNameDTO;
 import balancebite.model.meal.Meal;
 import balancebite.model.user.User;
 import org.springframework.data.domain.Page;
@@ -125,5 +127,13 @@ public interface MealRepository extends JpaRepository<Meal, Long> {
             @Param("foodItems") List<String> foodItems,
             Pageable pageable
     );
+
+    /**
+     * Retrieves all meals with only ID and name.
+     *
+     * @return A list of MealNameDTOs containing only ID and name.
+     */
+    @Query("SELECT DISTINCT new balancebite.dto.meal.MealNameDTO(m.id, m.name) FROM Meal m WHERE m.isTemplate = true")
+    List<MealNameDTO> findAllMealNames();
 }
 
