@@ -172,9 +172,9 @@ public class UserMealController {
      * Results are paginated.
      *
      * @param authorizationHeader The Authorization header containing the JWT token.
-     * @param cuisine (Optional) Filter for meal cuisine.
-     * @param diet (Optional) Filter for meal diet.
-     * @param mealType (Optional) Filter for meal type (BREAKFAST, LUNCH, etc.).
+     * @param cuisines (Optional) Filter for meal cuisine.
+     * @param diets (Optional) Filter for meal diet.
+     * @param mealTypes (Optional) Filter for meal type (BREAKFAST, LUNCH, etc.).
      * @param foodItems (Optional) List of food items to filter meals by (comma-separated).
      * @param sortBy (Optional) Sorting field (calories, protein, fat, carbs, name).
      * @param sortOrder (Optional) Sorting order ("asc" for ascending, "desc" for descending).
@@ -184,9 +184,10 @@ public class UserMealController {
     @GetMapping("/meals")
     public ResponseEntity<Page<MealDTO>> getAllMealsForAuthenticatedUser(
             @RequestHeader("Authorization") String authorizationHeader,
-            @RequestParam(required = false) String cuisine,
-            @RequestParam(required = false) String diet,
-            @RequestParam(required = false) String mealType,
+            @RequestParam(required = false) List<String> cuisines,
+            @RequestParam(required = false) List<String> diets,
+            @RequestParam(required = false) List<String> mealTypes,
+
             @RequestParam(required = false) List<String> foodItems,
             @RequestParam(required = false) String sortBy,
             @RequestParam(required = false, defaultValue = "asc") String sortOrder,
@@ -201,7 +202,7 @@ public class UserMealController {
 
             // Fetch meals with filtering, sorting, and pagination
             Page<MealDTO> mealDTOs = userMealService.getAllMealsForUser(
-                    userId, cuisine, diet, mealType, foodItems, sortBy, sortOrder, pageable
+                    userId, cuisines, diets, mealTypes, foodItems, sortBy, sortOrder, pageable
             );
 
             if (mealDTOs.isEmpty()) {
@@ -230,9 +231,9 @@ public class UserMealController {
      * Results are paginated.
      *
      * @param authorizationHeader The Authorization header containing the JWT token.
-     * @param cuisine (Optional) Filter for meal cuisine.
-     * @param diet (Optional) Filter for meal diet.
-     * @param mealType (Optional) Filter for meal type (BREAKFAST, LUNCH, etc.).
+     * @param cuisines (Optional) Filter for meal cuisine.
+     * @param diets (Optional) Filter for meal diet.
+     * @param mealTypes (Optional) Filter for meal type (BREAKFAST, LUNCH, etc.).
      * @param foodItems (Optional) List of food items to filter meals by (comma-separated).
      * @param sortBy (Optional) Sorting field (calories, protein, fat, carbs, name).
      * @param sortOrder (Optional) Sorting order ("asc" for ascending, "desc" for descending).
@@ -242,9 +243,10 @@ public class UserMealController {
     @GetMapping("/created-meals")
     public ResponseEntity<Page<MealDTO>> getMealsCreatedByAuthenticatedUser(
             @RequestHeader("Authorization") String authorizationHeader,
-            @RequestParam(required = false) String cuisine,
-            @RequestParam(required = false) String diet,
-            @RequestParam(required = false) String mealType,
+            @RequestParam(required = false) List<String> cuisines,
+            @RequestParam(required = false) List<String> diets,
+            @RequestParam(required = false) List<String> mealTypes,
+
             @RequestParam(required = false) List<String> foodItems,
             @RequestParam(required = false) String sortBy,
             @RequestParam(required = false, defaultValue = "asc") String sortOrder,
@@ -259,7 +261,7 @@ public class UserMealController {
 
             // Fetch meals with filtering, sorting, and pagination
             Page<MealDTO> mealDTOs = userMealService.getMealsCreatedByUser(
-                    userId, cuisine, diet, mealType, foodItems, sortBy, sortOrder, pageable
+                    userId, cuisines, diets, mealTypes, foodItems, sortBy, sortOrder, pageable
             );
 
             if (mealDTOs.isEmpty()) {

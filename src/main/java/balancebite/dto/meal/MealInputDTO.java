@@ -12,6 +12,7 @@ import jakarta.validation.constraints.Size;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * Data Transfer Object (DTO) for capturing input data related to a Meal.
@@ -69,22 +70,23 @@ public class MealInputDTO {
     private UserDTO createdBy;
 
     /**
-     * The type of meal (e.g., breakfast, lunch, dinner, or snack).
-     * This field is optional.
+     * The types of the meal (e.g., breakfast, lunch, dinner, or snack).
+     * This field is optional and allows selecting multiple meal types.
      */
-    private MealType mealType;
+    private Set<MealType> mealTypes;
 
     /**
-     * The cuisine type of the meal (e.g., Italian, French, Japanese).
-     * This field is optional.
+     * The cuisine types of the meal (e.g., Italian, French, Japanese).
+     * This field is optional and allows selecting multiple cuisine types.
      */
-    private Cuisine cuisine;
+    private Set<Cuisine> cuisines;
 
     /**
-     * The dietary category of the meal (e.g., vegetarian, vegan, gluten-free).
-     * This field is optional.
+     * The dietary categories of the meal (e.g., vegetarian, vegan, gluten-free).
+     * This field is optional and allows selecting multiple diet categories.
      */
-    private Diet diet;
+    private Set<Diet> diets;
+
 
     /**
      * Default constructor for frameworks that require a no-argument constructor.
@@ -101,9 +103,9 @@ public class MealInputDTO {
      * @param imageUrl        URL of the image representing the meal (optional). Maximum length: 500 characters.
      * @param imageFile       MultipartFile for direct file uploads of the meal's image (optional).
      * @param createdBy       The user who created the meal (optional). Managed by the system.
-     * @param mealType        The type of meal (optional). Defines if the meal is breakfast, lunch, dinner, or snack.
-     * @param cuisine         The cuisine type of the meal (optional). Represents the cultural or regional origin.
-     * @param diet            The dietary category of the meal (optional). Used for filtering meals based on diet.
+     * @param mealTypes       The types of meal (optional). Allows classifying as breakfast, lunch, dinner, or snack.
+     * @param cuisines        The cuisine types of the meal (optional). Represents the cultural or regional origins.
+     * @param diets           The dietary categories of the meal (optional). Used for filtering based on diet.
      */
     public MealInputDTO(
             @NotBlank(message = "The name of the meal cannot be blank. Please provide a valid name.")
@@ -115,9 +117,9 @@ public class MealInputDTO {
             @Size(max = 500, message = "Image URL must not exceed 500 characters.") String imageUrl,
             MultipartFile imageFile,
             @Valid UserDTO createdBy,
-            MealType mealType,
-            Cuisine cuisine,
-            Diet diet) {
+            Set<MealType> mealTypes,
+            Set<Cuisine> cuisines,
+            Set<Diet> diets) {
         this.name = name;
         this.mealIngredients = mealIngredients;
         this.mealDescription = mealDescription;
@@ -125,10 +127,11 @@ public class MealInputDTO {
         this.imageUrl = imageUrl;
         this.imageFile = imageFile;
         this.createdBy = createdBy;
-        this.mealType = mealType;
-        this.cuisine = cuisine;
-        this.diet = diet;
+        this.mealTypes = mealTypes;
+        this.cuisines = cuisines;
+        this.diets = diets;
     }
+
 
     /**
      * Gets the name of the meal.
@@ -258,63 +261,62 @@ public class MealInputDTO {
     }
 
     /**
-     * Gets the type of meal (e.g., breakfast, lunch, dinner, or snack).
-     * This enum helps categorize meals based on the time of day or purpose.
+     * Gets the types of meal (e.g., breakfast, lunch, dinner, or snack).
+     * Allows categorization of meals based on multiple intended meal times.
      *
-     * @return the meal type.
+     * @return the set of meal types.
      */
-    public MealType getMealType() {
-        return mealType;
+    public Set<MealType> getMealTypes() {
+        return mealTypes;
     }
 
     /**
-     * Sets the type of meal (e.g., breakfast, lunch, dinner, or snack).
-     * This allows categorization of meals based on their intended meal time.
+     * Sets the types of meal (e.g., breakfast, lunch, dinner, or snack).
+     * Allows categorization of meals based on multiple intended meal times.
      *
-     * @param mealType the meal type to set for the meal.
+     * @param mealTypes the set of meal types to set.
      */
-    public void setMealType(MealType mealType) {
-        this.mealType = mealType;
-    }
-
-
-    /**
-     * Gets the cuisine type of the meal.
-     * Represents the cultural or regional origin of the meal (e.g., Italian, French, Japanese).
-     *
-     * @return The cuisine type of the meal.
-     */
-    public Cuisine getCuisine() {
-        return cuisine;
+    public void setMealTypes(Set<MealType> mealTypes) {
+        this.mealTypes = mealTypes;
     }
 
     /**
-     * Sets the cuisine type of the meal.
-     * This defines the cultural or regional origin of the meal.
+     * Gets the cuisine types of the meal.
+     * Represents the cultural or regional origins of the meal (e.g., Italian, French, Japanese).
      *
-     * @param cuisine The cuisine type to set for the meal.
+     * @return the set of cuisine types.
      */
-    public void setCuisine(Cuisine cuisine) {
-        this.cuisine = cuisine;
+    public Set<Cuisine> getCuisines() {
+        return cuisines;
     }
 
     /**
-     * Gets the dietary category of the meal.
+     * Sets the cuisine types of the meal.
+     * Defines the cultural or regional origins of the meal.
+     *
+     * @param cuisines the set of cuisine types to set.
+     */
+    public void setCuisines(Set<Cuisine> cuisines) {
+        this.cuisines = cuisines;
+    }
+
+    /**
+     * Gets the dietary categories of the meal.
      * Used for filtering meals based on dietary restrictions or preferences (e.g., vegetarian, vegan, gluten-free).
      *
-     * @return The diet type of the meal.
+     * @return the set of diet types.
      */
-    public Diet getDiet() {
-        return diet;
+    public Set<Diet> getDiets() {
+        return diets;
     }
 
     /**
-     * Sets the dietary category of the meal.
-     * This allows meals to be categorized based on dietary restrictions or preferences.
+     * Sets the dietary categories of the meal.
+     * Allows categorization based on dietary restrictions or preferences.
      *
-     * @param diet The diet type to set for the meal.
+     * @param diets the set of diet types to set.
      */
-    public void setDiet(Diet diet) {
-        this.diet = diet;
+    public void setDiets(Set<Diet> diets) {
+        this.diets = diets;
     }
 }

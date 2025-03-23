@@ -23,6 +23,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Service class for managing Meal entities.
@@ -64,9 +65,9 @@ public class MealService implements IMealService {
      * Meals can be sorted by name, total calories, protein, fat, or carbs.
      * Results are paginated.
      *
-     * @param cuisine Optional filter for meal cuisine.
-     * @param diet Optional filter for meal diet.
-     * @param mealType Optional filter for meal type (BREAKFAST, LUNCH, etc.).
+     * @param cuisines Optional filter for meal cuisine.
+     * @param diets Optional filter for meal diet.
+     * @param mealTypes Optional filter for meal type (BREAKFAST, LUNCH, etc.).
      * @param foodItems List of food items to filter meals by (e.g., "Banana", "Peas").
      * @param sortBy Sorting field (calories, protein, fat, carbs, name).
      * @param sortOrder Sorting order ("asc" for ascending, "desc" for descending).
@@ -76,9 +77,9 @@ public class MealService implements IMealService {
     @Override
     @Transactional(readOnly = true)
     public Page<MealDTO> getAllMeals(
-            String cuisine,
-            String diet,
-            String mealType,
+            List<String> cuisines,
+            List<String> diets,
+            List<String> mealTypes,
             List<String> foodItems,
             String sortBy,
             String sortOrder,
@@ -90,15 +91,27 @@ public class MealService implements IMealService {
         List<Meal> meals = mealRepository.findAllTemplateMeals();
 
         // ✅ **Filtering on cuisine, diet, and mealType**
-        if (cuisine != null) {
-            meals.removeIf(meal -> !meal.getCuisine().toString().equalsIgnoreCase(cuisine));
+        if (cuisines != null && !cuisines.isEmpty()) {
+            Set<String> cuisineSet = cuisines.stream().map(String::toUpperCase).collect(Collectors.toSet());
+            meals.removeIf(meal -> meal.getCuisines().stream()
+                    .map(Enum::name)
+                    .noneMatch(cuisineSet::contains));
         }
-        if (diet != null) {
-            meals.removeIf(meal -> !meal.getDiet().toString().equalsIgnoreCase(diet));
+
+        if (diets != null && !diets.isEmpty()) {
+            Set<String> dietSet = diets.stream().map(String::toUpperCase).collect(Collectors.toSet());
+            meals.removeIf(meal -> meal.getDiets().stream()
+                    .map(Enum::name)
+                    .noneMatch(dietSet::contains));
         }
-        if (mealType != null) {
-            meals.removeIf(meal -> !meal.getMealType().toString().equalsIgnoreCase(mealType));
+
+        if (mealTypes != null && !mealTypes.isEmpty()) {
+            Set<String> mealTypeSet = mealTypes.stream().map(String::toUpperCase).collect(Collectors.toSet());
+            meals.removeIf(meal -> meal.getMealTypes().stream()
+                    .map(Enum::name)
+                    .noneMatch(mealTypeSet::contains));
         }
+
 
         // ✅ **Filtering on food items (must contain at least one of the selected food items)**
         if (foodItems != null && !foodItems.isEmpty()) {

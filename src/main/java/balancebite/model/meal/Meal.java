@@ -10,7 +10,9 @@ import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -106,25 +108,35 @@ public class Meal {
     private boolean isTemplate = true;
 
     /**
-     * The type of meal (e.g., breakfast, lunch, dinner, or snack).
-     * This enum helps categorize meals based on the time of day or purpose.
+     * The types of meal (e.g., breakfast, lunch, dinner, or snack).
+     * This allows multiple classifications per meal.
      */
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "meal_meal_types", joinColumns = @JoinColumn(name = "meal_id"))
     @Enumerated(EnumType.STRING)
-    private MealType mealType;
+    @Column(name = "meal_type")
+    private Set<MealType> mealTypes = new HashSet<>();
 
     /**
-     * The cuisine type of the meal (e.g., Italian, French, Japanese).
-     * This enum represents the regional or cultural origin of the meal.
+     * The cuisine types of the meal (e.g., Italian, French, Japanese).
+     * Allows associating multiple cuisines per meal.
      */
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "meal_cuisines", joinColumns = @JoinColumn(name = "meal_id"))
     @Enumerated(EnumType.STRING)
-    private Cuisine cuisine;
+    @Column(name = "cuisine")
+    private Set<Cuisine> cuisines = new HashSet<>();
 
     /**
-     * The dietary category of the meal (e.g., vegetarian, vegan, gluten-free).
-     * This enum helps users filter meals based on dietary restrictions or preferences.
+     * The dietary categories of the meal (e.g., vegetarian, vegan, gluten-free).
+     * Allows multiple dietary tags for filtering and preferences.
      */
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "meal_diets", joinColumns = @JoinColumn(name = "meal_id"))
     @Enumerated(EnumType.STRING)
-    private Diet diet;
+    @Column(name = "diet")
+    private Set<Diet> diets = new HashSet<>();
+
 
     /**
      * Stores the total calorie count of the meal.
@@ -467,58 +479,59 @@ public class Meal {
     }
 
     /**
-     * Gets the dietary category of the meal.
+     * Gets the dietary categories of the meal.
      *
-     * @return the diet type of the meal.
+     * @return the set of diet types of the meal.
      */
-    public Diet getDiet() {
-        return diet;
+    public Set<Diet> getDiets() {
+        return diets;
     }
 
     /**
-     * Sets the dietary category of the meal.
+     * Sets the dietary categories of the meal.
      *
-     * @param diet the diet type to set for the meal.
+     * @param diets the set of diet types to set for the meal.
      */
-    public void setDiet(Diet diet) {
-        this.diet = diet;
+    public void setDiets(Set<Diet> diets) {
+        this.diets = diets;
     }
 
     /**
-     * Gets the type of meal (e.g., breakfast, lunch, dinner, or snack).
+     * Gets the types of the meal (e.g., breakfast, lunch, dinner, or snack).
      *
-     * @return the meal type.
+     * @return the set of meal types.
      */
-    public MealType getMealType() {
-        return mealType;
+    public Set<MealType> getMealTypes() {
+        return mealTypes;
     }
 
     /**
-     * Sets the type of meal (e.g., breakfast, lunch, dinner, or snack).
+     * Sets the types of the meal (e.g., breakfast, lunch, dinner, or snack).
      *
-     * @param mealType the meal type to set.
+     * @param mealTypes the set of meal types to set.
      */
-    public void setMealType(MealType mealType) {
-        this.mealType = mealType;
+    public void setMealTypes(Set<MealType> mealTypes) {
+        this.mealTypes = mealTypes;
     }
 
     /**
-     * Gets the cuisine type of the meal (e.g., Italian, French, Japanese).
+     * Gets the cuisine types of the meal (e.g., Italian, French, Japanese).
      *
-     * @return the cuisine type of the meal.
+     * @return the set of cuisine types of the meal.
      */
-    public Cuisine getCuisine() {
-        return cuisine;
+    public Set<Cuisine> getCuisines() {
+        return cuisines;
     }
 
     /**
-     * Sets the cuisine type of the meal (e.g., Italian, French, Japanese).
+     * Sets the cuisine types of the meal (e.g., Italian, French, Japanese).
      *
-     * @param cuisine the cuisine type to set.
+     * @param cuisines the set of cuisine types to set.
      */
-    public void setCuisine(Cuisine cuisine) {
-        this.cuisine = cuisine;
+    public void setCuisines(Set<Cuisine> cuisines) {
+        this.cuisines = cuisines;
     }
+
 
     public double getTotalCalories() { return totalCalories; }
 

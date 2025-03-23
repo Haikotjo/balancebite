@@ -53,9 +53,9 @@ public class MealController {
      * Meals can be sorted by name, total calories, protein, fat, or carbs.
      * Results are paginated.
      *
-     * @param cuisine (Optional) Filter for meal cuisine.
-     * @param diet (Optional) Filter for meal diet.
-     * @param mealType (Optional) Filter for meal type (BREAKFAST, LUNCH, etc.).
+     * @param cuisines (Optional) Filter for meal cuisine.
+     * @param diets (Optional) Filter for meal diet.
+     * @param mealTypes (Optional) Filter for meal type (BREAKFAST, LUNCH, etc.).
      * @param foodItems (Optional) List of food items to filter meals by (comma-separated).
      * @param sortBy (Optional) Sorting field (calories, protein, fat, carbs, name).
      * @param sortOrder (Optional) Sorting order ("asc" for ascending, "desc" for descending).
@@ -64,9 +64,9 @@ public class MealController {
      */
     @GetMapping
     public ResponseEntity<Page<MealDTO>> getAllMeals(
-            @RequestParam(required = false) String cuisine,
-            @RequestParam(required = false) String diet,
-            @RequestParam(required = false) String mealType,
+            @RequestParam(required = false) List<String> cuisines,
+            @RequestParam(required = false) List<String> diets,
+            @RequestParam(required = false) List<String> mealTypes,
             @RequestParam(required = false) List<String> foodItems,
             @RequestParam(required = false) String sortBy,
             @RequestParam(required = false, defaultValue = "asc") String sortOrder,
@@ -78,7 +78,7 @@ public class MealController {
 
             // Haal gefilterde, gesorteerde en gepagineerde maaltijden op
             Page<MealDTO> mealDTOs = mealService.getAllMeals(
-                    cuisine, diet, mealType, foodItems, sortBy, sortOrder, pageable
+                    cuisines, diets, mealTypes, foodItems, sortBy, sortOrder, pageable
             );
 
             if (mealDTOs.isEmpty()) {

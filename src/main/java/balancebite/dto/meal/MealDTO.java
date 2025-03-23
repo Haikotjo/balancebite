@@ -8,6 +8,7 @@ import balancebite.model.meal.references.MealType;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Data Transfer Object (DTO) for transferring Meal data between layers of the application.
@@ -76,22 +77,23 @@ public class MealDTO {
     private final boolean isTemplate;
 
     /**
-     * The type of meal (e.g., breakfast, lunch, dinner, or snack).
-     * This enum helps categorize meals based on the time of day or purpose.
+     * The types of the meal (e.g., breakfast, lunch, dinner, or snack).
+     * Allows multiple classifications based on the time of day or purpose.
      */
-    private final MealType mealType;
+    private final Set<MealType> mealTypes;
 
     /**
-     * The cuisine type of the meal (e.g., Italian, French, Japanese).
-     * This enum represents the cultural or regional origin of the meal.
+     * The dietary categories of the meal (e.g., vegetarian, vegan, gluten-free).
+     * Used for filtering meals based on dietary restrictions or preferences.
      */
-    private final Cuisine cuisine;
+    private final Set<Diet> diets;
 
     /**
-     * The dietary category of the meal (e.g., vegetarian, vegan, gluten-free).
-     * This enum helps users filter meals based on dietary restrictions or preferences.
+     * The cuisine types of the meal (e.g., Italian, French, Japanese).
+     * Represents the cultural or regional origins of the meal.
      */
-    private final Diet diet;
+    private final Set<Cuisine> cuisines;
+
 
     /**
      * Total calculated calories of the meal.
@@ -134,9 +136,9 @@ public class MealDTO {
      * @param createdBy        the user who originally created the meal.
      * @param adjustedBy       the user who adjusted the meal (if applicable).
      * @param isTemplate
-     * @param mealType         the type of meal (optional). Defines if the meal is breakfast, lunch, dinner, or snack.
-     * @param cuisine          the cuisine type of the meal (optional). Represents the cultural or regional origin.
-     * @param diet             the dietary category of the meal (optional). Used for filtering meals based on diet.
+     * @param mealTypes         the types of meal (optional). Allows classification as breakfast, lunch, dinner, or snack.
+     * @param cuisines          the cuisine types of the meal (optional). Represents cultural or regional origins.
+     * @param diets             the dietary categories of the meal (optional). Used for filtering based on dietary preferences.
      * @param totalCalories    the total calculated calorie count of the meal.
      * @param totalProtein     the total calculated protein content of the meal (grams).
      * @param totalCarbs       the total calculated carbohydrate content of the meal (grams).
@@ -145,8 +147,7 @@ public class MealDTO {
      */
     public MealDTO(Long id, String name, String mealDescription, String image, String imageUrl, Long originalMealId,
                    LocalDateTime version, List<MealIngredientDTO> mealIngredients, int userCount, UserDTO createdBy,
-                   UserDTO adjustedBy,Boolean isTemplate , MealType mealType, Cuisine cuisine, Diet diet,
-                   double totalCalories, double totalProtein, double totalCarbs,
+                   UserDTO adjustedBy,Boolean isTemplate ,  Set<MealType> mealTypes, Set<Cuisine> cuisines, Set<Diet> diets, double totalCalories, double totalProtein, double totalCarbs,
                    double totalFat, String foodItemsString) {
         this.id = id;
         this.name = name;
@@ -160,9 +161,9 @@ public class MealDTO {
         this.createdBy = createdBy;
         this.adjustedBy = adjustedBy;
         this.isTemplate = isTemplate;
-        this.mealType = mealType;
-        this.cuisine = cuisine;
-        this.diet = diet;
+        this.mealTypes = mealTypes != null ? Set.copyOf(mealTypes) : Set.of();
+        this.cuisines = cuisines != null ? Set.copyOf(cuisines) : Set.of();
+        this.diets = diets != null ? Set.copyOf(diets) : Set.of();
         this.totalCalories = totalCalories;
         this.totalProtein = totalProtein;
         this.totalCarbs = totalCarbs;
@@ -268,34 +269,35 @@ public class MealDTO {
     public boolean getIsTemplate() {return isTemplate;}
 
     /**
-     * Gets the type of meal (e.g., breakfast, lunch, dinner, or snack).
-     * This enum helps categorize meals based on the time of day or purpose.
+     * Gets the types of the meal (e.g., breakfast, lunch, dinner, or snack).
+     * Allows multiple classifications based on the time of day or purpose.
      *
-     * @return the meal type.
+     * @return a set of meal types.
      */
-    public MealType getMealType() {
-        return mealType;
+    public Set<MealType> getMealTypes() {
+        return Set.copyOf(mealTypes);
     }
 
     /**
-     * Gets the cuisine type of the meal.
-     * Represents the cultural or regional origin of the meal (e.g., Italian, French, Japanese).
+     * Gets the cuisine types of the meal.
+     * Represents the cultural or regional origins of the meal (e.g., Italian, French, Japanese).
      *
-     * @return the cuisine type of the meal.
+     * @return a set of cuisine types.
      */
-    public Cuisine getCuisine() {
-        return cuisine;
+    public Set<Cuisine> getCuisines() {
+        return Set.copyOf(cuisines);
     }
 
     /**
-     * Gets the dietary category of the meal.
+     * Gets the dietary categories of the meal.
      * Used for filtering meals based on dietary restrictions or preferences (e.g., vegetarian, vegan, gluten-free).
      *
-     * @return the diet type of the meal.
+     * @return a set of dietary categories.
      */
-    public Diet getDiet() {
-        return diet;
+    public Set<Diet> getDiets() {
+        return Set.copyOf(diets);
     }
+
 
     /**
      * Gets the total calculated calories of the meal.

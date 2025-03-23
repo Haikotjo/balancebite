@@ -68,9 +68,9 @@ public class MealMapper {
                 meal.getCreatedBy() != null ? toUserDTO(meal.getCreatedBy()) : null,
                 meal.getAdjustedBy() != null ? toUserDTO(meal.getAdjustedBy()) : null,
                 meal.isTemplate(),
-                meal.getMealType(),
-                meal.getCuisine(),
-                meal.getDiet(),
+                meal.getMealTypes(),
+                meal.getCuisines(),
+                meal.getDiets(),
                 meal.getTotalCalories(),
                 meal.getTotalProtein(),
                 meal.getTotalCarbs(),
@@ -96,9 +96,9 @@ public class MealMapper {
                     Meal meal = new Meal();
                     meal.setName(dto.getName());
                     meal.setMealDescription(dto.getMealDescription());
-                    meal.setMealType(dto.getMealType());
-                    meal.setCuisine(dto.getCuisine());
-                    meal.setDiet(dto.getDiet());
+                    meal.setMealTypes(dto.getMealTypes());
+                    meal.setCuisines(dto.getCuisines());
+                    meal.setDiets(dto.getDiets());
 
                     // Verwerk Base64 of URL afbeelding
                     if (dto.getImageFile() != null && !dto.getImageFile().isEmpty()) {

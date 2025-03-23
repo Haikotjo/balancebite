@@ -5,6 +5,9 @@ import balancebite.dto.fooditem.FoodItemNameDTO;
 import balancebite.dto.meal.MealDTO;
 import balancebite.dto.meal.MealNameDTO;
 import balancebite.model.meal.Meal;
+import balancebite.model.meal.references.Cuisine;
+import balancebite.model.meal.references.Diet;
+import balancebite.model.meal.references.MealType;
 import balancebite.model.user.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -105,28 +108,34 @@ public interface MealRepository extends JpaRepository<Meal, Long> {
      * Retrieves all meals that match the given filters, including filtering by food items, and applies sorting and pagination.
      *
      * @param createdByUserId Optional user ID to filter meals by creator.
-     * @param cuisine Optional cuisine type to filter meals.
-     * @param diet Optional diet type to filter meals.
-     * @param mealType Optional meal type to filter meals (e.g., "Breakfast", "Lunch").
+     * @param cuisines Optional cuisine type to filter meals.
+     * @param diets Optional diet type to filter meals.
+     * @param mealTypes Optional meal type to filter meals (e.g., "Breakfast", "Lunch").
      * @param foodItems Optional list of food items to filter meals by (must contain at least one).
      * @param pageable Pageable object for sorting and paginating results.
      * @return A paginated and sorted list of Meal objects.
      */
-    @Query("SELECT DISTINCT m FROM Meal m " +
-            "JOIN m.mealIngredients mi " + // Regular JOIN to prevent duplicates
-            "WHERE (:createdByUserId IS NULL OR m.createdBy.id = :createdByUserId) " +
-            "AND (:cuisine IS NULL OR m.cuisine = :cuisine) " +
-            "AND (:diet IS NULL OR m.diet = :diet) " +
-            "AND (:mealType IS NULL OR m.mealType = :mealType) " +
-            "AND (:foodItems IS NULL OR mi.foodItem.name IN :foodItems)")
+    @Query("""
+    SELECT DISTINCT m FROM Meal m
+    LEFT JOIN m.mealIngredients mi
+    LEFT JOIN m.cuisines c
+    LEFT JOIN m.diets d
+    LEFT JOIN m.mealTypes mt
+    WHERE (:createdByUserId IS NULL OR m.createdBy.id = :createdByUserId)
+      AND (:cuisines IS NULL OR c IN (:cuisines))
+      AND (:diets IS NULL OR d IN (:diets))
+      AND (:mealTypes IS NULL OR mt IN (:mealTypes))
+      AND (:foodItems IS NULL OR mi.foodItem.name IN :foodItems)
+""")
     Page<Meal> findMealsWithFilters(
             @Param("createdByUserId") Long createdByUserId,
-            @Param("cuisine") String cuisine,
-            @Param("diet") String diet,
-            @Param("mealType") String mealType,
+            @Param("cuisines") List<Cuisine> cuisines,
+            @Param("diets") List<Diet> diets,
+            @Param("mealTypes") List<MealType> mealTypes,
             @Param("foodItems") List<String> foodItems,
             Pageable pageable
     );
+
 
     /**
      * Retrieves all meals with only ID and name.

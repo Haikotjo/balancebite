@@ -36,9 +36,9 @@ public interface IMealService {
      * @return A paginated and sorted list of MealDTOs that match the filters.
      */
     Page<MealDTO> getAllMeals(
-            String cuisine,
-            String diet,
-            String mealType,
+            List<String> cuisines,
+            List<String> diets,
+            List<String> mealTypes,
             List<String> foodItems,
             String sortBy,
             String sortOrder,

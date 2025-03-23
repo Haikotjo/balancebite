@@ -88,9 +88,9 @@ public class UserMealService implements IUserMealService {
         Meal meal = mealMapper.toEntity(mealInputDTO);
 
         // Set meal type, cuisine, and diet if provided
-        meal.setMealType(mealInputDTO.getMealType());
-        meal.setCuisine(mealInputDTO.getCuisine());
-        meal.setDiet(mealInputDTO.getDiet());
+        meal.setMealTypes(mealInputDTO.getMealTypes());
+        meal.setCuisines(mealInputDTO.getCuisines());
+        meal.setDiets(mealInputDTO.getDiets());
 
         // Process image from the DTO only if not already handled in the mapper
         if (meal.getImageUrl() == null && mealInputDTO.getImageFile() != null && !mealInputDTO.getImageFile().isEmpty()) {
@@ -189,9 +189,9 @@ public class UserMealService implements IUserMealService {
         mealCopy.setMealDescription(originalMeal.getMealDescription());
         mealCopy.setImage(originalMeal.getImage());
         mealCopy.setImageUrl(originalMeal.getImageUrl());
-        mealCopy.setMealType(originalMeal.getMealType());
-        mealCopy.setCuisine(originalMeal.getCuisine());
-        mealCopy.setDiet(originalMeal.getDiet());
+        mealCopy.setMealTypes(originalMeal.getMealTypes());
+        mealCopy.setCuisines(originalMeal.getCuisines());
+        mealCopy.setDiets(originalMeal.getDiets());
 
         // Set originalMealId and mark as non-template
         mealCopy.setOriginalMealId(mealId);
@@ -267,9 +267,9 @@ public class UserMealService implements IUserMealService {
         updatedMeal.setIsTemplate(false);
 
         // Set MealType, Cuisine, and Diet only if provided; otherwise, retain the original values
-        updatedMeal.setMealType(mealInputDTO.getMealType() != null ? mealInputDTO.getMealType() : originalMeal.getMealType());
-        updatedMeal.setCuisine(mealInputDTO.getCuisine() != null ? mealInputDTO.getCuisine() : originalMeal.getCuisine());
-        updatedMeal.setDiet(mealInputDTO.getDiet() != null ? mealInputDTO.getDiet() : originalMeal.getDiet());
+        updatedMeal.setMealTypes(mealInputDTO.getMealTypes() != null ? mealInputDTO.getMealTypes() : originalMeal.getMealTypes());
+        updatedMeal.setCuisines(mealInputDTO.getCuisines() != null ? mealInputDTO.getCuisines() : originalMeal.getCuisines());
+        updatedMeal.setDiets(mealInputDTO.getDiets() != null ? mealInputDTO.getDiets() : originalMeal.getDiets());
 
         // Process meal ingredients and associate them with the updated meal
         mealInputDTO.getMealIngredients().forEach(inputIngredient -> {
@@ -294,9 +294,9 @@ public class UserMealService implements IUserMealService {
      * Results are paginated.
      *
      * @param userId The ID of the user whose saved meals are to be retrieved.
-     * @param cuisine Optional filter for meal cuisine.
-     * @param diet Optional filter for meal diet.
-     * @param mealType Optional filter for meal type (BREAKFAST, LUNCH, etc.).
+     * @param cuisines Optional filter for meal cuisine.
+     * @param diets Optional filter for meal diet.
+     * @param mealTypes Optional filter for meal type (BREAKFAST, LUNCH, etc.).
      * @param foodItems Optional list of food items to filter meals by (e.g., "Banana", "Peas").
      * @param sortBy Sorting field (calories, protein, fat, carbs, name).
      * @param sortOrder Sorting order ("asc" for ascending, "desc" for descending).
@@ -306,9 +306,9 @@ public class UserMealService implements IUserMealService {
     @Transactional(readOnly = true)
     public Page<MealDTO> getAllMealsForUser(
             Long userId,
-            String cuisine,
-            String diet,
-            String mealType,
+            List<String> cuisines,
+            List<String> diets,
+            List<String> mealTypes,
             List<String> foodItems,
             String sortBy,
             String sortOrder,
@@ -323,15 +323,24 @@ public class UserMealService implements IUserMealService {
         List<Meal> meals = new ArrayList<>(user.getMeals());
 
         // ✅ **Apply filters**
-        if (cuisine != null) {
-            meals.removeIf(meal -> !meal.getCuisine().toString().equalsIgnoreCase(cuisine));
+        if (cuisines != null && !cuisines.isEmpty()) {
+            meals.removeIf(meal ->
+                    meal.getCuisines().stream().noneMatch(c -> cuisines.contains(c.name()))
+            );
         }
-        if (diet != null) {
-            meals.removeIf(meal -> !meal.getDiet().toString().equalsIgnoreCase(diet));
+
+        if (diets != null && !diets.isEmpty()) {
+            meals.removeIf(meal ->
+                    meal.getDiets().stream().noneMatch(d -> diets.contains(d.name()))
+            );
         }
-        if (mealType != null) {
-            meals.removeIf(meal -> !meal.getMealType().toString().equalsIgnoreCase(mealType));
+
+        if (mealTypes != null && !mealTypes.isEmpty()) {
+            meals.removeIf(meal ->
+                    meal.getMealTypes().stream().noneMatch(mt -> mealTypes.contains(mt.name()))
+            );
         }
+
         if (foodItems != null && !foodItems.isEmpty()) {
             meals.removeIf(meal -> foodItems.stream().noneMatch(item ->
                     Arrays.asList(meal.getFoodItemsString().split(" \\| ")).contains(item)
@@ -378,9 +387,9 @@ public class UserMealService implements IUserMealService {
      * Results are paginated.
      *
      * @param userId The ID of the user whose created meals are to be retrieved.
-     * @param cuisine Optional filter for meal cuisine.
-     * @param diet Optional filter for meal diet.
-     * @param mealType Optional filter for meal type (BREAKFAST, LUNCH, etc.).
+     * @param cuisines Optional filter for meal cuisine.
+     * @param diets Optional filter for meal diet.
+     * @param mealTypes Optional filter for meal type (BREAKFAST, LUNCH, etc.).
      * @param foodItems Optional list of food items to filter meals by (e.g., "Banana", "Peas").
      * @param sortBy Sorting field (calories, protein, fat, carbs, name).
      * @param sortOrder Sorting order ("asc" for ascending, "desc" for descending).
@@ -390,9 +399,9 @@ public class UserMealService implements IUserMealService {
     @Transactional(readOnly = true)
     public Page<MealDTO> getMealsCreatedByUser(
             Long userId,
-            String cuisine,
-            String diet,
-            String mealType,
+            List<String> cuisines,
+            List<String> diets,
+            List<String> mealTypes,
             List<String> foodItems,
             String sortBy,
             String sortOrder,
@@ -404,14 +413,24 @@ public class UserMealService implements IUserMealService {
         List<Meal> createdMeals = mealRepository.findByCreatedBy_Id(userId);
 
         // ✅ **Apply filters**
-        if (cuisine != null) {
-            createdMeals.removeIf(meal -> !meal.getCuisine().toString().equalsIgnoreCase(cuisine));
+        if (cuisines != null && !cuisines.isEmpty()) {
+            createdMeals.removeIf(meal ->
+                    meal.getCuisines().stream().noneMatch(c -> cuisines.contains(c.name()))
+            );
         }
-        if (diet != null) {
-            createdMeals.removeIf(meal -> !meal.getDiet().toString().equalsIgnoreCase(diet));
+
+// ✅ Filter op diets (meerdere toegelaten)
+        if (diets != null && !diets.isEmpty()) {
+            createdMeals.removeIf(meal ->
+                    meal.getDiets().stream().noneMatch(d -> diets.contains(d.name()))
+            );
         }
-        if (mealType != null) {
-            createdMeals.removeIf(meal -> !meal.getMealType().toString().equalsIgnoreCase(mealType));
+
+// ✅ Filter op mealTypes (meerdere toegelaten)
+        if (mealTypes != null && !mealTypes.isEmpty()) {
+            createdMeals.removeIf(meal ->
+                    meal.getMealTypes().stream().noneMatch(mt -> mealTypes.contains(mt.name()))
+            );
         }
         if (foodItems != null && !foodItems.isEmpty()) {
             createdMeals.removeIf(meal -> foodItems.stream().noneMatch(item ->
