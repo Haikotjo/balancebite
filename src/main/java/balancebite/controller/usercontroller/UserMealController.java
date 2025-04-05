@@ -49,6 +49,23 @@ public class UserMealController {
         this.jwtService = jwtService;
     }
 
+    /**
+     * Handles the creation of a new meal for the currently authenticated user.
+     * This endpoint accepts multipart/form-data input containing:
+     * - a JSON payload of MealInputDTO
+     * - an optional image file for the meal
+     *
+     * The method:
+     * - Parses and validates the incoming data
+     * - Extracts the user ID from the JWT token
+     * - Passes the request to the service layer
+     * - Handles specific business exceptions for clean frontend feedback
+     *
+     * @param mealInputDTOJson      JSON string representing the MealInputDTO
+     * @param imageFile             Optional image file representing the meal
+     * @param authorizationHeader   The Authorization header containing the JWT token
+     * @return                      ResponseEntity with the created meal or error message
+     */
     @PostMapping(value = "/create-meal", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> createMealForAuthenticatedUser(
             @RequestPart("mealInputDTO") String mealInputDTOJson,
@@ -57,28 +74,42 @@ public class UserMealController {
         try {
             log.info("Received request to create a new meal for the authenticated user.");
 
-            // Parse JSON string to MealInputDTO
+            // Parse JSON string into MealInputDTO
             ObjectMapper objectMapper = new ObjectMapper();
             MealInputDTO mealInputDTO = objectMapper.readValue(mealInputDTOJson, MealInputDTO.class);
 
-            // Attach the file if present
+            // Attach the uploaded image to the DTO if present
             if (imageFile != null && !imageFile.isEmpty()) {
                 mealInputDTO.setImageFile(imageFile);
             }
 
-            // Extract user ID from token
+            // Extract user ID from the JWT token in the Authorization header
             String token = authorizationHeader.substring(7); // Remove "Bearer " prefix
             Long userId = jwtService.extractUserId(token);
 
-            // Call the service layer
+            // Delegate meal creation to the service layer
             MealDTO createdMeal = userMealService.createMealForUser(mealInputDTO, userId);
 
             log.info("Successfully created meal for user ID: {}", userId);
             return ResponseEntity.status(HttpStatus.CREATED).body(createdMeal);
+
         } catch (EntityNotFoundException e) {
+            // Triggered if the user cannot be found in the database
             log.warn("User not found or invalid: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+
+        } catch (DuplicateMealException e) {
+            // Triggered if a similar template meal already exists
+            log.warn("Duplicate meal detected: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
+
+        } catch (InvalidFoodItemException e) {
+            // Triggered if the meal contains duplicated or invalid food items
+            log.warn("Invalid food item in meal: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
+
         } catch (Exception e) {
+            // Catch-all for any other unexpected errors
             log.error("Unexpected error occurred during meal creation: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", e.getMessage()));
         }
@@ -128,39 +159,33 @@ public class UserMealController {
      * @param authorizationHeader The Authorization header containing the JWT token.
      * @return ResponseEntity containing the updated MealDTO with 200 status code, or an error response with an appropriate status.
      */
-    @PatchMapping("/update-meal/{mealId}")
+    @PatchMapping(value = "/update-meal/{mealId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> updateUserMeal(
             @PathVariable Long mealId,
-            @RequestBody MealInputDTO mealInputDTO,
+            @RequestPart("mealInputDTO") String mealInputDTOJson,
+            @RequestPart(value = "imageFile", required = false) MultipartFile imageFile,
             @RequestHeader("Authorization") String authorizationHeader) {
         try {
             log.info("Received request to update meal with ID: {}", mealId);
 
-            // Extract userId from the token
             String token = authorizationHeader.substring(7); // Remove "Bearer " prefix
             Long userId = jwtService.extractUserId(token);
 
-            // Call the service method
+            // ✅ Parse JSON string to DTO
+            ObjectMapper objectMapper = new ObjectMapper();
+            MealInputDTO mealInputDTO = objectMapper.readValue(mealInputDTOJson, MealInputDTO.class);
+
+            // ✅ Verwerk image
+            mealInputDTO.setImageFile(imageFile); // 🔥 Deze regel moet **altijd** meegegeven worden, zelfs als null
+
             MealDTO updatedMeal = userMealService.updateUserMeal(userId, mealId, mealInputDTO);
 
             log.info("Successfully updated meal with ID: {} for user ID: {}", mealId, userId);
             return ResponseEntity.ok(updatedMeal);
 
-        } catch (DuplicateMealException e) {
-            log.warn("Duplicate meal detected during update for meal ID {}: {}", mealId, e.getMessage());
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", e.getMessage()));
-
-        } catch (EntityNotFoundException e) {
-            log.warn("User or meal not found for meal ID {}: {}", mealId, e.getMessage());
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
-
-        } catch (InvalidFoodItemException e) {
-            log.warn("Invalid food item in meal update for meal ID {}: {}", mealId, e.getMessage());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
-
         } catch (Exception e) {
-            log.error("Unexpected error during meal update for meal ID {}: {}", mealId, e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "An unexpected error occurred."));
+            log.error("Unexpected error during meal update", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "Update failed."));
         }
     }
 

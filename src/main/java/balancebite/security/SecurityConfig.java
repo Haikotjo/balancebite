@@ -81,6 +81,8 @@ public class SecurityConfig {
 
                         .requestMatchers(HttpMethod.GET, "/uploads/**").permitAll()
 
+                        .requestMatchers(HttpMethod.GET, "/uploads/**").permitAll()
+
                         // register endpoints
                         .requestMatchers(HttpMethod.POST, "/auth/**").permitAll()
 
@@ -117,6 +119,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/meals/nutrients/{id}").permitAll()
                         .requestMatchers(HttpMethod.GET, "/meals/nutrients-per-food-item/{id}").permitAll()
                         .requestMatchers(HttpMethod.GET, "/meals/sorted").permitAll()
+                        .requestMatchers(HttpMethod.PATCH, "/users/update-meal/**").authenticated()
 
                         .requestMatchers(HttpMethod.POST, "/meals-admin/create-meal").hasAnyRole("ADMIN", "CHEF")
                         .requestMatchers(HttpMethod.PATCH, "/meals-admin/update-meal").hasAnyRole("ADMIN", "CHEF")

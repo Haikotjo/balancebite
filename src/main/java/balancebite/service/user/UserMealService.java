@@ -100,7 +100,17 @@ public class UserMealService implements IUserMealService {
 
         meal.setVersion(LocalDateTime.now());
 
-        // Validate and check for duplicate ingredients
+        // Ensure no duplicate food items (same name AND same quantity)
+        Set<String> uniqueFoodItems = new HashSet<>();
+        for (MealIngredient ingredient : meal.getMealIngredients()) {
+            String key = ingredient.getFoodItem().getName() + "-" + ingredient.getQuantity(); // Combine name + quantity
+            if (!uniqueFoodItems.add(key)) {
+                throw new InvalidFoodItemException("Duplicate food item with same quantity found: " + ingredient.getFoodItem().getName()
+                        + " (" + ingredient.getQuantity() + ")");
+            }
+        }
+
+        // Validate and check for duplicate ingredients in template meals
         List<Long> foodItemIds = meal.getMealIngredients().stream()
                 .map(ingredient -> ingredient.getFoodItem().getId())
                 .collect(Collectors.toList());
@@ -129,6 +139,7 @@ public class UserMealService implements IUserMealService {
         // Return the saved meal as a DTO
         return mealMapper.toDTO(savedMeal);
     }
+
 
     /**
      * Adds an existing meal to a user's list of meals.
@@ -189,9 +200,9 @@ public class UserMealService implements IUserMealService {
         mealCopy.setMealDescription(originalMeal.getMealDescription());
         mealCopy.setImage(originalMeal.getImage());
         mealCopy.setImageUrl(originalMeal.getImageUrl());
-        mealCopy.setMealTypes(originalMeal.getMealTypes());
-        mealCopy.setCuisines(originalMeal.getCuisines());
-        mealCopy.setDiets(originalMeal.getDiets());
+        mealCopy.setCuisines(new HashSet<>(originalMeal.getCuisines()));
+        mealCopy.setDiets(new HashSet<>(originalMeal.getDiets()));
+        mealCopy.setMealTypes(new HashSet<>(originalMeal.getMealTypes()));
 
         // Set originalMealId and mark as non-template
         mealCopy.setOriginalMealId(mealId);
@@ -235,56 +246,71 @@ public class UserMealService implements IUserMealService {
 
 
     /**
-     * Updates a user's meal by creating a modified version of an existing meal.
-     * This method allows users to make adjustments to meals while keeping the original intact.
+     * Updates a user's meal by overwriting the existing meal.
+     * This method allows users to modify their own meals, including updating ingredients and image.
      *
-     * @param userId      The ID of the user requesting the update.
-     * @param mealId      The ID of the meal to be updated.
-     * @param mealInputDTO The DTO containing the updated meal data.
-     * @return The updated MealDTO.
+     * @param userId        The ID of the user requesting the update.
+     * @param mealId        The ID of the meal to be updated.
+     * @param mealInputDTO  The DTO containing the updated meal data.
+     * @return              The updated MealDTO.
      * @throws UserNotFoundException If the user with the specified ID does not exist.
      * @throws MealNotFoundException If the meal with the specified ID does not exist.
      */
     @Override
     @Transactional
     public MealDTO updateUserMeal(Long userId, Long mealId, MealInputDTO mealInputDTO) {
-        log.info("Creating a modified version of meal ID: {} for user ID: {}", mealId, userId);
+        log.info("Updating existing meal ID: {} for user ID: {}", mealId, userId);
 
-        // Retrieve the user or throw an exception if not found
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("User not found with ID: " + userId));
 
-        // Retrieve the original meal or throw an exception if not found
-        Meal originalMeal = mealRepository.findById(mealId)
-                .orElseThrow(() -> new MealNotFoundException("Original meal not found."));
+        Meal meal = mealRepository.findById(mealId)
+                .orElseThrow(() -> new MealNotFoundException("Meal not found with ID: " + mealId));
 
-        // Create a new meal entity based on the existing meal with modifications
-        Meal updatedMeal = new Meal();
-        updatedMeal.setName(mealInputDTO.getName() != null ? mealInputDTO.getName() : originalMeal.getName());
-        updatedMeal.setMealDescription(mealInputDTO.getMealDescription() != null ? mealInputDTO.getMealDescription() : originalMeal.getMealDescription());
-        updatedMeal.setCreatedBy(originalMeal.getCreatedBy());
-        updatedMeal.setAdjustedBy(user);
-        updatedMeal.setIsTemplate(false);
+        if (!meal.getCreatedBy().getId().equals(userId) && !meal.getAdjustedBy().getId().equals(userId)) {
+            throw new SecurityException("User is not allowed to update this meal.");
+        }
 
-        // Set MealType, Cuisine, and Diet only if provided; otherwise, retain the original values
-        updatedMeal.setMealTypes(mealInputDTO.getMealTypes() != null ? mealInputDTO.getMealTypes() : originalMeal.getMealTypes());
-        updatedMeal.setCuisines(mealInputDTO.getCuisines() != null ? mealInputDTO.getCuisines() : originalMeal.getCuisines());
-        updatedMeal.setDiets(mealInputDTO.getDiets() != null ? mealInputDTO.getDiets() : originalMeal.getDiets());
+        meal.setName(mealInputDTO.getName());
+        meal.setMealDescription(mealInputDTO.getMealDescription());
+        meal.setMealTypes(mealInputDTO.getMealTypes());
+        meal.setCuisines(mealInputDTO.getCuisines());
+        meal.setDiets(mealInputDTO.getDiets());
+        meal.setAdjustedBy(user);
+        meal.setVersion(LocalDateTime.now());
 
-        // Process meal ingredients and associate them with the updated meal
+        // 🔥 Nieuwe afbeelding uploaden
+        if (mealInputDTO.getImageFile() != null && !mealInputDTO.getImageFile().isEmpty()) {
+            log.info("📷 New image file detected: {}", mealInputDTO.getImageFile().getOriginalFilename());
+            if (meal.getImageUrl() != null) {
+                fileStorageService.deleteFileByUrl(meal.getImageUrl());
+            }
+            String imageUrl = fileStorageService.saveFile(mealInputDTO.getImageFile());
+            meal.setImageUrl(imageUrl);
+            log.info("✅ New image URL set on meal: {}", imageUrl);
+        }
+
+        // 🧼 Verwijder afbeelding als user oude verwijderd heeft en geen nieuwe gaf
+        if ((mealInputDTO.getImageFile() == null || mealInputDTO.getImageFile().isEmpty())
+                && (mealInputDTO.getImageUrl() == null || mealInputDTO.getImageUrl().isBlank())
+                && meal.getImageUrl() != null) {
+            log.info("🧼 Removing image because frontend cleared it and no new file was provided.");
+            fileStorageService.deleteFileByUrl(meal.getImageUrl());
+            meal.setImageUrl(null);
+        }
+
+        meal.getMealIngredients().clear();
         mealInputDTO.getMealIngredients().forEach(inputIngredient -> {
-            MealIngredient ingredient = mealIngredientMapper.toEntity(inputIngredient, updatedMeal);
-            updatedMeal.addMealIngredient(ingredient);
+            MealIngredient ingredient = mealIngredientMapper.toEntity(inputIngredient, meal);
+            meal.addMealIngredient(ingredient);
         });
 
-        // Save the updated meal and associate it with the user
-        mealRepository.save(updatedMeal);
-        user.getMeals().add(updatedMeal);
-        userRepository.save(user);
+        meal.updateNutrients();
 
-        log.info("Updated meal created and linked to user ID: {}", userId);
-        return mealMapper.toDTO(updatedMeal);
+        Meal saved = mealRepository.save(meal);
+        return mealMapper.toDTO(saved);
     }
+
 
     /**
      * Retrieves paginated and sorted meals saved by a specific user with optional filtering.

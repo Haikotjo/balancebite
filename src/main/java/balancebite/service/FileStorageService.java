@@ -45,8 +45,11 @@ public class FileStorageService {
             Files.write(filePath, file.getBytes());
             log.info("File written successfully: {}", filePath.toAbsolutePath());
 
+            // ✅ Voeg deze regel toe om te loggen wat is opgeslagen
+            log.info("⏫ Saved file: {} -> {}", uniqueFileName, filePath.toAbsolutePath());
+
             // Generate and return the full URL
-            String fullUrl = getFullUrl(uniqueFileName); // Gebruik jouw bestaande getFullUrl()
+            String fullUrl = getFullUrl(uniqueFileName);
             log.info("Generated full URL for uploaded file: {}", fullUrl);
             return fullUrl;
         } catch (IOException e) {
@@ -66,6 +69,22 @@ public class FileStorageService {
         String fullUrl = baseUrl + "uploads/" + fileName;
         log.info("Generated full URL: {}", fullUrl);
         return fullUrl;
+    }
+
+    public void deleteFileByUrl(String imageUrl) {
+        try {
+            String fileName = imageUrl.substring(imageUrl.lastIndexOf("/") + 1);
+            Path filePath = Paths.get(uploadDir, fileName);
+
+            if (Files.exists(filePath)) {
+                Files.delete(filePath);
+                log.info("Deleted old image file: {}", filePath.toAbsolutePath());
+            } else {
+                log.warn("Tried to delete file but it does not exist: {}", filePath.toAbsolutePath());
+            }
+        } catch (IOException e) {
+            log.error("Failed to delete file: {}", e.getMessage());
+        }
     }
 }
 
