@@ -3,6 +3,7 @@ package balancebite.service.interfaces.user;
 import balancebite.dto.user.UserRegistrationInputDTO;
 import balancebite.dto.user.UserDTO;
 import balancebite.errorHandling.UserNotFoundException;
+import balancebite.errorHandling.EntityAlreadyExistsException;
 
 import java.util.List;
 
@@ -35,4 +36,25 @@ public interface IUserAdminService {
      * @throws UserNotFoundException If the user with the specified ID is not found.
      */
     void deleteUser(Long id);
+
+
+    /**
+     * Updates the roles of a user based on their email address.
+     *
+     * @param email the email address of the user whose roles should be updated
+     * @param roleNames a list of role names to assign (e.g., ["USER", "ADMIN"])
+     * @throws UserNotFoundException if no user is found with the provided email
+     * @throws RuntimeException if one or more role names are invalid
+     */
+    void updateUserRolesByEmail(String email, List<String> roleNames);
+
+    /**
+     * Registers a new user with the specified roles.
+     * This method is intended for admin use only.
+     *
+     * @param registrationDTO The input DTO containing user registration details.
+     * @throws EntityAlreadyExistsException If a user with the given email already exists.
+     */
+    void registerUserAsAdmin(UserRegistrationInputDTO registrationDTO);
+
 }

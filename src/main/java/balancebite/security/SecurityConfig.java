@@ -81,8 +81,6 @@ public class SecurityConfig {
 
                         .requestMatchers(HttpMethod.GET, "/uploads/**").permitAll()
 
-                        .requestMatchers(HttpMethod.GET, "/uploads/**").permitAll()
-
                         // register endpoints
                         .requestMatchers(HttpMethod.POST, "/auth/**").permitAll()
 
@@ -105,7 +103,7 @@ public class SecurityConfig {
 
                         .requestMatchers(HttpMethod.PATCH, "/users/**").authenticated()
                         .requestMatchers(HttpMethod.PUT, "/users/**").authenticated()
-                        .requestMatchers(HttpMethod.GET, "/admins/**").hasRole("ADMIN")
+                        .requestMatchers("/admins/**").hasRole("ADMIN")
 
                         .requestMatchers(HttpMethod.POST, "/daily-intake/user").authenticated()
                         .requestMatchers(HttpMethod.POST, "/user/profile").authenticated()
@@ -127,9 +125,13 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.DELETE, "/meals-admin/delete-meal/").hasAnyRole("ADMIN", "CHEF")
 
                         // foodItem entity endpoints
+                        .requestMatchers(HttpMethod.POST, "/fooditems").authenticated()
                         .requestMatchers(HttpMethod.GET, "/fooditems/search-by-name").permitAll()
                         .requestMatchers(HttpMethod.GET, "/fooditems").permitAll()
                         .requestMatchers(HttpMethod.GET, "/fooditems/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/fooditems/fetch/**").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/fooditems/bulk-fetch-items").authenticated()
+
 
 
                         .anyRequest().authenticated()

@@ -46,6 +46,11 @@ public class FoodItemInputDTO {
     @PositiveOrZero(message = "The gram weight must be greater than or equal to zero.")
     private Double gramWeight;
 
+    /**
+     * Optional source indicating where the food item was purchased (e.g., supermarket name).
+     */
+    private String source;
+
     // Constructor, getters, and setters
 
     public FoodItemInputDTO() {
@@ -90,4 +95,13 @@ public class FoodItemInputDTO {
     public void setGramWeight(Double gramWeight) {
         this.gramWeight = gramWeight;
     }
+
+    public String getSource() {
+        return source;
+    }
+
+    public void setSource(String source) {
+        this.source = source;
+    }
+
 }

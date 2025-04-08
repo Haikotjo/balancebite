@@ -2,6 +2,7 @@ package balancebite.controller.usercontroller;
 
 import balancebite.dto.user.UserDTO;
 import balancebite.dto.user.UserRegistrationInputDTO;
+import balancebite.dto.user.UserRoleUpdateDTO;
 import balancebite.errorHandling.EntityAlreadyExistsException;
 import balancebite.errorHandling.UserNotFoundException;
 import balancebite.service.RecommendedDailyIntakeService;
@@ -111,6 +112,39 @@ public class UserAdminController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
             log.error("Unexpected error during user deletion: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "An unexpected error occurred."));
+        }
+    }
+
+    @PatchMapping("/users/update-role")
+    public ResponseEntity<?> updateUserRoles(@Valid @RequestBody UserRoleUpdateDTO dto) {
+        log.info("Updating roles for user with email: {}", dto.getEmail());
+        try {
+            userAdminService.updateUserRolesByEmail(dto.getEmail(), dto.getRoles());
+            log.info("Successfully updated roles for user: {}", dto.getEmail());
+            return ResponseEntity.ok(Map.of("message", "User roles updated successfully"));
+        } catch (UserNotFoundException e) {
+            log.warn("User not found during role update: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+        } catch (RuntimeException e) {
+            log.warn("Invalid role data provided: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            log.error("Unexpected error during role update: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "An unexpected error occurred."));
+        }
+    }
+
+    @PostMapping("/create-user")
+    public ResponseEntity<?> registerUserAsAdmin(@Valid @RequestBody UserRegistrationInputDTO dto) {
+        log.info("Admin attempting to register new user: {}", dto.getEmail());
+        try {
+            userAdminService.registerUserAsAdmin(dto);
+            return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("message", "User created successfully."));
+        } catch (EntityAlreadyExistsException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            log.error("Unexpected error during admin user creation", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "An unexpected error occurred."));
         }
     }

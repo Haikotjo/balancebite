@@ -2,6 +2,7 @@ package balancebite.controller;
 
 import balancebite.dto.UsdaFoodResponseDTO;
 import balancebite.dto.fooditem.FoodItemDTO;
+import balancebite.dto.fooditem.FoodItemInputDTO;
 import balancebite.dto.fooditem.FoodItemNameDTO;
 import balancebite.errorHandling.EntityAlreadyExistsException;
 import balancebite.errorHandling.EntityNotFoundException;
@@ -33,6 +34,26 @@ public class FoodItemController {
      */
     public FoodItemController(FoodItemService foodItemService) {
         this.foodItemService = foodItemService;
+    }
+
+    /**
+     * Endpoint to manually create a new FoodItem.
+     * Accepts a JSON body with the FoodItemInputDTO structure.
+     *
+     * @param inputDTO The DTO containing food item details from the user.
+     * @return A ResponseEntity with the created FoodItemDTO.
+     */
+    @PostMapping
+    public ResponseEntity<?> createFoodItem(@RequestBody FoodItemInputDTO inputDTO) {
+        log.info("Received request to create new FoodItem: {}", inputDTO.getName());
+        try {
+            FoodItemDTO created = foodItemService.createFoodItem(inputDTO);
+            return ResponseEntity.status(HttpStatus.CREATED).body(created);
+        } catch (Exception e) {
+            log.error("Error while creating FoodItem: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "An unexpected error occurred while creating the food item."));
+        }
     }
 
     /**

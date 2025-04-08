@@ -43,6 +43,11 @@ public class FoodItemDTO {
     private final double gramWeight;
 
     /**
+     * Optional source indicating where the food item was purchased (e.g., supermarket name).
+     */
+    private final String source;
+
+    /**
      * Parameterized constructor to create a FoodItemDTO.
      * Calculates the combined values for healthy and unhealthy fats.
      *
@@ -52,14 +57,16 @@ public class FoodItemDTO {
      * @param nutrients The list of nutrients associated with the food item.
      * @param portionDescription The description of the portion.
      * @param gramWeight The gram weight of the portion.
+     * @param source The source where the food item was purchased (optional).
      */
-    public FoodItemDTO(Long id, String name, int fdcId, List<NutrientInfoDTO> nutrients, String portionDescription, double gramWeight) {
+    public FoodItemDTO(Long id, String name, int fdcId, List<NutrientInfoDTO> nutrients, String portionDescription, double gramWeight, String source) {
         this.id = id;
         this.name = name;
         this.fdcId = fdcId;
         this.nutrients = processNutrients(nutrients);
         this.portionDescription = portionDescription;
         this.gramWeight = gramWeight;
+        this.source = source;
     }
 
     /**
@@ -167,4 +174,14 @@ public class FoodItemDTO {
     public double getGramWeight() {
         return gramWeight;
     }
+
+    /**
+     * Gets the source of the food item.
+     *
+     * @return The source (e.g., supermarket name), or null if not specified.
+     */
+    public String getSource() {
+        return source;
+    }
+
 }

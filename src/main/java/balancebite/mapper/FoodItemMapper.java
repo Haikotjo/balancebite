@@ -33,8 +33,13 @@ public class FoodItemMapper {
         return Optional.ofNullable(inputDTO)
                 .map(dto -> {
                     log.debug("Mapping fields from FoodItemInputDTO to FoodItem.");
-                    FoodItem foodItem = new FoodItem(dto.getName(), dto.getFdcId(), dto.getPortionDescription(), dto.getGramWeight());
-
+                    FoodItem foodItem = new FoodItem(
+                            dto.getName(),
+                            dto.getFdcId(),
+                            dto.getPortionDescription(),
+                            dto.getGramWeight(),
+                            dto.getSource()
+                    );
                     List<NutrientInfo> nutrients = dto.getNutrients() != null ?
                             dto.getNutrients().stream()
                                     .map(n -> new NutrientInfo(n.getNutrientName(), n.getValue(), n.getUnitName(), n.getNutrientId()))
@@ -71,8 +76,10 @@ public class FoodItemMapper {
                                 .map(n -> new NutrientInfoDTO(n.getNutrientName(), n.getValue(), n.getUnitName(), n.getNutrientId()))
                                 .collect(Collectors.toList()) : List.of(),
                 foodItem.getPortionDescription(),
-                foodItem.getGramWeight()
+                foodItem.getGramWeight(),
+                foodItem.getSource()
         );
+
         log.debug("Finished mapping FoodItem entity to FoodItemDTO: {}", dto);
         return dto;
     }

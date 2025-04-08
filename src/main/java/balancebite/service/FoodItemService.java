@@ -2,6 +2,7 @@ package balancebite.service;
 
 import balancebite.dto.fooditem.FoodItemDTO;
 import balancebite.dto.UsdaFoodResponseDTO;
+import balancebite.dto.fooditem.FoodItemInputDTO;
 import balancebite.dto.fooditem.FoodItemNameDTO;
 import balancebite.errorHandling.EntityAlreadyExistsException;
 import balancebite.errorHandling.UsdaApiException;
@@ -45,6 +46,23 @@ public class FoodItemService implements IFoodItemService {
         this.foodItemRepository = foodItemRepository;
         this.usdaApiService = usdaApiService;
         this.foodItemMapper = foodItemMapper;
+    }
+
+    /**
+     * Creates a new FoodItem from input DTO and saves it to the database.
+     *
+     * @param inputDTO The FoodItemInputDTO containing user-defined values.
+     * @return The created FoodItem as a DTO.
+     */
+    @Override
+    public FoodItemDTO createFoodItem(FoodItemInputDTO inputDTO) {
+        log.info("Creating new FoodItem from user input: {}", inputDTO.getName());
+
+        FoodItem foodItem = foodItemMapper.toEntity(inputDTO);
+        foodItemRepository.save(foodItem);
+
+        log.info("Successfully created FoodItem: {}", foodItem.getName());
+        return foodItemMapper.toDTO(foodItem);
     }
 
     /**
@@ -221,6 +239,7 @@ public class FoodItemService implements IFoodItemService {
      * @param prefix The prefix to search for.
      * @return A list of FoodItemDTOs that match the criteria.
      */
+    @Override
     public List<FoodItemDTO> getFoodItemsByNamePrefix(String prefix) {
         log.info("Searching for food items with names starting with: {}", prefix);
         List<FoodItem> foodItems = foodItemRepository.findByNameStartingWithIgnoreCase(prefix);

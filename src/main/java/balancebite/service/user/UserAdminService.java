@@ -2,6 +2,7 @@ package balancebite.service.user;
 
 import balancebite.dto.user.UserDTO;
 import balancebite.dto.user.UserRegistrationInputDTO;
+import balancebite.errorHandling.EntityAlreadyExistsException;
 import balancebite.errorHandling.UserNotFoundException;
 import balancebite.mapper.UserMapper;
 import balancebite.model.meal.Meal;
@@ -20,7 +21,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -38,6 +41,7 @@ public class UserAdminService implements IUserAdminService {
     private final RecommendedDailyIntakeService recommendedDailyIntakeService;
     private final UserUpdateHelper userUpdateHelper;
     private final MealRepository mealRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -51,19 +55,21 @@ public class UserAdminService implements IUserAdminService {
      * @param recommendedDailyIntakeService   The service to handle recommended daily intake logic.
      * @param userUpdateHelper
      * @param mealRepository
+     * @param passwordEncoder The encoder for hashing passwords.
      */
     public UserAdminService(UserRepository userRepository,
                             UserMapper userMapper,
                             RecommendedDailyIntakeRepository recommendedDailyIntakeRepository,
                             RecommendedDailyIntakeService recommendedDailyIntakeService,
                             UserUpdateHelper userUpdateHelper,
-                            MealRepository mealRepository) {
+                            MealRepository mealRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.userMapper = userMapper;
         this.recommendedDailyIntakeRepository = recommendedDailyIntakeRepository;
         this.recommendedDailyIntakeService = recommendedDailyIntakeService;
         this.userUpdateHelper = userUpdateHelper;
         this.mealRepository = mealRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     /**
@@ -204,6 +210,74 @@ public class UserAdminService implements IUserAdminService {
         log.info("Successfully deleted user with ID: {}", id);
     }
 
+    /**
+     * Updates the roles of a user based on their email address.
+     *
+     * @param email the email address of the user whose roles should be updated
+     * @param roleNames a list of role names to assign (e.g., ["USER", "ADMIN"])
+     * @throws UserNotFoundException if no user is found with the provided email
+     * @throws RuntimeException if one or more role names are invalid
+     */
+    @Override
+    public void updateUserRolesByEmail(String email, List<String> roleNames) {
+        log.info("Admin attempting to update roles for user with email: {}", email);
 
+        // Find user by email
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException("User not found with email: " + email));
+
+        // Convert role names to Role entities
+        Set<Role> updatedRoles = roleNames.stream()
+                .map(roleName -> {
+                    try {
+                        return new Role(UserRole.valueOf(roleName));
+                    } catch (IllegalArgumentException e) {
+                        log.warn("Invalid role provided: {}", roleName);
+                        throw new RuntimeException("Invalid role: " + roleName);
+                    }
+                })
+                .collect(Collectors.toSet());
+
+        // Set new roles and save
+        user.setRoles(updatedRoles);
+        userRepository.save(user);
+
+        log.info("Successfully updated roles for user with email: {} -> {}", email, roleNames);
+    }
+
+    /**
+     * Creates a new user with specified roles. Only accessible by admins.
+     *
+     * @param registrationDTO the user data to register
+     * @throws EntityAlreadyExistsException if the email is already in use
+     */
+    @Override
+    public void registerUserAsAdmin(UserRegistrationInputDTO registrationDTO) {
+        log.info("Admin creating new user with email: {}", registrationDTO.getEmail());
+
+        if (userRepository.existsByEmail(registrationDTO.getEmail())) {
+            throw new EntityAlreadyExistsException("A user with email " + registrationDTO.getEmail() + " already exists.");
+        }
+
+        String hashedPassword = passwordEncoder.encode(registrationDTO.getPassword());
+
+        Set<Role> roles = (registrationDTO.getRoles() != null && !registrationDTO.getRoles().isEmpty())
+                ? registrationDTO.getRoles().stream()
+                .map(roleName -> new Role(UserRole.valueOf(roleName)))
+                .collect(Collectors.toSet())
+                : Collections.singleton(new Role(UserRole.USER));
+
+        User user = new User(
+                registrationDTO.getUserName() != null && !registrationDTO.getUserName().isBlank()
+                        ? registrationDTO.getUserName()
+                        : registrationDTO.getEmail(),
+                registrationDTO.getEmail(),
+                hashedPassword,
+                roles
+        );
+
+        userRepository.save(user);
+        log.info("User created successfully by admin: {}", user.getEmail());
+    }
 
 }

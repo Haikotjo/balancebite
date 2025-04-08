@@ -94,3 +94,14 @@ INSERT INTO meal_ingredients (meal_id, food_item_id, quantity, food_item_name) V
 INSERT INTO user_meals (user_id, meal_id) VALUES
                                               (1, 1), (1, 2), (1, 3),
                                               (2, 4), (2, 5), (2, 6);
+
+-- Voeg testFoodItem toe
+INSERT INTO food_items (name, fdc_id, portion_description, gram_weight, source)
+VALUES ('TestFoodItem', 999999, '1 portie (200g)', 200, 'Albert Heijn');
+
+-- Voeg voedingswaarden toe voor testFoodItem
+INSERT INTO food_item_nutrients (food_item_id, nutrient_name, value, unit_name, nutrient_id) VALUES
+                                                                                                 ((SELECT id FROM food_items WHERE fdc_id = 999999), 'Energy', 100, 'kcal', 1008),
+                                                                                                 ((SELECT id FROM food_items WHERE fdc_id = 999999), 'Protein', 100, 'g', 1003),
+                                                                                                 ((SELECT id FROM food_items WHERE fdc_id = 999999), 'Carbohydrates', 100, 'g', 1005),
+                                                                                                 ((SELECT id FROM food_items WHERE fdc_id = 999999), 'Total lipid (fat)', 100, 'g', 1004);

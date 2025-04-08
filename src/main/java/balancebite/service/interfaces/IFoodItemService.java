@@ -2,6 +2,7 @@ package balancebite.service.interfaces;
 
 import balancebite.dto.UsdaFoodResponseDTO;
 import balancebite.dto.fooditem.FoodItemDTO;
+import balancebite.dto.fooditem.FoodItemInputDTO;
 import balancebite.dto.fooditem.FoodItemNameDTO;
 import balancebite.errorHandling.EntityAlreadyExistsException;
 import jakarta.persistence.EntityNotFoundException;
@@ -15,6 +16,15 @@ import java.util.concurrent.CompletableFuture;
  * Defines methods to manage and retrieve FoodItem data from the USDA API.
  */
 public interface IFoodItemService {
+
+    /**
+     * Creates a new FoodItem from input DTO and saves it to the database.
+     *
+     * @param inputDTO The FoodItemInputDTO containing user-defined values.
+     * @return The created FoodItem as a DTO.
+     */
+    FoodItemDTO createFoodItem(FoodItemInputDTO inputDTO);
+
 
     /**
      * Fetches a single food item from the USDA API by its FDC ID and saves it.
@@ -59,6 +69,15 @@ public interface IFoodItemService {
      * @throws EntityNotFoundException if the food item with the specified ID does not exist.
      */
     void deleteFoodItemById(Long id);
+
+    /**
+     * Retrieves a list of FoodItems whose names start with the given prefix.
+     *
+     * @param prefix The prefix to search for.
+     * @return A list of FoodItemDTOs that match the criteria.
+     */
+    List<FoodItemDTO> getFoodItemsByNamePrefix(String prefix);
+
 
     /**
      * Retrieves a list of all FoodItems, returning only their ID and name.

@@ -41,12 +41,19 @@ public class FoodItem {
     /**
      * Description of the portion, such as "1 medium banana".
      */
+    @Column(nullable = true)
     private String portionDescription;
 
     /**
      * The gram weight of the portion.
      */
     private double gramWeight;
+
+    /**
+     * Optional source indicating where the food item was purchased (e.g., supermarket name).
+     */
+    private String source;
+
 
     /**
      * List of meal ingredients associated with this food item.
@@ -73,6 +80,23 @@ public class FoodItem {
         this.fdcId = fdcId;
         this.portionDescription = portionDescription;
         this.gramWeight = gramWeight;
+    }
+
+    /**
+     * Constructor to initialize a FoodItem with name, FDC ID, portion description, gram weight, and source.
+     *
+     * @param name The name of the food item.
+     * @param fdcId The FDC ID associated with the food item.
+     * @param portionDescription The description of the portion.
+     * @param gramWeight The gram weight of the portion.
+     * @param source The source where the food item was purchased (optional, e.g., supermarket name).
+     */
+    public FoodItem(String name, int fdcId, String portionDescription, double gramWeight, String source) {
+        this.name = name;
+        this.fdcId = fdcId;
+        this.portionDescription = portionDescription;
+        this.gramWeight = gramWeight;
+        this.source = source;
     }
 
     // Getters and setters
@@ -203,4 +227,23 @@ public class FoodItem {
     public String getDisplayName() {
         return this.name;
     }
+
+    /**
+     * Gets the source of the food item.
+     *
+     * @return The source (e.g., supermarket name), or null if not specified.
+     */
+    public String getSource() {
+        return source;
+    }
+
+    /**
+     * Sets the source of the food item.
+     *
+     * @param source The new source (e.g., supermarket name).
+     */
+    public void setSource(String source) {
+        this.source = source;
+    }
 }
+
