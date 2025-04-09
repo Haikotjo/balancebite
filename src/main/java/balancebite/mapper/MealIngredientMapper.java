@@ -3,7 +3,7 @@ package balancebite.mapper;
 import balancebite.dto.mealingredient.MealIngredientDTO;
 import balancebite.dto.mealingredient.MealIngredientInputDTO;
 import balancebite.errorHandling.InvalidFoodItemException;
-import balancebite.model.FoodItem;
+import balancebite.model.foodItem.FoodItem;
 import balancebite.model.meal.Meal;
 import balancebite.model.MealIngredient;
 import balancebite.repository.FoodItemRepository;

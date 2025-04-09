@@ -1,7 +1,7 @@
 package balancebite.utils;
 
 import balancebite.dto.UsdaFoodResponseDTO;
-import balancebite.model.FoodItem;
+import balancebite.model.foodItem.FoodItem;
 import balancebite.repository.FoodItemRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -1,11 +1,10 @@
 package balancebite.repository;
 
 import balancebite.dto.fooditem.FoodItemNameDTO;
-import balancebite.model.FoodItem;
-import balancebite.model.NutrientInfo;
+import balancebite.model.foodItem.FoodItem;
+import balancebite.model.foodItem.FoodSource;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 
@@ -46,4 +45,12 @@ public interface FoodItemRepository extends JpaRepository<FoodItem, Long> {
      */
     @Query("SELECT DISTINCT new balancebite.dto.fooditem.FoodItemNameDTO(f.id, f.name) FROM FoodItem f")
     List<FoodItemNameDTO> findAllFoodItemNames();
+
+    /**
+     * Finds all food items that have the given food source.
+     *
+     * @param foodSource The food source to filter by.
+     * @return A list of FoodItems from the specified food source.
+     */
+    List<FoodItem> findByFoodSource(FoodSource foodSource);
 }

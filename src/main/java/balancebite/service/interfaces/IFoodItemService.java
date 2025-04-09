@@ -4,6 +4,7 @@ import balancebite.dto.UsdaFoodResponseDTO;
 import balancebite.dto.fooditem.FoodItemDTO;
 import balancebite.dto.fooditem.FoodItemInputDTO;
 import balancebite.dto.fooditem.FoodItemNameDTO;
+import balancebite.model.foodItem.FoodSource;
 import balancebite.errorHandling.EntityAlreadyExistsException;
 import jakarta.persistence.EntityNotFoundException;
 
@@ -85,4 +86,13 @@ public interface IFoodItemService {
      * @return A list of FoodItemNameDTOs containing only ID and name.
      */
     List<FoodItemNameDTO> getAllFoodItemNames();
+
+    /**
+     * Retrieves a list of FoodItems by their food source.
+     *
+     * @param foodSource The enum value representing the food source.
+     * @return A list of FoodItemDTOs from the specified source.
+     */
+    List<FoodItemDTO> getFoodItemsByFoodSource(FoodSource foodSource);
+
 }

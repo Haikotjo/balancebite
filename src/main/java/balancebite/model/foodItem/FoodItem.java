@@ -1,5 +1,7 @@
-package balancebite.model;
+package balancebite.model.foodItem;
 
+import balancebite.model.MealIngredient;
+import balancebite.model.NutrientInfo;
 import jakarta.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -54,6 +56,12 @@ public class FoodItem {
      */
     private String source;
 
+    /**
+     * Optional enum representing a predefined food source.
+     */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "food_source", nullable = true)
+    private FoodSource foodSource;
 
     /**
      * List of meal ingredients associated with this food item.
@@ -98,6 +106,16 @@ public class FoodItem {
         this.gramWeight = gramWeight;
         this.source = source;
     }
+
+    public FoodItem(String name, int fdcId, String portionDescription, double gramWeight, String source, FoodSource foodSource) {
+        this.name = name;
+        this.fdcId = fdcId;
+        this.portionDescription = portionDescription;
+        this.gramWeight = gramWeight;
+        this.source = source;
+        this.foodSource = foodSource;
+    }
+
 
     // Getters and setters
 
@@ -244,6 +262,14 @@ public class FoodItem {
      */
     public void setSource(String source) {
         this.source = source;
+    }
+
+    public FoodSource getFoodSource() {
+        return foodSource;
+    }
+
+    public void setFoodSource(FoodSource foodSource) {
+        this.foodSource = foodSource;
     }
 }
 

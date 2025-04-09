@@ -4,6 +4,8 @@ import balancebite.dto.NutrientInfoDTO;
 
 import java.util.ArrayList;
 import java.util.List;
+import balancebite.model.foodItem.FoodSource;
+
 
 /**
  * Data Transfer Object (DTO) representing a FoodItem.
@@ -48,6 +50,12 @@ public class FoodItemDTO {
     private final String source;
 
     /**
+     * Optional structured source of the food item (e.g., ALBERT_HEIJN, JUMBO).
+     */
+    private final FoodSource foodSource;
+
+
+    /**
      * Parameterized constructor to create a FoodItemDTO.
      * Calculates the combined values for healthy and unhealthy fats.
      *
@@ -57,9 +65,10 @@ public class FoodItemDTO {
      * @param nutrients The list of nutrients associated with the food item.
      * @param portionDescription The description of the portion.
      * @param gramWeight The gram weight of the portion.
-     * @param source The source where the food item was purchased (optional).
+     *                     * @param source The source where the food item can be purchased (optional).
+     * @param foodSource The source where the food item was purchased (optional).
      */
-    public FoodItemDTO(Long id, String name, int fdcId, List<NutrientInfoDTO> nutrients, String portionDescription, double gramWeight, String source) {
+    public FoodItemDTO(Long id, String name, int fdcId, List<NutrientInfoDTO> nutrients, String portionDescription, double gramWeight, String source, FoodSource foodSource) {
         this.id = id;
         this.name = name;
         this.fdcId = fdcId;
@@ -67,6 +76,7 @@ public class FoodItemDTO {
         this.portionDescription = portionDescription;
         this.gramWeight = gramWeight;
         this.source = source;
+        this.foodSource = foodSource;
     }
 
     /**
@@ -182,6 +192,15 @@ public class FoodItemDTO {
      */
     public String getSource() {
         return source;
+    }
+
+    /**
+     * Gets the structured food source (enum).
+     *
+     * @return The FoodSource enum value or null if not specified.
+     */
+    public FoodSource getFoodSource() {
+        return foodSource;
     }
 
 }

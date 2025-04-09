@@ -72,23 +72,27 @@ INSERT INTO meal_diets (meal_id, diet) VALUES
                                            (5, 'LOW_FAT'),
                                            (6, 'HIGH_PROTEIN'), (6, 'LOW_SODIUM');
 
--- Ingrediënten voor alle maaltijden
+-- Ingrediënten voor alle maaltijden (met veilige koppeling via fdc_id)
 INSERT INTO meal_ingredients (meal_id, food_item_id, quantity, food_item_name) VALUES
-                                                                                   (1, 4, 126, 'Bananas, raw'),
-                                                                                   (1, 17, 245, 'Milk, nonfat...'),
-                                                                                   (1, 15, 28.35, 'Bread, whole-wheat'),
-                                                                                   (2, 1, 278, 'Peas and carrots'),
-                                                                                   (2, 2, 284, 'Spinach'),
-                                                                                   (2, 7, 200, 'Strawberries'),
-                                                                                   (2, 11, 230, 'Avocados'),
-                                                                                   (3, 3, 89, 'Corn'),
-                                                                                   (3, 8, 100, 'Cauliflower'),
-                                                                                   (3, 14, 25.5, 'Egg, hard-boiled'),
-                                                                                   (4, 5, 182, 'Apple'),
-                                                                                   (4, 6, 28, 'Almonds'),
-                                                                                   (5, 13, 140, 'Chicken, roasted'),
-                                                                                   (5, 14, 158, 'Rice, white'),
-                                                                                   (5, 16, 91, 'Broccoli');
+                                                                                   (1, (SELECT id FROM food_items WHERE fdc_id = 173944), 126, 'Bananas, raw'),
+                                                                                   (1, (SELECT id FROM food_items WHERE fdc_id = 171269), 245, 'Milk, nonfat...'),
+                                                                                   (1, (SELECT id FROM food_items WHERE fdc_id = 172688), 28.35, 'Bread, whole-wheat'),
+
+                                                                                   (2, (SELECT id FROM food_items WHERE fdc_id = 170513), 278, 'Peas and carrots'),
+                                                                                   (2, (SELECT id FROM food_items WHERE fdc_id = 169287), 284, 'Spinach'),
+                                                                                   (2, (SELECT id FROM food_items WHERE fdc_id = 2346409), 200, 'Strawberries'),
+                                                                                   (2, (SELECT id FROM food_items WHERE fdc_id = 171705), 230, 'Avocados'),
+
+                                                                                   (3, (SELECT id FROM food_items WHERE fdc_id = 169999), 89, 'Corn'),
+                                                                                   (3, (SELECT id FROM food_items WHERE fdc_id = 2685573), 100, 'Cauliflower'),
+                                                                                   (3, (SELECT id FROM food_items WHERE fdc_id = 173424), 25.5, 'Egg, hard-boiled'),
+
+                                                                                   (4, (SELECT id FROM food_items WHERE fdc_id = 323505), 182, 'Kale'), -- Apple → Kale in jouw data
+                                                                                   (4, (SELECT id FROM food_items WHERE fdc_id = 169910), 28, 'Mangos'),
+
+                                                                                   (5, (SELECT id FROM food_items WHERE fdc_id = 2344766), 140, 'Berries'),
+                                                                                   (5, (SELECT id FROM food_items WHERE fdc_id = 173424), 158, 'Egg, hard-boiled'), -- Zelfde egg
+                                                                                   (5, (SELECT id FROM food_items WHERE fdc_id = 171409), 91, 'Sandwich spread');
 
 -- Koppel maaltijden aan gebruikers
 INSERT INTO user_meals (user_id, meal_id) VALUES

@@ -6,6 +6,7 @@ import balancebite.dto.fooditem.FoodItemInputDTO;
 import balancebite.dto.fooditem.FoodItemNameDTO;
 import balancebite.errorHandling.EntityAlreadyExistsException;
 import balancebite.errorHandling.EntityNotFoundException;
+import balancebite.model.foodItem.FoodSource;
 import balancebite.service.FoodItemService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -206,5 +207,43 @@ public class FoodItemController {
             return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
         }
         return ResponseEntity.ok(foodItemNames);
+    }
+
+    /**
+     * Endpoint to retrieve FoodItems by their food source.
+     *
+     * @param source The food source (e.g., ALBERT_HEIJN, JUMBO) as enum name.
+     * @return A ResponseEntity with the list of matching FoodItemDTOs.
+     */
+    @GetMapping("/by-source")
+    public ResponseEntity<?> getFoodItemsByFoodSource(@RequestParam("source") String source) {
+        log.info("Fetching food items with food source: {}", source);
+        try {
+            FoodSource foodSource = FoodSource.valueOf(source.toUpperCase());
+            List<FoodItemDTO> foodItems = foodItemService.getFoodItemsByFoodSource(foodSource);
+            if (foodItems.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+            }
+            return ResponseEntity.ok(foodItems);
+        } catch (IllegalArgumentException e) {
+            log.warn("Invalid food source: {}", source);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", "Invalid food source: " + source));
+        } catch (Exception e) {
+            log.error("Error while fetching food items by source: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "An unexpected error occurred."));
+        }
+    }
+
+    /**
+     * Endpoint to retrieve all predefined food sources.
+     *
+     * @return A list of all FoodSource enum values.
+     */
+    @GetMapping("/sources")
+    public ResponseEntity<?> getAllFoodSources() {
+        log.info("Fetching all predefined food sources.");
+        return ResponseEntity.ok(FoodSource.values());
     }
 }

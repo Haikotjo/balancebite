@@ -1,5 +1,6 @@
 package balancebite.model;
 
+import balancebite.model.foodItem.FoodItem;
 import balancebite.model.meal.Meal;
 import jakarta.persistence.*;
 

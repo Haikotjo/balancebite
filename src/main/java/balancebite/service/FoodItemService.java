@@ -7,7 +7,8 @@ import balancebite.dto.fooditem.FoodItemNameDTO;
 import balancebite.errorHandling.EntityAlreadyExistsException;
 import balancebite.errorHandling.UsdaApiException;
 import balancebite.mapper.FoodItemMapper;
-import balancebite.model.FoodItem;
+import balancebite.model.foodItem.FoodItem;
+import balancebite.model.foodItem.FoodSource;
 import balancebite.repository.FoodItemRepository;
 import balancebite.service.interfaces.IFoodItemService;
 import balancebite.errorHandling.EntityNotFoundException;
@@ -261,5 +262,25 @@ public class FoodItemService implements IFoodItemService {
     public List<FoodItemNameDTO> getAllFoodItemNames() {
         log.info("Fetching all food item names and IDs.");
         return foodItemRepository.findAllFoodItemNames();
+    }
+
+    /**
+     * Retrieves a list of FoodItems filtered by their food source.
+     *
+     * This method queries the repository for all food items that match the specified
+     * {@link balancebite.model.foodItem.FoodSource}. It is useful for filtering food items
+     * based on where they were purchased or originated, such as Albert Heijn or Jumbo.
+     *
+     * @param foodSource The {@link balancebite.model.foodItem.FoodSource} to filter by.
+     * @return A list of {@link FoodItemDTO} instances from the specified food source.
+     *         Returns an empty list if no matches are found.
+     */
+    @Override
+    public List<FoodItemDTO> getFoodItemsByFoodSource(FoodSource foodSource) {
+        log.info("Retrieving food items by food source: {}", foodSource);
+        List<FoodItem> foodItems = foodItemRepository.findByFoodSource(foodSource);
+        return foodItems.stream()
+                .map(foodItemMapper::toDTO)
+                .collect(Collectors.toList());
     }
 }

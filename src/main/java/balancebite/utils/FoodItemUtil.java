@@ -1,7 +1,7 @@
 package balancebite.utils;
 
 import balancebite.dto.UsdaFoodResponseDTO;
-import balancebite.model.FoodItem;
+import balancebite.model.foodItem.FoodItem;
 import balancebite.model.NutrientInfo;
 
 import java.util.List;

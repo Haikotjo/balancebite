@@ -3,7 +3,7 @@ package balancebite.mapper;
 import balancebite.dto.fooditem.FoodItemDTO;
 import balancebite.dto.fooditem.FoodItemInputDTO;
 import balancebite.dto.NutrientInfoDTO;
-import balancebite.model.FoodItem;
+import balancebite.model.foodItem.FoodItem;
 import balancebite.model.NutrientInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,7 +38,8 @@ public class FoodItemMapper {
                             dto.getFdcId(),
                             dto.getPortionDescription(),
                             dto.getGramWeight(),
-                            dto.getSource()
+                            dto.getSource(),
+                            dto.getFoodSource()
                     );
                     List<NutrientInfo> nutrients = dto.getNutrients() != null ?
                             dto.getNutrients().stream()
@@ -77,7 +78,8 @@ public class FoodItemMapper {
                                 .collect(Collectors.toList()) : List.of(),
                 foodItem.getPortionDescription(),
                 foodItem.getGramWeight(),
-                foodItem.getSource()
+                foodItem.getSource(),
+                foodItem.getFoodSource()
         );
 
         log.debug("Finished mapping FoodItem entity to FoodItemDTO: {}", dto);

@@ -69,12 +69,23 @@ public interface MealRepository extends JpaRepository<Meal, Long> {
      * @param size the expected size of the ingredient list
      * @return a list of template meals with identical ingredients as the specified meal
      */
-    @Query("SELECT m FROM Meal m " +
-            "JOIN m.mealIngredients mi " +
-            "WHERE m.isTemplate = true " +
-            "AND mi.foodItem.id IN :foodItemIds " +
-            "GROUP BY m.id " +
-            "HAVING COUNT(mi) = :size")
+    @Query("""
+    SELECT m FROM Meal m
+    WHERE m.isTemplate = true
+    AND SIZE(m.mealIngredients) = :size
+    AND NOT EXISTS (
+        SELECT mi FROM MealIngredient mi
+        WHERE mi.meal = m
+        AND mi.foodItem.id NOT IN :foodItemIds
+    )
+    AND NOT EXISTS (
+        SELECT id FROM FoodItem fi
+        WHERE fi.id IN :foodItemIds
+        AND fi.id NOT IN (
+            SELECT mi.foodItem.id FROM MealIngredient mi WHERE mi.meal = m
+        )
+    )
+""")
     List<Meal> findTemplateMealsWithExactIngredients(@Param("foodItemIds") List<Long> foodItemIds, @Param("size") long size);
 
     /**

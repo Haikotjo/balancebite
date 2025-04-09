@@ -2,6 +2,8 @@ package balancebite.dto.fooditem;
 
 import balancebite.dto.NutrientInfoDTO;
 import jakarta.validation.constraints.*;
+import balancebite.model.foodItem.FoodSource;
+
 
 import java.util.List;
 
@@ -50,6 +52,13 @@ public class FoodItemInputDTO {
      * Optional source indicating where the food item was purchased (e.g., supermarket name).
      */
     private String source;
+
+    /**
+     * Optional structured source of the food item, selected from predefined values (e.g., supermarkets).
+     * This field complements the free-text 'source' field and provides consistent reference.
+     */
+    private FoodSource foodSource;
+
 
     // Constructor, getters, and setters
 
@@ -102,6 +111,14 @@ public class FoodItemInputDTO {
 
     public void setSource(String source) {
         this.source = source;
+    }
+
+    public FoodSource getFoodSource() {
+        return foodSource;
+    }
+
+    public void setFoodSource(FoodSource foodSource) {
+        this.foodSource = foodSource;
     }
 
 }
