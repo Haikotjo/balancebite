@@ -87,6 +87,11 @@ public class MealInputDTO {
      */
     private Set<Diet> diets;
 
+    /**
+     * Estimated preparation time as a duration string (e.g., "PT20M", "PT1H30M", or "00:45:00").
+     * Optional field. Expected format: ISO-8601 or "HH:mm:ss" for user input.
+     */
+    private String preparationTime;
 
     /**
      * Default constructor for frameworks that require a no-argument constructor.
@@ -106,6 +111,7 @@ public class MealInputDTO {
      * @param mealTypes       The types of meal (optional). Allows classifying as breakfast, lunch, dinner, or snack.
      * @param cuisines        The cuisine types of the meal (optional). Represents the cultural or regional origins.
      * @param diets           The dietary categories of the meal (optional). Used for filtering based on diet.
+     * @param preparationTime Estimated preparation time in minutes (optional).
      */
     public MealInputDTO(
             @NotBlank(message = "The name of the meal cannot be blank. Please provide a valid name.")
@@ -119,7 +125,9 @@ public class MealInputDTO {
             @Valid UserDTO createdBy,
             Set<MealType> mealTypes,
             Set<Cuisine> cuisines,
-            Set<Diet> diets) {
+            Set<Diet> diets,
+            String preparationTime
+    ) {
         this.name = name;
         this.mealIngredients = mealIngredients;
         this.mealDescription = mealDescription;
@@ -130,7 +138,9 @@ public class MealInputDTO {
         this.mealTypes = mealTypes;
         this.cuisines = cuisines;
         this.diets = diets;
+        this.preparationTime = preparationTime;
     }
+
 
 
     /**
@@ -318,5 +328,13 @@ public class MealInputDTO {
      */
     public void setDiets(Set<Diet> diets) {
         this.diets = diets;
+    }
+
+    public String getPreparationTime() {
+        return preparationTime;
+    }
+
+    public void setPreparationTime(String preparationTime) {
+        this.preparationTime = preparationTime;
     }
 }

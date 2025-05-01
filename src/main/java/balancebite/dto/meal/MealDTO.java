@@ -122,6 +122,13 @@ public class MealDTO {
     private final String foodItemsString;
 
     /**
+     * Estimated preparation time for the meal (e.g., "PT30M", "PT1H").
+     * Follows ISO-8601 duration format.
+     */
+    private final String preparationTime;
+
+
+    /**
      * Constructor for creating a MealDTO with essential meal information.
      *
      * @param id               the unique identifier of the meal.
@@ -148,7 +155,7 @@ public class MealDTO {
     public MealDTO(Long id, String name, String mealDescription, String image, String imageUrl, Long originalMealId,
                    LocalDateTime version, List<MealIngredientDTO> mealIngredients, int userCount, UserDTO createdBy,
                    UserDTO adjustedBy,Boolean isTemplate ,  Set<MealType> mealTypes, Set<Cuisine> cuisines, Set<Diet> diets, double totalCalories, double totalProtein, double totalCarbs,
-                   double totalFat, String foodItemsString) {
+                   double totalFat, String foodItemsString, String preparationTime) {
         this.id = id;
         this.name = name;
         this.mealDescription = mealDescription;
@@ -169,6 +176,7 @@ public class MealDTO {
         this.totalCarbs = totalCarbs;
         this.totalFat = totalFat;
         this.foodItemsString = foodItemsString;
+        this.preparationTime = preparationTime;
     }
 
 
@@ -343,4 +351,14 @@ public class MealDTO {
     public String getFoodItemsString() {
         return foodItemsString;
     }
+
+    /**
+     * Gets the estimated preparation time in ISO-8601 format (e.g., "PT30M").
+     *
+     * @return the preparation time as a string.
+     */
+    public String getPreparationTime() {
+        return preparationTime;
+    }
+
 }

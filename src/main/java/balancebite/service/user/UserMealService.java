@@ -29,6 +29,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -97,6 +98,12 @@ public class UserMealService implements IUserMealService {
             String imageUrl = fileStorageService.saveFile(mealInputDTO.getImageFile());
             meal.setImageUrl(imageUrl);
         }
+
+        meal.setPreparationTime(
+                mealInputDTO.getPreparationTime() != null && !mealInputDTO.getPreparationTime().isBlank()
+                        ? Duration.parse(mealInputDTO.getPreparationTime())
+                        : null
+        );
 
         meal.setVersion(LocalDateTime.now());
 
@@ -200,6 +207,7 @@ public class UserMealService implements IUserMealService {
         mealCopy.setMealDescription(originalMeal.getMealDescription());
         mealCopy.setImage(originalMeal.getImage());
         mealCopy.setImageUrl(originalMeal.getImageUrl());
+        mealCopy.setPreparationTime(originalMeal.getPreparationTime());
         mealCopy.setCuisines(new HashSet<>(originalMeal.getCuisines()));
         mealCopy.setDiets(new HashSet<>(originalMeal.getDiets()));
         mealCopy.setMealTypes(new HashSet<>(originalMeal.getMealTypes()));
@@ -277,6 +285,11 @@ public class UserMealService implements IUserMealService {
         meal.setMealTypes(mealInputDTO.getMealTypes());
         meal.setCuisines(mealInputDTO.getCuisines());
         meal.setDiets(mealInputDTO.getDiets());
+        if (mealInputDTO.getPreparationTime() != null && !mealInputDTO.getPreparationTime().isBlank()) {
+            meal.setPreparationTime(Duration.parse(mealInputDTO.getPreparationTime()));
+        } else {
+            meal.setPreparationTime(null);
+        }
         meal.setAdjustedBy(user);
         meal.setVersion(LocalDateTime.now());
 
@@ -298,6 +311,12 @@ public class UserMealService implements IUserMealService {
             log.info("🧼 Removing image because frontend cleared it and no new file was provided.");
             fileStorageService.deleteFileByUrl(meal.getImageUrl());
             meal.setImageUrl(null);
+        }
+
+        if ((mealInputDTO.getImageFile() == null || mealInputDTO.getImageFile().isEmpty())
+                && mealInputDTO.getImageUrl() != null && !mealInputDTO.getImageUrl().isBlank()) {
+            log.info("🖼 Using image URL directly: {}", mealInputDTO.getImageUrl());
+            meal.setImageUrl(mealInputDTO.getImageUrl());
         }
 
         meal.getMealIngredients().clear();

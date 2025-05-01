@@ -75,9 +75,12 @@ public class MealMapper {
                 meal.getTotalProtein(),
                 meal.getTotalCarbs(),
                 meal.getTotalFat(),
-                meal.getFoodItemsString()
+                meal.getFoodItemsString(),
+                meal.getPreparationTime() != null ? meal.getPreparationTime().toString() : null
         );
         log.debug("Finished converting Meal entity to MealDTO: {}", dto);
+        log.info("Meal {} preparationTime: {}", meal.getId(), meal.getPreparationTime());
+
         return dto;
     }
 
@@ -99,6 +102,10 @@ public class MealMapper {
                     meal.setMealTypes(dto.getMealTypes());
                     meal.setCuisines(dto.getCuisines());
                     meal.setDiets(dto.getDiets());
+
+                    if (dto.getPreparationTime() != null && !dto.getPreparationTime().isBlank()) {
+                        meal.setPreparationTime(java.time.Duration.parse(dto.getPreparationTime()));
+                    }
 
                     // Verwerk Base64 of URL afbeelding
                     if (dto.getImageFile() != null && !dto.getImageFile().isEmpty()) {

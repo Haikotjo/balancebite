@@ -18,32 +18,33 @@ INSERT INTO user_roles (user_id, roles_rolename) VALUES
                                                      (4, 'ADMIN'), (5, 'ADMIN'), (6, 'CHEF');
 
 -- Voeg maaltijden toe (met uitgebreidere beschrijvingen)
-INSERT INTO meals (name, meal_description, user_count, is_template, created_by_user_id, image_url, total_calories, total_protein, total_carbs, total_fat)
-VALUES
-    ('Breakfast',
-     'Start your day with a nourishing breakfast featuring naturally sweet bananas, creamy nonfat milk, and wholesome whole-wheat bread. This energizing combination provides a perfect balance of carbohydrates, protein, and fiber to fuel your morning and keep you satisfied until your next meal.',
-     1, true, 1, 'https://images.unsplash.com/photo-1473093295043-cdd812d0e601?q=80', 267, 13, 53, 2),
+INSERT INTO meals (
+    name, meal_description, user_count, is_template,
+    created_by_user_id, image_url, total_calories, total_protein, total_carbs, total_fat, preparation_time
+) VALUES
+      ('Breakfast',
+       'Start your day with a nourishing breakfast featuring naturally sweet bananas, creamy nonfat milk, and wholesome whole-wheat bread. This energizing combination provides a perfect balance of carbohydrates, protein, and fiber to fuel your morning and keep you satisfied until your next meal.',
+       1, true, 1, 'https://images.unsplash.com/photo-1473093295043-cdd812d0e601?q=80', 267, 13, 53, 2, 'PT15M'),
 
-    ('Lunch',
-     'Enjoy a colorful and vibrant lunch packed with nutrients and flavor. This meal brings together tender peas and carrots, hearty spinach, juicy strawberries, and creamy avocado for a delicious and refreshing midday boost. A perfect choice for those seeking a plant-forward, balanced plate.',
-     1, true, 1, 'https://images.unsplash.com/photo-1485451456034-3f9391c6f769?q=80', 584, 25, 76, 37),
+      ('Lunch',
+       'Enjoy a colorful and vibrant lunch packed with nutrients and flavor. This meal brings together tender peas and carrots, hearty spinach, juicy strawberries, and creamy avocado for a delicious and refreshing midday boost. A perfect choice for those seeking a plant-forward, balanced plate.',
+       1, true, 1, 'https://images.unsplash.com/photo-1485451456034-3f9391c6f769?q=80', 584, 25, 76, 37, 'PT30M'),
 
-    ('Dinner',
-     'Unwind with a comforting and hearty dinner that combines naturally sweet yellow corn, crisp cauliflower, and perfectly cooked hard-boiled eggs. This simple yet satisfying meal offers a rich blend of textures and nutrients, ideal for a lighter evening option that still nourishes and restores.',
-     1, true, 1, 'https://images.unsplash.com/photo-1505932049984-db368d92fa63?q=80', 125, 8, 24, 4),
+      ('Dinner',
+       'Unwind with a comforting and hearty dinner that combines naturally sweet yellow corn, crisp cauliflower, and perfectly cooked hard-boiled eggs. This simple yet satisfying meal offers a rich blend of textures and nutrients, ideal for a lighter evening option that still nourishes and restores.',
+       1, true, 1, 'https://images.unsplash.com/photo-1505932049984-db368d92fa63?q=80', 125, 8, 24, 4, 'PT45M'),
 
-    ('Snack',
-     'Recharge your energy with a delightful snack that pairs the refreshing crunch of raw apples with the rich, satisfying taste of raw almonds. Whether you’re on the go or enjoying a quick break, this simple duo provides a naturally sweet, fiber-rich, and protein-packed option to tide you over.',
-     1, true, 2, 'https://plus.unsplash.com/premium_photo-1678481245533-3b5c7a5e3d37?q=80', 81, 6, 12, 3),
+      ('Snack',
+       'Recharge your energy with a delightful snack that pairs the refreshing crunch of raw apples with the rich, satisfying taste of raw almonds. Whether you’re on the go or enjoying a quick break, this simple duo provides a naturally sweet, fiber-rich, and protein-packed option to tide you over.',
+       1, true, 2, 'https://plus.unsplash.com/premium_photo-1678481245533-3b5c7a5e3d37?q=80', 81, 6, 12, 3, 'PT5M'),
 
-    ('Salad',
-     'Treat yourself to a light and refreshing salad composed of crisp romaine lettuce, ripe tomatoes, and cool cucumbers. This vibrant mix is not only visually appealing but also packed with hydration, vitamins, and antioxidants, making it a perfect addition to any lunch or light dinner.',
-     1, true, 2, 'https://images.unsplash.com/photo-1505253716362-afaea1d3d1af?q=80', 200, 5, 30, 5),
+      ('Salad',
+       'Treat yourself to a light and refreshing salad composed of crisp romaine lettuce, ripe tomatoes, and cool cucumbers. This vibrant mix is not only visually appealing but also packed with hydration, vitamins, and antioxidants, making it a perfect addition to any lunch or light dinner.',
+       1, true, 2, 'https://images.unsplash.com/photo-1505253716362-afaea1d3d1af?q=80', 200, 5, 30, 5, 'PT10M'),
 
-    ('Dinner Special',
-     'Indulge in a hearty dinner special featuring savory roasted chicken, fluffy white rice, and fresh broccoli florets. This balanced meal delivers a satisfying combination of lean protein, energizing carbohydrates, and essential nutrients, perfect for a fulfilling and wholesome end to your day.',
-     1, true, 2, 'https://images.unsplash.com/photo-1605926637512-c8b131444a4b?q=80', 658, 22, 36, 48);
-
+      ('Dinner Special',
+       'Indulge in a hearty dinner special featuring savory roasted chicken, fluffy white rice, and fresh broccoli florets. This balanced meal delivers a satisfying combination of lean protein, energizing carbohydrates, and essential nutrients, perfect for a fulfilling and wholesome end to your day.',
+       1, true, 2, 'https://images.unsplash.com/photo-1605926637512-c8b131444a4b?q=80', 658, 22, 36, 48, 'PT1H');
 
 -- Meal types (ElementCollection)
 INSERT INTO meal_meal_types (meal_id, meal_type) VALUES

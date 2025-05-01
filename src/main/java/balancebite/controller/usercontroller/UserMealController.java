@@ -7,6 +7,7 @@ import balancebite.errorHandling.*;
 import balancebite.security.JwtService;
 import balancebite.service.user.ConsumeMealService;
 import balancebite.service.user.UserMealService;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
@@ -173,7 +174,9 @@ public class UserMealController {
 
             // ✅ Parse JSON string to DTO
             ObjectMapper objectMapper = new ObjectMapper();
+            objectMapper.configure(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT, true);
             MealInputDTO mealInputDTO = objectMapper.readValue(mealInputDTOJson, MealInputDTO.class);
+
 
             // ✅ Verwerk image
             mealInputDTO.setImageFile(imageFile); // 🔥 Deze regel moet **altijd** meegegeven worden, zelfs als null

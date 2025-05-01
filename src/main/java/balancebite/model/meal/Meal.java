@@ -1,5 +1,6 @@
 package balancebite.model.meal;
 
+import balancebite.config.DurationConverter;
 import balancebite.model.MealIngredient;
 import balancebite.model.meal.references.Cuisine;
 import balancebite.model.meal.references.Diet;
@@ -8,6 +9,7 @@ import balancebite.model.user.User;
 import balancebite.model.user.userenums.ActivityLevel;
 import jakarta.persistence.*;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -169,6 +171,15 @@ public class Meal {
      */
     @Column(name = "food_items_string", length = 5000)
     private String foodItemsString = "";
+
+    /**
+     * Estimated preparation time for the meal.
+     * Allows hour-minute-second precision.
+     */
+    @Convert(converter = DurationConverter.class)
+    @Column(name = "preparation_time")
+    private Duration preparationTime;
+
 
     /**
      * No-argument constructor required by JPA.
@@ -542,4 +553,12 @@ public class Meal {
     public double getTotalFat() { return totalFat; }
 
     public String getFoodItemsString() { return foodItemsString; }
+
+    public Duration getPreparationTime() {
+        return preparationTime;
+    }
+
+    public void setPreparationTime(Duration preparationTime) {
+        this.preparationTime = preparationTime;
+    }
 }
