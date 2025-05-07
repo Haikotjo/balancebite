@@ -110,3 +110,30 @@ INSERT INTO food_item_nutrients (food_item_id, nutrient_name, value, unit_name, 
                                                                                                  ((SELECT id FROM food_items WHERE fdc_id = 999999), 'Protein', 100, 'g', 1003),
                                                                                                  ((SELECT id FROM food_items WHERE fdc_id = 999999), 'Carbohydrates', 100, 'g', 1005),
                                                                                                  ((SELECT id FROM food_items WHERE fdc_id = 999999), 'Total lipid (fat)', 100, 'g', 1004);
+
+-- Voeg diets toe
+INSERT INTO diet (name, original_diet_id, is_template, version, created_by_user_id) VALUES
+                                                                                        ('Beginner Veggie Diet', NULL, TRUE, '2025-05-01T20:00:00', 1),
+                                                                                        ('High Protein 3-Day Plan', NULL, TRUE, '2025-05-01T20:00:00', 2);
+
+-- Voeg diet_days toe
+INSERT INTO diet_day (day_label, date, diet_id) VALUES
+                                                    ('Day 1', NULL, 1),
+
+                                                    ('Day 1', NULL, 2),
+                                                    ('Day 2', NULL, 2),
+                                                    ('Day 3', NULL, 2);
+
+-- Voeg meals toe aan de diet_days
+INSERT INTO diet_day_meals (diet_day_id, meal_id) VALUES
+-- Beginner Veggie Diet: 1 dag met 2 maaltijden
+(1, 1),
+(1, 2),
+
+-- High Protein 3-Day Plan: 3 dagen met elk 2 maaltijden
+(2, 2),
+(2, 3),
+(3, 4),
+(3, 5),
+(4, 1),
+(4, 6);

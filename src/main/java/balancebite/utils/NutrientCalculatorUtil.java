@@ -3,7 +3,10 @@ package balancebite.utils;
 import balancebite.dto.NutrientInfoDTO;
 import balancebite.model.MealIngredient;
 import balancebite.model.NutrientInfo;
+import balancebite.model.diet.DietDay;
+import balancebite.model.meal.Meal;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -164,4 +167,33 @@ public class NutrientCalculatorUtil {
 
         return nutrientNameCount;
     }
+
+    public static Map<String, NutrientInfoDTO> calculateTotalNutrientsForDiet(List<DietDay> dietDays) {
+        List<MealIngredient> allIngredients = new ArrayList<>();
+
+        for (DietDay day : dietDays) {
+            for (Meal meal : day.getMeals()) {
+                allIngredients.addAll(meal.getMealIngredients());
+            }
+        }
+
+        return calculateTotalNutrients(allIngredients);
+    }
+
+    public static Map<String, NutrientInfoDTO> calculateTotalNutrientsForDay(DietDay dietDay) {
+        if (dietDay == null || dietDay.getMeals() == null) {
+            return new HashMap<>();
+        }
+
+        List<MealIngredient> allIngredients = new ArrayList<>();
+        for (Meal meal : dietDay.getMeals()) {
+            if (meal != null && meal.getMealIngredients() != null) {
+                allIngredients.addAll(meal.getMealIngredients());
+            }
+        }
+
+        return calculateTotalNutrients(allIngredients);
+    }
+
+
 }

@@ -156,7 +156,6 @@ public class UserMealController {
      * Updates a user's meal by ID, only allowing updates to meals in their list.
      *
      * @param mealId       The ID of the meal to update.
-     * @param mealInputDTO The new details of the meal.
      * @param authorizationHeader The Authorization header containing the JWT token.
      * @return ResponseEntity containing the updated MealDTO with 200 status code, or an error response with an appropriate status.
      */

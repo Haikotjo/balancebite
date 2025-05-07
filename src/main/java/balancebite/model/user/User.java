@@ -1,5 +1,6 @@
 package balancebite.model.user;
 
+import balancebite.model.diet.Diet;
 import balancebite.model.meal.Meal;
 import balancebite.model.RecommendedDailyIntake;
 import balancebite.model.user.userenums.ActivityLevel;
@@ -7,7 +8,10 @@ import balancebite.model.user.userenums.Gender;
 import balancebite.model.user.userenums.Goal;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -66,6 +70,9 @@ public class User {
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "base_rdi_id", referencedColumnName = "id")
     private RecommendedDailyIntake baseRecommendedDailyIntake;
+
+    @OneToMany(mappedBy = "createdBy", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Diet> diets = new ArrayList<>();
 
     public User() {}
 
@@ -182,5 +189,13 @@ public class User {
 
     public void setBaseRecommendedDailyIntake(RecommendedDailyIntake baseRecommendedDailyIntake) {
         this.baseRecommendedDailyIntake = baseRecommendedDailyIntake;
+    }
+
+    public List<Diet> getDiets() {
+        return diets;
+    }
+
+    public void setDiets(List<Diet> diets) {
+        this.diets = diets;
     }
 }
