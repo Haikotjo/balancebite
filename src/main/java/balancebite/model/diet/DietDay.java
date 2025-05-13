@@ -7,9 +7,7 @@ import balancebite.utils.NutrientCalculatorUtil;
 import jakarta.persistence.*;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Entity
 public class DietDay {
@@ -22,10 +20,14 @@ public class DietDay {
 
     private LocalDate date; // e.g. 2025-05-01
 
-    @ManyToOne(optional = false)
-    private Diet diet;
+    @Column(length = 1000)
+    private String dietDayDescription;
 
-    @ManyToMany
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "diet_plan_id")
+    private DietPlan diet;
+
+    @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
             name = "diet_day_meals",
             joinColumns = @JoinColumn(name = "diet_day_id"),
@@ -33,10 +35,16 @@ public class DietDay {
     )
     private List<Meal> meals = new ArrayList<>();
 
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "diet_day_diets", joinColumns = @JoinColumn(name = "diet_day_id"))
+    @Enumerated(EnumType.STRING)
+    @Column(name = "diet")
+    private Set<balancebite.model.meal.references.Diet> diets = new HashSet<>();
+
     // Constructors
     public DietDay() {}
 
-    public DietDay(String dayLabel, LocalDate date, Diet diet) {
+    public DietDay(String dayLabel, LocalDate date, DietPlan diet) {
         this.dayLabel = dayLabel;
         this.date = date;
         this.diet = diet;
@@ -63,11 +71,11 @@ public class DietDay {
         this.date = date;
     }
 
-    public Diet getDiet() {
+    public DietPlan getDiet() {
         return diet;
     }
 
-    public void setDiet(Diet diet) {
+    public void setDiet(DietPlan diet) {
         this.diet = diet;
     }
 
@@ -93,4 +101,19 @@ public class DietDay {
         return NutrientCalculatorUtil.calculateTotalNutrients(getAllMealIngredients());
     }
 
+    public String getDietDayDescription() {
+        return dietDayDescription;
+    }
+
+    public void setDietDayDescription(String dietDayDescription) {
+        this.dietDayDescription = dietDayDescription;
+    }
+
+    public Set<balancebite.model.meal.references.Diet> getDiets() {
+        return diets;
+    }
+
+    public void setDiets(Set<balancebite.model.meal.references.Diet> diets) {
+        this.diets = diets;
+    }
 }

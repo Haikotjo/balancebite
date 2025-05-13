@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -73,14 +74,20 @@ public class FileStorageService {
 
     public void deleteFileByUrl(String imageUrl) {
         try {
-            String fileName = imageUrl.substring(imageUrl.lastIndexOf("/") + 1);
-            Path filePath = Paths.get(uploadDir, fileName);
+            // 1) Parse de URL en haal alleen het pad op (zonder query)
+            URI uri = URI.create(imageUrl);
+            String path = uri.getPath();  // bijv. "/uploads/photo-…-db368d92fa63.jpg"
 
+            // 2) Haal de bestandsnaam uit dat pad
+            String fileName = Paths.get(path).getFileName().toString();
+
+            // 3) Bouw het lokale pad en verwijder
+            Path filePath = Paths.get(uploadDir, fileName);
             if (Files.exists(filePath)) {
                 Files.delete(filePath);
                 log.info("Deleted old image file: {}", filePath.toAbsolutePath());
             } else {
-                log.warn("Tried to delete file but it does not exist: {}", filePath.toAbsolutePath());
+                log.warn("File not found for deletion: {}", filePath.toAbsolutePath());
             }
         } catch (IOException e) {
             log.error("Failed to delete file: {}", e.getMessage());

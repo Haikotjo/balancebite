@@ -1,6 +1,6 @@
 package balancebite.model.user;
 
-import balancebite.model.diet.Diet;
+import balancebite.model.diet.DietPlan;
 import balancebite.model.meal.Meal;
 import balancebite.model.RecommendedDailyIntake;
 import balancebite.model.user.userenums.ActivityLevel;
@@ -72,7 +72,7 @@ public class User {
     private RecommendedDailyIntake baseRecommendedDailyIntake;
 
     @OneToMany(mappedBy = "createdBy", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Diet> diets = new ArrayList<>();
+    private List<DietPlan> dietPlans = new ArrayList<>();
 
     public User() {}
 
@@ -191,11 +191,11 @@ public class User {
         this.baseRecommendedDailyIntake = baseRecommendedDailyIntake;
     }
 
-    public List<Diet> getDiets() {
-        return diets;
+    public List<DietPlan> getDietPlans() {
+        return dietPlans;
     }
 
-    public void setDiets(List<Diet> diets) {
-        this.diets = diets;
+    public void setDiets(List<DietPlan> dietPlans) {
+        this.dietPlans = dietPlans;
     }
 }

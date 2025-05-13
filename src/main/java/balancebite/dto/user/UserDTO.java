@@ -47,6 +47,10 @@ public class UserDTO {
         this(id, userName, email, null, null, null, null, null, null, List.of(), List.of(), List.of(), null);
     }
 
+    public UserDTO(Long id, String userName) {
+        this(id, userName, null, null, null, null, null, null, null, List.of(), List.of(), List.of(), null);
+    }
+
     public Long getId() {
         return id;
     }

@@ -111,29 +111,66 @@ INSERT INTO food_item_nutrients (food_item_id, nutrient_name, value, unit_name, 
                                                                                                  ((SELECT id FROM food_items WHERE fdc_id = 999999), 'Carbohydrates', 100, 'g', 1005),
                                                                                                  ((SELECT id FROM food_items WHERE fdc_id = 999999), 'Total lipid (fat)', 100, 'g', 1004);
 
--- Voeg diets toe
-INSERT INTO diet (name, original_diet_id, is_template, version, created_by_user_id) VALUES
-                                                                                        ('Beginner Veggie Diet', NULL, TRUE, '2025-05-01T20:00:00', 1),
-                                                                                        ('High Protein 3-Day Plan', NULL, TRUE, '2025-05-01T20:00:00', 2);
+-- === Voeg diet_plans toe ===
+INSERT INTO diet_plan (name, diet_description, original_diet_id, is_template, created_by_user_id)
+VALUES
+    ('Beginner Veggie Diet', 'A beginner-friendly vegetarian diet designed for those new to plant-based eating.', NULL, TRUE, 1),
+    ('High Protein 3-Day Plan', 'A high-protein meal plan to boost muscle gain over three days.', NULL, TRUE, 2),
+    ('Mediterranean Diet', 'A balanced diet with an emphasis on fresh vegetables, fruits, whole grains, and healthy fats.', NULL, TRUE, 3),
+    ('Low Carb Diet', 'A diet focused on low carbohydrate intake to assist in weight loss and improve metabolic health.', NULL, TRUE, 4);
 
--- Voeg diet_days toe
-INSERT INTO diet_day (day_label, date, diet_id) VALUES
-                                                    ('Day 1', NULL, 1),
+-- === Voeg diet_days toe ===
+INSERT INTO diet_day (day_label, date, diet_plan_id, diet_day_description)
+VALUES
+    -- Veggie
+    ('Day 1', NULL, 1, 'Start your vegetarian journey with easy-to-make, nutrient-packed meals.'),
+    ('Day 2', NULL, 1, 'Continue your vegetarian meals with fresh ingredients and healthy options.'),
+    ('Day 3', NULL, 1, 'End your vegetarian plan with some light, delicious, and filling meals.'),
+    -- High Protein
+    ('Day 1', NULL, 2, 'High-protein meals to kickstart muscle-building and boost energy.'),
+    ('Day 2', NULL, 2, 'Continue your high-protein meals to maintain muscle recovery and growth.'),
+    ('Day 3', NULL, 2, 'Wrap up your high-protein plan with a strong finish to maximize results.'),
+    -- Mediterranean
+    ('Day 1', NULL, 3, 'Start with a fresh salad and whole-grain bread for a light meal.'),
+    ('Day 2', NULL, 3, 'Enjoy grilled vegetables, lean meats, and healthy fats like olive oil.'),
+    ('Day 3', NULL, 3, 'Finish with a hearty fish dish paired with fresh fruits.'),
+    -- Low Carb
+    ('Day 1', NULL, 4, 'Start with a protein-heavy meal with minimal carbs.'),
+    ('Day 2', NULL, 4, 'Focus on low-carb, high-protein meals and fresh vegetables.'),
+    ('Day 3', NULL, 4, 'Conclude with filling low-carb meals that leave you satisfied.');
 
-                                                    ('Day 1', NULL, 2),
-                                                    ('Day 2', NULL, 2),
-                                                    ('Day 3', NULL, 2);
+-- === Voeg diet_day_diets toe ===
+INSERT INTO diet_day_diets (diet_day_id, diet)
+VALUES
+    (1, 'VEGAN'), (2, 'VEGAN'), (3, 'VEGAN'),
+    (4, 'HIGH_PROTEIN'), (5, 'HIGH_PROTEIN'), (6, 'HIGH_PROTEIN'),
+    (7, 'MEDITERRANEAN'), (8, 'MEDITERRANEAN'), (9, 'MEDITERRANEAN'),
+    (10, 'LOW_CARB'), (11, 'LOW_CARB'), (12, 'LOW_CARB');
 
--- Voeg meals toe aan de diet_days
-INSERT INTO diet_day_meals (diet_day_id, meal_id) VALUES
--- Beginner Veggie Diet: 1 dag met 2 maaltijden
-(1, 1),
-(1, 2),
+-- === Voeg diet_plan_diets toe ===
+INSERT INTO dietplan_diets (dietplan_id, diet)
+VALUES
+    (1, 'VEGAN'),
+    (2, 'HIGH_PROTEIN'),
+    (3, 'MEDITERRANEAN'),
+    (4, 'LOW_CARB');
 
--- High Protein 3-Day Plan: 3 dagen met elk 2 maaltijden
-(2, 2),
-(2, 3),
-(3, 4),
-(3, 5),
-(4, 1),
-(4, 6);
+-- === Koppel meals aan diet_days ===
+INSERT INTO diet_day_meals (diet_day_id, meal_id)
+VALUES
+    -- Veggie
+    (1, 1), (1, 2),
+    (2, 3), (2, 4),
+    (3, 5), (3, 6),
+    -- High Protein
+    (4, 6), (4, 5),
+    (5, 4), (5, 3),
+    (6, 2), (6, 1),
+    -- Mediterranean
+    (7, 2), (7, 5),
+    (8, 1), (8, 6),
+    (9, 4), (9, 3),
+    -- Low Carb
+    (10, 6), (10, 2),
+    (11, 5), (11, 1),
+    (12, 3), (12, 4);

@@ -183,20 +183,20 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
     }
 
-    @ExceptionHandler(DietNotFoundException.class)
-    public ResponseEntity<String> handleDietNotFoundException(DietNotFoundException e) {
+    @ExceptionHandler(DietPlanNotFoundException.class)
+    public ResponseEntity<String> handleDietNotFoundException(DietPlanNotFoundException e) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
     }
 
     /**
-     * Handles cases where a duplicate diet already exists for a user.
+     * Handles cases where a duplicate dietPlan already exists for a user.
      *
-     * @param e The thrown {@link DuplicateDietException}.
-     * @return A ResponseEntity indicating that a duplicate diet exists, with a CONFLICT (409) status.
+     * @param e The thrown {@link DuplicateDietPlanException}.
+     * @return A ResponseEntity indicating that a duplicate dietPlan exists, with a CONFLICT (409) status.
      */
-    @ExceptionHandler(DuplicateDietException.class)
-    public ResponseEntity<Map<String, String>> handleDuplicateDietException(DuplicateDietException e) {
-        log.warn("DuplicateDietException handler reached for message: {}", e.getMessage());
+    @ExceptionHandler(DuplicateDietPlanException.class)
+    public ResponseEntity<Map<String, String>> handleDuplicateDietPlanException(DuplicateDietPlanException e) {
+        log.warn("DuplicateDietPlanException handler reached for message: {}", e.getMessage());
         Map<String, String> response = new HashMap<>();
         response.put("error", e.getMessage());
         return ResponseEntity.status(HttpStatus.CONFLICT).body(response);

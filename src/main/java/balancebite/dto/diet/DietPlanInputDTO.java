@@ -1,14 +1,17 @@
 package balancebite.dto.diet;
 
+import balancebite.model.meal.references.Diet;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Size;
+
 import java.util.List;
+import java.util.Set;
 
-public class DietInputDTO {
+public class DietPlanInputDTO {
 
-    @NotBlank(message = "Diet name is required.")
-    @Size(max = 100, message = "Diet name must not exceed 100 characters.")
+    @NotBlank(message = "Diet plan name is required.")
+    @Size(max = 100, message = "Diet plan name must not exceed 100 characters.")
     private String name;
 
     private Long originalDietId;
@@ -17,22 +20,33 @@ public class DietInputDTO {
 
     private Long adjustedByUserId;
 
+    // Optioneel: alleen gebruiken als je vanuit frontend wilt bepalen of het een template is
     private boolean isTemplate = true;
 
     @NotEmpty(message = "At least one diet day is required.")
     private List<DietDayInputDTO> dietDays;
 
-    public DietInputDTO() {}
+    @Size(max = 1000, message = "Diet description must not exceed 1000 characters.")
+    private String dietDescription;
 
-    public DietInputDTO(String name, Long originalDietId, Long createdByUserId, Long adjustedByUserId, boolean isTemplate, List<DietDayInputDTO> dietDays) {
+    private Set<Diet> diets;
+
+    public DietPlanInputDTO() {}
+
+    public DietPlanInputDTO(String name, Long originalDietId, Long createdByUserId, Long adjustedByUserId,
+                            boolean isTemplate, List<DietDayInputDTO> dietDays,
+                            String dietDescription, Set<Diet> diets) {
         this.name = name;
         this.originalDietId = originalDietId;
         this.createdByUserId = createdByUserId;
         this.adjustedByUserId = adjustedByUserId;
         this.isTemplate = isTemplate;
         this.dietDays = dietDays;
+        this.dietDescription = dietDescription;
+        this.diets = diets;
     }
 
+    // Getters & Setters
     public String getName() {
         return name;
     }
@@ -79,5 +93,21 @@ public class DietInputDTO {
 
     public void setDietDays(List<DietDayInputDTO> dietDays) {
         this.dietDays = dietDays;
+    }
+
+    public String getDietDescription() {
+        return dietDescription;
+    }
+
+    public void setDietDescription(String dietDescription) {
+        this.dietDescription = dietDescription;
+    }
+
+    public Set<Diet> getDiets() {
+        return diets;
+    }
+
+    public void setDiets(Set<Diet> diets) {
+        this.diets = diets;
     }
 }

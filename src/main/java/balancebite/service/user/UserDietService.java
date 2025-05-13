@@ -1,130 +1,164 @@
 package balancebite.service.user;
 
-import balancebite.dto.diet.DietDTO;
-import balancebite.dto.diet.DietInputDTO;
 import balancebite.dto.diet.DietDayInputDTO;
-import balancebite.errorHandling.DietNotFoundException;
-import balancebite.errorHandling.DuplicateDietException;
+import balancebite.dto.diet.DietPlanDTO;
+import balancebite.dto.diet.DietPlanInputDTO;
+import balancebite.errorHandling.DietPlanNotFoundException;
+import balancebite.errorHandling.DuplicateDietPlanException;
 import balancebite.errorHandling.MealNotFoundException;
 import balancebite.errorHandling.UserNotFoundException;
-import balancebite.mapper.DietMapper;
 import balancebite.mapper.DietDayMapper;
-import balancebite.model.diet.Diet;
+import balancebite.mapper.DietPlanMapper;
 import balancebite.model.diet.DietDay;
+import balancebite.model.diet.DietPlan;
 import balancebite.model.meal.Meal;
 import balancebite.model.user.User;
-import balancebite.repository.DietRepository;
+import balancebite.repository.DietPlanRepository;
 import balancebite.repository.MealRepository;
 import balancebite.repository.UserRepository;
-import balancebite.service.interfaces.diet.IUserDietService;
+import balancebite.service.interfaces.diet.IUserDietPlanService;
 import balancebite.dto.user.UserDTO;
 import balancebite.mapper.UserMapper;
+import balancebite.utils.MealAssignmentUtil;
 import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
 @Transactional
-public class UserDietService implements IUserDietService {
+public class UserDietService implements IUserDietPlanService {
 
     private static final Logger log = LoggerFactory.getLogger(UserDietService.class);
 
-    private final DietRepository dietRepository;
+    private final DietPlanRepository dietPlanRepository;
     private final UserRepository userRepository;
     private final MealRepository mealRepository;
-    private final DietMapper dietMapper;
+    private final DietPlanMapper dietPlanMapper;
     private final DietDayMapper dietDayMapper;
     private final UserMapper userMapper;
+    private final UserMealService userMealService;
+    private final MealAssignmentUtil mealAssignmentUtil;
 
-    public UserDietService(DietRepository dietRepository,
+    public UserDietService(DietPlanRepository dietPlanRepository,
                        UserRepository userRepository,
                        MealRepository mealRepository,
-                       DietMapper dietMapper,
+                       DietPlanMapper dietPlanMapper,
                        DietDayMapper dietDayMapper,
-                       UserMapper userMapper) {
-        this.dietRepository = dietRepository;
+                       UserMapper userMapper,
+                           UserMealService userMealService,
+                           MealAssignmentUtil mealAssignmentUtil) {
+        this.dietPlanRepository = dietPlanRepository;
         this.userRepository = userRepository;
         this.mealRepository = mealRepository;
-        this.dietMapper = dietMapper;
+        this.dietPlanMapper = dietPlanMapper;
         this.dietDayMapper = dietDayMapper;
         this.userMapper = userMapper;
+        this.userMealService = userMealService;
+        this.mealAssignmentUtil = mealAssignmentUtil;
     }
 
     @Override
     @Transactional
-    public DietDTO createDiet(DietInputDTO input, Long userId) {
+    public DietPlanDTO createDietPlan(DietPlanInputDTO input, Long userId) {
         log.info("Creating new diet for user ID: {}", userId);
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("User not found with ID: " + userId));
 
-        Diet diet = new Diet();
-        diet.setName(input.getName());
-        diet.setCreatedBy(user);
-        diet.setTemplate(false); // altijd false bij handmatig aanmaken
-        diet.setOriginalDietId(null); // geen parent, dus null
-        diet.setVersion(LocalDateTime.now());
+        DietPlan dietPlan = new DietPlan();
+        dietPlan.setName(input.getName());
+        dietPlan.setCreatedBy(user);  // je kunt hier de volledige user gebruiken
+        dietPlan.setTemplate(true); // altijd true bij handmatig aanmaken
+        dietPlan.setOriginalDietId(null); // geen parent, dus null
+        dietPlan.setDietDescription(input.getDietDescription());
+        dietPlan.setDiets(input.getDiets());
 
-        if (input.getDietDays() != null && !input.getDietDays().isEmpty()) {
-            List<DietDay> dietDays = new ArrayList<>();
-            for (int i = 0; i < input.getDietDays().size(); i++) {
-                DietDayInputDTO dayInput = input.getDietDays().get(i);
-                Set<Meal> meals = dayInput.getMealIds().stream()
-                        .map(id -> mealRepository.findById(id)
-                                .orElseThrow(() -> new MealNotFoundException("Meal not found with ID: " + id)))
-                        .collect(Collectors.toSet());
-
-                DietDay day = new DietDay();
-                day.setDayLabel("Day " + (i + 1));
-                day.setDate(dayInput.getDate()); // mag null zijn
-                day.setMeals(new ArrayList<>(meals));
-                day.setDiet(diet);
-                dietDays.add(day);
-            }
-            diet.setDietDays(dietDays);
+        // Zorg ervoor dat er altijd minstens 1 DietDay is
+        if (input.getDietDays() == null || input.getDietDays().isEmpty()) {
+            DietDayInputDTO defaultDay = new DietDayInputDTO();  // Maak standaard dag aan
+            defaultDay.setDietDayDescription("Default day description");
+            defaultDay.setMealIds(new ArrayList<>());  // Voeg standaard maaltijden toe
+            input.setDietDays(List.of(defaultDay));  // Voeg de standaard dag toe aan de input
         }
 
-        Diet saved = dietRepository.save(diet);
+        // Voeg de DietDays toe aan het dieet
+        List<DietDay> dietDays = new ArrayList<>();
+        for (int i = 0; i < input.getDietDays().size(); i++) {
+            DietDayInputDTO dayInput = input.getDietDays().get(i);
+
+            // Haal maaltijden op en voeg de diets van de maaltijden toe
+            Set<Meal> meals = dayInput.getMealIds().stream()
+                    .map(id -> mealAssignmentUtil.getOrAddMealToUser(userId, id))
+                    .collect(Collectors.toSet());
+            if (meals.size() < 2) {
+                throw new IllegalArgumentException("Each day must have at least 2 meals.");
+            }
+            DietDay day = dietDayMapper.toEntity(dayInput, meals, i);
+            day.setDiet(dietPlan);
+
+            // Voeg de diets van de maaltijden toe aan de DietDay
+            if (day.getDiets() == null) {
+                day.setDiets(new HashSet<>());  // Zorg ervoor dat de DietDay een niet-null Set heeft
+            }
+
+            for (Meal meal : meals) {
+                day.getDiets().addAll(meal.getDiets());  // Voeg diets van de maaltijd toe aan de dag
+            }
+
+            dietDays.add(day);
+        }
+
+        dietPlan.setDietDays(dietDays);
+
+        // Voeg alle diets van de dagen toe aan het dieet
+        Set<balancebite.model.meal.references.Diet> allDiets = new HashSet<>();
+        for (DietDay day : dietDays) {
+            allDiets.addAll(day.getDiets());  // Voeg de diets van de dagen toe aan het dieet
+        }
+        dietPlan.setDiets(allDiets);
+
+        // Sla het dieet op
+        DietPlan saved = dietPlanRepository.save(dietPlan);
         log.info("Diet created with ID: {}", saved.getId());
-        return dietMapper.toDTO(saved);
+
+        // Return het DietPlanDTO met de relevante informatie van de gebruiker
+        return dietPlanMapper.toDTO(saved);
     }
 
     @Override
     @Transactional
-    public UserDTO addDietToUser(Long userId, Long dietId) {
-        log.info("Creating a personalized copy of diet ID: {} for user ID: {}", dietId, userId);
+    public UserDTO addDietPlanToUser(Long userId, Long dietPlanId) {
+        log.info("Creating a personalized copy of diet ID: {} for user ID: {}", dietPlanId, userId);
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("User not found with ID: " + userId));
 
-        Diet originalDiet = dietRepository.findById(dietId)
-                .orElseThrow(() -> new DietNotFoundException("Diet not found with ID: " + dietId));
+        DietPlan originalDiet = dietPlanRepository.findById(dietPlanId)
+                .orElseThrow(() -> new DietPlanNotFoundException("DietPlan not found with ID: " + dietPlanId));
 
         // Check if user already has a copy of this diet
-        boolean dietExists = user.getDiets().stream()
-                .anyMatch(d -> (d.getOriginalDietId() != null && d.getOriginalDietId().equals(dietId)) || d.getId().equals(dietId));
+        boolean dietPlanExists = user.getDietPlans().stream()
+                .anyMatch(d -> (d.getOriginalDietId() != null && d.getOriginalDietId().equals(dietPlanId)) || d.getId().equals(dietPlanId));
 
-        if (dietExists) {
-            log.warn("User ID {} already has a copy of diet ID {}", userId, dietId);
-            throw new DuplicateDietException("User already has a copy of this diet.");
+        if (dietPlanExists) {
+            log.warn("User ID {} already has a copy of diet ID {}", userId, dietPlanId);
+            throw new DuplicateDietPlanException("User already has a copy of this diet.");
         }
 
         // Create a new Diet copy
-        Diet dietCopy = new Diet();
-        dietCopy.setName(originalDiet.getName());
-        dietCopy.setTemplate(false);
-        dietCopy.setOriginalDietId(originalDiet.getId());
-        dietCopy.setCreatedBy(originalDiet.getCreatedBy());
-        dietCopy.setAdjustedBy(user);
-        dietCopy.setVersion(LocalDateTime.now());
+        DietPlan dietPlanCopy = new DietPlan();
+        dietPlanCopy.setName(originalDiet.getName());
+        dietPlanCopy.setTemplate(false);
+        dietPlanCopy.setOriginalDietId(originalDiet.getId());
+        dietPlanCopy.setCreatedBy(originalDiet.getCreatedBy());
+        dietPlanCopy.setAdjustedBy(user);
+        dietPlanCopy.setDietDescription(originalDiet.getDietDescription());
+        dietPlanCopy.setDiets(originalDiet.getDiets());
 
         // Copy DietDays
         List<DietDay> copiedDays = new ArrayList<>();
@@ -133,87 +167,175 @@ public class UserDietService implements IUserDietService {
             DietDay newDay = new DietDay();
             newDay.setDayLabel("Day " + (i + 1));
             newDay.setDate(originalDay.getDate());
-            newDay.setMeals(new ArrayList<>(originalDay.getMeals()));
-            newDay.setDiet(dietCopy);
+            Set<Meal> mealsForUser = originalDay.getMeals().stream()
+                    .map(meal -> mealAssignmentUtil.getOrAddMealToUser(userId, meal.getId()))
+                    .collect(Collectors.toSet());
+
+            newDay.setMeals(new ArrayList<>(mealsForUser));
+            newDay.setDietDayDescription(originalDay.getDietDayDescription());
+            newDay.setDiets(originalDay.getDiets());
+            newDay.setDiet(dietPlanCopy);
             copiedDays.add(newDay);
         }
-        dietCopy.setDietDays(copiedDays);
+        dietPlanCopy.setDietDays(copiedDays);
 
         // Save and associate with user
-        Diet savedDiet = dietRepository.save(dietCopy);
-        user.getDiets().add(savedDiet);
+        DietPlan savedDietPlan = dietPlanRepository.save(dietPlanCopy);
+        user.getDietPlans().add(savedDietPlan);
         userRepository.save(user);
 
-        log.info("Successfully created and linked a diet copy with ID: {} for user ID: {}", savedDiet.getId(), userId);
+        log.info("Successfully created and linked a dietPlan copy with ID: {} for user ID: {}", savedDietPlan.getId(), userId);
         return userMapper.toDTO(user);
     }
 
     @Override
-    public DietDTO getDietById(Long dietId, Long userId) {
-        Diet diet = dietRepository.findById(dietId)
-                .orElseThrow(() -> new DietNotFoundException("Diet not found with ID: " + dietId));
+    @Transactional
+    public DietPlanDTO updateDietPlan(Long dietPlanId, DietPlanInputDTO input, Long adjustedByUserId) {
+        log.info("Updating diet plan ID: {} by user ID: {}", dietPlanId, adjustedByUserId);
 
-        boolean isOwner = (diet.getCreatedBy() != null && diet.getCreatedBy().getId().equals(userId)) ||
-                (diet.getAdjustedBy() != null && diet.getAdjustedBy().getId().equals(userId));
+        DietPlan dietPlan = dietPlanRepository.findById(dietPlanId)
+                .orElseThrow(() -> new DietPlanNotFoundException("Diet plan not found with ID: " + dietPlanId));
+
+        // Controleer of de gebruiker de eigenaar is
+        if (dietPlan.getCreatedBy() == null || !dietPlan.getCreatedBy().getId().equals(adjustedByUserId)) {
+            throw new SecurityException("User is not authorized to update this diet plan.");
+        }
+
+        Optional<User> adjustedBy = userRepository.findById(adjustedByUserId);
+        dietPlanMapper.updateFromInputDTO(dietPlan, input, Optional.of(dietPlan.getCreatedBy()), adjustedBy);
+
+        if (input.getDietDays() != null) {
+            dietPlan.getDietDays().clear(); // oude dagen verwijderen i.v.m. orphanRemoval
+
+            List<DietDay> newDietDays = new ArrayList<>();
+            for (int i = 0; i < input.getDietDays().size(); i++) {
+                DietDayInputDTO dayInput = input.getDietDays().get(i);
+
+                Set<Meal> meals = dayInput.getMealIds().stream()
+                        .map(id -> mealAssignmentUtil.getOrAddMealToUser(adjustedByUserId, id))
+                        .collect(Collectors.toSet());
+
+                DietDay day = dietDayMapper.toEntity(dayInput, meals, i);
+                day.setDiet(dietPlan);
+                newDietDays.add(day);
+            }
+
+            dietPlan.setDietDays(newDietDays);
+
+            // Verzamel opnieuw alle diets van de dagen
+            Set<balancebite.model.meal.references.Diet> allDiets = new HashSet<>();
+            for (DietDay day : newDietDays) {
+                allDiets.addAll(day.getDiets());
+            }
+            dietPlan.setDiets(allDiets);
+        }
+
+        DietPlan updated = dietPlanRepository.save(dietPlan);
+        return dietPlanMapper.toDTO(updated);
+    }
+
+    @Override
+    @Transactional
+    public DietPlanDTO addMealToDietDay(Long userId, Long dietId, int dayIndex, Long mealId) {
+        DietPlan dietPlan = getOwnedDietPlanOrThrow(userId, dietId);
+        DietDay targetDay = getDietDayOrThrow(dietPlan, dayIndex);
+
+        Meal meal = mealAssignmentUtil.getOrAddMealToUser(userId, mealId);
+        if (!targetDay.getMeals().contains(meal)) {
+            targetDay.getMeals().add(meal);
+        }
+
+        DietPlan saved = dietPlanRepository.save(dietPlan);
+        return dietPlanMapper.toDTO(saved);
+    }
+
+    @Override
+    @Transactional
+    public DietPlanDTO removeMealFromDietDay(Long userId, Long dietPlanId, int dayIndex, Long mealId) {
+        DietPlan dietPlan = getOwnedDietPlanOrThrow(userId, dietPlanId);
+        DietDay targetDay = getDietDayOrThrow(dietPlan, dayIndex);
+
+        targetDay.getMeals().removeIf(meal -> meal.getId().equals(mealId));
+
+        DietPlan saved = dietPlanRepository.save(dietPlan);
+        return dietPlanMapper.toDTO(saved);
+    }
+
+    @Override
+    public DietPlanDTO getDietPlanById(Long dietPlanId, Long userId) {
+        DietPlan dietPlan = dietPlanRepository.findById(dietPlanId)
+                .orElseThrow(() -> new DietPlanNotFoundException("DietPlan not found with ID: " + dietPlanId));
+
+        boolean isOwner = (dietPlan.getCreatedBy() != null && dietPlan.getCreatedBy().getId().equals(userId)) ||
+                (dietPlan.getAdjustedBy() != null && dietPlan.getAdjustedBy().getId().equals(userId));
 
         if (!isOwner) {
             throw new SecurityException("You are not authorized to view this diet.");
         }
 
-        return dietMapper.toDTO(diet);
-    }
-
-
-    @Override
-    public List<DietDTO> getAllDietsForUser(Long userId) {
-        log.info("Fetching all diets for user ID: {}", userId);
-
-        List<Diet> diets = dietRepository.findByCreatedBy_IdOrAdjustedBy_Id(userId, userId);
-        return diets.stream().map(dietMapper::toDTO).collect(Collectors.toList());
+        return dietPlanMapper.toDTO(dietPlan);
     }
 
     @Override
-    public DietDTO updateDiet(Long dietId, DietInputDTO input, Long adjustedByUserId) {
-        log.info("Updating diet ID: {} by user ID: {}", dietId, adjustedByUserId);
+    public List<DietPlanDTO> getAllDietPlansForUser(Long userId) {
+        log.info("Fetching all dietPlans for user ID: {}", userId);
 
-        Diet diet = dietRepository.findById(dietId)
-                .orElseThrow(() -> new DietNotFoundException("Diet not found with ID: " + dietId));
+        List<DietPlan> dietPlans = dietPlanRepository.findByCreatedBy_IdOrAdjustedBy_Id(userId, userId);
+        return dietPlans.stream().map(dietPlanMapper::toDTO).collect(Collectors.toList());
+    }
 
-        Optional<User> adjustedBy = userRepository.findById(adjustedByUserId);
-        dietMapper.updateFromInputDTO(diet, input, Optional.ofNullable(diet.getCreatedBy()), adjustedBy);
-        diet.setVersion(LocalDateTime.now());
+    @Override
+    @Transactional
+    public DietPlanDTO removeDietDay(Long userId, Long dietPlanId, int dayIndex) {
+        DietPlan dietPlan = getOwnedDietPlanOrThrow(userId, dietPlanId);
+        DietDay targetDay = getDietDayOrThrow(dietPlan, dayIndex);
 
-        if (input.getDietDays() != null) {
-            List<DietDay> dietDays = new ArrayList<>();
-            for (int i = 0; i < input.getDietDays().size(); i++) {
-                DietDayInputDTO dayInput = input.getDietDays().get(i);
-                Set<Meal> meals = dayInput.getMealIds().stream()
-                        .map(id -> mealRepository.findById(id)
-                                .orElseThrow(() -> new MealNotFoundException("Meal not found with ID: " + id)))
-                        .collect(Collectors.toSet());
-                DietDay day = dietDayMapper.toEntity(dayInput, meals, i);
-                day.setDiet(diet);
-                dietDays.add(day);
-            }
-            diet.setDietDays(dietDays);
+        dietPlan.getDietDays().remove(targetDay);
+
+        // orphanRemoval = true zorgt ervoor dat de dag uit de DB wordt verwijderd
+        DietPlan saved = dietPlanRepository.save(dietPlan);
+        return dietPlanMapper.toDTO(saved);
+    }
+
+    @Override
+    public void deleteDietPlan(Long dietPlanId, Long userId) {
+        log.info("Deleting dietPlan ID: {} by user ID: {}", dietPlanId, userId);
+
+        DietPlan dietPlan = dietPlanRepository.findById(dietPlanId)
+                .orElseThrow(() -> new DietPlanNotFoundException("DietPlan not found with ID: " + dietPlanId));
+
+        if (dietPlan.getCreatedBy() == null || !dietPlan.getCreatedBy().getId().equals(userId)) {
+            throw new SecurityException("User is not authorized to delete this dietPlan.");
         }
 
-        Diet updated = dietRepository.save(diet);
-        return dietMapper.toDTO(updated);
+        dietPlanRepository.delete(dietPlan);
+        log.info("DietPlan with ID: {} successfully deleted", dietPlanId);
     }
 
-    @Override
-    public void deleteDiet(Long dietId, Long userId) {
-        log.info("Deleting diet ID: {} by user ID: {}", dietId, userId);
+// =============================
+// 🔽 Private helper methods 🔽
+// =============================
 
-        Diet diet = dietRepository.findById(dietId)
-                .orElseThrow(() -> new DietNotFoundException("Diet not found with ID: " + dietId));
+    private DietPlan getOwnedDietPlanOrThrow(Long userId, Long dietPlanId) {
+        DietPlan dietPlan = dietPlanRepository.findById(dietPlanId)
+                .orElseThrow(() -> new DietPlanNotFoundException("Diet not found with ID: " + dietPlanId));
 
-        if (diet.getCreatedBy() == null || !diet.getCreatedBy().getId().equals(userId)) {
-            throw new SecurityException("User is not authorized to delete this diet.");
+        boolean isOwner = (dietPlan.getCreatedBy() != null && dietPlan.getCreatedBy().getId().equals(userId)) ||
+                (dietPlan.getAdjustedBy() != null && dietPlan.getAdjustedBy().getId().equals(userId));
+        if (!isOwner) {
+            throw new SecurityException("Not allowed to modify this diet.");
         }
 
-        dietRepository.delete(diet);
-        log.info("Diet with ID: {} successfully deleted", dietId);
+        return dietPlan;
     }
+
+    private DietDay getDietDayOrThrow(DietPlan dietPlan, int index) {
+        List<DietDay> days = dietPlan.getDietDays();
+        if (index < 0 || index >= days.size()) {
+            throw new IllegalArgumentException("Invalid day index.");
+        }
+        return days.get(index);
+    }
+
+
 }

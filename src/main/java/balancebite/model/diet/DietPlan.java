@@ -2,13 +2,14 @@ package balancebite.model.diet;
 
 import balancebite.model.user.User;
 import jakarta.persistence.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 @Entity
-public class Diet {
+public class DietPlan {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -20,29 +21,41 @@ public class Diet {
 
     private boolean isTemplate = true;
 
-    private LocalDateTime version;
+    @Column(length = 1000)
+    private String dietDescription;
+
+    @CreationTimestamp
+    private LocalDateTime createdAt;
+
+    @UpdateTimestamp
+    private LocalDateTime updatedAt;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "created_by_user_id", nullable = true)
+    @JoinColumn(name = "created_by_user_id")
     private User createdBy;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "adjusted_by_user_id", nullable = true)
+    @JoinColumn(name = "adjusted_by_user_id")
     private User adjustedBy;
 
-    @OneToMany(mappedBy = "diet", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "diet", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<DietDay> dietDays = new ArrayList<>();
 
-    // Constructors
-    public Diet() {}
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "dietplan_diets", joinColumns = @JoinColumn(name = "dietplan_id"))
+    @Enumerated(EnumType.STRING)
+    @Column(name = "diet")
+    private Set<balancebite.model.meal.references.Diet> diets = new HashSet<>();
 
-    public Diet(String name, User createdBy) {
+    // Constructors
+    public DietPlan() {}
+
+    public DietPlan(String name, User createdBy) {
         this.name = name;
         this.createdBy = createdBy;
-        this.version = LocalDateTime.now();
     }
 
-    // Getters & setters
+    // Getters & Setters
     public Long getId() {
         return id;
     }
@@ -71,12 +84,20 @@ public class Diet {
         isTemplate = template;
     }
 
-    public LocalDateTime getVersion() {
-        return version;
+    public String getDietDescription() {
+        return dietDescription;
     }
 
-    public void setVersion(LocalDateTime version) {
-        this.version = version;
+    public void setDietDescription(String dietDescription) {
+        this.dietDescription = dietDescription;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
     }
 
     public User getCreatedBy() {
@@ -101,5 +122,13 @@ public class Diet {
 
     public void setDietDays(List<DietDay> dietDays) {
         this.dietDays = dietDays;
+    }
+
+    public Set<balancebite.model.meal.references.Diet> getDiets() {
+        return diets;
+    }
+
+    public void setDiets(Set<balancebite.model.meal.references.Diet> diets) {
+        this.diets = diets;
     }
 }

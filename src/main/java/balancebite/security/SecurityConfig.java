@@ -134,12 +134,13 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/fooditems/bulk-fetch-items").authenticated()
 
                         // diet entity endpoints
-                        .requestMatchers(HttpMethod.GET, "/users/diets").authenticated()
-                        .requestMatchers(HttpMethod.GET, "/users/diets/{id}").authenticated()
-                        .requestMatchers(HttpMethod.POST, "/users/diets").authenticated()
-                        .requestMatchers(HttpMethod.PATCH, "/users/diets/{id}").authenticated()
-                        .requestMatchers(HttpMethod.DELETE, "/users/diets/{id}").authenticated()
-                        .requestMatchers("/public/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/public/**").permitAll()
+
+                        .requestMatchers(HttpMethod.GET, "/users/diet-plans/**").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/users/diet-plans/**").authenticated()
+                        .requestMatchers(HttpMethod.PUT, "/users/diet-plans/**").authenticated()
+                        .requestMatchers(HttpMethod.PATCH, "/users/diet-plans/**").authenticated()
+                        .requestMatchers(HttpMethod.DELETE, "/users/diet-plans/**").authenticated()
 
 
                         .anyRequest().authenticated()
