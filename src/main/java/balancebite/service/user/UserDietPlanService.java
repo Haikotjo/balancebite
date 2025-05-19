@@ -20,9 +20,12 @@ import balancebite.service.interfaces.diet.IUserDietPlanService;
 import balancebite.dto.user.UserDTO;
 import balancebite.mapper.UserMapper;
 import balancebite.utils.MealAssignmentUtil;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -132,8 +135,8 @@ public class UserDietService implements IUserDietPlanService {
 
     @Override
     @Transactional
-    public UserDTO addDietPlanToUser(Long userId, Long dietPlanId) {
-        log.info("Creating a personalized copy of diet ID: {} for user ID: {}", dietPlanId, userId);
+    public DietPlanDTO addDietPlanToUser(Long userId, Long dietPlanId) {
+        log.info("Start addDietPlanToUser with userId={} and dietPlanId={}", userId, dietPlanId);
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("User not found with ID: " + userId));
@@ -141,16 +144,14 @@ public class UserDietService implements IUserDietPlanService {
         DietPlan originalDiet = dietPlanRepository.findById(dietPlanId)
                 .orElseThrow(() -> new DietPlanNotFoundException("DietPlan not found with ID: " + dietPlanId));
 
-        // Check if user already has a copy of this diet
-        boolean dietPlanExists = user.getDietPlans().stream()
+        boolean alreadyExists = user.getDietPlans().stream()
                 .anyMatch(d -> (d.getOriginalDietId() != null && d.getOriginalDietId().equals(dietPlanId)) || d.getId().equals(dietPlanId));
 
-        if (dietPlanExists) {
+        if (alreadyExists) {
             log.warn("User ID {} already has a copy of diet ID {}", userId, dietPlanId);
             throw new DuplicateDietPlanException("User already has a copy of this diet.");
         }
 
-        // Create a new Diet copy
         DietPlan dietPlanCopy = new DietPlan();
         dietPlanCopy.setName(originalDiet.getName());
         dietPlanCopy.setTemplate(false);
@@ -158,34 +159,30 @@ public class UserDietService implements IUserDietPlanService {
         dietPlanCopy.setCreatedBy(originalDiet.getCreatedBy());
         dietPlanCopy.setAdjustedBy(user);
         dietPlanCopy.setDietDescription(originalDiet.getDietDescription());
-        dietPlanCopy.setDiets(originalDiet.getDiets());
+        dietPlanCopy.setDiets(new HashSet<>(originalDiet.getDiets())); // copy to avoid shared references
 
-        // Copy DietDays
         List<DietDay> copiedDays = new ArrayList<>();
         for (int i = 0; i < originalDiet.getDietDays().size(); i++) {
             DietDay originalDay = originalDiet.getDietDays().get(i);
             DietDay newDay = new DietDay();
             newDay.setDayLabel("Day " + (i + 1));
             newDay.setDate(originalDay.getDate());
-            Set<Meal> mealsForUser = originalDay.getMeals().stream()
+            newDay.setMeals(originalDay.getMeals().stream()
                     .map(meal -> mealAssignmentUtil.getOrAddMealToUser(userId, meal.getId()))
-                    .collect(Collectors.toSet());
-
-            newDay.setMeals(new ArrayList<>(mealsForUser));
+                    .collect(Collectors.toCollection(ArrayList::new)));
             newDay.setDietDayDescription(originalDay.getDietDayDescription());
-            newDay.setDiets(originalDay.getDiets());
+            newDay.setDiets(new HashSet<>(originalDay.getDiets()));
             newDay.setDiet(dietPlanCopy);
             copiedDays.add(newDay);
         }
         dietPlanCopy.setDietDays(copiedDays);
 
-        // Save and associate with user
-        DietPlan savedDietPlan = dietPlanRepository.save(dietPlanCopy);
-        user.getDietPlans().add(savedDietPlan);
+        DietPlan saved = dietPlanRepository.save(dietPlanCopy);
+        user.getDietPlans().add(saved);
         userRepository.save(user);
 
-        log.info("Successfully created and linked a dietPlan copy with ID: {} for user ID: {}", savedDietPlan.getId(), userId);
-        return userMapper.toDTO(user);
+        log.info("DietPlan {} successfully linked to user {}", saved.getId(), userId);
+        return dietPlanMapper.toDTO(saved);
     }
 
     @Override
@@ -277,12 +274,50 @@ public class UserDietService implements IUserDietPlanService {
     }
 
     @Override
-    public List<DietPlanDTO> getAllDietPlansForUser(Long userId) {
+    @Transactional(readOnly = true)
+    public Page<DietPlanDTO> getAllDietPlansForUser(Long userId, Pageable pageable) {
         log.info("Fetching all dietPlans for user ID: {}", userId);
 
-        List<DietPlan> dietPlans = dietPlanRepository.findByCreatedBy_IdOrAdjustedBy_Id(userId, userId);
-        return dietPlans.stream().map(dietPlanMapper::toDTO).collect(Collectors.toList());
+        List<DietPlan> all = dietPlanRepository.findByCreatedBy_IdOrAdjustedBy_Id(userId, userId);
+
+        int pageSize = pageable.getPageSize();
+        int currentPage = pageable.getPageNumber();
+        int startItem = currentPage * pageSize;
+
+        List<DietPlan> paged;
+        if (all.size() < startItem) {
+            paged = Collections.emptyList();
+        } else {
+            int toIndex = Math.min(startItem + pageSize, all.size());
+            paged = all.subList(startItem, toIndex);
+        }
+
+        return new PageImpl<>(paged.stream().map(dietPlanMapper::toDTO).toList(), pageable, all.size());
     }
+
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<DietPlanDTO> getDietPlansCreatedByUser(Long userId, Pageable pageable) {
+        log.info("Fetching diet plans created by user ID: {}", userId);
+
+        List<DietPlan> allCreated = dietPlanRepository.findByCreatedBy_Id(userId);
+
+        int pageSize = pageable.getPageSize();
+        int currentPage = pageable.getPageNumber();
+        int startItem = currentPage * pageSize;
+
+        List<DietPlan> paged;
+        if (allCreated.size() < startItem) {
+            paged = Collections.emptyList();
+        } else {
+            int toIndex = Math.min(startItem + pageSize, allCreated.size());
+            paged = allCreated.subList(startItem, toIndex);
+        }
+
+        return new PageImpl<>(paged.stream().map(dietPlanMapper::toDTO).toList(), pageable, allCreated.size());
+    }
+
 
     @Override
     @Transactional
@@ -298,19 +333,31 @@ public class UserDietService implements IUserDietPlanService {
     }
 
     @Override
-    public void deleteDietPlan(Long dietPlanId, Long userId) {
-        log.info("Deleting dietPlan ID: {} by user ID: {}", dietPlanId, userId);
+    @Transactional
+    public UserDTO removeDietPlanFromUser(Long userId, Long dietPlanId) {
+        log.info("Unlinking or deleting dietPlan ID {} from user ID {}", dietPlanId, userId);
 
-        DietPlan dietPlan = dietPlanRepository.findById(dietPlanId)
-                .orElseThrow(() -> new DietPlanNotFoundException("DietPlan not found with ID: " + dietPlanId));
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
 
-        if (dietPlan.getCreatedBy() == null || !dietPlan.getCreatedBy().getId().equals(userId)) {
-            throw new SecurityException("User is not authorized to delete this dietPlan.");
+        DietPlan diet = user.getDietPlans().stream()
+                .filter(d -> d.getId().equals(dietPlanId))
+                .findFirst()
+                .orElseThrow(() -> new DietPlanNotFoundException("DietPlan not found in user's list."));
+
+        if (!diet.isTemplate()) {
+            log.info("DietPlan is a user copy. Deleting...");
+            user.getDietPlans().remove(diet);
+            dietPlanRepository.delete(diet);
+        } else {
+            log.info("DietPlan is a template. Unlinking...");
+            user.getDietPlans().remove(diet);
         }
 
-        dietPlanRepository.delete(dietPlan);
-        log.info("DietPlan with ID: {} successfully deleted", dietPlanId);
+        userRepository.save(user);
+        return userMapper.toDTO(user);
     }
+
 
 // =============================
 // 🔽 Private helper methods 🔽
