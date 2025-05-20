@@ -79,7 +79,7 @@ public class UserDietPlanService implements IUserDietPlanService {
         dietPlan.setDietDescription(input.getDietDescription());
         dietPlan.setDiets(input.getDiets());
 
-        // Zorg ervoor dat er altijd minstens 1 DietDay is
+        // Fallback: zorg dat er minstens één dag is
         if (input.getDietDays() == null || input.getDietDays().isEmpty()) {
             DietDayInputDTO defaultDay = new DietDayInputDTO();
             defaultDay.setDietDayDescription("Default day description");
@@ -87,28 +87,34 @@ public class UserDietPlanService implements IUserDietPlanService {
             input.setDietDays(List.of(defaultDay));
         }
 
-        // Voeg de DietDays toe aan het dieet
         List<DietDay> dietDays = new ArrayList<>();
+
         for (int i = 0; i < input.getDietDays().size(); i++) {
             DietDayInputDTO dayInput = input.getDietDays().get(i);
 
-            // Haal maaltijden op en voeg de diets van de maaltijden toe
-            Set<Meal> meals = dayInput.getMealIds().stream()
+            // ➕ Haal alle meals op — als List, zodat duplicaten mogelijk zijn
+            List<Meal> meals = dayInput.getMealIds().stream()
                     .map(id -> mealAssignmentUtil.getOrAddMealToUser(userId, id))
-                    .collect(Collectors.toSet());
-            if (meals.size() < 2) {
+                    .collect(Collectors.toList());
+
+            // ✅ Check op minstens 2 geldige maaltijden
+            long validCount = meals.stream().filter(Objects::nonNull).count();
+            if (validCount < 2) {
                 throw new IllegalArgumentException("Each day must have at least 2 meals.");
             }
+
+            // ➕ Pas eventueel je mapper aan zodat deze ook een List accepteert
             DietDay day = dietDayMapper.toEntity(dayInput, meals, i);
             day.setDiet(dietPlan);
 
-            // Voeg de diets van de maaltijden toe aan de DietDay
+            // ➕ Verzamel diets van de maaltijden in een Set (zonder duplicates)
             if (day.getDiets() == null) {
-                day.setDiets(new HashSet<>());  // Zorg ervoor dat de DietDay een niet-null Set heeft
+                day.setDiets(new HashSet<>());
             }
-
             for (Meal meal : meals) {
-                day.getDiets().addAll(meal.getDiets());  // Voeg diets van de maaltijd toe aan de dag
+                if (meal != null && meal.getDiets() != null) {
+                    day.getDiets().addAll(meal.getDiets());
+                }
             }
 
             dietDays.add(day);
@@ -116,22 +122,24 @@ public class UserDietPlanService implements IUserDietPlanService {
 
         dietPlan.setDietDays(dietDays);
 
-        // Voeg alle diets van de dagen toe aan het dieet
+        // ➕ Voeg alle diets van alle dagen toe aan de DietPlan zelf
         Set<balancebite.model.meal.references.Diet> allDiets = new HashSet<>();
         for (DietDay day : dietDays) {
-            allDiets.addAll(day.getDiets());  // Voeg de diets van de dagen toe aan het dieet
+            if (day.getDiets() != null) {
+                allDiets.addAll(day.getDiets());
+            }
         }
         dietPlan.setDiets(allDiets);
 
-        // Sla het dieet op
+        // ➕ Sla op en koppel aan gebruiker
         DietPlan saved = dietPlanRepository.save(dietPlan);
         user.getSavedDietPlans().add(saved);
         userRepository.save(user);
-        log.info("Diet created with ID: {}", saved.getId());
 
-        // Return het DietPlanDTO met de relevante informatie van de gebruiker
+        log.info("Diet created with ID: {}", saved.getId());
         return dietPlanMapper.toDTO(saved);
     }
+
 
     @Override
     @Transactional
@@ -220,9 +228,9 @@ public class UserDietPlanService implements IUserDietPlanService {
             for (int i = 0; i < input.getDietDays().size(); i++) {
                 DietDayInputDTO dayInput = input.getDietDays().get(i);
 
-                Set<Meal> meals = dayInput.getMealIds().stream()
+                List<Meal> meals = dayInput.getMealIds().stream()
                         .map(id -> mealAssignmentUtil.getOrAddMealToUser(adjustedByUserId, id))
-                        .collect(Collectors.toSet());
+                        .toList();
 
                 DietDay day = dietDayMapper.toEntity(dayInput, meals, i);
                 day.setDiet(dietPlan);

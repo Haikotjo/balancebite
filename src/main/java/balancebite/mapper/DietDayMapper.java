@@ -12,7 +12,6 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 @Component
 public class DietDayMapper {
@@ -45,7 +44,8 @@ public class DietDayMapper {
         );
     }
 
-    public DietDay toEntity(DietDayInputDTO input, Set<Meal> meals, int index) {
+    // 👇 Belangrijk: gebruik List<Meal> i.p.v. Set<Meal> zodat dubbele maaltijden kunnen
+    public DietDay toEntity(DietDayInputDTO input, List<Meal> meals, int index) {
         if (input == null || meals == null) return null;
 
         DietDay entity = new DietDay();
@@ -54,14 +54,14 @@ public class DietDayMapper {
                 : "Day " + (index + 1);
         entity.setDayLabel(label);
         entity.setDate(input.getDate());
-        entity.setMeals(meals.stream().toList());
+        entity.setMeals(meals);
         entity.setDietDayDescription(input.getDietDayDescription());
         entity.setDiets(input.getDiets());
 
         return entity;
     }
 
-    public void updateFromInputDTO(DietDay dietDay, DietDayInputDTO input, Set<Meal> meals, int index) {
+    public void updateFromInputDTO(DietDay dietDay, DietDayInputDTO input, List<Meal> meals, int index) {
         if (dietDay == null || input == null || meals == null) return;
 
         String label = (input.getDayLabel() != null && !input.getDayLabel().isBlank())
@@ -69,7 +69,7 @@ public class DietDayMapper {
                 : "Day " + (index + 1);
         dietDay.setDayLabel(label);
         dietDay.setDate(input.getDate());
-        dietDay.setMeals(meals.stream().toList());
+        dietDay.setMeals(meals);
         dietDay.setDietDayDescription(input.getDietDayDescription());
         dietDay.setDiets(input.getDiets());
     }
