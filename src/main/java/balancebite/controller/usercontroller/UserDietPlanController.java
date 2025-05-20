@@ -147,22 +147,22 @@ public class UserDietPlanController {
             @RequestHeader("Authorization") String authHeader,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "12") int size,
+            @RequestParam(required = false) List<String> diets,
             @RequestParam(required = false) String sortBy,
             @RequestParam(defaultValue = "asc") String sortOrder
     ) {
         try {
-            log.info("Retrieving diet plans for authenticated user with sorting.");
+            log.info("Retrieving diet plans for authenticated user with filters and sorting.");
 
             String token = authHeader.substring(7);
             Long userId = jwtService.extractUserId(token);
 
-            Sort sort = Sort.by(sortBy != null ? sortBy : "name");
-            if ("desc".equalsIgnoreCase(sortOrder)) {
-                sort = sort.descending();
-            }
+            // Geen sort meer hier, sorting gebeurt in de service
+            Pageable pageable = PageRequest.of(page, size);
 
-            Pageable pageable = PageRequest.of(page, size, sort);
-            Page<DietPlanDTO> plans = userDietPlanService.getAllDietPlansForUser(userId, pageable);
+            Page<DietPlanDTO> plans = userDietPlanService.getAllDietPlansForUser(
+                    userId, diets, sortBy, sortOrder, pageable
+            );
 
             if (plans.isEmpty()) {
                 log.info("No diet plans found for authenticated user ID: {}", userId);
@@ -180,6 +180,7 @@ public class UserDietPlanController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Page.empty());
         }
     }
+
 
 
     @GetMapping("/diet-plans/created")

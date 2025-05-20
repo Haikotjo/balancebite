@@ -14,10 +14,15 @@ public interface IUserDietPlanService {
 
     DietPlanDTO getDietPlanById(Long dietId, Long userId);
 
-    Page<DietPlanDTO> getAllDietPlansForUser(Long userId, Pageable pageable);
+    Page<DietPlanDTO> getAllDietPlansForUser(
+            Long userId,
+            List<String> diets,
+            String sortBy,
+            String sortOrder,
+            Pageable pageable
+    );
 
     Page<DietPlanDTO> getDietPlansCreatedByUser(Long userId, Pageable pageable);
-
 
     DietPlanDTO removeDietDay(Long userId, Long dietPlanId, int dayIndex);
 

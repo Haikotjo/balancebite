@@ -9,7 +9,7 @@ import java.util.List;
 
 public interface DietPlanRepository extends JpaRepository<DietPlan, Long> {
 
-    Page<DietPlan> findByCreatedBy_IdOrAdjustedBy_Id(Long createdById, Long adjustedById, Pageable pageable);
+    Page<DietPlan> findByAdjustedBy_Id(Long userId, Pageable pageable);
 
     Page<DietPlan> findByCreatedBy_Id(Long userId, Pageable pageable);
 
