@@ -356,11 +356,9 @@ public class UserMealController {
         try {
             log.info("Received request to remove meal ID {} from the authenticated user's list.", mealId);
 
-            // Extract userId from the token
-            String token = authorizationHeader.substring(7); // Remove "Bearer " prefix
+            String token = authorizationHeader.substring(7);
             Long userId = jwtService.extractUserId(token);
 
-            // Call the service method
             userMealService.removeMealFromUser(userId, mealId);
 
             log.info("Successfully removed meal ID {} from authenticated user ID: {}", mealId, userId);
@@ -369,9 +367,6 @@ public class UserMealController {
         } catch (UserNotFoundException | MealNotFoundException e) {
             log.warn("Error occurred during meal removal for authenticated user: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
-        } catch (Exception e) {
-            log.error("Unexpected error occurred during meal removal for authenticated user: {}", e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "An unexpected error occurred."));
         }
     }
 

@@ -5,7 +5,6 @@ import balancebite.dto.diet.DietPlanDTO;
 import balancebite.dto.diet.DietPlanInputDTO;
 import balancebite.errorHandling.DietPlanNotFoundException;
 import balancebite.errorHandling.DuplicateDietPlanException;
-import balancebite.errorHandling.MealNotFoundException;
 import balancebite.errorHandling.UserNotFoundException;
 import balancebite.mapper.DietDayMapper;
 import balancebite.mapper.DietPlanMapper;
@@ -28,15 +27,14 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
 @Transactional
-public class UserDietService implements IUserDietPlanService {
+public class UserDietPlanService implements IUserDietPlanService {
 
-    private static final Logger log = LoggerFactory.getLogger(UserDietService.class);
+    private static final Logger log = LoggerFactory.getLogger(UserDietPlanService.class);
 
     private final DietPlanRepository dietPlanRepository;
     private final UserRepository userRepository;
@@ -47,14 +45,14 @@ public class UserDietService implements IUserDietPlanService {
     private final UserMealService userMealService;
     private final MealAssignmentUtil mealAssignmentUtil;
 
-    public UserDietService(DietPlanRepository dietPlanRepository,
-                       UserRepository userRepository,
-                       MealRepository mealRepository,
-                       DietPlanMapper dietPlanMapper,
-                       DietDayMapper dietDayMapper,
-                       UserMapper userMapper,
-                           UserMealService userMealService,
-                           MealAssignmentUtil mealAssignmentUtil) {
+    public UserDietPlanService(DietPlanRepository dietPlanRepository,
+                               UserRepository userRepository,
+                               MealRepository mealRepository,
+                               DietPlanMapper dietPlanMapper,
+                               DietDayMapper dietDayMapper,
+                               UserMapper userMapper,
+                               UserMealService userMealService,
+                               MealAssignmentUtil mealAssignmentUtil) {
         this.dietPlanRepository = dietPlanRepository;
         this.userRepository = userRepository;
         this.mealRepository = mealRepository;
@@ -144,7 +142,7 @@ public class UserDietService implements IUserDietPlanService {
         DietPlan originalDiet = dietPlanRepository.findById(dietPlanId)
                 .orElseThrow(() -> new DietPlanNotFoundException("DietPlan not found with ID: " + dietPlanId));
 
-        boolean alreadyExists = user.getDietPlans().stream()
+        boolean alreadyExists = user.getSavedDietPlans().stream()
                 .anyMatch(d -> (d.getOriginalDietId() != null && d.getOriginalDietId().equals(dietPlanId)) || d.getId().equals(dietPlanId));
 
         if (alreadyExists) {
@@ -178,12 +176,13 @@ public class UserDietService implements IUserDietPlanService {
         dietPlanCopy.setDietDays(copiedDays);
 
         DietPlan saved = dietPlanRepository.save(dietPlanCopy);
-        user.getDietPlans().add(saved);
+        user.getSavedDietPlans().add(saved); // ✅ juiste ManyToMany relatie
         userRepository.save(user);
 
         log.info("DietPlan {} successfully linked to user {}", saved.getId(), userId);
         return dietPlanMapper.toDTO(saved);
     }
+
 
     @Override
     @Transactional
@@ -276,23 +275,9 @@ public class UserDietService implements IUserDietPlanService {
     @Override
     @Transactional(readOnly = true)
     public Page<DietPlanDTO> getAllDietPlansForUser(Long userId, Pageable pageable) {
-        log.info("Fetching all dietPlans for user ID: {}", userId);
-
-        List<DietPlan> all = dietPlanRepository.findByCreatedBy_IdOrAdjustedBy_Id(userId, userId);
-
-        int pageSize = pageable.getPageSize();
-        int currentPage = pageable.getPageNumber();
-        int startItem = currentPage * pageSize;
-
-        List<DietPlan> paged;
-        if (all.size() < startItem) {
-            paged = Collections.emptyList();
-        } else {
-            int toIndex = Math.min(startItem + pageSize, all.size());
-            paged = all.subList(startItem, toIndex);
-        }
-
-        return new PageImpl<>(paged.stream().map(dietPlanMapper::toDTO).toList(), pageable, all.size());
+        log.info("Fetching all diet plans for user ID: {}", userId);
+        Page<DietPlan> page = dietPlanRepository.findByCreatedBy_IdOrAdjustedBy_Id(userId, userId, pageable);
+        return page.map(dietPlanMapper::toDTO);
     }
 
 
@@ -300,23 +285,10 @@ public class UserDietService implements IUserDietPlanService {
     @Transactional(readOnly = true)
     public Page<DietPlanDTO> getDietPlansCreatedByUser(Long userId, Pageable pageable) {
         log.info("Fetching diet plans created by user ID: {}", userId);
-
-        List<DietPlan> allCreated = dietPlanRepository.findByCreatedBy_Id(userId);
-
-        int pageSize = pageable.getPageSize();
-        int currentPage = pageable.getPageNumber();
-        int startItem = currentPage * pageSize;
-
-        List<DietPlan> paged;
-        if (allCreated.size() < startItem) {
-            paged = Collections.emptyList();
-        } else {
-            int toIndex = Math.min(startItem + pageSize, allCreated.size());
-            paged = allCreated.subList(startItem, toIndex);
-        }
-
-        return new PageImpl<>(paged.stream().map(dietPlanMapper::toDTO).toList(), pageable, allCreated.size());
+        Page<DietPlan> page = dietPlanRepository.findByCreatedBy_Id(userId, pageable);
+        return page.map(dietPlanMapper::toDTO);
     }
+
 
 
     @Override
@@ -340,18 +312,23 @@ public class UserDietService implements IUserDietPlanService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
 
-        DietPlan diet = user.getDietPlans().stream()
-                .filter(d -> d.getId().equals(dietPlanId))
-                .findFirst()
-                .orElseThrow(() -> new DietPlanNotFoundException("DietPlan not found in user's list."));
+        DietPlan diet = dietPlanRepository.findById(dietPlanId)
+                .orElseThrow(() -> new DietPlanNotFoundException("DietPlan not found"));
 
-        if (!diet.isTemplate()) {
-            log.info("DietPlan is a user copy. Deleting...");
-            user.getDietPlans().remove(diet);
+        boolean isCreator = diet.getCreatedBy() != null && diet.getCreatedBy().getId().equals(userId);
+        boolean isSaved = user.getSavedDietPlans().stream().anyMatch(d -> d.getId().equals(dietPlanId));
+
+        if (!isCreator && !isSaved) {
+            throw new DietPlanNotFoundException("DietPlan not found in user's list.");
+        }
+
+        if (!isCreator) {
+            log.info("User is not the creator. Deleting the copied diet.");
+            user.getSavedDietPlans().removeIf(d -> d.getId().equals(dietPlanId));
             dietPlanRepository.delete(diet);
         } else {
-            log.info("DietPlan is a template. Unlinking...");
-            user.getDietPlans().remove(diet);
+            log.info("User is the creator. Unlinking but keeping the diet plan.");
+            user.getDietPlans().removeIf(d -> d.getId().equals(dietPlanId));
         }
 
         userRepository.save(user);

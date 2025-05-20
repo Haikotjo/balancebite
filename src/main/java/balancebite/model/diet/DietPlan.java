@@ -47,6 +47,10 @@ public class DietPlan {
     @Column(name = "diet")
     private Set<balancebite.model.meal.references.Diet> diets = new HashSet<>();
 
+    @ManyToMany(mappedBy = "savedDietPlans")
+    private Set<User> users = new HashSet<>();
+
+
     // Constructors
     public DietPlan() {}
 
@@ -131,4 +135,13 @@ public class DietPlan {
     public void setDiets(Set<balancebite.model.meal.references.Diet> diets) {
         this.diets = diets;
     }
+
+    public Set<User> getUsers() {
+        return users;
+    }
+
+    public void setUsers(Set<User> users) {
+        this.users = users != null ? users : new HashSet<>();
+    }
+
 }

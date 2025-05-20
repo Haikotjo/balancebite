@@ -74,6 +74,15 @@ public class User {
     @OneToMany(mappedBy = "createdBy", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<DietPlan> dietPlans = new ArrayList<>();
 
+    @ManyToMany
+    @JoinTable(
+            name = "user_saved_diet_plans",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "diet_plan_id")
+    )
+    private Set<DietPlan> savedDietPlans = new HashSet<>();
+
+
     public User() {}
 
     public User(String userName, String email, String password, Set<Role> roles) {
@@ -195,7 +204,16 @@ public class User {
         return dietPlans;
     }
 
-    public void setDiets(List<DietPlan> dietPlans) {
+    public void setDietPlans(List<DietPlan> dietPlans) {
         this.dietPlans = dietPlans;
     }
+
+    public Set<DietPlan> getSavedDietPlans() {
+        return savedDietPlans;
+    }
+
+    public void setSavedDietPlans(Set<DietPlan> savedDietPlans) {
+        this.savedDietPlans = savedDietPlans != null ? savedDietPlans : new HashSet<>();
+    }
+
 }

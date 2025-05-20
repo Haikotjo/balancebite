@@ -12,6 +12,10 @@ import balancebite.service.interfaces.diet.IUserDietPlanService;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -52,19 +56,23 @@ public class UserDietPlanController {
         }
     }
 
-    @PostMapping("/diet-plans/{dietPlanId}")
+    @PatchMapping("add-diet-plan/{dietPlanId}")
     public ResponseEntity<?> addDietPlanToUser(@PathVariable Long dietPlanId,
-                                                             @RequestHeader("Authorization") String authHeader) {
+                                               @RequestHeader("Authorization") String authHeader) {
         try {
             Long userId = jwtService.extractUserId(authHeader.substring(7));
-            UserDTO updatedUser = userDietPlanService.addDietPlanToUser(userId, dietPlanId);
-            return ResponseEntity.ok(updatedUser);
+            DietPlanDTO copiedDiet = userDietPlanService.addDietPlanToUser(userId, dietPlanId);
+            log.info("✅ DietPlan {} successfully copied and assigned to user {}", dietPlanId, userId);
+            return ResponseEntity.ok(copiedDiet);
         } catch (DietPlanNotFoundException | UserNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
         } catch (DuplicateDietPlanException e) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "Failed to copy diet plan"));
+            Long userId = jwtService.extractUserId(authHeader.substring(7));
+            log.error("❌ Unexpected error in addDietPlanToUser – dietPlanId={}, userId={}", dietPlanId, userId, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Failed to copy diet plan"));
         }
     }
 
@@ -85,7 +93,6 @@ public class UserDietPlanController {
             return ResponseEntity.status(500).body(Map.of("error", "Failed to update diet plan"));
         }
     }
-
 
     @PostMapping("/diet-plans/{dietPlanId}/days/{dayIndex}/meals/{mealId}")
     public ResponseEntity<?> addMealToDietDay(@PathVariable Long dietPlanId,
@@ -136,10 +143,55 @@ public class UserDietPlanController {
     }
 
     @GetMapping("/diet-plans")
-    public ResponseEntity<?> getAllDietPlansForUser(@RequestHeader("Authorization") String authHeader) {
+    public ResponseEntity<Page<DietPlanDTO>> getAllDietPlansForUser(
+            @RequestHeader("Authorization") String authHeader,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "12") int size,
+            @RequestParam(required = false) String sortBy,
+            @RequestParam(defaultValue = "asc") String sortOrder
+    ) {
+        try {
+            log.info("Retrieving diet plans for authenticated user with sorting.");
+
+            String token = authHeader.substring(7);
+            Long userId = jwtService.extractUserId(token);
+
+            Sort sort = Sort.by(sortBy != null ? sortBy : "name");
+            if ("desc".equalsIgnoreCase(sortOrder)) {
+                sort = sort.descending();
+            }
+
+            Pageable pageable = PageRequest.of(page, size, sort);
+            Page<DietPlanDTO> plans = userDietPlanService.getAllDietPlansForUser(userId, pageable);
+
+            if (plans.isEmpty()) {
+                log.info("No diet plans found for authenticated user ID: {}", userId);
+                return ResponseEntity.noContent().build();
+            }
+
+            log.info("Successfully retrieved diet plans for authenticated user ID: {}", userId);
+            return ResponseEntity.ok(plans);
+
+        } catch (UserNotFoundException e) {
+            log.warn("User not found during diet plan retrieval: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Page.empty());
+        } catch (Exception e) {
+            log.error("Unexpected error during diet plan retrieval: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Page.empty());
+        }
+    }
+
+
+    @GetMapping("/diet-plans/created")
+    public ResponseEntity<?> getCreatedDietPlans(
+            @RequestHeader("Authorization") String authHeader,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "12") int size
+    ) {
         try {
             Long userId = jwtService.extractUserId(authHeader.substring(7));
-            List<DietPlanDTO> plans = userDietPlanService.getAllDietPlansForUser(userId);
+            Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+            Page<DietPlanDTO> plans = userDietPlanService.getDietPlansCreatedByUser(userId, pageable);
             if (plans.isEmpty()) {
                 return ResponseEntity.noContent().build();
             }
@@ -147,10 +199,11 @@ public class UserDietPlanController {
         } catch (UserNotFoundException e) {
             return ResponseEntity.status(404).body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
-            log.error("Failed to fetch diet plans", e);
-            return ResponseEntity.status(500).body(Map.of("error", "Failed to retrieve diet plans"));
+            log.error("Failed to fetch created diet plans", e);
+            return ResponseEntity.status(500).body(Map.of("error", "Failed to retrieve created diet plans"));
         }
     }
+
 
     @DeleteMapping("/diet-plans/{dietPlanId}/days/{dayIndex}")
     public ResponseEntity<?> removeDietDay(@PathVariable Long dietPlanId,
@@ -172,20 +225,25 @@ public class UserDietPlanController {
         }
     }
 
-    @DeleteMapping("/diet-plans/{dietPlanId}")
-    public ResponseEntity<?> deleteDietPlan(@PathVariable Long dietPlanId,
-                                            @RequestHeader("Authorization") String authHeader) {
+    @DeleteMapping("/diet-plan/{dietPlanId}")
+    public ResponseEntity<?> removeDietPlanFromAuthenticatedUser(
+            @PathVariable Long dietPlanId,
+            @RequestHeader("Authorization") String authHeader) {
         try {
+            log.info("Received request to remove dietPlan ID {} from the authenticated user's list.", dietPlanId);
+
             Long userId = jwtService.extractUserId(authHeader.substring(7));
-            userDietPlanService.deleteDietPlan(dietPlanId, userId);
+            userDietPlanService.removeDietPlanFromUser(userId, dietPlanId);
+
+            log.info("Successfully removed dietPlan ID {} from authenticated user ID: {}", dietPlanId, userId);
             return ResponseEntity.noContent().build();
-        } catch (DietPlanNotFoundException e) {
+
+        } catch (UserNotFoundException | DietPlanNotFoundException e) {
             return ResponseEntity.status(404).body(Map.of("error", e.getMessage()));
-        } catch (SecurityException e) {
-            return ResponseEntity.status(403).body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
-            log.error("Unexpected error while deleting diet plan", e);
-            return ResponseEntity.status(500).body(Map.of("error", "Failed to delete diet plan"));
+            log.error("Unexpected error during dietPlan removal for authenticated user", e);
+            return ResponseEntity.status(500).body(Map.of("error", "Failed to remove diet plan"));
         }
     }
+
 }

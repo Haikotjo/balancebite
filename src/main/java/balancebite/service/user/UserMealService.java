@@ -3,16 +3,16 @@ package balancebite.service.user;
 import balancebite.dto.meal.MealDTO;
 import balancebite.dto.meal.MealInputDTO;
 import balancebite.dto.user.UserDTO;
-import balancebite.errorHandling.DuplicateMealException;
-import balancebite.errorHandling.InvalidFoodItemException;
-import balancebite.errorHandling.MealNotFoundException;
-import balancebite.errorHandling.UserNotFoundException;
+import balancebite.errorHandling.*;
 import balancebite.mapper.MealIngredientMapper;
 import balancebite.mapper.MealMapper;
 import balancebite.mapper.UserMapper;
+import balancebite.model.diet.DietDay;
 import balancebite.model.meal.Meal;
 import balancebite.model.MealIngredient;
 import balancebite.model.user.User;
+import balancebite.repository.DietDayRepository;
+import balancebite.repository.MealIngredientRepository;
 import balancebite.repository.MealRepository;
 import balancebite.repository.UserRepository;
 import balancebite.security.JwtService;
@@ -46,6 +46,8 @@ public class UserMealService implements IUserMealService {
 
     private final UserRepository userRepository;
     private final MealRepository mealRepository;
+
+    private final DietDayRepository dietDayRepository;
     private final UserMapper userMapper;
     private final MealMapper mealMapper;
     private final MealIngredientMapper mealIngredientMapper;
@@ -54,11 +56,12 @@ public class UserMealService implements IUserMealService {
     private final JwtService jwtService;
     private final FileStorageService fileStorageService;
 
-    public UserMealService(UserRepository userRepository, MealRepository mealRepository, UserMapper userMapper,
+    public UserMealService(UserRepository userRepository, MealRepository mealRepository, DietDayRepository dietDayRepository, UserMapper userMapper,
                            MealMapper mealMapper, MealIngredientMapper mealIngredientMapper,
                            CheckForDuplicateTemplateMealUtil checkForDuplicateTemplateMeal, UserUpdateHelper userUpdateHelper, JwtService jwtService, FileStorageService fileStorageService) {
         this.userRepository = userRepository;
         this.mealRepository = mealRepository;
+        this.dietDayRepository = dietDayRepository;
         this.userMapper = userMapper;
         this.mealMapper = mealMapper;
         this.mealIngredientMapper = mealIngredientMapper;
@@ -555,23 +558,47 @@ public class UserMealService implements IUserMealService {
     public UserDTO removeMealFromUser(Long userId, Long mealId) {
         log.info("Unlinking or deleting meal ID {} from user ID {}", mealId, userId);
 
-        // Retrieve the user or throw an exception if not found
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("User not found with ID: " + userId));
 
-        // Find the meal in the user's list or throw an exception if not found
         Meal meal = user.getMeals().stream()
                 .filter(m -> m.getId().equals(mealId))
                 .findFirst()
                 .orElseThrow(() -> new MealNotFoundException("Meal not found in user's list."));
 
-        // If isTemplate = false remove meal completely
         if (!meal.isTemplate()) {
+            // ❗ Check if it's still used in a DietDay
+            List<DietDay> daysWithMeal = dietDayRepository.findByMealsContainingWithDietFetched(meal);
+            if (!daysWithMeal.isEmpty()) {
+                Set<String> dietNames = daysWithMeal.stream()
+                        .map(d -> d.getDiet().getName())
+                        .collect(Collectors.toSet());
+
+                String joinedNames = String.join(", ", dietNames);
+                log.warn("Meal ID {} is still used in diets: {}", mealId, joinedNames);
+                List<Map<String, Object>> diets = daysWithMeal.stream()
+                        .map(DietDay::getDiet)
+                        .distinct()
+                        .map(diet -> {
+                            Map<String, Object> map = new HashMap<>();
+                            map.put("id", diet.getId());
+                            map.put("name", diet.getName());
+                            return map;
+                        })
+                        .toList();
+
+                log.warn("Meal ID {} is still used in diets: {}", mealId, diets);
+
+                throw new MealStillInUseException(
+                        "This meal is still used in the following diets.",
+                        diets
+                );
+            }
+
             log.info("Meal ID {} is NOT a template, deleting it permanently.", mealId);
             user.getMeals().remove(meal);
             mealRepository.delete(meal);
         } else {
-            // If isTemplate = true, unlink
             log.info("Meal ID {} is a template, unlinking from user.", mealId);
             user.getMeals().remove(meal);
         }

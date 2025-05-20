@@ -174,3 +174,62 @@ VALUES
     (10, 6), (10, 2),
     (11, 5), (11, 1),
     (12, 3), (12, 4);
+
+-- Voeg vier unieke sample diets toe
+INSERT INTO diet_plan (name, diet_description, original_diet_id, is_template, created_by_user_id)
+VALUES
+    ('Sample Vegan Plan', 'Een plantaardig dieet voor energie en welzijn.', NULL, TRUE, 1),
+    ('Protein Boost Plan', 'Voor spiergroei en herstel na training.', NULL, TRUE, 2),
+    ('Mediterranean Breeze', 'Gebaseerd op de gezonde Mediterrane keuken.', NULL, TRUE, 3),
+    ('Low Carb Lite', 'Voor een koolhydraatarme levensstijl.', NULL, TRUE, 4);
+
+-- Nieuwe diet_plan_id’s zijn 5,6,7,8
+INSERT INTO dietplan_diets (dietplan_id, diet)
+VALUES
+    (5, 'VEGAN'),
+    (6, 'HIGH_PROTEIN'),
+    (7, 'MEDITERRANEAN'),
+    (8, 'LOW_CARB');
+
+-- Voeg drie dagen toe per dieet
+INSERT INTO diet_day (day_label, date, diet_plan_id, diet_day_description)
+VALUES
+    ('Dag A', NULL, 5, 'Vegan startdag'),
+    ('Dag B', NULL, 5, 'Vegan kernmaaltijden'),
+    ('Dag C', NULL, 5, 'Vegan afsluiting'),
+
+    ('Maandag', NULL, 6, 'Eiwitrijk begin'),
+    ('Woensdag', NULL, 6, 'Eiwitdag 2'),
+    ('Vrijdag', NULL, 6, 'Herstel & eiwit'),
+
+    ('Lunedì', NULL, 7, 'Zuid-Europees begin'),
+    ('Mercoledì', NULL, 7, 'Zon en smaak'),
+    ('Venerdì', NULL, 7, 'Licht en fris'),
+
+    ('LC Dag 1', NULL, 8, 'Koolhydraatarm intro'),
+    ('LC Dag 2', NULL, 8, 'Focus op vetten en eiwitten'),
+    ('LC Dag 3', NULL, 8, 'Afsluitende dag laag in carbs');
+
+-- Koppel dezelfde dieet-enum als het plan
+INSERT INTO diet_day_diets (diet_day_id, diet)
+VALUES
+    (13, 'VEGAN'), (14, 'VEGAN'), (15, 'VEGAN'),
+    (16, 'HIGH_PROTEIN'), (17, 'HIGH_PROTEIN'), (18, 'HIGH_PROTEIN'),
+    (19, 'MEDITERRANEAN'), (20, 'MEDITERRANEAN'), (21, 'MEDITERRANEAN'),
+    (22, 'LOW_CARB'), (23, 'LOW_CARB'), (24, 'LOW_CARB');
+
+-- Verdeel meals 1–6 per dieetplan op unieke manier
+INSERT INTO diet_day_meals (diet_day_id, meal_id)
+VALUES
+    -- Vegan: meals 1 & 2, 3 & 4, 5 & 6
+    (13,1),(13,2), (14,3),(14,4), (15,5),(15,6),
+
+    -- High Protein: meals 2 & 3, 4 & 5, 6 & 1
+    (16,2),(16,3), (17,4),(17,5), (18,6),(18,1),
+
+    -- Mediterranean: meals 3 & 1, 2 & 5, 4 & 6
+    (19,3),(19,1), (20,2),(20,5), (21,4),(21,6),
+
+    -- Low Carb: meals 5 & 1, 2 & 6, 3 & 4
+    (22,5),(22,1), (23,2),(23,6), (24,3),(24,4);
+

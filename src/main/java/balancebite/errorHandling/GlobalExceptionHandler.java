@@ -202,4 +202,13 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
     }
 
+    @ExceptionHandler(MealStillInUseException.class)
+    public ResponseEntity<Map<String, Object>> handleMealStillInUseException(MealStillInUseException e) {
+        Map<String, Object> errorBody = new HashMap<>();
+        errorBody.put("error", e.getMessage());
+        errorBody.put("diets", e.getDiets()); // hier geef je dus de volledige lijst terug
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(errorBody);
+    }
+
+
 }

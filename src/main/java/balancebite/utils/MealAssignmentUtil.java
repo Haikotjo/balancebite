@@ -1,5 +1,6 @@
 package balancebite.utils;
 
+import balancebite.errorHandling.DuplicateMealException;
 import balancebite.errorHandling.UserNotFoundException;
 import balancebite.model.meal.Meal;
 import balancebite.model.user.User;
@@ -43,7 +44,11 @@ public class MealAssignmentUtil {
         }
 
         log.info("Meal with ID {} not found for user {}. Creating a copy...", mealId, userId);
-        userMealService.addMealToUser(userId, mealId);
+        try {
+            userMealService.addMealToUser(userId, mealId);
+        } catch (DuplicateMealException e) {
+            log.warn("Meal already exists for user {}. Using existing meal instead.", userId);
+        }
 
         return userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("User not found after adding meal"))

@@ -5,6 +5,8 @@ import balancebite.errorHandling.DietPlanNotFoundException;
 import balancebite.service.interfaces.diet.IPublicDietPlanService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,13 +25,19 @@ public class PublicDietPlanController {
     }
 
     @GetMapping
-    public ResponseEntity<?> getAllPublicDiets() {
-        List<DietPlanDTO> diets = publicDietPlanService.getAllPublicDietPlans();
-        if (diets.isEmpty()) {
+    public ResponseEntity<?> getAllPublicDiets(
+            @RequestParam(required = false) List<String> diets,
+            @RequestParam(required = false, defaultValue = "name") String sortBy,
+            @RequestParam(required = false, defaultValue = "asc") String sortOrder,
+            Pageable pageable
+    ) {
+        Page<DietPlanDTO> page = publicDietPlanService.getAllPublicDietPlans(diets, sortBy, sortOrder, pageable);
+        if (page.isEmpty()) {
             return ResponseEntity.noContent().build();
         }
-        return ResponseEntity.ok(diets);
+        return ResponseEntity.ok(page);
     }
+
 
     @GetMapping("/{id}")
     public ResponseEntity<?> getPublicDietById(@PathVariable Long id) {
