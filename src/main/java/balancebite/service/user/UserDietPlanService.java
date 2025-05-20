@@ -322,19 +322,23 @@ public class UserDietPlanService implements IUserDietPlanService {
             throw new DietPlanNotFoundException("DietPlan not found in user's list.");
         }
 
-        if (!isCreator) {
-            log.info("User is not the creator. Deleting the copied diet.");
+        if (diet.isTemplate()) {
+            log.info("DietPlan is a template. Unlinking only, not deleting.");
+            user.getSavedDietPlans().removeIf(d -> d.getId().equals(dietPlanId));
+            user.getDietPlans().removeIf(d -> d.getId().equals(dietPlanId));
+        } else if (!isCreator) {
+            log.info("User is not the creator and diet is not a template. Deleting the copied diet.");
             user.getSavedDietPlans().removeIf(d -> d.getId().equals(dietPlanId));
             dietPlanRepository.delete(diet);
         } else {
-            log.info("User is the creator. Unlinking but keeping the diet plan.");
+            log.info("User is the creator. Unlinking and deleting the diet plan.");
             user.getDietPlans().removeIf(d -> d.getId().equals(dietPlanId));
+            dietPlanRepository.delete(diet);
         }
 
         userRepository.save(user);
         return userMapper.toDTO(user);
     }
-
 
 // =============================
 // 🔽 Private helper methods 🔽

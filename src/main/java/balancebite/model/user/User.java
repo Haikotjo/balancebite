@@ -71,7 +71,7 @@ public class User {
     @JoinColumn(name = "base_rdi_id", referencedColumnName = "id")
     private RecommendedDailyIntake baseRecommendedDailyIntake;
 
-    @OneToMany(mappedBy = "createdBy", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "createdBy", cascade = CascadeType.PERSIST) // of gewoon geen cascade
     private List<DietPlan> dietPlans = new ArrayList<>();
 
     @ManyToMany
