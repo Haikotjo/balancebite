@@ -195,6 +195,9 @@ public class UserDietPlanService implements IUserDietPlanService {
                     .map(m -> mealAssignmentUtil.getOrAddMealToUser(userId, m.getId()))
                     .distinct()
                     .collect(Collectors.toList()));
+            if (d.getMeals().stream().filter(Objects::nonNull).count() < 2) {
+                throw new IllegalArgumentException("Each day must have at least 2 meals.");
+            }
             return d;
         }).collect(Collectors.toList());
         copy.setDietDays(days);
@@ -234,7 +237,17 @@ public class UserDietPlanService implements IUserDietPlanService {
 
                 DietDay day = dietDayMapper.toEntity(dayInput, meals, i);
                 day.setDiet(dietPlan);
+
+                Set<balancebite.model.meal.references.Diet> dietsForDay = new HashSet<>();
+                for (Meal meal : meals) {
+                    if (meal.getDiets() != null) {
+                        dietsForDay.addAll(meal.getDiets());
+                    }
+                }
+                day.setDiets(dietsForDay);
+
                 newDietDays.add(day);
+
             }
 
             dietPlan.setDietDays(newDietDays);
