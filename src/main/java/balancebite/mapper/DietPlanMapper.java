@@ -60,8 +60,17 @@ public class DietPlanMapper {
                 adjustedByDTO,
                 dietDayDTOs,
                 dietPlan.getDietDescription(),
-                dietPlan.getDiets()
+                dietPlan.getDiets(),
+                dietPlan.getTotalProtein(),
+                dietPlan.getTotalCarbs(),
+                dietPlan.getTotalFat(),
+                dietPlan.getTotalCalories(),
+                dietPlan.getAvgProtein(),
+                dietPlan.getAvgCarbs(),
+                dietPlan.getAvgFat(),
+                dietPlan.getAvgCalories()
         );
+
     }
 
     /**

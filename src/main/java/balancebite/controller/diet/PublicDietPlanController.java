@@ -6,7 +6,9 @@ import balancebite.service.interfaces.diet.IPublicDietPlanService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -25,19 +27,66 @@ public class PublicDietPlanController {
     }
 
     @GetMapping
-    public ResponseEntity<?> getAllPublicDiets(
+    public ResponseEntity<Page<DietPlanDTO>> getAllPublicDiets(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "12") int size,
+            @RequestParam(required = false) List<String> requiredDiets,
+            @RequestParam(required = false) List<String> excludedDiets,
             @RequestParam(required = false) List<String> diets,
-            @RequestParam(required = false, defaultValue = "name") String sortBy,
-            @RequestParam(required = false, defaultValue = "asc") String sortOrder,
-            Pageable pageable
+            @RequestParam(defaultValue = "name") String sortBy,
+            @RequestParam(defaultValue = "asc") String sortOrder,
+            @RequestParam(required = false) Double minProtein,
+            @RequestParam(required = false) Double maxProtein,
+            @RequestParam(required = false) Double minCarbs,
+            @RequestParam(required = false) Double maxCarbs,
+            @RequestParam(required = false) Double minFat,
+            @RequestParam(required = false) Double maxFat,
+            @RequestParam(required = false) Double minCalories,
+            @RequestParam(required = false) Double maxCalories,
+            @RequestParam(required = false) Long createdByUserId
     ) {
-        Page<DietPlanDTO> page = publicDietPlanService.getAllPublicDietPlans(diets, sortBy, sortOrder, pageable);
-        if (page.isEmpty()) {
+        Map<String, String> sortFieldMap = Map.of(
+                "avgProtein", "avgProtein",
+                "avgCarbs", "avgCarbs",
+                "avgFat", "avgFat",
+                "avgCalories", "avgCalories",
+                "totalProtein", "totalProtein",
+                "totalCarbs", "totalCarbs",
+                "totalFat", "totalFat",
+                "totalCalories", "totalCalories",
+                "createdAt", "createdAt",
+                "name", "name"
+        );
+
+        String mappedSortBy = sortFieldMap.get(sortBy);
+        if (mappedSortBy == null) {
+            log.warn("Invalid sortBy value '{}', falling back to default 'createdAt'", sortBy);
+            mappedSortBy = "createdAt";
+        }
+
+        Sort.Direction direction = sortOrder.equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
+        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, mappedSortBy));
+
+        Page<DietPlanDTO> plans = publicDietPlanService.getAllPublicDietPlans(
+                requiredDiets,
+                excludedDiets,
+                diets,
+                sortBy,
+                sortOrder,
+                pageable,
+                minProtein, maxProtein,
+                minCarbs, maxCarbs,
+                minFat, maxFat,
+                minCalories, maxCalories,
+                createdByUserId
+        );
+
+        if (plans.isEmpty()) {
             return ResponseEntity.noContent().build();
         }
-        return ResponseEntity.ok(page);
-    }
 
+        return ResponseEntity.ok(plans);
+    }
 
     @GetMapping("/{id}")
     public ResponseEntity<?> getPublicDietById(@PathVariable Long id) {

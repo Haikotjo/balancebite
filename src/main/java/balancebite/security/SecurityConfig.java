@@ -141,7 +141,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PUT, "/users/diet-plans/**").authenticated()
                         .requestMatchers(HttpMethod.PATCH, "/users/diet-plans/**").authenticated()
                         .requestMatchers(HttpMethod.DELETE, "/users/diet-plans/**").authenticated()
-
+                        .requestMatchers(HttpMethod.PUT, "/users/update-diet-plans/**").authenticated()
 
                         .anyRequest().authenticated()
                 )

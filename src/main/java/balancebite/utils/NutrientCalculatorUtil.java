@@ -195,5 +195,22 @@ public class NutrientCalculatorUtil {
         return calculateTotalNutrients(allIngredients);
     }
 
+    public static Map<String, Double> calculateAverages(Map<String, NutrientInfoDTO> totalNutrients, int dayCount) {
+        Map<String, Double> averages = new HashMap<>();
+        if (dayCount == 0 || totalNutrients == null) return averages;
+
+        averages.put("avgCalories", (double) Math.round(getValue(totalNutrients, "Energy kcal") / dayCount));
+        averages.put("avgProtein", (double) Math.round(getValue(totalNutrients, "Protein g") / dayCount));
+        averages.put("avgCarbs", (double) Math.round(getValue(totalNutrients, "Carbohydrates g") / dayCount));
+        averages.put("avgFat", (double) Math.round(getValue(totalNutrients, "Total lipid (fat) g") / dayCount));
+
+        return averages;
+    }
+
+    private static double getValue(Map<String, NutrientInfoDTO> nutrients, String key) {
+        return nutrients.containsKey(key) && nutrients.get(key).getValue() != null
+                ? nutrients.get(key).getValue()
+                : 0.0;
+    }
 
 }

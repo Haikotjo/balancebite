@@ -50,6 +50,14 @@ public class DietPlan {
     @ManyToMany(mappedBy = "savedDietPlans")
     private Set<User> users = new HashSet<>();
 
+    private Double totalProtein;
+    private Double totalCarbs;
+    private Double totalFat;
+    private Double totalCalories;
+    private Double avgProtein;
+    private Double avgCarbs;
+    private Double avgFat;
+    private Double avgCalories;
 
     // Constructors
     public DietPlan() {}
@@ -144,4 +152,67 @@ public class DietPlan {
         this.users = users != null ? users : new HashSet<>();
     }
 
+    public Double getTotalProtein() {
+        return totalProtein;
+    }
+
+    public void setTotalProtein(Double totalProtein) {
+        this.totalProtein = totalProtein;
+    }
+
+    public Double getTotalCarbs() {
+        return totalCarbs;
+    }
+
+    public void setTotalCarbs(Double totalCarbs) {
+        this.totalCarbs = totalCarbs;
+    }
+
+    public Double getTotalFat() {
+        return totalFat;
+    }
+
+    public void setTotalFat(Double totalFat) {
+        this.totalFat = totalFat;
+    }
+
+    public Double getTotalCalories() {
+        return totalCalories;
+    }
+
+    public void setTotalCalories(Double totalCalories) {
+        this.totalCalories = totalCalories;
+    }
+
+    public Double getAvgProtein() {
+        return avgProtein;
+    }
+
+    public void setAvgProtein(Double avgProtein) {
+        this.avgProtein = avgProtein;
+    }
+
+    public Double getAvgCarbs() {
+        return avgCarbs;
+    }
+
+    public void setAvgCarbs(Double avgCarbs) {
+        this.avgCarbs = avgCarbs;
+    }
+
+    public Double getAvgFat() {
+        return avgFat;
+    }
+
+    public void setAvgFat(Double avgFat) {
+        this.avgFat = avgFat;
+    }
+
+    public Double getAvgCalories() {
+        return avgCalories;
+    }
+
+    public void setAvgCalories(Double avgCalories) {
+        this.avgCalories = avgCalories;
+    }
 }

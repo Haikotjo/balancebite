@@ -7,6 +7,7 @@ import balancebite.errorHandling.DietPlanNotFoundException;
 import balancebite.errorHandling.DuplicateDietPlanException;
 import balancebite.errorHandling.MealNotFoundException;
 import balancebite.errorHandling.UserNotFoundException;
+import balancebite.model.meal.references.Diet;
 import balancebite.security.JwtService;
 import balancebite.service.interfaces.diet.IUserDietPlanService;
 import jakarta.validation.Valid;
@@ -76,7 +77,7 @@ public class UserDietPlanController {
         }
     }
 
-    @PutMapping("/diet-plans/{dietPlanId}")
+    @PutMapping("/update-diet-plans/{dietPlanId}")
     public ResponseEntity<?> updateDietPlan(@PathVariable Long dietPlanId,
                                             @RequestBody @Valid DietPlanInputDTO input,
                                             @RequestHeader("Authorization") String authHeader) {
@@ -143,68 +144,72 @@ public class UserDietPlanController {
     }
 
     @GetMapping("/diet-plans")
-    public ResponseEntity<Page<DietPlanDTO>> getAllDietPlansForUser(
+    public ResponseEntity<Page<DietPlanDTO>> getFilteredDietPlans(
             @RequestHeader("Authorization") String authHeader,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "12") int size,
-            @RequestParam(required = false) List<String> diets,
-            @RequestParam(required = false) String sortBy,
-            @RequestParam(defaultValue = "asc") String sortOrder
-    ) {
-        try {
-            log.info("Retrieving diet plans for authenticated user with filters and sorting.");
-
-            String token = authHeader.substring(7);
-            Long userId = jwtService.extractUserId(token);
-
-            // Geen sort meer hier, sorting gebeurt in de service
-            Pageable pageable = PageRequest.of(page, size);
-
-            Page<DietPlanDTO> plans = userDietPlanService.getAllDietPlansForUser(
-                    userId, diets, sortBy, sortOrder, pageable
-            );
-
-            if (plans.isEmpty()) {
-                log.info("No diet plans found for authenticated user ID: {}", userId);
-                return ResponseEntity.noContent().build();
-            }
-
-            log.info("Successfully retrieved diet plans for authenticated user ID: {}", userId);
-            return ResponseEntity.ok(plans);
-
-        } catch (UserNotFoundException e) {
-            log.warn("User not found during diet plan retrieval: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Page.empty());
-        } catch (Exception e) {
-            log.error("Unexpected error during diet plan retrieval: {}", e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Page.empty());
-        }
-    }
-
-
-
-    @GetMapping("/diet-plans/created")
-    public ResponseEntity<?> getCreatedDietPlans(
-            @RequestHeader("Authorization") String authHeader,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "12") int size
+            @RequestParam(defaultValue = "all") String mode,
+            @RequestParam(required = false) List<String> requiredDiets,
+            @RequestParam(required = false) List<String> excludedDiets,
+            @RequestParam(required = false) Diet dietFilter,
+            @RequestParam(required = false) Double minCalories,
+            @RequestParam(required = false) Double maxCalories,
+            @RequestParam(required = false) Double minProtein,
+            @RequestParam(required = false) Double maxProtein,
+            @RequestParam(required = false) Double minCarbs,
+            @RequestParam(required = false) Double maxCarbs,
+            @RequestParam(required = false) Double minFat,
+            @RequestParam(required = false) Double maxFat,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "desc") String sortOrder
     ) {
         try {
             Long userId = jwtService.extractUserId(authHeader.substring(7));
-            Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-            Page<DietPlanDTO> plans = userDietPlanService.getDietPlansCreatedByUser(userId, pageable);
+
+            Map<String, String> sortFieldMap = Map.of(
+                    "avgProtein", "avgProtein",
+                    "avgCarbs", "avgCarbs",
+                    "avgFat", "avgFat",
+                    "avgCalories", "avgCalories",
+                    "createdAt", "createdAt",
+                    "name", "name"
+            );
+
+            String mappedSortBy = sortFieldMap.get(sortBy);
+            if (mappedSortBy == null) {
+                log.warn("Invalid sortBy value '{}', falling back to default 'createdAt'", sortBy);
+                mappedSortBy = "createdAt";
+            }
+
+            Sort.Direction direction = sortOrder.equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
+            Pageable pageable = PageRequest.of(page, size, Sort.by(direction, mappedSortBy));
+
+            Page<DietPlanDTO> plans = userDietPlanService.getFilteredDietPlans(
+                    requiredDiets,
+                    excludedDiets,
+                    userId, mode, dietFilter,
+                    minCalories, maxCalories,
+                    minProtein, maxProtein,
+                    minCarbs, maxCarbs,
+                    minFat, maxFat,
+                    sortBy,
+                    sortOrder,
+                    pageable
+            );
+
             if (plans.isEmpty()) {
                 return ResponseEntity.noContent().build();
             }
+
             return ResponseEntity.ok(plans);
+
         } catch (UserNotFoundException e) {
-            return ResponseEntity.status(404).body(Map.of("error", e.getMessage()));
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Page.empty());
         } catch (Exception e) {
-            log.error("Failed to fetch created diet plans", e);
-            return ResponseEntity.status(500).body(Map.of("error", "Failed to retrieve created diet plans"));
+            log.error("Error retrieving filtered diet plans", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Page.empty());
         }
     }
-
 
     @DeleteMapping("/diet-plans/{dietPlanId}/days/{dayIndex}")
     public ResponseEntity<?> removeDietDay(@PathVariable Long dietPlanId,

@@ -11,6 +11,7 @@ import balancebite.mapper.DietPlanMapper;
 import balancebite.model.diet.DietDay;
 import balancebite.model.diet.DietPlan;
 import balancebite.model.meal.Meal;
+import balancebite.model.meal.references.Diet;
 import balancebite.model.user.User;
 import balancebite.repository.DietPlanRepository;
 import balancebite.repository.MealRepository;
@@ -18,13 +19,14 @@ import balancebite.repository.UserRepository;
 import balancebite.service.interfaces.diet.IUserDietPlanService;
 import balancebite.dto.user.UserDTO;
 import balancebite.mapper.UserMapper;
+import balancebite.specification.DietPlanSpecification;
 import balancebite.utils.MealAssignmentUtil;
+import balancebite.utils.NutrientCalculatorUtil;
+import org.springframework.data.domain.*;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.transaction.annotation.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -92,22 +94,18 @@ public class UserDietPlanService implements IUserDietPlanService {
         for (int i = 0; i < input.getDietDays().size(); i++) {
             DietDayInputDTO dayInput = input.getDietDays().get(i);
 
-            // ➕ Haal alle meals op — als List, zodat duplicaten mogelijk zijn
             List<Meal> meals = dayInput.getMealIds().stream()
                     .map(id -> mealAssignmentUtil.getOrAddMealToUser(userId, id))
                     .collect(Collectors.toList());
 
-            // ✅ Check op minstens 2 geldige maaltijden
             long validCount = meals.stream().filter(Objects::nonNull).count();
             if (validCount < 2) {
                 throw new IllegalArgumentException("Each day must have at least 2 meals.");
             }
 
-            // ➕ Pas eventueel je mapper aan zodat deze ook een List accepteert
             DietDay day = dietDayMapper.toEntity(dayInput, meals, i);
             day.setDiet(dietPlan);
 
-            // ➕ Verzamel diets van de maaltijden in een Set (zonder duplicates)
             if (day.getDiets() == null) {
                 day.setDiets(new HashSet<>());
             }
@@ -122,7 +120,7 @@ public class UserDietPlanService implements IUserDietPlanService {
 
         dietPlan.setDietDays(dietDays);
 
-        // ➕ Voeg alle diets van alle dagen toe aan de DietPlan zelf
+        // Verzamel alle diets van alle dagen
         Set<balancebite.model.meal.references.Diet> allDiets = new HashSet<>();
         for (DietDay day : dietDays) {
             if (day.getDiets() != null) {
@@ -131,7 +129,22 @@ public class UserDietPlanService implements IUserDietPlanService {
         }
         dietPlan.setDiets(allDiets);
 
-        // ➕ Sla op en koppel aan gebruiker
+        // ✅ BEREKEN NUTRIENTEN
+        var totalNutrients = NutrientCalculatorUtil.calculateTotalNutrientsForDiet(dietDays);
+        int dayCount = dietDays.size();
+        var averages = NutrientCalculatorUtil.calculateAverages(totalNutrients, dayCount);
+
+        dietPlan.setTotalCalories(getValue(totalNutrients, "Energy kcal"));
+        dietPlan.setTotalProtein(getValue(totalNutrients, "Protein g"));
+        dietPlan.setTotalCarbs(getValue(totalNutrients, "Carbohydrates g"));
+        dietPlan.setTotalFat(getValue(totalNutrients, "Total lipid (fat) g"));
+
+        dietPlan.setAvgCalories(round1(averages.getOrDefault("avgCalories", 0.0)));
+        dietPlan.setAvgProtein(round1(averages.getOrDefault("avgProtein", 0.0)));
+        dietPlan.setAvgCarbs(round1(averages.getOrDefault("avgCarbs", 0.0)));
+        dietPlan.setAvgFat(round1(averages.getOrDefault("avgFat", 0.0)));
+
+        // Opslaan en koppelen aan gebruiker
         DietPlan saved = dietPlanRepository.save(dietPlan);
         user.getSavedDietPlans().add(saved);
         userRepository.save(user);
@@ -139,7 +152,6 @@ public class UserDietPlanService implements IUserDietPlanService {
         log.info("Diet created with ID: {}", saved.getId());
         return dietPlanMapper.toDTO(saved);
     }
-
 
     @Override
     @Transactional
@@ -149,7 +161,7 @@ public class UserDietPlanService implements IUserDietPlanService {
         DietPlan original = dietPlanRepository.findById(dietPlanId)
                 .orElseThrow(() -> new DietPlanNotFoundException("DietPlan not found with ID: " + dietPlanId));
 
-        // ── NIEUW: als jij de creator bent, her-link alleen het originele plan
+        // ── Als jij de creator bent: geen kopie, gewoon relinken
         if (original.getCreatedBy() != null && original.getCreatedBy().getId().equals(userId)) {
             if (!user.getSavedDietPlans().contains(original)) {
                 user.getSavedDietPlans().add(original);
@@ -158,7 +170,7 @@ public class UserDietPlanService implements IUserDietPlanService {
             return dietPlanMapper.toDTO(original);
         }
 
-        // ── Bestaande kopie (of template) check
+        // ── Check op bestaande kopie
         Optional<DietPlan> existingCopy = user.getSavedDietPlans().stream()
                 .filter(d -> (d.getOriginalDietId() != null && d.getOriginalDietId().equals(dietPlanId))
                         || d.getId().equals(dietPlanId))
@@ -173,7 +185,7 @@ public class UserDietPlanService implements IUserDietPlanService {
             return dietPlanMapper.toDTO(copy);
         }
 
-        // ── Anders maak je écht een nieuwe kopie
+        // ── Nieuwe kopie maken
         DietPlan copy = new DietPlan();
         copy.setName(original.getName());
         copy.setTemplate(false);
@@ -181,8 +193,8 @@ public class UserDietPlanService implements IUserDietPlanService {
         copy.setCreatedBy(original.getCreatedBy());
         copy.setAdjustedBy(user);
         copy.setDietDescription(original.getDietDescription());
-        copy.setDiets(new HashSet<>(original.getDiets()));
 
+        // DietDays opbouwen
         List<DietDay> days = original.getDietDays().stream().map(origDay -> {
             DietDay d = new DietDay();
             d.setDayLabel(origDay.getDayLabel());
@@ -190,21 +202,46 @@ public class UserDietPlanService implements IUserDietPlanService {
             d.setDietDayDescription(origDay.getDietDayDescription());
             d.setDiets(new HashSet<>(origDay.getDiets()));
             d.setDiet(copy);
-            // voeg hier meals toe via jouw MealAssignmentUtil:
-            d.setMeals(origDay.getMeals().stream()
+            List<Meal> assignedMeals = origDay.getMeals().stream()
                     .map(m -> mealAssignmentUtil.getOrAddMealToUser(userId, m.getId()))
                     .distinct()
-                    .collect(Collectors.toList()));
-            if (d.getMeals().stream().filter(Objects::nonNull).count() < 2) {
+                    .collect(Collectors.toList());
+            if (assignedMeals.stream().filter(Objects::nonNull).count() < 2) {
                 throw new IllegalArgumentException("Each day must have at least 2 meals.");
             }
+            d.setMeals(assignedMeals);
             return d;
         }).collect(Collectors.toList());
+
+        // 🔥 Hier verzamel je de diets van de meals in alle dagen
+        Set<balancebite.model.meal.references.Diet> allDiets = new HashSet<>();
+        for (DietDay day : days) {
+            for (Meal meal : day.getMeals()) {
+                if (meal != null && meal.getDiets() != null) {
+                    allDiets.addAll(meal.getDiets());
+                }
+            }
+        }
+
+        // 🔁 Diets opslaan in de diet plan kopie
+        copy.setDiets(allDiets);
         copy.setDietDays(days);
 
+        copy.setTotalCalories(original.getTotalCalories());
+        copy.setTotalProtein(original.getTotalProtein());
+        copy.setTotalCarbs(original.getTotalCarbs());
+        copy.setTotalFat(original.getTotalFat());
+
+        copy.setAvgCalories(original.getAvgCalories());
+        copy.setAvgProtein(original.getAvgProtein());
+        copy.setAvgCarbs(original.getAvgCarbs());
+        copy.setAvgFat(original.getAvgFat());
+
+        // ⛳ Opslaan
         DietPlan saved = dietPlanRepository.save(copy);
         user.getSavedDietPlans().add(saved);
         userRepository.save(user);
+
         return dietPlanMapper.toDTO(saved);
     }
 
@@ -217,7 +254,10 @@ public class UserDietPlanService implements IUserDietPlanService {
                 .orElseThrow(() -> new DietPlanNotFoundException("Diet plan not found with ID: " + dietPlanId));
 
         // Controleer of de gebruiker de eigenaar is
-        if (dietPlan.getCreatedBy() == null || !dietPlan.getCreatedBy().getId().equals(adjustedByUserId)) {
+        User user = userRepository.findById(adjustedByUserId)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+
+        if (!user.getSavedDietPlans().contains(dietPlan)) {
             throw new SecurityException("User is not authorized to update this diet plan.");
         }
 
@@ -225,8 +265,7 @@ public class UserDietPlanService implements IUserDietPlanService {
         dietPlanMapper.updateFromInputDTO(dietPlan, input, Optional.of(dietPlan.getCreatedBy()), adjustedBy);
 
         if (input.getDietDays() != null) {
-            dietPlan.getDietDays().clear(); // oude dagen verwijderen i.v.m. orphanRemoval
-
+            // Maak nieuwe dagen aan
             List<DietDay> newDietDays = new ArrayList<>();
             for (int i = 0; i < input.getDietDays().size(); i++) {
                 DietDayInputDTO dayInput = input.getDietDays().get(i);
@@ -247,18 +286,34 @@ public class UserDietPlanService implements IUserDietPlanService {
                 day.setDiets(dietsForDay);
 
                 newDietDays.add(day);
-
             }
 
-            dietPlan.setDietDays(newDietDays);
+            // Verwijder oude en voeg nieuwe toe op hetzelfde object
+            dietPlan.getDietDays().clear();
+            dietPlan.getDietDays().addAll(newDietDays);
 
-            // Verzamel opnieuw alle diets van de dagen
+            // Herbereken alle diets
             Set<balancebite.model.meal.references.Diet> allDiets = new HashSet<>();
             for (DietDay day : newDietDays) {
                 allDiets.addAll(day.getDiets());
             }
             dietPlan.setDiets(allDiets);
         }
+
+        // ✅ Herbereken nutriënten
+        var totalNutrients = NutrientCalculatorUtil.calculateTotalNutrientsForDiet(dietPlan.getDietDays());
+        int dayCount = dietPlan.getDietDays().size();
+        var averages = NutrientCalculatorUtil.calculateAverages(totalNutrients, dayCount);
+
+        dietPlan.setTotalCalories(getValue(totalNutrients, "Energy kcal"));
+        dietPlan.setTotalProtein(getValue(totalNutrients, "Protein g"));
+        dietPlan.setTotalCarbs(getValue(totalNutrients, "Carbohydrates g"));
+        dietPlan.setTotalFat(getValue(totalNutrients, "Total lipid (fat) g"));
+
+        dietPlan.setAvgCalories(round1(averages.getOrDefault("avgCalories", 0.0)));
+        dietPlan.setAvgProtein(round1(averages.getOrDefault("avgProtein", 0.0)));
+        dietPlan.setAvgCarbs(round1(averages.getOrDefault("avgCarbs", 0.0)));
+        dietPlan.setAvgFat(round1(averages.getOrDefault("avgFat", 0.0)));
 
         DietPlan updated = dietPlanRepository.save(dietPlan);
         return dietPlanMapper.toDTO(updated);
@@ -308,58 +363,96 @@ public class UserDietPlanService implements IUserDietPlanService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<DietPlanDTO> getAllDietPlansForUser(
+    public Page<DietPlanDTO> getFilteredDietPlans(
+            List<String> requiredDiets,
+            List<String> excludedDiets,
             Long userId,
-            List<String> diets,
+            String mode,
+            Diet dietFilter,
+            // avg-waarden (zonder “Avg” in de naam)
+            Double minCalories,      Double maxCalories,
+            Double minProtein,       Double maxProtein,
+            Double minCarbs,         Double maxCarbs,
+            Double minFat,           Double maxFat,
             String sortBy,
             String sortOrder,
             Pageable pageable
     ) {
-        log.info("Fetching and filtering diet plans for user ID: {}", userId);
-
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException("User not found with ID: " + userId));
-
-        List<DietPlan> dietPlans = new ArrayList<>(user.getSavedDietPlans());
-
-        // Filter op diets
-        if (diets != null && !diets.isEmpty()) {
-            dietPlans.removeIf(dietPlan ->
-                    dietPlan.getDiets().stream().noneMatch(d -> diets.contains(d.name()))
-            );
-        }
-
-        // Sorteren
-        Comparator<DietPlan> comparator = switch (sortBy != null ? sortBy.toLowerCase() : "") {
-            case "name" -> Comparator.comparing(DietPlan::getName, String.CASE_INSENSITIVE_ORDER);
-            case "days" -> Comparator.comparing(d -> d.getDietDays().size());
-            default -> Comparator.comparing(DietPlan::getName);
+        Specification<DietPlan> spec = switch (mode.toLowerCase()) {
+            case "created" -> DietPlanSpecification.createdBy(userId);
+            case "saved"   -> DietPlanSpecification.savedBy(userId);
+            default        -> DietPlanSpecification.createdOrSavedBy(userId);
         };
 
-        if ("desc".equalsIgnoreCase(sortOrder)) {
-            comparator = comparator.reversed();
+        if (dietFilter != null) {
+            spec = spec.and(DietPlanSpecification.hasDiet(dietFilter));
         }
-        dietPlans.sort(comparator);
+        if (requiredDiets != null && !requiredDiets.isEmpty()) {
+            spec = spec.and(DietPlanSpecification.mustIncludeAllDiets(
+                    requiredDiets.stream().map(Diet::valueOf).collect(Collectors.toSet())
+            ));
+        }
+        if (excludedDiets != null && !excludedDiets.isEmpty()) {
+            spec = spec.and(DietPlanSpecification.mustExcludeAllDiets(
+                    excludedDiets.stream().map(Diet::valueOf).collect(Collectors.toSet())
+            ));
+        }
 
-        // Pagination
-        int pageSize = pageable.getPageSize();
-        int currentPage = pageable.getPageNumber();
-        int startItem = currentPage * pageSize;
-        List<DietPlan> paged = startItem >= dietPlans.size()
-                ? Collections.emptyList()
-                : dietPlans.subList(startItem, Math.min(startItem + pageSize, dietPlans.size()));
+// avg-filters
+        if (minCalories != null && maxCalories != null) {
+            spec = spec.and(DietPlanSpecification.avgCaloriesBetween(minCalories, maxCalories));
+        } else if (minCalories != null) {
+            spec = spec.and((root, query, cb) -> cb.ge(root.get("avgCalories"), minCalories));
+        } else if (maxCalories != null) {
+            spec = spec.and((root, query, cb) -> cb.le(root.get("avgCalories"), maxCalories));
+        }
 
-        return new PageImpl<>(paged.stream().map(dietPlanMapper::toDTO).toList(), pageable, dietPlans.size());
+        if (minProtein != null && maxProtein != null) {
+            spec = spec.and(DietPlanSpecification.avgProteinBetween(minProtein, maxProtein));
+        } else if (minProtein != null) {
+            spec = spec.and((root, query, cb) -> cb.ge(root.get("avgProtein"), minProtein));
+        } else if (maxProtein != null) {
+            spec = spec.and((root, query, cb) -> cb.le(root.get("avgProtein"), maxProtein));
+        }
+
+        if (minCarbs != null && maxCarbs != null) {
+            spec = spec.and(DietPlanSpecification.avgCarbsBetween(minCarbs, maxCarbs));
+        } else if (minCarbs != null) {
+            spec = spec.and((root, query, cb) -> cb.ge(root.get("avgCarbs"), minCarbs));
+        } else if (maxCarbs != null) {
+            spec = spec.and((root, query, cb) -> cb.le(root.get("avgCarbs"), maxCarbs));
+        }
+
+        if (minFat != null && maxFat != null) {
+            spec = spec.and(DietPlanSpecification.avgFatBetween(minFat, maxFat));
+        } else if (minFat != null) {
+            spec = spec.and((root, query, cb) -> cb.ge(root.get("avgFat"), minFat));
+        } else if (maxFat != null) {
+            spec = spec.and((root, query, cb) -> cb.le(root.get("avgFat"), maxFat));
+        }
+
+
+        // Zelfde mapping als in public method
+        Map<String, String> sortFieldMap = Map.of(
+                "avgProtein", "avgProtein",
+                "avgCarbs", "avgCarbs",
+                "avgFat", "avgFat",
+                "totalCalories", "totalCalories",
+                "createdAt", "createdAt",
+                "name", "name"
+        );
+
+        String mappedSortBy = sortFieldMap.getOrDefault(sortBy, "createdAt");
+        Sort.Direction direction = sortOrder.equalsIgnoreCase("asc") ? Sort.Direction.ASC : Sort.Direction.DESC;
+        Pageable sortedPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Sort.by(direction, mappedSortBy));
+
+//        log.info("Hallo!!! DIET FILTERS: minCarbs={}, maxCarbs={}, minProtein={}, maxProtein={}, minFat={}, maxFat={}, minCalories={}, maxCalories={}",
+//             minCarbs, maxCarbs, minProtein, maxProtein,  minFat, maxFat, minCalories, maxCalories
+//        );
+
+        return dietPlanRepository.findAll(spec, sortedPageable)
+                .map(dietPlanMapper::toDTO);
     }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Page<DietPlanDTO> getDietPlansCreatedByUser(Long userId, Pageable pageable) {
-        log.info("Fetching diet plans created by user ID: {}", userId);
-        Page<DietPlan> page = dietPlanRepository.findByCreatedBy_Id(userId, pageable);
-        return page.map(dietPlanMapper::toDTO);
-    }
-
 
 
     @Override
@@ -436,5 +529,12 @@ public class UserDietPlanService implements IUserDietPlanService {
         return days.get(index);
     }
 
+    private double getValue(Map<String, balancebite.dto.NutrientInfoDTO> nutrients, String key) {
+        return nutrients.getOrDefault(key, new balancebite.dto.NutrientInfoDTO(key, 0.0, "", 0L)).getValue();
+    }
+
+    private double round1(double value) {
+        return Math.round(value * 10.0) / 10.0;
+    }
 
 }

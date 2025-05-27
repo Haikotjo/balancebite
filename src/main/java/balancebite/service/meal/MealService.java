@@ -10,6 +10,7 @@ import balancebite.model.meal.Meal;
 import balancebite.repository.FoodItemRepository;
 import balancebite.repository.MealRepository;
 import balancebite.repository.UserRepository;
+import balancebite.service.diet.PublicDietPlanService;
 import balancebite.service.interfaces.meal.IMealService;
 import balancebite.utils.NutrientCalculatorUtil;
 import balancebite.utils.CheckForDuplicateTemplateMealUtil;
@@ -32,7 +33,7 @@ import java.util.stream.Collectors;
 @Service
 public class MealService implements IMealService {
 
-    private static final Logger log = LoggerFactory.getLogger(MealService.class);
+    private static final Logger log = LoggerFactory.getLogger(PublicDietPlanService.class);
 
     private final MealRepository mealRepository;
     private final FoodItemRepository foodItemRepository;

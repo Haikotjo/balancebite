@@ -3,6 +3,7 @@ package balancebite.service.interfaces.diet;
 import balancebite.dto.diet.DietPlanDTO;
 import balancebite.dto.diet.DietPlanInputDTO;
 import balancebite.dto.user.UserDTO;
+import balancebite.model.meal.references.Diet;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -12,21 +13,31 @@ public interface IUserDietPlanService {
 
     DietPlanDTO createDietPlan(DietPlanInputDTO input, Long userId);
 
+    DietPlanDTO updateDietPlan(Long dietPlanId, DietPlanInputDTO input, Long adjustedByUserId);
+
     DietPlanDTO getDietPlanById(Long dietId, Long userId);
 
-    Page<DietPlanDTO> getAllDietPlansForUser(
+    Page<DietPlanDTO> getFilteredDietPlans(
+            List<String> requiredDiets,
+            List<String> excludedDiets,
             Long userId,
-            List<String> diets,
+            String mode,
+            Diet dietFilter,
+            Double minCalories,
+            Double maxCalories,
+            Double minProtein,
+            Double maxProtein,
+            Double minCarbs,
+            Double maxCarbs,
+            Double minFat,
+            Double maxFat,
             String sortBy,
             String sortOrder,
             Pageable pageable
     );
 
-    Page<DietPlanDTO> getDietPlansCreatedByUser(Long userId, Pageable pageable);
 
     DietPlanDTO removeDietDay(Long userId, Long dietPlanId, int dayIndex);
-
-    DietPlanDTO updateDietPlan(Long dietPlanId, DietPlanInputDTO input, Long adjustedByUserId);
 
     DietPlanDTO addMealToDietDay(Long userId, Long dietPlanId, int dayIndex, Long mealId);
 
