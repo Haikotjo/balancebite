@@ -74,4 +74,7 @@ public interface IUserMealService {
      * @throws MealNotFoundException If the meal with the specified ID is not associated with the user's meal list.
      */
     UserDTO removeMealFromUser(Long userId, Long mealId);
+
+    void forceRemoveMealFromUser(Long userId, Long mealId);
+
 }

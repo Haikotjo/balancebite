@@ -15,4 +15,5 @@ public interface DietDayRepository extends JpaRepository<DietDay, Long> {
 
     @Query("SELECT dd FROM DietDay dd JOIN FETCH dd.diet WHERE :meal MEMBER OF dd.meals")
     List<DietDay> findByMealsContainingWithDietFetched(@Param("meal") Meal meal);
+
 }

@@ -143,6 +143,10 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.DELETE, "/users/diet-plans/**").authenticated()
                         .requestMatchers(HttpMethod.PUT, "/users/update-diet-plans/**").authenticated()
 
+
+                        // admin-only endpoints
+                        .requestMatchers("/admin/dietplans/**").hasRole("ADMIN")
+
                         .anyRequest().authenticated()
                 )
                 .exceptionHandling(exception -> exception.authenticationEntryPoint(customAuthenticationEntryPoint))

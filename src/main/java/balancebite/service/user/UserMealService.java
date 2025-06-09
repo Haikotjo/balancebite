@@ -609,4 +609,29 @@ public class UserMealService implements IUserMealService {
         return userMapper.toDTO(user);
     }
 
+    @Override
+    @Transactional
+    public void forceRemoveMealFromUser(Long userId, Long mealId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+
+        Meal meal = user.getMeals().stream()
+                .filter(m -> m.getId().equals(mealId))
+                .findFirst()
+                .orElseThrow(() -> new MealNotFoundException("Meal not found in user's list"));
+
+        // ✅ Verwijder uit alle dietDay.meals
+        List<DietDay> daysWithMeal = dietDayRepository.findByMealsContainingWithDietFetched(meal);
+        for (DietDay day : daysWithMeal) {
+            day.getMeals().remove(meal);
+        }
+
+        user.getMeals().remove(meal);
+        mealRepository.delete(meal); // ✅ nu veilig
+
+        userRepository.save(user);
+    }
+
+
+
 }

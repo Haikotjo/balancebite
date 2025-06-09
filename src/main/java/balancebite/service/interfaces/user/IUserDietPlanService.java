@@ -1,4 +1,4 @@
-package balancebite.service.interfaces.diet;
+package balancebite.service.interfaces.user;
 
 import balancebite.dto.diet.DietPlanDTO;
 import balancebite.dto.diet.DietPlanInputDTO;
@@ -8,6 +8,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import java.util.List;
+import java.util.Map;
 
 public interface IUserDietPlanService {
 
@@ -46,4 +47,6 @@ public interface IUserDietPlanService {
     UserDTO removeDietPlanFromUser(Long userId, Long dietPlanId);
 
     DietPlanDTO addDietPlanToUser(Long userId, Long dietPlanId);
+
+    List<Map<String, Object>> getShoppingListForDietPlan(Long dietPlanId, Long userId);
 }

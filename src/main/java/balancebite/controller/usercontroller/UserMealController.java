@@ -370,6 +370,28 @@ public class UserMealController {
         }
     }
 
+    @DeleteMapping("/meal/{mealId}/force")
+    public ResponseEntity<?> forceRemoveMealFromUser(
+            @PathVariable Long mealId,
+            @RequestHeader("Authorization") String authorizationHeader) {
+        try {
+            log.info("Force-removal requested for meal ID {} from authenticated user", mealId);
+
+            String token = authorizationHeader.substring(7);
+            Long userId = jwtService.extractUserId(token);
+
+            userMealService.forceRemoveMealFromUser(userId, mealId);
+
+            log.info("Force removal successful for meal ID {} and user ID {}", mealId, userId);
+            return ResponseEntity.noContent().build();
+
+        } catch (UserNotFoundException | MealNotFoundException e) {
+            log.warn("Force-removal error: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+        }
+    }
+
+
     /**
      * Processes the consumption of a meal by the authenticated user.
      *

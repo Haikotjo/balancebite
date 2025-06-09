@@ -4,24 +4,25 @@ import balancebite.dto.diet.DietDayInputDTO;
 import balancebite.dto.diet.DietPlanDTO;
 import balancebite.dto.diet.DietPlanInputDTO;
 import balancebite.errorHandling.DietPlanNotFoundException;
-import balancebite.errorHandling.DuplicateDietPlanException;
 import balancebite.errorHandling.UserNotFoundException;
 import balancebite.mapper.DietDayMapper;
 import balancebite.mapper.DietPlanMapper;
 import balancebite.model.diet.DietDay;
 import balancebite.model.diet.DietPlan;
+import balancebite.model.foodItem.FoodItem;
 import balancebite.model.meal.Meal;
 import balancebite.model.meal.references.Diet;
 import balancebite.model.user.User;
 import balancebite.repository.DietPlanRepository;
 import balancebite.repository.MealRepository;
 import balancebite.repository.UserRepository;
-import balancebite.service.interfaces.diet.IUserDietPlanService;
+import balancebite.service.interfaces.user.IUserDietPlanService;
 import balancebite.dto.user.UserDTO;
 import balancebite.mapper.UserMapper;
 import balancebite.specification.DietPlanSpecification;
 import balancebite.utils.MealAssignmentUtil;
 import balancebite.utils.NutrientCalculatorUtil;
+import balancebite.utils.ShoppingCartCalculator;
 import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.transaction.annotation.Transactional;
@@ -360,6 +361,32 @@ public class UserDietPlanService implements IUserDietPlanService {
 
         return dietPlanMapper.toDTO(dietPlan);
     }
+
+    @Override
+    public List<Map<String, Object>> getShoppingListForDietPlan(Long dietPlanId, Long userId) {
+        DietPlan dietPlan = dietPlanRepository.findById(dietPlanId)
+                .orElseThrow(() -> new DietPlanNotFoundException("DietPlan not found with ID: " + dietPlanId));
+
+        boolean isOwner = (dietPlan.getCreatedBy() != null && dietPlan.getCreatedBy().getId().equals(userId)) ||
+                (dietPlan.getAdjustedBy() != null && dietPlan.getAdjustedBy().getId().equals(userId));
+
+        if (!isOwner) {
+            throw new SecurityException("You are not authorized to view this diet.");
+        }
+
+        Map<FoodItem, Double> shoppingMap = ShoppingCartCalculator.calculateShoppingList(dietPlan);
+
+        return shoppingMap.entrySet().stream()
+                .map(entry -> {
+                    Map<String, Object> item = new HashMap<>();
+                    item.put("name", entry.getKey().getName());
+                    item.put("quantity", entry.getValue());
+                    item.put("source", entry.getKey().getSource());
+                    return item;
+                })
+                .toList();
+    }
+
 
     @Override
     @Transactional(readOnly = true)

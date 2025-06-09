@@ -2,14 +2,12 @@ package balancebite.controller.usercontroller;
 
 import balancebite.dto.diet.DietPlanDTO;
 import balancebite.dto.diet.DietPlanInputDTO;
-import balancebite.dto.user.UserDTO;
 import balancebite.errorHandling.DietPlanNotFoundException;
 import balancebite.errorHandling.DuplicateDietPlanException;
-import balancebite.errorHandling.MealNotFoundException;
 import balancebite.errorHandling.UserNotFoundException;
 import balancebite.model.meal.references.Diet;
 import balancebite.security.JwtService;
-import balancebite.service.interfaces.diet.IUserDietPlanService;
+import balancebite.service.interfaces.user.IUserDietPlanService;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -140,6 +138,24 @@ public class UserDietPlanController {
         } catch (Exception e) {
             log.error("Failed to fetch diet plan", e);
             return ResponseEntity.status(500).body(Map.of("error", "Failed to retrieve diet plan"));
+        }
+    }
+
+    @GetMapping("/diet-plans/{dietPlanId}/shopping-cart")
+    public ResponseEntity<?> getShoppingCart(@PathVariable Long dietPlanId,
+                                             @RequestHeader("Authorization") String authHeader) {
+        try {
+            Long userId = jwtService.extractUserId(authHeader.substring(7));
+            List<Map<String, Object>> shoppingList = userDietPlanService.getShoppingListForDietPlan(dietPlanId, userId);
+            return ResponseEntity.ok(shoppingList);
+        } catch (DietPlanNotFoundException e) {
+            log.warn("Diet plan not found: {}", e.getMessage());
+            return ResponseEntity.status(404).body(Map.of("error", e.getMessage()));
+        } catch (SecurityException e) {
+            return ResponseEntity.status(403).body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            log.error("Failed to fetch shopping cart", e);
+            return ResponseEntity.status(500).body(Map.of("error", "Failed to retrieve shopping cart"));
         }
     }
 
