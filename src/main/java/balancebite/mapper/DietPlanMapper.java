@@ -4,9 +4,9 @@ import balancebite.dto.diet.DietDayDTO;
 import balancebite.dto.diet.DietPlanDTO;
 import balancebite.dto.diet.DietPlanInputDTO;
 import balancebite.dto.user.PublicUserDTO;
-import balancebite.dto.user.UserDTO;
 import balancebite.model.diet.DietPlan;
 import balancebite.model.user.User;
+import balancebite.repository.SavedDietPlanRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -22,15 +22,14 @@ public class DietPlanMapper {
 
     private final DietDayMapper dietDayMapper;
     private final UserMapper userMapper;
+    private final SavedDietPlanRepository savedDietPlanRepository;
 
-    public DietPlanMapper(DietDayMapper dietDayMapper, UserMapper userMapper) {
+    public DietPlanMapper(DietDayMapper dietDayMapper, UserMapper userMapper, SavedDietPlanRepository savedDietPlanRepository) {
         this.dietDayMapper = dietDayMapper;
         this.userMapper = userMapper;
+        this.savedDietPlanRepository = savedDietPlanRepository;
     }
 
-    /**
-     * Converts a DietPlan entity to a DietPlanDTO.
-     */
     public DietPlanDTO toDTO(DietPlan dietPlan) {
         if (dietPlan == null) {
             log.warn("Received null DietPlan entity, returning null for DietPlanDTO.");
@@ -48,6 +47,14 @@ public class DietPlanMapper {
         PublicUserDTO adjustedByDTO = dietPlan.getAdjustedBy() != null
                 ? new PublicUserDTO(dietPlan.getAdjustedBy().getId(), dietPlan.getAdjustedBy().getUserName())
                 : null;
+
+        long saveCount = savedDietPlanRepository.countByDietPlan(dietPlan);
+
+        LocalDateTime oneWeekAgo = LocalDateTime.now().minusWeeks(1);
+        LocalDateTime oneMonthAgo = LocalDateTime.now().minusMonths(1);
+
+        long weeklySaveCount = savedDietPlanRepository.countByDietPlanAndTimestampAfter(dietPlan, oneWeekAgo);
+        long monthlySaveCount = savedDietPlanRepository.countByDietPlanAndTimestampAfter(dietPlan, oneMonthAgo);
 
         return new DietPlanDTO(
                 dietPlan.getId(),
@@ -68,14 +75,13 @@ public class DietPlanMapper {
                 dietPlan.getAvgProtein(),
                 dietPlan.getAvgCarbs(),
                 dietPlan.getAvgFat(),
-                dietPlan.getAvgCalories()
+                dietPlan.getAvgCalories(),
+                saveCount,
+                weeklySaveCount,
+                monthlySaveCount
         );
-
     }
 
-    /**
-     * Converts a DietPlanInputDTO to a new DietPlan entity.
-     */
     public DietPlan toEntity(DietPlanInputDTO input, Optional<User> createdBy, Optional<User> adjustedBy) {
         if (input == null) {
             log.warn("Received null DietPlanInputDTO, returning null for DietPlan entity.");
@@ -96,9 +102,6 @@ public class DietPlanMapper {
         return dietPlan;
     }
 
-    /**
-     * Updates an existing DietPlan entity from DietPlanInputDTO.
-     */
     public void updateFromInputDTO(DietPlan dietPlan, DietPlanInputDTO input, Optional<User> createdBy, Optional<User> adjustedBy) {
         if (dietPlan == null || input == null) {
             log.warn("Cannot update DietPlan: entity or input is null.");

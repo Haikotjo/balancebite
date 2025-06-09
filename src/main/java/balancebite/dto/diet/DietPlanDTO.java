@@ -1,7 +1,6 @@
 package balancebite.dto.diet;
 
 import balancebite.dto.user.PublicUserDTO;
-import balancebite.dto.user.UserDTO;
 import balancebite.model.meal.references.Diet;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -30,7 +29,9 @@ public class DietPlanDTO {
     private final Double avgCarbs;
     private final Double avgFat;
     private final Double avgCalories;
-
+    private final long saveCount;
+    private final long weeklySaveCount;
+    private final long monthlySaveCount;
 
     public DietPlanDTO(Long id,
                        String name,
@@ -50,7 +51,10 @@ public class DietPlanDTO {
                        Double avgProtein,
                        Double avgCarbs,
                        Double avgFat,
-                       Double avgCalories) {
+                       Double avgCalories,
+                       long saveCount,
+                       long weeklySaveCount,
+                       long monthlySaveCount) {
         this.id = id;
         this.name = name;
         this.originalDietId = originalDietId;
@@ -70,10 +74,11 @@ public class DietPlanDTO {
         this.avgCarbs = avgCarbs;
         this.avgFat = avgFat;
         this.avgCalories = avgCalories;
+        this.saveCount = saveCount;
+        this.weeklySaveCount = weeklySaveCount;
+        this.monthlySaveCount = monthlySaveCount;
     }
 
-
-    // Getters
     public Long getId() {
         return id;
     }
@@ -109,6 +114,7 @@ public class DietPlanDTO {
     public List<DietDayDTO> getDietDays() {
         return dietDays;
     }
+
     public String getDietDescription() {
         return dietDescription;
     }
@@ -147,5 +153,17 @@ public class DietPlanDTO {
 
     public Double getAvgCalories() {
         return avgCalories;
+    }
+
+    public long getSaveCount() {
+        return saveCount;
+    }
+
+    public long getWeeklySaveCount() {
+        return weeklySaveCount;
+    }
+
+    public long getMonthlySaveCount() {
+        return monthlySaveCount;
     }
 }

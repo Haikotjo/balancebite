@@ -9,12 +9,14 @@ import balancebite.mapper.DietDayMapper;
 import balancebite.mapper.DietPlanMapper;
 import balancebite.model.diet.DietDay;
 import balancebite.model.diet.DietPlan;
+import balancebite.model.diet.SavedDietPlan;
 import balancebite.model.foodItem.FoodItem;
 import balancebite.model.meal.Meal;
 import balancebite.model.meal.references.Diet;
 import balancebite.model.user.User;
 import balancebite.repository.DietPlanRepository;
 import balancebite.repository.MealRepository;
+import balancebite.repository.SavedDietPlanRepository;
 import balancebite.repository.UserRepository;
 import balancebite.service.interfaces.user.IUserDietPlanService;
 import balancebite.dto.user.UserDTO;
@@ -47,6 +49,8 @@ public class UserDietPlanService implements IUserDietPlanService {
     private final UserMapper userMapper;
     private final UserMealService userMealService;
     private final MealAssignmentUtil mealAssignmentUtil;
+    private final SavedDietPlanRepository savedDietPlanRepository;
+
 
     public UserDietPlanService(DietPlanRepository dietPlanRepository,
                                UserRepository userRepository,
@@ -55,7 +59,8 @@ public class UserDietPlanService implements IUserDietPlanService {
                                DietDayMapper dietDayMapper,
                                UserMapper userMapper,
                                UserMealService userMealService,
-                               MealAssignmentUtil mealAssignmentUtil) {
+                               MealAssignmentUtil mealAssignmentUtil,
+                               SavedDietPlanRepository savedDietPlanRepository) {
         this.dietPlanRepository = dietPlanRepository;
         this.userRepository = userRepository;
         this.mealRepository = mealRepository;
@@ -64,6 +69,7 @@ public class UserDietPlanService implements IUserDietPlanService {
         this.userMapper = userMapper;
         this.userMealService = userMealService;
         this.mealAssignmentUtil = mealAssignmentUtil;
+        this.savedDietPlanRepository = savedDietPlanRepository;
     }
 
     @Override
@@ -167,6 +173,11 @@ public class UserDietPlanService implements IUserDietPlanService {
             if (!user.getSavedDietPlans().contains(original)) {
                 user.getSavedDietPlans().add(original);
                 userRepository.save(user);
+
+                // ⏱️ Registreer save van het originele plan
+                SavedDietPlan savedRecord = new SavedDietPlan();
+                savedRecord.setDietPlan(original);
+                savedDietPlanRepository.save(savedRecord);
             }
             return dietPlanMapper.toDTO(original);
         }
@@ -182,6 +193,11 @@ public class UserDietPlanService implements IUserDietPlanService {
             if (!user.getSavedDietPlans().contains(copy)) {
                 user.getSavedDietPlans().add(copy);
                 userRepository.save(user);
+
+                // ⏱️ Registreer save van het originele plan
+                SavedDietPlan savedRecord = new SavedDietPlan();
+                savedRecord.setDietPlan(original);
+                savedDietPlanRepository.save(savedRecord);
             }
             return dietPlanMapper.toDTO(copy);
         }
@@ -195,7 +211,6 @@ public class UserDietPlanService implements IUserDietPlanService {
         copy.setAdjustedBy(user);
         copy.setDietDescription(original.getDietDescription());
 
-        // DietDays opbouwen
         List<DietDay> days = original.getDietDays().stream().map(origDay -> {
             DietDay d = new DietDay();
             d.setDayLabel(origDay.getDayLabel());
@@ -214,7 +229,6 @@ public class UserDietPlanService implements IUserDietPlanService {
             return d;
         }).collect(Collectors.toList());
 
-        // 🔥 Hier verzamel je de diets van de meals in alle dagen
         Set<balancebite.model.meal.references.Diet> allDiets = new HashSet<>();
         for (DietDay day : days) {
             for (Meal meal : day.getMeals()) {
@@ -224,7 +238,6 @@ public class UserDietPlanService implements IUserDietPlanService {
             }
         }
 
-        // 🔁 Diets opslaan in de diet plan kopie
         copy.setDiets(allDiets);
         copy.setDietDays(days);
 
@@ -238,13 +251,18 @@ public class UserDietPlanService implements IUserDietPlanService {
         copy.setAvgCarbs(original.getAvgCarbs());
         copy.setAvgFat(original.getAvgFat());
 
-        // ⛳ Opslaan
         DietPlan saved = dietPlanRepository.save(copy);
         user.getSavedDietPlans().add(saved);
         userRepository.save(user);
 
+        // ⏱️ Registreer save van het originele plan
+        SavedDietPlan savedRecord = new SavedDietPlan();
+        savedRecord.setDietPlan(original);
+        savedDietPlanRepository.save(savedRecord);
+
         return dietPlanMapper.toDTO(saved);
     }
+
 
     @Override
     @Transactional
@@ -481,7 +499,6 @@ public class UserDietPlanService implements IUserDietPlanService {
                 .map(dietPlanMapper::toDTO);
     }
 
-
     @Override
     @Transactional
     public DietPlanDTO removeDietDay(Long userId, Long dietPlanId, int dayIndex) {
@@ -520,6 +537,12 @@ public class UserDietPlanService implements IUserDietPlanService {
         } else if (!isCreator) {
             log.info("User is not the creator and diet is not a template. Deleting the copied diet.");
             user.getSavedDietPlans().removeIf(d -> d.getId().equals(dietPlanId));
+
+            // Trek 1 save af van het originele dieet
+            if (diet.getOriginalDietId() != null) {
+                savedDietPlanRepository.deleteLatestByDietPlanId(diet.getOriginalDietId());
+            }
+
             dietPlanRepository.delete(diet);
         } else {
             log.info("User is the creator. Unlinking and deleting the diet plan.");
@@ -530,6 +553,7 @@ public class UserDietPlanService implements IUserDietPlanService {
         userRepository.save(user);
         return userMapper.toDTO(user);
     }
+
 
 // =============================
 // 🔽 Private helper methods 🔽
