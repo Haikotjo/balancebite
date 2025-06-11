@@ -127,6 +127,9 @@ public class MealDTO {
      */
     private final String preparationTime;
 
+    private final long saveCount;
+    private final long weeklySaveCount;
+    private final long monthlySaveCount;
 
     /**
      * Constructor for creating a MealDTO with essential meal information.
@@ -155,7 +158,7 @@ public class MealDTO {
     public MealDTO(Long id, String name, String mealDescription, String image, String imageUrl, Long originalMealId,
                    LocalDateTime version, List<MealIngredientDTO> mealIngredients, int userCount, UserDTO createdBy,
                    UserDTO adjustedBy,Boolean isTemplate ,  Set<MealType> mealTypes, Set<Cuisine> cuisines, Set<Diet> diets, double totalCalories, double totalProtein, double totalCarbs,
-                   double totalFat, String foodItemsString, String preparationTime) {
+                   double totalFat, String foodItemsString, String preparationTime, long saveCount, long weeklySaveCount, long monthlySaveCount) {
         this.id = id;
         this.name = name;
         this.mealDescription = mealDescription;
@@ -177,6 +180,9 @@ public class MealDTO {
         this.totalFat = totalFat;
         this.foodItemsString = foodItemsString;
         this.preparationTime = preparationTime;
+        this.saveCount = saveCount;
+        this.weeklySaveCount = weeklySaveCount;
+        this.monthlySaveCount = monthlySaveCount;
     }
 
 
@@ -361,4 +367,15 @@ public class MealDTO {
         return preparationTime;
     }
 
+    public long getSaveCount() {
+        return saveCount;
+    }
+
+    public long getWeeklySaveCount() {
+        return weeklySaveCount;
+    }
+
+    public long getMonthlySaveCount() {
+        return monthlySaveCount;
+    }
 }

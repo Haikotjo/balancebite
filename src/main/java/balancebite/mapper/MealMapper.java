@@ -11,11 +11,15 @@ import balancebite.model.meal.Meal;
 import balancebite.model.MealIngredient;
 import balancebite.model.user.User;
 import balancebite.repository.FoodItemRepository;
+import balancebite.repository.SavedDietPlanRepository;
+import balancebite.repository.SavedMealRepository;
+import balancebite.repository.UserRepository;
 import balancebite.service.FileStorageService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -32,11 +36,13 @@ public class MealMapper {
     private final FoodItemRepository foodItemRepository;
     private final MealIngredientMapper mealIngredientMapper;
     private final FileStorageService fileStorageService;
+    private final SavedMealRepository savedMealRepository;
 
-    public MealMapper(FoodItemRepository foodItemRepository, MealIngredientMapper mealIngredientMapper, FileStorageService fileStorageService) {
+    public MealMapper(FoodItemRepository foodItemRepository, MealIngredientMapper mealIngredientMapper, FileStorageService fileStorageService, SavedMealRepository savedMealRepository) {
         this.foodItemRepository = foodItemRepository;
         this.mealIngredientMapper = mealIngredientMapper;
         this.fileStorageService = fileStorageService;
+        this.savedMealRepository = savedMealRepository;
     }
 
     /**
@@ -53,12 +59,20 @@ public class MealMapper {
             return null;
         }
 
+        long saveCount = savedMealRepository.countByMeal(meal);
+
+        LocalDateTime oneWeekAgo = LocalDateTime.now().minusWeeks(1);
+        LocalDateTime oneMonthAgo = LocalDateTime.now().minusMonths(1);
+
+        long weeklySaveCount = savedMealRepository.countByMealAndTimestampAfter(meal, oneWeekAgo);
+        long monthlySaveCount = savedMealRepository.countByMealAndTimestampAfter(meal, oneMonthAgo);
+
         MealDTO dto = new MealDTO(
                 meal.getId(),
                 meal.getName(),
                 meal.getMealDescription(),
-                meal.getImage(), // Base64 image
-                meal.getImageUrl(), // Image URL
+                meal.getImage(),
+                meal.getImageUrl(),
                 meal.getOriginalMealId(),
                 meal.getVersion(),
                 meal.getMealIngredients().stream()
@@ -76,13 +90,16 @@ public class MealMapper {
                 meal.getTotalCarbs(),
                 meal.getTotalFat(),
                 meal.getFoodItemsString(),
-                meal.getPreparationTime() != null ? meal.getPreparationTime().toString() : null
+                meal.getPreparationTime() != null ? meal.getPreparationTime().toString() : null,
+                saveCount,
+                weeklySaveCount,
+                monthlySaveCount
         );
-        log.debug("Finished converting Meal entity to MealDTO: {}", dto);
-        log.info("Meal {} preparationTime: {}", meal.getId(), meal.getPreparationTime());
 
+        log.debug("Finished converting Meal entity to MealDTO: {}", dto);
         return dto;
     }
+
 
     /**
      * Converts a MealInputDTO to a Meal entity.

@@ -1,35 +1,35 @@
-package balancebite.model.diet;
+package balancebite.model.meal;
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "saved_diet_plan")
-public class SavedDietPlan {
+@Table(name = "saved_meal")
+public class SavedMeal {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne(optional = false)
-    private DietPlan dietPlan;
+    private Meal meal;
 
     @CreationTimestamp
     private LocalDateTime timestamp;
 
-    public SavedDietPlan() {}
+    public SavedMeal() {}
 
     public Long getId() {
         return id;
     }
 
-    public DietPlan getDietPlan() {
-        return dietPlan;
+    public Meal getMeal() {
+        return meal;
     }
 
-    public void setDietPlan(DietPlan dietPlan) {
-        this.dietPlan = dietPlan;
+    public void setMeal(Meal meal) {
+        this.meal = meal;
     }
 
     public LocalDateTime getTimestamp() {

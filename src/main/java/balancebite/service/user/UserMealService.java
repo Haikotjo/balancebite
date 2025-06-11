@@ -10,11 +10,9 @@ import balancebite.mapper.UserMapper;
 import balancebite.model.diet.DietDay;
 import balancebite.model.meal.Meal;
 import balancebite.model.MealIngredient;
+import balancebite.model.meal.SavedMeal;
 import balancebite.model.user.User;
-import balancebite.repository.DietDayRepository;
-import balancebite.repository.MealIngredientRepository;
-import balancebite.repository.MealRepository;
-import balancebite.repository.UserRepository;
+import balancebite.repository.*;
 import balancebite.security.JwtService;
 import balancebite.service.FileStorageService;
 import balancebite.service.interfaces.user.IUserMealService;
@@ -46,19 +44,26 @@ public class UserMealService implements IUserMealService {
 
     private final UserRepository userRepository;
     private final MealRepository mealRepository;
-
     private final DietDayRepository dietDayRepository;
     private final UserMapper userMapper;
     private final MealMapper mealMapper;
     private final MealIngredientMapper mealIngredientMapper;
     private final CheckForDuplicateTemplateMealUtil checkForDuplicateTemplateMeal;
     private final UserUpdateHelper userUpdateHelper;
-    private final JwtService jwtService;
     private final FileStorageService fileStorageService;
 
-    public UserMealService(UserRepository userRepository, MealRepository mealRepository, DietDayRepository dietDayRepository, UserMapper userMapper,
-                           MealMapper mealMapper, MealIngredientMapper mealIngredientMapper,
-                           CheckForDuplicateTemplateMealUtil checkForDuplicateTemplateMeal, UserUpdateHelper userUpdateHelper, JwtService jwtService, FileStorageService fileStorageService) {
+    private final SavedMealRepository savedMealRepository;
+
+    public UserMealService(UserRepository userRepository,
+                           MealRepository mealRepository,
+                           DietDayRepository dietDayRepository,
+                           UserMapper userMapper,
+                           MealMapper mealMapper,
+                           MealIngredientMapper mealIngredientMapper,
+                           CheckForDuplicateTemplateMealUtil checkForDuplicateTemplateMeal,
+                           UserUpdateHelper userUpdateHelper,
+                           FileStorageService fileStorageService,
+                           SavedMealRepository savedMealRepository) {
         this.userRepository = userRepository;
         this.mealRepository = mealRepository;
         this.dietDayRepository = dietDayRepository;
@@ -67,8 +72,8 @@ public class UserMealService implements IUserMealService {
         this.mealIngredientMapper = mealIngredientMapper;
         this.checkForDuplicateTemplateMeal = checkForDuplicateTemplateMeal;
         this.userUpdateHelper = userUpdateHelper;
-        this.jwtService = jwtService;
         this.fileStorageService = fileStorageService;
+        this.savedMealRepository = savedMealRepository;
     }
 
     /**
@@ -143,13 +148,13 @@ public class UserMealService implements IUserMealService {
 
         // Save meal and user
         Meal savedMeal = mealRepository.save(meal);
+        user.getSavedMeals().add(savedMeal);
         userRepository.save(user);
         log.info("Successfully created meal for user ID: {}", userId);
 
         // Return the saved meal as a DTO
         return mealMapper.toDTO(savedMeal);
     }
-
 
     /**
      * Adds an existing meal to a user's list of meals.
@@ -249,6 +254,10 @@ public class UserMealService implements IUserMealService {
         // Link the copied meal to the user and save changes
         user.getMeals().add(mealCopy);
         userRepository.save(user);
+
+        SavedMeal savedRecord = new SavedMeal();
+        savedRecord.setMeal(originalMeal);
+        savedMealRepository.save(savedRecord);
 
         log.info("Successfully created and linked a meal copy with ID: {} for user ID: {}", mealCopy.getId(), userId);
 
@@ -598,6 +607,10 @@ public class UserMealService implements IUserMealService {
             log.info("Meal ID {} is NOT a template, deleting it permanently.", mealId);
             user.getMeals().remove(meal);
             mealRepository.delete(meal);
+
+            if (meal.getOriginalMealId() != null) {
+                savedMealRepository.deleteLatestByMealId(meal.getOriginalMealId());
+            }
         } else {
             log.info("Meal ID {} is a template, unlinking from user.", mealId);
             user.getMeals().remove(meal);
@@ -627,7 +640,11 @@ public class UserMealService implements IUserMealService {
         }
 
         user.getMeals().remove(meal);
-        mealRepository.delete(meal); // ✅ nu veilig
+        mealRepository.delete(meal);
+
+        if (meal.getOriginalMealId() != null) {
+            savedMealRepository.deleteLatestByMealId(meal.getOriginalMealId());
+        }
 
         userRepository.save(user);
     }

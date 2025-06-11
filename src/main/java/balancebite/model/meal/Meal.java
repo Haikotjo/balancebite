@@ -180,6 +180,8 @@ public class Meal {
     @Column(name = "preparation_time")
     private Duration preparationTime;
 
+    @ManyToMany(mappedBy = "savedMeals")
+    private Set<User> users = new HashSet<>();
 
     /**
      * No-argument constructor required by JPA.

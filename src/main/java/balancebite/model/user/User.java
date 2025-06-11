@@ -82,6 +82,14 @@ public class User {
     )
     private Set<DietPlan> savedDietPlans = new HashSet<>();
 
+    @ManyToMany
+    @JoinTable(
+            name = "user_saved_meals",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "meal_id")
+    )
+    private Set<Meal> savedMeals = new HashSet<>();
+
 
     public User() {}
 
@@ -216,4 +224,11 @@ public class User {
         this.savedDietPlans = savedDietPlans != null ? savedDietPlans : new HashSet<>();
     }
 
+    public Set<Meal> getSavedMeals() {
+        return savedMeals;
+    }
+
+    public void setSavedMeals(Set<Meal> savedMeals) {
+        this.savedMeals = savedMeals;
+    }
 }
