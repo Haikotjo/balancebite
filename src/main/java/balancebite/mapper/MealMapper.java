@@ -78,7 +78,6 @@ public class MealMapper {
                 meal.getMealIngredients().stream()
                         .map(this::toMealIngredientDTO)
                         .collect(Collectors.toList()),
-                meal.getUserCount(),
                 meal.getCreatedBy() != null ? toUserDTO(meal.getCreatedBy()) : null,
                 meal.getAdjustedBy() != null ? toUserDTO(meal.getAdjustedBy()) : null,
                 meal.isTemplate(),

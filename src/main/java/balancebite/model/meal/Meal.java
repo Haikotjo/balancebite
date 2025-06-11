@@ -80,14 +80,6 @@ public class Meal {
     private List<MealIngredient> mealIngredients = new ArrayList<>();
 
     /**
-     * Count of users who have added this meal.
-     * This field tracks how many unique users have added this meal.
-     * Increments each time a user adds the meal and decrements if they remove it.
-     */
-    @Column(name = "user_count", nullable = false)
-    private int userCount = 0;
-
-    /**
      * The user who created this meal.
      */
     @ManyToOne(fetch = FetchType.LAZY)
@@ -407,32 +399,6 @@ public class Meal {
     public void addMealIngredients(List<MealIngredient> mealIngredients) {
         for (MealIngredient mealIngredient : mealIngredients) {
             addMealIngredient(mealIngredient);
-        }
-    }
-
-    /**
-     * Gets the user count for the meal.
-     *
-     * @return the count of users who have added this meal.
-     */
-    public int getUserCount() {
-        return userCount;
-    }
-
-    /**
-     * Increments the user count for this meal by 1, tracking users who add this meal.
-     */
-    public void incrementUserCount() {
-        this.userCount++;
-    }
-
-    /**
-     * Decrements the user count for this meal by 1, ensuring it does not go below 0.
-     * This is used to track users removing the meal.
-     */
-    public void decrementUserCount() {
-        if (this.userCount > 0) {
-            this.userCount--;
         }
     }
 

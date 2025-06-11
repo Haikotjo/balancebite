@@ -59,11 +59,6 @@ public class MealDTO {
     private final List<MealIngredientDTO> mealIngredients;
 
     /**
-     * Count of users who have added this meal.
-     */
-    private final int userCount;
-
-    /**
      * The user who originally created the meal.
      */
     private final UserDTO createdBy;
@@ -142,7 +137,6 @@ public class MealDTO {
      * @param originalMealId
      * @param version          the version timestamp of the meal, used to track updates.
      * @param mealIngredients  the list of ingredients in the meal.
-     * @param userCount        the count of users who have added the meal.
      * @param createdBy        the user who originally created the meal.
      * @param adjustedBy       the user who adjusted the meal (if applicable).
      * @param isTemplate
@@ -156,7 +150,7 @@ public class MealDTO {
      * @param foodItemsString  the concatenated string of food items in the meal.
      */
     public MealDTO(Long id, String name, String mealDescription, String image, String imageUrl, Long originalMealId,
-                   LocalDateTime version, List<MealIngredientDTO> mealIngredients, int userCount, UserDTO createdBy,
+                   LocalDateTime version, List<MealIngredientDTO> mealIngredients, UserDTO createdBy,
                    UserDTO adjustedBy,Boolean isTemplate ,  Set<MealType> mealTypes, Set<Cuisine> cuisines, Set<Diet> diets, double totalCalories, double totalProtein, double totalCarbs,
                    double totalFat, String foodItemsString, String preparationTime, long saveCount, long weeklySaveCount, long monthlySaveCount) {
         this.id = id;
@@ -167,7 +161,6 @@ public class MealDTO {
         this.originalMealId = originalMealId;
         this.version = version;
         this.mealIngredients = (mealIngredients != null) ? List.copyOf(mealIngredients) : List.of(); // Use an unmodifiable list
-        this.userCount = userCount;
         this.createdBy = createdBy;
         this.adjustedBy = adjustedBy;
         this.isTemplate = isTemplate;
@@ -251,15 +244,6 @@ public class MealDTO {
      */
     public List<MealIngredientDTO> getMealIngredients() {
         return List.copyOf(mealIngredients); // Ensure the list cannot be mutated outside this DTO
-    }
-
-    /**
-     * Gets the count of users associated with the meal.
-     *
-     * @return the user count.
-     */
-    public int getUserCount() {
-        return userCount;
     }
 
     /**

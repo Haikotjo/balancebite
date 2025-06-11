@@ -140,7 +140,6 @@ public class UserMealService implements IUserMealService {
 
         // Associate meal with user
         meal.setCreatedBy(user);
-        meal.incrementUserCount();
         user.getMeals().add(meal);
 
         // 🔥 **BELANGRIJK:** Update de voedingswaarden vóór opslaan!
@@ -248,7 +247,6 @@ public class UserMealService implements IUserMealService {
         mealCopy.updateNutrients();
 
         // Save the copied meal
-        originalMeal.incrementUserCount();
         mealRepository.save(mealCopy);
 
         // Link the copied meal to the user and save changes
