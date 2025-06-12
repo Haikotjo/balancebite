@@ -48,13 +48,9 @@ public class DietPlanMapper {
                 ? new PublicUserDTO(dietPlan.getAdjustedBy().getId(), dietPlan.getAdjustedBy().getUserName())
                 : null;
 
-        long saveCount = savedDietPlanRepository.countByDietPlan(dietPlan);
-
-        LocalDateTime oneWeekAgo = LocalDateTime.now().minusWeeks(1);
-        LocalDateTime oneMonthAgo = LocalDateTime.now().minusMonths(1);
-
-        long weeklySaveCount = savedDietPlanRepository.countByDietPlanAndTimestampAfter(dietPlan, oneWeekAgo);
-        long monthlySaveCount = savedDietPlanRepository.countByDietPlanAndTimestampAfter(dietPlan, oneMonthAgo);
+        long saveCount = Optional.ofNullable(dietPlan.getSaveCount()).orElse(0L);
+        long weeklySaveCount = Optional.ofNullable(dietPlan.getWeeklySaveCount()).orElse(0L);
+        long monthlySaveCount = Optional.ofNullable(dietPlan.getMonthlySaveCount()).orElse(0L);
 
         return new DietPlanDTO(
                 dietPlan.getId(),

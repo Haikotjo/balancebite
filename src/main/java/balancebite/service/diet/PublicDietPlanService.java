@@ -112,18 +112,22 @@ public class PublicDietPlanService implements IPublicDietPlanService {
 
 
         // Pas sortering toe op de bestaande pageable
-        Map<String, String> sortFieldMap = Map.of(
-                "avgProtein", "avgProtein",
-                "avgCarbs", "avgCarbs",
-                "avgFat", "avgFat",
-                "avgCalories", "avgCalories",
-                "totalProtein", "totalProtein",
-                "totalCarbs", "totalCarbs",
-                "totalFat", "totalFat",
-                "totalCalories", "totalCalories",
-                "createdAt", "createdAt",
-                "name", "name"
+        Map<String, String> sortFieldMap = Map.ofEntries(
+                Map.entry("avgProtein", "avgProtein"),
+                Map.entry("avgCarbs", "avgCarbs"),
+                Map.entry("avgFat", "avgFat"),
+                Map.entry("avgCalories", "avgCalories"),
+                Map.entry("totalProtein", "totalProtein"),
+                Map.entry("totalCarbs", "totalCarbs"),
+                Map.entry("totalFat", "totalFat"),
+                Map.entry("totalCalories", "totalCalories"),
+                Map.entry("saveCount", "saveCount"),
+                Map.entry("weeklySaveCount", "weeklySaveCount"),
+                Map.entry("monthlySaveCount", "monthlySaveCount"),
+                Map.entry("createdAt", "createdAt"),
+                Map.entry("name", "name")
         );
+
 
         String mappedSortBy = sortFieldMap.getOrDefault(sortBy, "createdAt");
         Sort.Direction direction = sortOrder.equalsIgnoreCase("asc") ? Sort.Direction.ASC : Sort.Direction.DESC;

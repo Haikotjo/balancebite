@@ -24,7 +24,7 @@ public interface SavedDietPlanRepository extends JpaRepository<SavedDietPlan, Lo
     // Voor populaire plannen (optioneel)
     List<SavedDietPlan> findAllByTimestampAfter(LocalDateTime since);
 
-    void deleteTopByDietPlanIdOrderByTimestampDesc(Long dietPlanId);
+    Optional<SavedDietPlan> findTopByDietPlanOrderByTimestampDesc(DietPlan dietPlan);
 
     @Modifying
     @Query("DELETE FROM SavedDietPlan s WHERE s.id = (" +
@@ -40,5 +40,6 @@ public interface SavedDietPlanRepository extends JpaRepository<SavedDietPlan, Lo
     ORDER BY COUNT(s) DESC
 """)
     List<SavedDietPlanDTO> findSavedDietPlanSince(@Param("since") LocalDateTime since);
+
 
 }

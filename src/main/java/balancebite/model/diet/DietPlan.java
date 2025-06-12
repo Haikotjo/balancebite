@@ -59,6 +59,16 @@ public class DietPlan {
     private Double avgFat;
     private Double avgCalories;
 
+    @Column(name = "save_count")
+    private Long saveCount = 0L;
+
+    @Column(name = "weekly_save_count")
+    private Long weeklySaveCount = 0L;
+
+    @Column(name = "monthly_save_count")
+    private Long monthlySaveCount = 0L;
+
+
     // Constructors
     public DietPlan() {}
 
@@ -214,5 +224,29 @@ public class DietPlan {
 
     public void setAvgCalories(Double avgCalories) {
         this.avgCalories = avgCalories;
+    }
+
+    public Long getSaveCount() {
+        return saveCount;
+    }
+
+    public void setSaveCount(Long saveCount) {
+        this.saveCount = saveCount;
+    }
+
+    public Long getWeeklySaveCount() {
+        return weeklySaveCount;
+    }
+
+    public void setWeeklySaveCount(Long weeklySaveCount) {
+        this.weeklySaveCount = weeklySaveCount;
+    }
+
+    public Long getMonthlySaveCount() {
+        return monthlySaveCount;
+    }
+
+    public void setMonthlySaveCount(Long monthlySaveCount) {
+        this.monthlySaveCount = monthlySaveCount;
     }
 }

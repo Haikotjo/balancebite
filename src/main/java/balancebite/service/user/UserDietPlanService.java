@@ -178,6 +178,10 @@ public class UserDietPlanService implements IUserDietPlanService {
                 SavedDietPlan savedRecord = new SavedDietPlan();
                 savedRecord.setDietPlan(original);
                 savedDietPlanRepository.save(savedRecord);
+
+                long totalSaves = savedDietPlanRepository.countByDietPlan(original);
+                original.setSaveCount(totalSaves);
+                dietPlanRepository.save(original);
             }
             return dietPlanMapper.toDTO(original);
         }
@@ -198,6 +202,10 @@ public class UserDietPlanService implements IUserDietPlanService {
                 SavedDietPlan savedRecord = new SavedDietPlan();
                 savedRecord.setDietPlan(original);
                 savedDietPlanRepository.save(savedRecord);
+
+                long totalSaves = savedDietPlanRepository.countByDietPlan(original);
+                original.setSaveCount(totalSaves);
+                dietPlanRepository.save(original);
             }
             return dietPlanMapper.toDTO(copy);
         }
@@ -260,9 +268,14 @@ public class UserDietPlanService implements IUserDietPlanService {
         savedRecord.setDietPlan(original);
         savedDietPlanRepository.save(savedRecord);
 
+        long totalSaves = savedDietPlanRepository.countByDietPlan(original);
+        original.setSaveCount(totalSaves);
+        dietPlanRepository.saveAndFlush(original);
+        log.warn("⏱️ saveCount op {} is nu {}", original.getId(), original.getSaveCount());
+
+
         return dietPlanMapper.toDTO(saved);
     }
-
 
     @Override
     @Transactional
@@ -478,14 +491,18 @@ public class UserDietPlanService implements IUserDietPlanService {
 
 
         // Zelfde mapping als in public method
-        Map<String, String> sortFieldMap = Map.of(
-                "avgProtein", "avgProtein",
-                "avgCarbs", "avgCarbs",
-                "avgFat", "avgFat",
-                "totalCalories", "totalCalories",
-                "createdAt", "createdAt",
-                "name", "name"
+        Map<String, String> sortFieldMap = Map.ofEntries(
+                Map.entry("avgProtein", "avgProtein"),
+                Map.entry("avgCarbs", "avgCarbs"),
+                Map.entry("avgFat", "avgFat"),
+                Map.entry("avgCalories", "avgCalories"),
+                Map.entry("saveCount", "saveCount"),
+                Map.entry("weeklySaveCount", "weeklySaveCount"),
+                Map.entry("monthlySaveCount", "monthlySaveCount"),
+                Map.entry("createdAt", "createdAt"),
+                Map.entry("name", "name")
         );
+
 
         String mappedSortBy = sortFieldMap.getOrDefault(sortBy, "createdAt");
         Sort.Direction direction = sortOrder.equalsIgnoreCase("asc") ? Sort.Direction.ASC : Sort.Direction.DESC;
@@ -540,7 +557,15 @@ public class UserDietPlanService implements IUserDietPlanService {
 
             // Trek 1 save af van het originele dieet
             if (diet.getOriginalDietId() != null) {
-                savedDietPlanRepository.deleteLatestByDietPlanId(diet.getOriginalDietId());
+                DietPlan original = dietPlanRepository.findById(diet.getOriginalDietId())
+                        .orElseThrow(() -> new DietPlanNotFoundException("Original diet not found"));
+
+                savedDietPlanRepository.findTopByDietPlanOrderByTimestampDesc(original)
+                        .ifPresent(savedDietPlanRepository::delete);
+                long totalSaves = savedDietPlanRepository.countByDietPlan(original);
+                original.setSaveCount(totalSaves);
+                dietPlanRepository.save(original);
+
             }
 
             dietPlanRepository.delete(diet);
