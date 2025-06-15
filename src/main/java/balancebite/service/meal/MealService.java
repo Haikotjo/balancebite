@@ -127,8 +127,12 @@ public class MealService implements IMealService {
             case "protein" -> Comparator.comparing(Meal::getTotalProtein);
             case "fat" -> Comparator.comparing(Meal::getTotalFat);
             case "carbs" -> Comparator.comparing(Meal::getTotalCarbs);
-            default -> Comparator.comparing(Meal::getName); // Default: sort by name
+            case "savecount" -> Comparator.comparing(Meal::getSaveCount);
+            case "weeklysavecount" -> Comparator.comparing(Meal::getWeeklySaveCount);
+            case "monthlysavecount" -> Comparator.comparing(Meal::getMonthlySaveCount);
+            default -> Comparator.comparing(Meal::getName);
         };
+
 
         if ("desc".equalsIgnoreCase(sortOrder)) {
             comparator = comparator.reversed();

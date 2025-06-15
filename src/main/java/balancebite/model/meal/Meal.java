@@ -175,6 +175,19 @@ public class Meal {
     @ManyToMany(mappedBy = "savedMeals")
     private Set<User> users = new HashSet<>();
 
+    @Column(name = "save_count")
+    private Long saveCount = 0L;
+
+    @Column(name = "weekly_save_count")
+    private Long weeklySaveCount = 0L;
+
+    @Column(name = "monthly_save_count")
+    private Long monthlySaveCount = 0L;
+
+    public Long getSaveCount() {
+        return saveCount;
+    }
+
     /**
      * No-argument constructor required by JPA.
      */
@@ -528,5 +541,25 @@ public class Meal {
 
     public void setPreparationTime(Duration preparationTime) {
         this.preparationTime = preparationTime;
+    }
+
+    public Long getMonthlySaveCount() {
+        return monthlySaveCount;
+    }
+
+    public void setMonthlySaveCount(Long monthlySaveCount) {
+        this.monthlySaveCount = monthlySaveCount;
+    }
+
+    public Long getWeeklySaveCount() {
+        return weeklySaveCount;
+    }
+
+    public void setWeeklySaveCount(Long weeklySaveCount) {
+        this.weeklySaveCount = weeklySaveCount;
+    }
+
+    public void setSaveCount(Long saveCount) {
+        this.saveCount = saveCount;
     }
 }

@@ -59,13 +59,9 @@ public class MealMapper {
             return null;
         }
 
-        long saveCount = savedMealRepository.countByMeal(meal);
-
-        LocalDateTime oneWeekAgo = LocalDateTime.now().minusWeeks(1);
-        LocalDateTime oneMonthAgo = LocalDateTime.now().minusMonths(1);
-
-        long weeklySaveCount = savedMealRepository.countByMealAndTimestampAfter(meal, oneWeekAgo);
-        long monthlySaveCount = savedMealRepository.countByMealAndTimestampAfter(meal, oneMonthAgo);
+        long saveCount = Optional.ofNullable(meal.getSaveCount()).orElse(0L);
+        long weeklySaveCount = Optional.ofNullable(meal.getWeeklySaveCount()).orElse(0L);
+        long monthlySaveCount = Optional.ofNullable(meal.getMonthlySaveCount()).orElse(0L);
 
         MealDTO dto = new MealDTO(
                 meal.getId(),
@@ -98,6 +94,7 @@ public class MealMapper {
         log.debug("Finished converting Meal entity to MealDTO: {}", dto);
         return dto;
     }
+
 
 
     /**

@@ -159,110 +159,117 @@ public class UserMealService implements IUserMealService {
      * Adds an existing meal to a user's list of meals.
      *
      * The copied meal will:
-     * - Have a new unique ID
+     * - Receive a new unique ID
      * - Retain the original meal's ID in `originalMealId`
      * - Be marked as a non-template (`isTemplate = false`)
-     * - Have the original creator preserved (`createdBy` remains the same)
-     * - Be assigned to the specified user (`adjustedBy = userId`)
+     * - Keep the original creator (`createdBy`)
+     * - Be linked to the specified user as `adjustedBy`
      *
-     * @param mealId The ID of the meal to be copied.
-     * @param userId The ID of the user to whom the meal will be assigned.
-     * @return The updated UserDTO reflecting the newly added meal.
-     * @throws UserNotFoundException  If the user is not found.
-     * @throws MealNotFoundException  If the meal to copy is not found.
-     * @throws DuplicateMealException If the user already has a copy of the meal.
+     * If the original meal is a template created by the user, it is linked directly without duplication.
+     *
+     * @param mealId The ID of the meal to copy.
+     * @param userId The ID of the user who is adding the meal.
+     * @return The updated UserDTO including the new meal.
+     * @throws UserNotFoundException  If the user does not exist.
+     * @throws MealNotFoundException  If the meal does not exist.
+     * @throws DuplicateMealException If the user already has a copy of this meal.
      */
     @Override
     @Transactional
     public UserDTO addMealToUser(Long userId, Long mealId) {
-        log.info("Creating a personalized copy of meal ID: {} for user ID: {}", mealId, userId);
-
-        // Retrieve the user
+        // Step 1: Retrieve user and original meal
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("User not found with ID: " + userId));
-
-        // Retrieve the original meal
         Meal originalMeal = mealRepository.findById(mealId)
                 .orElseThrow(() -> new MealNotFoundException("Meal not found with ID: " + mealId));
 
-// Check if the user already has a meal with the same originalMealId OR the exact same meal ID
-        boolean mealExists = user.getMeals().stream()
-                .anyMatch(meal -> (meal.getOriginalMealId() != null && meal.getOriginalMealId().equals(mealId))
-                        || meal.getId().equals(mealId));
+        // Check if user already has this meal (original or copy)
+        boolean mealExists = user.getMeals().stream().anyMatch(
+                m -> (m.getOriginalMealId() != null && m.getOriginalMealId().equals(mealId))
+                        || m.getId().equals(mealId)
+        );
 
-        // ✅ Check of de meal door de gebruiker zelf is gemaakt en nog steeds in de database staat
-        if (originalMeal.getCreatedBy().getId().equals(user.getId()) && originalMeal.isTemplate()) {
-            log.info("User {} originally created this meal. Restoring link instead of copying.", userId);
-
-            // Voeg de originele meal opnieuw toe aan de gebruiker zonder een kopie te maken
+        // Step 2: Directly relink if the user is the original creator of a template meal
+        if (originalMeal.isTemplate() && originalMeal.getCreatedBy().getId().equals(userId)) {
             user.getMeals().add(originalMeal);
             userRepository.save(user);
 
+            // Register a save and update save count
+            SavedMeal record = new SavedMeal();
+            record.setMeal(originalMeal);
+            savedMealRepository.save(record);
+
+            long total = savedMealRepository.countByMeal(originalMeal);
+            originalMeal.setSaveCount(total);
+            mealRepository.saveAndFlush(originalMeal);
+
+            // Reload user to ensure updated meal save count is included
+            user = userRepository.findById(userId)
+                    .orElseThrow(() -> new UserNotFoundException("User not found: " + userId));
             return userMapper.toDTO(user);
         }
 
-
+        // Step 3: Check if a copy already exists
         if (mealExists) {
-            log.warn("User ID {} already has a meal copy of original meal ID {}", userId, mealId);
             throw new DuplicateMealException("Meal copy already exists in user's list.");
         }
 
+        // Step 4: Create a new copy of the meal
+        Meal copy = new Meal();
+        copy.setName(originalMeal.getName());
+        copy.setMealDescription(originalMeal.getMealDescription());
+        copy.setImage(originalMeal.getImage());
+        copy.setImageUrl(originalMeal.getImageUrl());
+        copy.setPreparationTime(originalMeal.getPreparationTime());
+        copy.setCuisines(new HashSet<>(originalMeal.getCuisines()));
+        copy.setDiets(new HashSet<>(originalMeal.getDiets()));
+        copy.setMealTypes(new HashSet<>(originalMeal.getMealTypes()));
+        copy.setOriginalMealId(mealId);
+        copy.setIsTemplate(false);
+        copy.setCreatedBy(originalMeal.getCreatedBy());
+        copy.setAdjustedBy(user);
+        copy.setVersion(LocalDateTime.now());
 
-        // Create a copy of the meal
-        Meal mealCopy = new Meal();
-        mealCopy.setName(originalMeal.getName());
-        mealCopy.setMealDescription(originalMeal.getMealDescription());
-        mealCopy.setImage(originalMeal.getImage());
-        mealCopy.setImageUrl(originalMeal.getImageUrl());
-        mealCopy.setPreparationTime(originalMeal.getPreparationTime());
-        mealCopy.setCuisines(new HashSet<>(originalMeal.getCuisines()));
-        mealCopy.setDiets(new HashSet<>(originalMeal.getDiets()));
-        mealCopy.setMealTypes(new HashSet<>(originalMeal.getMealTypes()));
+        // Copy ingredients
+        for (MealIngredient ing : originalMeal.getMealIngredients()) {
+            MealIngredient newIng = new MealIngredient();
+            newIng.setFoodItem(ing.getFoodItem());
+            newIng.setQuantity(ing.getQuantity());
+            copy.addMealIngredient(newIng);
+        }
 
-        // Set originalMealId and mark as non-template
-        mealCopy.setOriginalMealId(mealId);
-        mealCopy.setIsTemplate(false);
+        // Debug: print copied ingredients and nutrients
+        for (MealIngredient ing : copy.getMealIngredients()) {
+            System.out.println("- " + ing.getFoodItem().getName() + " x " + ing.getQuantity());
+            if (ing.getFoodItem().getNutrients() != null) {
+                ing.getFoodItem().getNutrients().forEach(n ->
+                        System.out.println("  🔸 " + n.getNutrientName() + ": " + n.getValue())
+                );
+            }
+        }
 
-        // Keep the original creator but assign the specified user as the adjuster
-        mealCopy.setCreatedBy(originalMeal.getCreatedBy());
-        mealCopy.setAdjustedBy(user);
+        // Update nutrient totals for the new meal
+        copy.updateNutrients();
 
-        // Copy meal ingredients and associate them with the new meal
-        List<MealIngredient> copiedIngredients = originalMeal.getMealIngredients().stream()
-                .map(ingredient -> {
-                    MealIngredient newIngredient = new MealIngredient();
-                    newIngredient.setFoodItem(ingredient.getFoodItem());
-                    newIngredient.setQuantity(ingredient.getQuantity());
-                    newIngredient.setMeal(mealCopy); // Associate with new meal
-                    return newIngredient;
-                })
-                .collect(Collectors.toList());
-
-        mealCopy.addMealIngredients(copiedIngredients);
-
-        // Set the initial version timestamp for tracking updates
-        mealCopy.setVersion(LocalDateTime.now());
-
-        // Recalculate nutrients instead of setting manually
-        mealCopy.updateNutrients();
-
-        // Save the copied meal
-        mealRepository.save(mealCopy);
-
-        // Link the copied meal to the user and save changes
-        user.getMeals().add(mealCopy);
+        // Save new meal and link to user
+        mealRepository.save(copy);
+        user.getMeals().add(copy);
         userRepository.save(user);
 
-        SavedMeal savedRecord = new SavedMeal();
-        savedRecord.setMeal(originalMeal);
-        savedMealRepository.save(savedRecord);
+        // Register a save for the original meal and update save count
+        SavedMeal record2 = new SavedMeal();
+        record2.setMeal(originalMeal);
+        savedMealRepository.save(record2);
 
-        log.info("Successfully created and linked a meal copy with ID: {} for user ID: {}", mealCopy.getId(), userId);
+        long total2 = savedMealRepository.countByMeal(originalMeal);
+        originalMeal.setSaveCount(total2);
+        mealRepository.saveAndFlush(originalMeal);
 
-        // Return the updated user DTO
+        // Reload user to reflect updates
+        user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("User not found: " + userId));
         return userMapper.toDTO(user);
     }
-
 
     /**
      * Updates a user's meal by overwriting the existing meal.
@@ -409,6 +416,9 @@ public class UserMealService implements IUserMealService {
             case "protein" -> Comparator.comparing(Meal::getTotalProtein);
             case "fat" -> Comparator.comparing(Meal::getTotalFat);
             case "carbs" -> Comparator.comparing(Meal::getTotalCarbs);
+            case "savecount"        -> Comparator.comparing(Meal::getSaveCount);
+            case "weeklysavecount"  -> Comparator.comparing(Meal::getWeeklySaveCount);
+            case "monthlysavecount" -> Comparator.comparing(Meal::getMonthlySaveCount);
             default -> Comparator.comparing(Meal::getName);
         };
 
@@ -500,6 +510,9 @@ public class UserMealService implements IUserMealService {
             case "protein" -> Comparator.comparing(Meal::getTotalProtein);
             case "fat" -> Comparator.comparing(Meal::getTotalFat);
             case "carbs" -> Comparator.comparing(Meal::getTotalCarbs);
+            case "savecount"        -> Comparator.comparing(Meal::getSaveCount);
+            case "weeklysavecount"  -> Comparator.comparing(Meal::getWeeklySaveCount);
+            case "monthlysavecount" -> Comparator.comparing(Meal::getMonthlySaveCount);
             default -> Comparator.comparing(Meal::getName);
         };
 
@@ -608,6 +621,11 @@ public class UserMealService implements IUserMealService {
 
             if (meal.getOriginalMealId() != null) {
                 savedMealRepository.deleteLatestByMealId(meal.getOriginalMealId());
+                Meal original = mealRepository.findById(meal.getOriginalMealId())
+                        .orElseThrow(() -> new MealNotFoundException("Original meal not found"));
+                long totalSaves = savedMealRepository.countByMeal(original);
+                original.setSaveCount(totalSaves);
+                mealRepository.saveAndFlush(original);
             }
         } else {
             log.info("Meal ID {} is a template, unlinking from user.", mealId);
@@ -631,7 +649,6 @@ public class UserMealService implements IUserMealService {
                 .findFirst()
                 .orElseThrow(() -> new MealNotFoundException("Meal not found in user's list"));
 
-        // ✅ Verwijder uit alle dietDay.meals
         List<DietDay> daysWithMeal = dietDayRepository.findByMealsContainingWithDietFetched(meal);
         for (DietDay day : daysWithMeal) {
             day.getMeals().remove(meal);
@@ -642,11 +659,14 @@ public class UserMealService implements IUserMealService {
 
         if (meal.getOriginalMealId() != null) {
             savedMealRepository.deleteLatestByMealId(meal.getOriginalMealId());
+
+            Meal original = mealRepository.findById(meal.getOriginalMealId())
+                    .orElseThrow(() -> new MealNotFoundException("Original meal not found"));
+            long totalSaves = savedMealRepository.countByMeal(original);
+            original.setSaveCount(totalSaves);
+            mealRepository.saveAndFlush(original);
         }
 
         userRepository.save(user);
     }
-
-
-
 }
