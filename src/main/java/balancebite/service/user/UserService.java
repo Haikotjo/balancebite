@@ -243,4 +243,10 @@ public class UserService implements IUserService {
         log.info("Successfully deleted logged-in user with ID: {}", id);
     }
 
+    @Override
+    public User findUserById(Long id) {
+        return userRepository.findById(id)
+                .orElseThrow(() -> new UserNotFoundException("No user found with ID: " + id));
+    }
+
 }

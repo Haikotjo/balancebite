@@ -26,13 +26,14 @@ public interface IMealService {
      * Meals can be sorted by name, total calories, protein, fat, or carbs.
      * Results are paginated.
      *
-     * @param cuisine Optional filter for meal cuisine.
-     * @param diet Optional filter for meal diet.
-     * @param mealType Optional filter for meal type (BREAKFAST, LUNCH, etc.).
+     * @param cuisines Optional filter for meal cuisine.
+     * @param diets Optional filter for meal diet.
+     * @param mealTypes Optional filter for meal type (BREAKFAST, LUNCH, etc.).
      * @param foodItems List of food items to filter meals by (e.g., "Banana", "Peas").
      * @param sortBy Sorting field (calories, protein, fat, carbs, name).
      * @param sortOrder Sorting order ("asc" for ascending, "desc" for descending).
      * @param pageable Pageable object for pagination and sorting.
+     * @param creatorId
      * @return A paginated and sorted list of MealDTOs that match the filters.
      */
     Page<MealDTO> getAllMeals(
@@ -42,8 +43,9 @@ public interface IMealService {
             List<String> foodItems,
             String sortBy,
             String sortOrder,
-            Pageable pageable
-    );
+            Pageable pageable,
+            Long creatorId
+            );
 
     /**
      * Retrieves a Meal by its ID, only if it is a template.

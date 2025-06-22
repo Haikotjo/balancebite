@@ -1,4 +1,4 @@
-package balancebite.model;
+package balancebite.model.stickyitem;
 
 import balancebite.model.user.User;
 import jakarta.persistence.*;

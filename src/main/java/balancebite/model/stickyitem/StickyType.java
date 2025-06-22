@@ -1,2 +1,6 @@
-package balancebite.model.stickyItem;public class StickyType {
+package balancebite.model.stickyitem;
+
+public enum StickyType {
+    MEAL,
+    DIET_PLAN
 }

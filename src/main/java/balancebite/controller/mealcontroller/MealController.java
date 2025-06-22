@@ -70,6 +70,7 @@ public class MealController {
             @RequestParam(required = false) List<String> foodItems,
             @RequestParam(required = false) String sortBy,
             @RequestParam(required = false, defaultValue = "asc") String sortOrder,
+            @RequestParam(required = false) Long creatorId,
             Pageable pageable
     ) {
         try {
@@ -78,7 +79,7 @@ public class MealController {
 
             // Haal gefilterde, gesorteerde en gepagineerde maaltijden op
             Page<MealDTO> mealDTOs = mealService.getAllMeals(
-                    cuisines, diets, mealTypes, foodItems, sortBy, sortOrder, pageable
+                    cuisines, diets, mealTypes, foodItems, sortBy, sortOrder, pageable, creatorId
             );
 
             if (mealDTOs.isEmpty()) {

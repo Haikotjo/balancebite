@@ -73,6 +73,7 @@ public class MealService implements IMealService {
      * @param sortBy Sorting field (calories, protein, fat, carbs, name).
      * @param sortOrder Sorting order ("asc" for ascending, "desc" for descending).
      * @param pageable Pageable object for pagination and sorting.
+     * @param creatorId
      * @return A paginated and sorted list of MealDTOs that match the filters.
      */
     @Override
@@ -84,7 +85,8 @@ public class MealService implements IMealService {
             List<String> foodItems,
             String sortBy,
             String sortOrder,
-            Pageable pageable
+            Pageable pageable,
+            Long creatorId
     ) {
         log.info("Retrieving paginated template meals with filters and sorting.");
 
@@ -97,6 +99,11 @@ public class MealService implements IMealService {
             meals.removeIf(meal -> meal.getCuisines().stream()
                     .map(Enum::name)
                     .noneMatch(cuisineSet::contains));
+        }
+
+        // ✅ Filter on creatorId
+        if (creatorId != null) {
+            meals.removeIf(meal -> meal.getCreatedBy() == null || !meal.getCreatedBy().getId().equals(creatorId));
         }
 
         if (diets != null && !diets.isEmpty()) {

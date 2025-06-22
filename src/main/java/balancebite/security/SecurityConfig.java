@@ -144,6 +144,13 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PUT, "/users/update-diet-plans/**").authenticated()
 
 
+                        // sticky item endpoints
+                        .requestMatchers(HttpMethod.POST, "/admin/sticky-items").hasRole("ADMIN")
+
+                        .requestMatchers(HttpMethod.GET, "/sticky-items").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/sticky-items/all").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/sticky-items/latest").permitAll()
+
                         // admin-only endpoints
                         .requestMatchers("/admin/dietplans/**").hasRole("ADMIN")
 

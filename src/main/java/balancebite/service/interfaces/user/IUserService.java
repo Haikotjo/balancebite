@@ -5,6 +5,7 @@ import balancebite.dto.user.UserDetailsInputDTO;
 import balancebite.dto.user.UserDTO;
 import balancebite.errorHandling.EntityAlreadyExistsException;
 import balancebite.errorHandling.UserNotFoundException;
+import balancebite.model.user.User;
 
 /**
  * Interface defining the methods for managing User operations.
@@ -51,5 +52,7 @@ public interface IUserService {
      * @throws UserNotFoundException If the user with the specified ID is not found.
      */
     void deleteLoggedInUser(Long id);
+
+    User findUserById(Long id);
 }
 
