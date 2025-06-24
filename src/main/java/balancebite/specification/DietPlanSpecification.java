@@ -73,7 +73,10 @@ public class DietPlanSpecification {
     }
 
     public static Specification<DietPlan> createdBy(Long userId) {
-        return (root, query, cb) -> cb.equal(root.get("createdBy").get("id"), userId);
+        return (root, query, cb) -> cb.and(
+                cb.equal(root.get("createdBy").get("id"), userId),
+                cb.isNull(root.get("adjustedBy"))
+        );
     }
 
     public static Specification<DietPlan> savedBy(Long userId) {

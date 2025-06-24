@@ -40,6 +40,15 @@ public interface IUserMealService {
      */
     MealDTO updateUserMeal(Long userId, Long mealId, MealInputDTO mealInputDTO) throws EntityNotFoundException, InvalidFoodItemException, DuplicateMealException;
 
+    /**
+     * Updates the privacy setting of a meal by its ID.
+     *
+     * @param userId The ID of the user to whom the meal is to be added.
+     * @param mealId    The ID of the meal to update.
+     * @param isPrivate {@code true} to mark the meal as private, {@code false} to make it public.
+     * @throws MealNotFoundException if the meal does not exist.
+     */
+    void updateMealPrivacy(Long userId, Long mealId, boolean isPrivate);
 
     /**
      * Adds an existing meal to the user's list of meals.

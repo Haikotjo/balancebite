@@ -57,6 +57,7 @@ public class DietPlanMapper {
                 dietPlan.getName(),
                 dietPlan.getOriginalDietId(),
                 dietPlan.isTemplate(),
+                dietPlan.isPrivate(),
                 dietPlan.getCreatedAt(),
                 dietPlan.getUpdatedAt(),
                 createdByDTO,
@@ -88,6 +89,7 @@ public class DietPlanMapper {
         dietPlan.setName(input.getName());
         dietPlan.setOriginalDietId(input.getOriginalDietId());
         dietPlan.setTemplate(input.isTemplate());
+        dietPlan.setPrivate(input.isPrivate());
         dietPlan.setDietDescription(input.getDietDescription());
         dietPlan.setDiets(input.getDiets());
 
@@ -107,6 +109,7 @@ public class DietPlanMapper {
         dietPlan.setName(input.getName());
         dietPlan.setOriginalDietId(input.getOriginalDietId());
         dietPlan.setTemplate(input.isTemplate());
+        dietPlan.setPrivate(input.isPrivate());
         dietPlan.setDietDescription(input.getDietDescription());
         dietPlan.setDiets(input.getDiets());
 

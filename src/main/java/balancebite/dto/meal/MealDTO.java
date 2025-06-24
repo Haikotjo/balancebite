@@ -71,6 +71,8 @@ public class MealDTO {
 
     private final boolean isTemplate;
 
+    private boolean isPrivate;
+
     /**
      * The types of the meal (e.g., breakfast, lunch, dinner, or snack).
      * Allows multiple classifications based on the time of day or purpose.
@@ -140,6 +142,7 @@ public class MealDTO {
      * @param createdBy        the user who originally created the meal.
      * @param adjustedBy       the user who adjusted the meal (if applicable).
      * @param isTemplate
+     * @param isPrivate
      * @param mealTypes         the types of meal (optional). Allows classification as breakfast, lunch, dinner, or snack.
      * @param cuisines          the cuisine types of the meal (optional). Represents cultural or regional origins.
      * @param diets             the dietary categories of the meal (optional). Used for filtering based on dietary preferences.
@@ -151,7 +154,7 @@ public class MealDTO {
      */
     public MealDTO(Long id, String name, String mealDescription, String image, String imageUrl, Long originalMealId,
                    LocalDateTime version, List<MealIngredientDTO> mealIngredients, UserDTO createdBy,
-                   UserDTO adjustedBy,Boolean isTemplate ,  Set<MealType> mealTypes, Set<Cuisine> cuisines, Set<Diet> diets, double totalCalories, double totalProtein, double totalCarbs,
+                   UserDTO adjustedBy,Boolean isTemplate, Boolean isPrivate,  Set<MealType> mealTypes, Set<Cuisine> cuisines, Set<Diet> diets, double totalCalories, double totalProtein, double totalCarbs,
                    double totalFat, String foodItemsString, String preparationTime, long saveCount, long weeklySaveCount, long monthlySaveCount) {
         this.id = id;
         this.name = name;
@@ -164,6 +167,7 @@ public class MealDTO {
         this.createdBy = createdBy;
         this.adjustedBy = adjustedBy;
         this.isTemplate = isTemplate;
+        this.isPrivate = isPrivate;
         this.mealTypes = mealTypes != null ? Set.copyOf(mealTypes) : Set.of();
         this.cuisines = cuisines != null ? Set.copyOf(cuisines) : Set.of();
         this.diets = diets != null ? Set.copyOf(diets) : Set.of();
@@ -265,6 +269,8 @@ public class MealDTO {
     }
 
     public boolean getIsTemplate() {return isTemplate;}
+
+    public boolean getIsPrivate() {return isPrivate;}
 
     /**
      * Gets the types of the meal (e.g., breakfast, lunch, dinner, or snack).

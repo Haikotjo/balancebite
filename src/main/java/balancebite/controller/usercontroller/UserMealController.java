@@ -192,6 +192,38 @@ public class UserMealController {
     }
 
     /**
+     * Updates the privacy status of a meal belonging to the authenticated user.
+     *
+     * Allows the user to mark a meal as private or public.
+     *
+     * @param mealId The ID of the meal whose privacy should be updated.
+     * @param isPrivate Boolean indicating whether the meal should be private.
+     * @param authorizationHeader The Authorization header containing the JWT token.
+     * @return ResponseEntity with 204 No Content on success, or error details.
+     */
+    @PatchMapping("/meals/{mealId}/privacy")
+    public ResponseEntity<?> updateMealPrivacy(
+            @PathVariable Long mealId,
+            @RequestParam boolean isPrivate,
+            @RequestHeader("Authorization") String authorizationHeader) {
+        try {
+            String token = authorizationHeader.substring(7);
+            Long userId = jwtService.extractUserId(token);
+
+            userMealService.updateMealPrivacy(userId, mealId, isPrivate);
+
+            return ResponseEntity.noContent().build();
+        } catch (MealNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+        } catch (SecurityException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            log.error("Failed to update meal privacy", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "Failed to update privacy"));
+        }
+    }
+
+    /**
      * Retrieves paginated and sorted meals for the authenticated user with optional filtering.
      *
      * Users can filter meals by cuisine, diet, meal type, and food items.

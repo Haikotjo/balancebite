@@ -21,6 +21,10 @@ public class DietPlan {
 
     private boolean isTemplate = true;
 
+    @Column(nullable = true)
+    private boolean isPrivate = false;
+
+
     @Column(length = 1000)
     private String dietDescription;
 
@@ -104,6 +108,14 @@ public class DietPlan {
 
     public void setTemplate(boolean template) {
         isTemplate = template;
+    }
+
+    public boolean isPrivate() {
+        return isPrivate;
+    }
+
+    public void setPrivate(boolean isPrivate) {
+        this.isPrivate = isPrivate;
     }
 
     public String getDietDescription() {

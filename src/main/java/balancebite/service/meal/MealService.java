@@ -20,6 +20,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -92,6 +93,8 @@ public class MealService implements IMealService {
 
         // Retrieve all template meals
         List<Meal> meals = mealRepository.findAllTemplateMeals();
+
+        meals.removeIf(Meal::isPrivate);
 
         // ✅ **Filtering on cuisine, diet, and mealType**
         if (cuisines != null && !cuisines.isEmpty()) {
@@ -175,13 +178,15 @@ public class MealService implements IMealService {
     public MealDTO getMealById(Long id) {
         log.info("Attempting to retrieve meal with ID: {}", id);
 
-        // Fetch the meal from the repository
         Meal meal = mealRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Meal not found with ID: " + id));
 
-        // Map the Meal entity to a MealDTO
-        MealDTO mealDTO = mealMapper.toDTO(meal);
+        if (meal.isPrivate()) {
+            log.warn("Attempt to access private meal with ID: {}", id);
+            throw new AccessDeniedException("This meal is private.");
+        }
 
+        MealDTO mealDTO = mealMapper.toDTO(meal);
         log.info("Successfully retrieved meal with ID: {}", id);
         return mealDTO;
     }

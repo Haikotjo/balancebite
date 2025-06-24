@@ -23,6 +23,8 @@ public class DietPlanInputDTO {
     // Optioneel: alleen gebruiken als je vanuit frontend wilt bepalen of het een template is
     private boolean isTemplate = true;
 
+    private boolean isPrivate = false;
+
     @NotEmpty(message = "At least one diet day is required.")
     private List<DietDayInputDTO> dietDays;
 
@@ -34,13 +36,14 @@ public class DietPlanInputDTO {
     public DietPlanInputDTO() {}
 
     public DietPlanInputDTO(String name, Long originalDietId, Long createdByUserId, Long adjustedByUserId,
-                            boolean isTemplate, List<DietDayInputDTO> dietDays,
+                            boolean isTemplate, boolean isPrivate, List<DietDayInputDTO> dietDays,
                             String dietDescription, Set<Diet> diets) {
         this.name = name;
         this.originalDietId = originalDietId;
         this.createdByUserId = createdByUserId;
         this.adjustedByUserId = adjustedByUserId;
         this.isTemplate = isTemplate;
+        this.isPrivate = isPrivate;
         this.dietDays = dietDays;
         this.dietDescription = dietDescription;
         this.diets = diets;
@@ -85,6 +88,14 @@ public class DietPlanInputDTO {
 
     public void setTemplate(boolean template) {
         isTemplate = template;
+    }
+
+    public boolean isPrivate() {
+        return isPrivate;
+    }
+
+    public void setPrivate(boolean aPrivate) {
+        isPrivate = aPrivate;
     }
 
     public List<DietDayInputDTO> getDietDays() {

@@ -93,6 +93,24 @@ public class UserDietPlanController {
         }
     }
 
+    @PatchMapping("/diet-plans/{dietPlanId}/privacy")
+    public ResponseEntity<?> updateDietPrivacy(@PathVariable Long dietPlanId,
+                                               @RequestParam boolean isPrivate,
+                                               @RequestHeader("Authorization") String authHeader) {
+        try {
+            Long userId = jwtService.extractUserId(authHeader.substring(7));
+            userDietPlanService.updateDietPrivacy(userId, dietPlanId, isPrivate);
+            return ResponseEntity.ok().build();
+        } catch (DietPlanNotFoundException e) {
+            return ResponseEntity.status(404).body(Map.of("error", e.getMessage()));
+        } catch (SecurityException e) {
+            return ResponseEntity.status(403).body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            log.error("Failed to update privacy for diet plan ID {}", dietPlanId, e);
+            return ResponseEntity.status(500).body(Map.of("error", "Failed to update privacy"));
+        }
+    }
+
     @PostMapping("/diet-plans/{dietPlanId}/days/{dayIndex}/meals/{mealId}")
     public ResponseEntity<?> addMealToDietDay(@PathVariable Long dietPlanId,
                                               @PathVariable int dayIndex,

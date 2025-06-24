@@ -57,6 +57,9 @@ public class PublicDietPlanService implements IPublicDietPlanService {
                 ? Specification.where(DietPlanSpecification.isTemplateCreatedBy(createdByUserId))
                 : Specification.where(DietPlanSpecification.isTemplate());
 
+        spec = spec.and((root, query, cb) -> cb.isFalse(root.get("isPrivate")));
+
+
         if (diets != null && !diets.isEmpty()) {
             spec = spec.and((root, query, cb) -> root.join("diets").in(diets));
         }
@@ -143,7 +146,7 @@ public class PublicDietPlanService implements IPublicDietPlanService {
     @Override
     public DietPlanDTO getPublicDietPlanById(Long id) {
         DietPlan dietPlan = dietPlanRepository.findById(id)
-                .filter(DietPlan::isTemplate)
+                .filter(d -> d.isTemplate() && !d.isPrivate())
                 .orElseThrow(() -> new DietPlanNotFoundException("Public diet not found with ID: " + id));
         return dietPlanMapper.toDTO(dietPlan);
     }

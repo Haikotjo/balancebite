@@ -101,6 +101,10 @@ public class Meal {
     @Column(name = "is_template", nullable = false)
     private boolean isTemplate = true;
 
+    @Column(nullable = true)
+    private boolean isPrivate = false;
+
+
     /**
      * The types of meal (e.g., breakfast, lunch, dinner, or snack).
      * This allows multiple classifications per meal.
@@ -468,6 +472,14 @@ public class Meal {
      */
     public void setIsTemplate(boolean isTemplate) {
         this.isTemplate = isTemplate;
+    }
+
+    public boolean isPrivate() {
+        return isPrivate;
+    }
+
+    public void setPrivate(boolean isPrivate) {
+        this.isPrivate = isPrivate;
     }
 
     /**

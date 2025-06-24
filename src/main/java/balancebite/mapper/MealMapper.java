@@ -77,6 +77,7 @@ public class MealMapper {
                 meal.getCreatedBy() != null ? toUserDTO(meal.getCreatedBy()) : null,
                 meal.getAdjustedBy() != null ? toUserDTO(meal.getAdjustedBy()) : null,
                 meal.isTemplate(),
+                meal.isPrivate(),
                 meal.getMealTypes(),
                 meal.getCuisines(),
                 meal.getDiets(),
@@ -115,6 +116,7 @@ public class MealMapper {
                     meal.setMealTypes(dto.getMealTypes());
                     meal.setCuisines(dto.getCuisines());
                     meal.setDiets(dto.getDiets());
+                    meal.setPrivate(dto.isPrivate());
 
                     if (dto.getPreparationTime() != null && !dto.getPreparationTime().isBlank()) {
                         meal.setPreparationTime(java.time.Duration.parse(dto.getPreparationTime()));

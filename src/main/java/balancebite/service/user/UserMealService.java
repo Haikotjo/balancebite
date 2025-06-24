@@ -348,6 +348,31 @@ public class UserMealService implements IUserMealService {
         return mealMapper.toDTO(saved);
     }
 
+    /**
+     * Updates the privacy status of a specific Meal.
+     *
+     * This method sets the {@code isPrivate} field of the Meal entity to the provided value.
+     * It is typically used to toggle the visibility of a meal (e.g., public vs private).
+     *
+     * @param userId The ID of the user to whom the meal is to be added.
+     * @param mealId    The ID of the meal to update.
+     * @param isPrivate {@code true} to make the meal private, {@code false} to make it public.
+     * @throws MealNotFoundException if no meal is found with the given ID.
+     */
+    @Override
+    public void updateMealPrivacy(Long userId, Long mealId, boolean isPrivate) {
+        Meal meal = mealRepository.findById(mealId)
+                .orElseThrow(() -> new MealNotFoundException("Meal not found with ID: " + mealId));
+
+        // Verifieer of de user dit meal mag aanpassen
+        if (!meal.getCreatedBy().getId().equals(userId) &&
+                (meal.getAdjustedBy() == null || !meal.getAdjustedBy().getId().equals(userId))) {
+            throw new SecurityException("User is not allowed to update this meal.");
+        }
+
+        meal.setPrivate(isPrivate);
+        mealRepository.save(meal);
+    }
 
     /**
      * Retrieves paginated and sorted meals saved by a specific user with optional filtering.
@@ -444,7 +469,6 @@ public class UserMealService implements IUserMealService {
         return new PageImpl<>(pagedMeals.stream().map(mealMapper::toDTO).toList(), pageable, meals.size());
     }
 
-
     /**
      * Retrieves paginated and sorted meals created by a specific user with optional filtering.
      *
@@ -477,6 +501,8 @@ public class UserMealService implements IUserMealService {
 
         // Fetch meals where createdBy matches the user ID
         List<Meal> createdMeals = mealRepository.findByCreatedBy_Id(userId);
+
+        createdMeals.removeIf(meal -> meal.getAdjustedBy() != null);
 
         // ✅ **Apply filters**
         if (cuisines != null && !cuisines.isEmpty()) {

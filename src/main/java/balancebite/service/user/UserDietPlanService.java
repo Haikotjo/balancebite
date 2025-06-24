@@ -353,6 +353,23 @@ public class UserDietPlanService implements IUserDietPlanService {
 
     @Override
     @Transactional
+    public void updateDietPrivacy(Long userId, Long dietPlanId, boolean isPrivate) {
+        DietPlan diet = dietPlanRepository.findById(dietPlanId)
+                .orElseThrow(() -> new DietPlanNotFoundException("DietPlan not found with ID: " + dietPlanId));
+
+        boolean isOwner = (diet.getCreatedBy() != null && diet.getCreatedBy().getId().equals(userId)) ||
+                (diet.getAdjustedBy() != null && diet.getAdjustedBy().getId().equals(userId));
+
+        if (!isOwner) {
+            throw new SecurityException("User not authorized to update privacy of this diet.");
+        }
+
+        diet.setPrivate(isPrivate);
+        dietPlanRepository.save(diet);
+    }
+
+    @Override
+    @Transactional
     public DietPlanDTO addMealToDietDay(Long userId, Long dietId, int dayIndex, Long mealId) {
         DietPlan dietPlan = getOwnedDietPlanOrThrow(userId, dietId);
         DietDay targetDay = getDietDayOrThrow(dietPlan, dayIndex);
@@ -417,7 +434,6 @@ public class UserDietPlanService implements IUserDietPlanService {
                 })
                 .toList();
     }
-
 
     @Override
     @Transactional(readOnly = true)

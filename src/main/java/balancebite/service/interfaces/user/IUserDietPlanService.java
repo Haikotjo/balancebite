@@ -42,6 +42,9 @@ public interface IUserDietPlanService {
 
     DietPlanDTO addMealToDietDay(Long userId, Long dietPlanId, int dayIndex, Long mealId);
 
+    void updateDietPrivacy(Long userId, Long dietPlanId, boolean isPrivate);
+
+
     DietPlanDTO removeMealFromDietDay(Long userId, Long dietPlanId, int dayIndex, Long mealId);
 
     UserDTO removeDietPlanFromUser(Long userId, Long dietPlanId);
