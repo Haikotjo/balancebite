@@ -217,9 +217,11 @@ public class UserMealController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
         } catch (SecurityException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", e.getMessage()));
-        } catch (Exception e) {
-            log.error("Failed to update meal privacy", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "Failed to update privacy"));
+        } catch (MealInDietException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
+                    "error", e.getMessage(),
+                    "diets", e.getDietNames()
+            ));
         }
     }
 

@@ -18,4 +18,12 @@ public interface DietDayRepository extends JpaRepository<DietDay, Long> {
 
     List<DietDay> findAllByMealsContaining(Meal meal);
 
+    boolean existsByMealsContaining(Meal meal);
+
+    @Query("SELECT DISTINCT dd.diet.id FROM DietDay dd WHERE :meal MEMBER OF dd.meals")
+    List<Long> findDietIdsByMeal(@Param("meal") Meal meal);
+
+    @Query("SELECT DISTINCT dd.diet.name FROM DietDay dd WHERE :meal MEMBER OF dd.meals")
+    List<String> findDietNamesByMeal(@Param("meal") Meal meal);
+
 }

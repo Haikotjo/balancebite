@@ -210,5 +210,12 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(errorBody);
     }
 
-
+    @ExceptionHandler(MealInDietException.class)
+    public ResponseEntity<?> handleMealInDietException(MealInDietException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(Map.of(
+                        "error", ex.getMessage(),
+                        "diets", ex.getDietNames()
+                ));
+    }
 }

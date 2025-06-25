@@ -370,6 +370,15 @@ public class UserMealService implements IUserMealService {
             throw new SecurityException("User is not allowed to update this meal.");
         }
 
+        // Extra check: zit de meal in een dieet?
+        if (isPrivate) {
+            List<String> dietNames = dietDayRepository.findDietNamesByMeal(meal);
+            if (!dietNames.isEmpty()) {
+                throw new MealInDietException("This meal is part of one or more diets and cannot be set to private.", dietNames);
+            }
+        }
+
+
         meal.setPrivate(isPrivate);
         mealRepository.save(meal);
     }
