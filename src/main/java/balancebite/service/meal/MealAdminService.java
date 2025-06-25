@@ -11,9 +11,11 @@ import balancebite.errorHandling.UserNotFoundException;
 import balancebite.mapper.MealIngredientMapper;
 import balancebite.mapper.MealMapper;
 import balancebite.mapper.UserMapper;
+import balancebite.model.diet.DietDay;
 import balancebite.model.meal.Meal;
 import balancebite.model.MealIngredient;
 import balancebite.model.user.User;
+import balancebite.repository.DietDayRepository;
 import balancebite.repository.FoodItemRepository;
 import balancebite.repository.MealRepository;
 import balancebite.repository.UserRepository;
@@ -45,6 +47,8 @@ public class MealAdminService implements IMealAdminService {
     private final MealIngredientMapper mealIngredientMapper;
     private final CheckForDuplicateTemplateMealUtil checkForDuplicateTemplateMeal;
 
+    private final DietDayRepository dietDayRepository;
+
     /**
      * Constructor for MealAdminService, using constructor injection.
      *
@@ -53,7 +57,7 @@ public class MealAdminService implements IMealAdminService {
      * @param userRepository     the repository for managing User entities.
      * @param mealMapper         the mapper for converting Meal entities to DTOs.
      */
-    public MealAdminService(MealRepository mealRepository, FoodItemRepository foodItemRepository, UserRepository userRepository, MealMapper mealMapper, UserMapper userMapper, MealIngredientMapper mealIngredientMapper, CheckForDuplicateTemplateMealUtil checkForDuplicateTemplateMeal) {
+    public MealAdminService(MealRepository mealRepository, FoodItemRepository foodItemRepository, UserRepository userRepository, MealMapper mealMapper, UserMapper userMapper, MealIngredientMapper mealIngredientMapper, CheckForDuplicateTemplateMealUtil checkForDuplicateTemplateMeal, DietDayRepository dietDayRepository) {
         this.mealRepository = mealRepository;
         this.foodItemRepository = foodItemRepository;
         this.userRepository = userRepository;
@@ -61,6 +65,7 @@ public class MealAdminService implements IMealAdminService {
         this.userMapper = userMapper;
         this.mealIngredientMapper = mealIngredientMapper;
         this.checkForDuplicateTemplateMeal = checkForDuplicateTemplateMeal;
+        this.dietDayRepository = dietDayRepository;
     }
 
     /**
@@ -298,9 +303,22 @@ public class MealAdminService implements IMealAdminService {
             user.getMeals().remove(meal);
         }
 
+        List<User> usersWithSavedMeal = userRepository.findAllBySavedMealsContaining(meal);
+        for (User user : usersWithSavedMeal) {
+            log.info("Removing saved meal association for User ID: {} and Meal ID: {}", user.getId(), meal.getId());
+            user.getSavedMeals().remove(meal);
+        }
+        userRepository.saveAll(usersWithSavedMeal);
+
         // Save updated users back to the database to ensure association is removed
         userRepository.saveAll(associatedUsers);
 
+        List<DietDay> dietDaysWithMeal = dietDayRepository.findAllByMealsContaining(meal);
+        for (DietDay day : dietDaysWithMeal) {
+            log.info("Removing meal from DietDay ID: {}", day.getId());
+            day.getMeals().remove(meal);
+        }
+        dietDayRepository.saveAll(dietDaysWithMeal);
         // Delete the meal after cleaning up the relationships
         mealRepository.delete(meal);
         log.info("Successfully deleted meal with ID: {}", mealId);

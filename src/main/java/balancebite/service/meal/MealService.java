@@ -87,8 +87,17 @@ public class MealService implements IMealService {
             String sortBy,
             String sortOrder,
             Pageable pageable,
-            Long creatorId
-    ) {
+            Long creatorId,
+            Double minCalories,
+            Double maxCalories,
+            Double minProtein,
+            Double maxProtein,
+            Double minCarbs,
+            Double maxCarbs,
+            Double minFat,
+            Double maxFat
+    )
+ {
         log.info("Retrieving paginated template meals with filters and sorting.");
 
         // Retrieve all template meals
@@ -123,12 +132,36 @@ public class MealService implements IMealService {
                     .noneMatch(mealTypeSet::contains));
         }
 
-
         // ✅ **Filtering on food items (must contain at least one of the selected food items)**
         if (foodItems != null && !foodItems.isEmpty()) {
             meals.removeIf(meal -> foodItems.stream().noneMatch(item ->
                     Arrays.asList(meal.getFoodItemsString().split(" \\| ")).contains(item)
             ));
+        }
+
+        if (minCalories != null) {
+            meals.removeIf(meal -> meal.getTotalCalories() < minCalories);
+        }
+        if (maxCalories != null) {
+            meals.removeIf(meal -> meal.getTotalCalories() > maxCalories);
+        }
+        if (minProtein != null) {
+            meals.removeIf(meal -> meal.getTotalProtein() < minProtein);
+        }
+        if (maxProtein != null) {
+            meals.removeIf(meal -> meal.getTotalProtein() > maxProtein);
+        }
+        if (minCarbs != null) {
+            meals.removeIf(meal -> meal.getTotalCarbs() < minCarbs);
+        }
+        if (maxCarbs != null) {
+            meals.removeIf(meal -> meal.getTotalCarbs() > maxCarbs);
+        }
+        if (minFat != null) {
+            meals.removeIf(meal -> meal.getTotalFat() < minFat);
+        }
+        if (maxFat != null) {
+            meals.removeIf(meal -> meal.getTotalFat() > maxFat);
         }
 
         // ✅ **Sorting**

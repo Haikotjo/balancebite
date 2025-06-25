@@ -42,5 +42,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Query("SELECT u FROM User u JOIN u.meals m WHERE m = :meal")
     List<User> findAllByMealsContaining(@Param("meal") Meal meal);
 
+    List<User> findAllBySavedMealsContaining(Meal meal);
 
 }

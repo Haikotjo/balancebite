@@ -23,17 +23,26 @@ public interface IMealService {
      * Retrieves paginated and sorted template meals with optional filtering.
      *
      * Users can filter meals by cuisine, diet, meal type, and food items.
+     * Additional filters are available for total calories, protein, fat, and carbs (min/max values).
      * Meals can be sorted by name, total calories, protein, fat, or carbs.
      * Results are paginated.
      *
-     * @param cuisines Optional filter for meal cuisine.
-     * @param diets Optional filter for meal diet.
-     * @param mealTypes Optional filter for meal type (BREAKFAST, LUNCH, etc.).
-     * @param foodItems List of food items to filter meals by (e.g., "Banana", "Peas").
-     * @param sortBy Sorting field (calories, protein, fat, carbs, name).
-     * @param sortOrder Sorting order ("asc" for ascending, "desc" for descending).
-     * @param pageable Pageable object for pagination and sorting.
-     * @param creatorId
+     * @param cuisines    Optional filter for meal cuisines.
+     * @param diets       Optional filter for meal diets.
+     * @param mealTypes   Optional filter for meal types (e.g., BREAKFAST, LUNCH).
+     * @param foodItems   Optional list of food items to match against meals.
+     * @param sortBy      Field to sort by (e.g., "calories", "protein", "fat", "carbs", "name").
+     * @param sortOrder   Sort direction ("asc" or "desc").
+     * @param pageable    Pagination settings.
+     * @param creatorId   Optional filter for meals created by a specific user.
+     * @param minCalories Optional minimum total calories.
+     * @param maxCalories Optional maximum total calories.
+     * @param minProtein  Optional minimum total protein.
+     * @param maxProtein  Optional maximum total protein.
+     * @param minCarbs    Optional minimum total carbohydrates.
+     * @param maxCarbs    Optional maximum total carbohydrates.
+     * @param minFat      Optional minimum total fat.
+     * @param maxFat      Optional maximum total fat.
      * @return A paginated and sorted list of MealDTOs that match the filters.
      */
     Page<MealDTO> getAllMeals(
@@ -44,8 +53,16 @@ public interface IMealService {
             String sortBy,
             String sortOrder,
             Pageable pageable,
-            Long creatorId
-            );
+            Long creatorId,
+            Double minCalories,
+            Double maxCalories,
+            Double minProtein,
+            Double maxProtein,
+            Double minCarbs,
+            Double maxCarbs,
+            Double minFat,
+            Double maxFat
+    );
 
     /**
      * Retrieves a Meal by its ID, only if it is a template.

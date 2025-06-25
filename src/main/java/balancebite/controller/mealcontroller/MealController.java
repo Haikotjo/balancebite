@@ -49,18 +49,27 @@ public class MealController {
     /**
      * Retrieves paginated and sorted template meals with optional filtering.
      *
-     * Users can filter meals by cuisine, diet, meal type, and food items.
+     * Users can filter meals by cuisine, diet, meal type, food items, and macro-nutrients.
      * Meals can be sorted by name, total calories, protein, fat, or carbs.
      * Results are paginated.
      *
-     * @param cuisines (Optional) Filter for meal cuisine.
-     * @param diets (Optional) Filter for meal diet.
-     * @param mealTypes (Optional) Filter for meal type (BREAKFAST, LUNCH, etc.).
-     * @param foodItems (Optional) List of food items to filter meals by (comma-separated).
-     * @param sortBy (Optional) Sorting field (calories, protein, fat, carbs, name).
-     * @param sortOrder (Optional) Sorting order ("asc" for ascending, "desc" for descending).
-     * @param pageable Pageable object for pagination and sorting.
-     * @return ResponseEntity containing a paginated list of MealDTO objects matching the filters.
+     * @param cuisines     (Optional) Filter for meal cuisines.
+     * @param diets        (Optional) Filter for meal diets.
+     * @param mealTypes    (Optional) Filter for meal types.
+     * @param foodItems    (Optional) Filter by food items (comma-separated).
+     * @param sortBy       (Optional) Sort field: calories, protein, fat, carbs, name, etc.
+     * @param sortOrder    (Optional) Sort direction: "asc" or "desc".
+     * @param creatorId    (Optional) Filter by creator user ID.
+     * @param minCalories  (Optional) Minimum total calories.
+     * @param maxCalories  (Optional) Maximum total calories.
+     * @param minProtein   (Optional) Minimum total protein.
+     * @param maxProtein   (Optional) Maximum total protein.
+     * @param minCarbs     (Optional) Minimum total carbs.
+     * @param maxCarbs     (Optional) Maximum total carbs.
+     * @param minFat       (Optional) Minimum total fat.
+     * @param maxFat       (Optional) Maximum total fat.
+     * @param pageable     Pageable object for pagination and sorting.
+     * @return A paginated list of MealDTOs matching the filters.
      */
     @GetMapping
     public ResponseEntity<Page<MealDTO>> getAllMeals(
@@ -71,27 +80,32 @@ public class MealController {
             @RequestParam(required = false) String sortBy,
             @RequestParam(required = false, defaultValue = "asc") String sortOrder,
             @RequestParam(required = false) Long creatorId,
+            @RequestParam(required = false) Double minCalories,
+            @RequestParam(required = false) Double maxCalories,
+            @RequestParam(required = false) Double minProtein,
+            @RequestParam(required = false) Double maxProtein,
+            @RequestParam(required = false) Double minCarbs,
+            @RequestParam(required = false) Double maxCarbs,
+            @RequestParam(required = false) Double minFat,
+            @RequestParam(required = false) Double maxFat,
             Pageable pageable
     ) {
         try {
-            log.info("Retrieving paginated template meals with filters and sorting. sortBy: {}, sortOrder: {}, page: {}, size: {}",
-                    sortBy, sortOrder, pageable.getPageNumber(), pageable.getPageSize());
+            log.info("Retrieving paginated template meals with filters and sorting.");
 
-            // Haal gefilterde, gesorteerde en gepagineerde maaltijden op
             Page<MealDTO> mealDTOs = mealService.getAllMeals(
-                    cuisines, diets, mealTypes, foodItems, sortBy, sortOrder, pageable, creatorId
+                    cuisines, diets, mealTypes, foodItems, sortBy, sortOrder, pageable, creatorId,
+                    minCalories, maxCalories, minProtein, maxProtein, minCarbs, maxCarbs, minFat, maxFat
             );
 
             if (mealDTOs.isEmpty()) {
-                log.info("No matching meals found.");
                 return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
             }
 
             return ResponseEntity.ok(mealDTOs);
         } catch (Exception e) {
             log.error("Unexpected error during retrieval of meals: {}", e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Page.empty());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Page.empty());
         }
     }
 
