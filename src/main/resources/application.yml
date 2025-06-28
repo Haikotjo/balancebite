@@ -25,7 +25,7 @@ spring:
       #           Recommended for development if you need to keep existing data.
       # - none: Disables schema management, retaining all data and schema as is.
       # - create-drop: Creates schema at startup but drops it when the application stops.
-      ddl-auto: update
+      ddl-auto: create
     defer-datasource-initialization: true
     properties:
       hibernate:

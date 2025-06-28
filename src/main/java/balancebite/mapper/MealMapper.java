@@ -17,6 +17,7 @@ import balancebite.repository.UserRepository;
 import balancebite.service.FileStorageService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
@@ -37,12 +38,14 @@ public class MealMapper {
     private final MealIngredientMapper mealIngredientMapper;
     private final FileStorageService fileStorageService;
     private final SavedMealRepository savedMealRepository;
+    private final UserMapper userMapper;
 
-    public MealMapper(FoodItemRepository foodItemRepository, MealIngredientMapper mealIngredientMapper, FileStorageService fileStorageService, SavedMealRepository savedMealRepository) {
+    public MealMapper(FoodItemRepository foodItemRepository, MealIngredientMapper mealIngredientMapper, FileStorageService fileStorageService, SavedMealRepository savedMealRepository, @Lazy UserMapper userMapper) {
         this.foodItemRepository = foodItemRepository;
         this.mealIngredientMapper = mealIngredientMapper;
         this.fileStorageService = fileStorageService;
         this.savedMealRepository = savedMealRepository;
+        this.userMapper = userMapper;
     }
 
     /**
@@ -74,8 +77,8 @@ public class MealMapper {
                 meal.getMealIngredients().stream()
                         .map(this::toMealIngredientDTO)
                         .collect(Collectors.toList()),
-                meal.getCreatedBy() != null ? toUserDTO(meal.getCreatedBy()) : null,
-                meal.getAdjustedBy() != null ? toUserDTO(meal.getAdjustedBy()) : null,
+                meal.getCreatedBy() != null ? userMapper.toPublicUserDTO(meal.getCreatedBy()) : null,
+                meal.getAdjustedBy() != null ? userMapper.toPublicUserDTO(meal.getAdjustedBy()) : null,
                 meal.isTemplate(),
                 meal.isPrivate(),
                 meal.getMealTypes(),

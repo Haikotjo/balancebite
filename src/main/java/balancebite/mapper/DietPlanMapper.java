@@ -41,12 +41,13 @@ public class DietPlanMapper {
                 .toList();
 
         PublicUserDTO createdByDTO = dietPlan.getCreatedBy() != null
-                ? new PublicUserDTO(dietPlan.getCreatedBy().getId(), dietPlan.getCreatedBy().getUserName())
+                ? userMapper.toPublicUserDTO(dietPlan.getCreatedBy())
                 : null;
 
         PublicUserDTO adjustedByDTO = dietPlan.getAdjustedBy() != null
-                ? new PublicUserDTO(dietPlan.getAdjustedBy().getId(), dietPlan.getAdjustedBy().getUserName())
+                ? userMapper.toPublicUserDTO(dietPlan.getAdjustedBy())
                 : null;
+
 
         long saveCount = Optional.ofNullable(dietPlan.getSaveCount()).orElse(0L);
         long weeklySaveCount = Optional.ofNullable(dietPlan.getWeeklySaveCount()).orElse(0L);

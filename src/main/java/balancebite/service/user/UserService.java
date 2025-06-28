@@ -3,6 +3,7 @@ package balancebite.service.user;
 import balancebite.dto.user.UserRegistrationInputDTO;
 import balancebite.dto.user.UserDTO;
 import balancebite.dto.user.UserDetailsInputDTO;
+import balancebite.dto.user.UserSearchDTO;
 import balancebite.errorHandling.UserNotFoundException;
 import balancebite.mapper.UserMapper;
 import balancebite.model.meal.Meal;
@@ -26,6 +27,7 @@ import java.time.LocalDate;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * Service class responsible for managing users.
@@ -247,6 +249,14 @@ public class UserService implements IUserService {
     public User findUserById(Long id) {
         return userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException("No user found with ID: " + id));
+    }
+
+@Override
+    public List<UserSearchDTO> searchUsersByName(String query) {
+        List<User> users = userRepository.findByUserNameContainingIgnoreCase(query);
+        return users.stream()
+                .map(user -> new UserSearchDTO(user.getId(), user.getUserName()))
+                .collect(Collectors.toList());
     }
 
 }

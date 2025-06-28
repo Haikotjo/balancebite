@@ -1,6 +1,7 @@
 package balancebite.controller.diet;
 
 import balancebite.dto.diet.DietPlanDTO;
+import balancebite.dto.diet.DietPlanNameDTO;
 import balancebite.errorHandling.DietPlanNotFoundException;
 import balancebite.service.interfaces.diet.IPublicDietPlanService;
 import org.slf4j.Logger;
@@ -43,8 +44,10 @@ public class PublicDietPlanController {
             @RequestParam(required = false) Double maxFat,
             @RequestParam(required = false) Double minCalories,
             @RequestParam(required = false) Double maxCalories,
-            @RequestParam(required = false) Long createdByUserId
-    ) {
+            @RequestParam(required = false) Long createdByUserId,
+            @RequestParam(required = false) String name
+
+            ) {
         Map<String, String> sortFieldMap = Map.ofEntries(
                 Map.entry("avgProtein", "avgProtein"),
                 Map.entry("avgCarbs", "avgCarbs"),
@@ -80,7 +83,8 @@ public class PublicDietPlanController {
                 minCarbs, maxCarbs,
                 minFat, maxFat,
                 minCalories, maxCalories,
-                createdByUserId
+                createdByUserId,
+                name
         );
 
         if (plans.isEmpty()) {
@@ -100,4 +104,24 @@ public class PublicDietPlanController {
             return ResponseEntity.status(404).body(Map.of("error", e.getMessage()));
         }
     }
+
+    /**
+     * Endpoint to retrieve only the IDs and names of all public diet plans.
+     * Optimized for search/autocomplete use.
+     *
+     * @return A list of DietPlanNameDTOs with only ID and name fields.
+     */
+    @GetMapping("/names")
+    public ResponseEntity<?> getAllPublicDietPlanNames() {
+        log.info("Fetching all public diet plan names and IDs.");
+        List<DietPlanNameDTO> names = publicDietPlanService.getAllPublicDietPlanNames();
+
+        if (names.isEmpty()) {
+            log.info("No public diet plan names found.");
+            return ResponseEntity.noContent().build();
+        }
+
+        return ResponseEntity.ok(names);
+    }
+
 }

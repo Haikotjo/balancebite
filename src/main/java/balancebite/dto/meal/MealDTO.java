@@ -1,6 +1,7 @@
 package balancebite.dto.meal;
 
 import balancebite.dto.mealingredient.MealIngredientDTO;
+import balancebite.dto.user.PublicUserDTO;
 import balancebite.dto.user.UserDTO;
 import balancebite.model.meal.references.Cuisine;
 import balancebite.model.meal.references.Diet;
@@ -61,13 +62,13 @@ public class MealDTO {
     /**
      * The user who originally created the meal.
      */
-    private final UserDTO createdBy;
+    private final PublicUserDTO createdBy;
 
     /**
      * The user who added and potentially adjusted the meal.
      * This field allows identification of customized meal copies.
      */
-    private final UserDTO adjustedBy;
+    private final PublicUserDTO adjustedBy;
 
     private final boolean isTemplate;
 
@@ -153,9 +154,9 @@ public class MealDTO {
      * @param foodItemsString  the concatenated string of food items in the meal.
      */
     public MealDTO(Long id, String name, String mealDescription, String image, String imageUrl, Long originalMealId,
-                   LocalDateTime version, List<MealIngredientDTO> mealIngredients, UserDTO createdBy,
-                   UserDTO adjustedBy,Boolean isTemplate, Boolean isPrivate,  Set<MealType> mealTypes, Set<Cuisine> cuisines, Set<Diet> diets, double totalCalories, double totalProtein, double totalCarbs,
-                   double totalFat, String foodItemsString, String preparationTime, long saveCount, long weeklySaveCount, long monthlySaveCount) {
+                   LocalDateTime version, List<MealIngredientDTO> mealIngredients, PublicUserDTO createdBy,
+                   PublicUserDTO adjustedBy ,Boolean isTemplate, Boolean isPrivate,  Set<MealType> mealTypes, Set<Cuisine> cuisines, Set<Diet> diets, double totalCalories, double totalProtein, double totalCarbs,
+                   double totalFat, String foodItemsString, String preparationTime, long saveCount, long weeklySaveCount, long monthlySaveCount ) {
         this.id = id;
         this.name = name;
         this.mealDescription = mealDescription;
@@ -255,16 +256,15 @@ public class MealDTO {
      *
      * @return the creator of the meal.
      */
-    public UserDTO getCreatedBy() {
+    public PublicUserDTO getCreatedBy() {
         return createdBy;
     }
-
     /**
      * Gets the user who added and potentially adjusted this meal.
      *
      * @return the user who adjusted the meal.
      */
-    public UserDTO getAdjustedBy() {
+    public PublicUserDTO getAdjustedBy() {
         return adjustedBy;
     }
 

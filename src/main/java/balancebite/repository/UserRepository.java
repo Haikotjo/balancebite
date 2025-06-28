@@ -44,4 +44,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     List<User> findAllBySavedMealsContaining(Meal meal);
 
+    List<User> findByUserNameContainingIgnoreCase(String query);
+
 }

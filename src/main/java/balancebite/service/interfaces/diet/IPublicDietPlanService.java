@@ -1,6 +1,7 @@
 package balancebite.service.interfaces.diet;
 
 import balancebite.dto.diet.DietPlanDTO;
+import balancebite.dto.diet.DietPlanNameDTO;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -46,6 +47,9 @@ public interface IPublicDietPlanService {
             Double maxFat,
             Double minCalories,
             Double maxCalories,
-            Long createdByUserId
+            Long createdByUserId,
+            String name
     );
+    List<DietPlanNameDTO> getAllPublicDietPlanNames();
+
 }

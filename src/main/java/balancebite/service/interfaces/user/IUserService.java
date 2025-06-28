@@ -3,9 +3,12 @@ package balancebite.service.interfaces.user;
 import balancebite.dto.user.UserRegistrationInputDTO;
 import balancebite.dto.user.UserDetailsInputDTO;
 import balancebite.dto.user.UserDTO;
+import balancebite.dto.user.UserSearchDTO;
 import balancebite.errorHandling.EntityAlreadyExistsException;
 import balancebite.errorHandling.UserNotFoundException;
 import balancebite.model.user.User;
+
+import java.util.List;
 
 /**
  * Interface defining the methods for managing User operations.
@@ -54,5 +57,13 @@ public interface IUserService {
     void deleteLoggedInUser(Long id);
 
     User findUserById(Long id);
+
+    /**
+     * Searches users by partial username match (case-insensitive).
+     *
+     * @param query The partial name to search for.
+     * @return A list of matching users as UserSearchDTO.
+     */
+    List<UserSearchDTO> searchUsersByName(String query);
 }
 

@@ -1,6 +1,7 @@
 package balancebite.service.diet;
 
 import balancebite.dto.diet.DietPlanDTO;
+import balancebite.dto.diet.DietPlanNameDTO;
 import balancebite.errorHandling.DietPlanNotFoundException;
 import balancebite.mapper.DietPlanMapper;
 import balancebite.model.diet.DietPlan;
@@ -51,7 +52,8 @@ public class PublicDietPlanService implements IPublicDietPlanService {
             Double maxFat,
             Double minCalories,
             Double maxCalories,
-            Long createdByUserId
+            Long createdByUserId,
+            String name
     ) {
         Specification<DietPlan> spec = createdByUserId != null
                 ? Specification.where(DietPlanSpecification.isTemplateCreatedBy(createdByUserId))
@@ -59,6 +61,10 @@ public class PublicDietPlanService implements IPublicDietPlanService {
 
         spec = spec.and((root, query, cb) -> cb.isFalse(root.get("isPrivate")));
 
+        if (name != null && !name.isBlank()) {
+            spec = spec.and((root, query, cb) ->
+                    cb.like(cb.lower(root.get("name")), "%" + name.toLowerCase() + "%"));
+        }
 
         if (diets != null && !diets.isEmpty()) {
             spec = spec.and((root, query, cb) -> root.join("diets").in(diets));
@@ -150,4 +156,11 @@ public class PublicDietPlanService implements IPublicDietPlanService {
                 .orElseThrow(() -> new DietPlanNotFoundException("Public diet not found with ID: " + id));
         return dietPlanMapper.toDTO(dietPlan);
     }
+    @Override
+    @Transactional(readOnly = true)
+    public List<DietPlanNameDTO> getAllPublicDietPlanNames() {
+        log.info("Fetching all public diet plan names and IDs.");
+        return dietPlanRepository.findAllTemplateDietPlanNames();
+    }
+
 }

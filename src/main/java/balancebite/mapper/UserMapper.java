@@ -1,9 +1,6 @@
 package balancebite.mapper;
 
-import balancebite.dto.user.UserDTO;
-import balancebite.dto.user.UserDetailsInputDTO;
-import balancebite.dto.user.UserLoginInputDTO;
-import balancebite.dto.user.UserRegistrationInputDTO;
+import balancebite.dto.user.*;
 import balancebite.dto.meal.MealDTO;
 import balancebite.dto.recommendeddailyintake.RecommendedDailyIntakeDTO;
 import balancebite.model.user.Role;
@@ -157,4 +154,10 @@ public class UserMapper {
         }
         log.debug("UserLoginInputDTO validation passed for email: {}", loginDTO.getEmail());
     }
+
+    public PublicUserDTO toPublicUserDTO(User user) {
+        if (user == null) return null;
+        return new PublicUserDTO(user.getId(), user.getUserName(), user.getRoles());
+    }
+
 }
