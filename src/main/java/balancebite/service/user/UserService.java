@@ -251,12 +251,16 @@ public class UserService implements IUserService {
                 .orElseThrow(() -> new UserNotFoundException("No user found with ID: " + id));
     }
 
-@Override
+    @Override
     public List<UserSearchDTO> searchUsersByName(String query) {
         List<User> users = userRepository.findByUserNameContainingIgnoreCase(query);
+
         return users.stream()
+                .filter(user ->
+                        user.getMeals().stream().anyMatch(meal -> !meal.isPrivate()) ||
+                                user.getDietPlans().stream().anyMatch(diet -> !diet.isPrivate())
+                )
                 .map(user -> new UserSearchDTO(user.getId(), user.getUserName()))
                 .collect(Collectors.toList());
     }
-
 }

@@ -1,9 +1,10 @@
-package balancebite.service.interfaces;
+package balancebite.service.interfaces.fooditem;
 
 import balancebite.dto.UsdaFoodResponseDTO;
 import balancebite.dto.fooditem.FoodItemDTO;
 import balancebite.dto.fooditem.FoodItemInputDTO;
 import balancebite.dto.fooditem.FoodItemNameDTO;
+import balancebite.model.foodItem.FoodCategory;
 import balancebite.model.foodItem.FoodSource;
 import balancebite.errorHandling.EntityAlreadyExistsException;
 import jakarta.persistence.EntityNotFoundException;
@@ -94,5 +95,8 @@ public interface IFoodItemService {
      * @return A list of FoodItemDTOs from the specified source.
      */
     List<FoodItemDTO> getFoodItemsByFoodSource(FoodSource foodSource);
+
+    List<FoodItemDTO> getFoodItemsByCategory(FoodCategory category);
+
 
 }

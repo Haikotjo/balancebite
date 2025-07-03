@@ -2,8 +2,11 @@ package balancebite.dto.fooditem;
 
 import balancebite.dto.NutrientInfoDTO;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+
+import balancebite.model.foodItem.FoodCategory;
 import balancebite.model.foodItem.FoodSource;
 
 
@@ -54,6 +57,11 @@ public class FoodItemDTO {
      */
     private final FoodSource foodSource;
 
+    private final boolean promoted;
+    private final LocalDateTime promotionStartDate;
+    private final LocalDateTime promotionEndDate;
+
+    private final FoodCategory foodCategory;
 
     /**
      * Parameterized constructor to create a FoodItemDTO.
@@ -68,7 +76,7 @@ public class FoodItemDTO {
      *                     * @param source The source where the food item can be purchased (optional).
      * @param foodSource The source where the food item was purchased (optional).
      */
-    public FoodItemDTO(Long id, String name, int fdcId, List<NutrientInfoDTO> nutrients, String portionDescription, double gramWeight, String source, FoodSource foodSource) {
+    public FoodItemDTO(Long id, String name, int fdcId, List<NutrientInfoDTO> nutrients, String portionDescription, double gramWeight, String source, FoodSource foodSource, boolean promoted, LocalDateTime promotionStartDate, LocalDateTime promotionEndDate, FoodCategory foodCategory) {
         this.id = id;
         this.name = name;
         this.fdcId = fdcId;
@@ -77,55 +85,66 @@ public class FoodItemDTO {
         this.gramWeight = gramWeight;
         this.source = source;
         this.foodSource = foodSource;
+        this.promoted = promoted;
+        this.promotionStartDate = promotionStartDate;
+        this.promotionEndDate = promotionEndDate;
+        this.foodCategory = foodCategory;
     }
 
     /**
-     * Processes the nutrients list to combine values of healthy and unhealthy fats.
-     * Adds new entries for "Mono- and Polyunsaturated fats" and "Saturated and Trans fats".
+     * Processes the list of nutrients to combine values for saturated and unsaturated fats.
+     * - Monounsaturated and polyunsaturated fats are grouped as "Unsaturated Fat".
+     * - Saturated and trans fats are grouped as "Saturated Fat".
+     * This simplifies the representation to just two fat types: healthy (unsaturated) and unhealthy (saturated).
      *
-     * @param nutrients The original list of nutrients.
-     * @return A list of nutrients with combined fat values.
+     * @param nutrients The original list of individual nutrient entries.
+     * @return A new list of nutrients where individual fats are replaced with grouped totals.
      */
     private List<NutrientInfoDTO> processNutrients(List<NutrientInfoDTO> nutrients) {
-        double totalHealthyFats = 0.0;
-        double totalUnhealthyFats = 0.0;
+        double unsaturatedFat = 0.0;
+        double saturatedFat = 0.0;
 
-        // Create a copy of the nutrient list to modify.
+        // Create a modifiable copy of the original list
         List<NutrientInfoDTO> updatedNutrients = new ArrayList<>(nutrients);
 
-        // Calculate the sum of healthy and unhealthy fats.
+        // Calculate totals for saturated and unsaturated fats
         for (NutrientInfoDTO nutrient : nutrients) {
             switch (nutrient.getNutrientName()) {
                 case "Fatty acids, total monounsaturated":
                 case "Fatty acids, total polyunsaturated":
-                    totalHealthyFats += nutrient.getValue();
+                    unsaturatedFat += nutrient.getValue();
+                    break;
+                case "Fatty acids, total unsaturated":
+                    unsaturatedFat += nutrient.getValue();
                     break;
                 case "Fatty acids, total saturated":
                 case "Fatty acids, total trans":
-                    totalUnhealthyFats += nutrient.getValue();
+                    saturatedFat += nutrient.getValue();
                     break;
                 default:
-                    // No action needed for other nutrients.
+                    // Other nutrients are left unchanged
                     break;
             }
         }
 
-        // Remove individual fat entries from the nutrient list.
+        // Remove original individual fat entries from the list
         updatedNutrients.removeIf(nutrient ->
                 nutrient.getNutrientName().equals("Fatty acids, total monounsaturated") ||
                         nutrient.getNutrientName().equals("Fatty acids, total polyunsaturated") ||
                         nutrient.getNutrientName().equals("Fatty acids, total saturated") ||
-                        nutrient.getNutrientName().equals("Fatty acids, total trans")
+                        nutrient.getNutrientName().equals("Fatty acids, total trans") ||
+                        nutrient.getNutrientName().equals("Fatty acids, total unsaturated")
         );
 
-        // Add combined entries if their values are greater than zero.
-        if (totalHealthyFats > 0) {
-            updatedNutrients.add(new NutrientInfoDTO("Mono- and Polyunsaturated fats", totalHealthyFats, "g"));
+        // Add combined fat values under clear display names
+        if (unsaturatedFat > 0) {
+            updatedNutrients.add(new NutrientInfoDTO("Unsaturated Fat", unsaturatedFat, "g"));
         }
-        if (totalUnhealthyFats > 0) {
-            updatedNutrients.add(new NutrientInfoDTO("Saturated and Trans fats", totalUnhealthyFats, "g"));
+        if (saturatedFat > 0) {
+            updatedNutrients.add(new NutrientInfoDTO("Saturated Fat", saturatedFat, "g"));
         }
 
+        // Return an unmodifiable copy of the updated list
         return List.copyOf(updatedNutrients);
     }
 
@@ -203,4 +222,19 @@ public class FoodItemDTO {
         return foodSource;
     }
 
+    public boolean isPromoted() {
+        return promoted;
+    }
+
+    public LocalDateTime getPromotionStartDate() {
+        return promotionStartDate;
+    }
+
+    public LocalDateTime getPromotionEndDate() {
+        return promotionEndDate;
+    }
+
+    public FoodCategory getFoodCategory() {
+        return foodCategory;
+    }
 }

@@ -70,6 +70,10 @@ public class FoodItem {
     @OneToMany(mappedBy = "foodItem", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<MealIngredient> mealIngredients = new ArrayList<>();
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "food_category", nullable = true)
+    private FoodCategory foodCategory;
+
     /**
      * No-argument constructor required by JPA.
      */
@@ -271,5 +275,15 @@ public class FoodItem {
     public void setFoodSource(FoodSource foodSource) {
         this.foodSource = foodSource;
     }
+
+    public FoodCategory getFoodCategory() {
+        return foodCategory;
+    }
+
+    public void setFoodCategory(FoodCategory foodCategory) {
+        this.foodCategory = foodCategory;
+    }
 }
+
+
 

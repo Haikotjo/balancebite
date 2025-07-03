@@ -676,32 +676,44 @@ public class UserMealService implements IUserMealService {
     @Override
     @Transactional
     public void forceRemoveMealFromUser(Long userId, Long mealId) {
+        log.info("Force-removal of meal ID {} from user ID {}", mealId, userId);
+
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException("User not found"));
+                .orElseThrow(() -> new UserNotFoundException("User not found with ID: " + userId));
 
         Meal meal = user.getMeals().stream()
                 .filter(m -> m.getId().equals(mealId))
                 .findFirst()
-                .orElseThrow(() -> new MealNotFoundException("Meal not found in user's list"));
+                .orElseThrow(() -> new MealNotFoundException("Meal not found in user's list."));
 
+        // ✅ Verwijder meal uit alle DietDays waarin hij voorkomt
         List<DietDay> daysWithMeal = dietDayRepository.findByMealsContainingWithDietFetched(meal);
         for (DietDay day : daysWithMeal) {
             day.getMeals().remove(meal);
         }
+        dietDayRepository.saveAll(daysWithMeal); // belangrijk!
 
-        user.getMeals().remove(meal);
-        mealRepository.delete(meal);
+        if (!meal.isTemplate()) {
+            log.info("Meal ID {} is NOT a template, deleting it permanently.", mealId);
+            user.getMeals().remove(meal);
+            mealRepository.delete(meal);
 
-        if (meal.getOriginalMealId() != null) {
-            savedMealRepository.deleteLatestByMealId(meal.getOriginalMealId());
-
-            Meal original = mealRepository.findById(meal.getOriginalMealId())
-                    .orElseThrow(() -> new MealNotFoundException("Original meal not found"));
-            long totalSaves = savedMealRepository.countByMeal(original);
-            original.setSaveCount(totalSaves);
-            mealRepository.saveAndFlush(original);
+            if (meal.getOriginalMealId() != null) {
+                savedMealRepository.deleteLatestByMealId(meal.getOriginalMealId());
+                Meal original = mealRepository.findById(meal.getOriginalMealId())
+                        .orElseThrow(() -> new MealNotFoundException("Original meal not found"));
+                long totalSaves = savedMealRepository.countByMeal(original);
+                original.setSaveCount(totalSaves);
+                mealRepository.saveAndFlush(original);
+            }
+        } else {
+            log.info("Meal ID {} is a template, unlinking from user.", mealId);
+            user.getMeals().remove(meal);
         }
 
         userRepository.save(user);
+        log.info("Force-removal completed for meal ID {} and user ID {}", mealId, userId);
     }
+
+
 }

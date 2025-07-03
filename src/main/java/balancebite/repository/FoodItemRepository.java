@@ -1,6 +1,7 @@
 package balancebite.repository;
 
 import balancebite.dto.fooditem.FoodItemNameDTO;
+import balancebite.model.foodItem.FoodCategory;
 import balancebite.model.foodItem.FoodItem;
 import balancebite.model.foodItem.FoodSource;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -53,4 +54,7 @@ public interface FoodItemRepository extends JpaRepository<FoodItem, Long> {
      * @return A list of FoodItems from the specified food source.
      */
     List<FoodItem> findByFoodSource(FoodSource foodSource);
+
+    List<FoodItem> findByFoodCategory(FoodCategory category);
+
 }

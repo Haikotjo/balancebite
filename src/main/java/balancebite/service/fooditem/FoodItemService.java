@@ -1,4 +1,4 @@
-package balancebite.service;
+package balancebite.service.fooditem;
 
 import balancebite.dto.fooditem.FoodItemDTO;
 import balancebite.dto.UsdaFoodResponseDTO;
@@ -7,10 +7,12 @@ import balancebite.dto.fooditem.FoodItemNameDTO;
 import balancebite.errorHandling.EntityAlreadyExistsException;
 import balancebite.errorHandling.UsdaApiException;
 import balancebite.mapper.FoodItemMapper;
+import balancebite.model.foodItem.FoodCategory;
 import balancebite.model.foodItem.FoodItem;
 import balancebite.model.foodItem.FoodSource;
 import balancebite.repository.FoodItemRepository;
-import balancebite.service.interfaces.IFoodItemService;
+import balancebite.service.UsdaApiService;
+import balancebite.service.interfaces.fooditem.IFoodItemService;
 import balancebite.errorHandling.EntityNotFoundException;
 import balancebite.utils.FoodItemBulkFetchUtil;
 import org.slf4j.Logger;
@@ -280,6 +282,15 @@ public class FoodItemService implements IFoodItemService {
         log.info("Retrieving food items by food source: {}", foodSource);
         List<FoodItem> foodItems = foodItemRepository.findByFoodSource(foodSource);
         return foodItems.stream()
+                .map(foodItemMapper::toDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<FoodItemDTO> getFoodItemsByCategory(FoodCategory category) {
+        log.info("Retrieving food items by category: {}", category);
+        return foodItemRepository.findByFoodCategory(category)
+                .stream()
                 .map(foodItemMapper::toDTO)
                 .collect(Collectors.toList());
     }

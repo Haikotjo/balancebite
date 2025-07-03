@@ -153,6 +153,9 @@ public class SecurityConfig {
 
                         // admin-only endpoints
                         .requestMatchers("/admin/dietplans/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/admin/promotions").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/admin/promotions/{promotionId}").hasRole("ADMIN")
+
 
                         .anyRequest().authenticated()
                 )

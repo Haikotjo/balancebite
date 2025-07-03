@@ -39,5 +39,9 @@ public interface SavedMealRepository extends JpaRepository<SavedMeal, Long> {
         ORDER BY COUNT(s) DESC
     """)
     List<SavedMealDTO> findSavedMealsSince(@Param("since") LocalDateTime since);
+
+    void deleteAllByMealId(Long mealId);
+
 }
+
 

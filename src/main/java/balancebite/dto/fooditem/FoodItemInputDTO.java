@@ -1,6 +1,7 @@
 package balancebite.dto.fooditem;
 
 import balancebite.dto.NutrientInfoDTO;
+import balancebite.model.foodItem.FoodCategory;
 import jakarta.validation.constraints.*;
 import balancebite.model.foodItem.FoodSource;
 
@@ -59,6 +60,7 @@ public class FoodItemInputDTO {
      */
     private FoodSource foodSource;
 
+    private FoodCategory foodCategory;
 
     // Constructor, getters, and setters
 
@@ -119,6 +121,14 @@ public class FoodItemInputDTO {
 
     public void setFoodSource(FoodSource foodSource) {
         this.foodSource = foodSource;
+    }
+
+    public FoodCategory getFoodCategory() {
+        return foodCategory;
+    }
+
+    public void setFoodCategory(FoodCategory foodCategory) {
+        this.foodCategory = foodCategory;
     }
 
 }

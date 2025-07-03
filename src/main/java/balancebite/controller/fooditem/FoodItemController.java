@@ -1,4 +1,4 @@
-package balancebite.controller;
+package balancebite.controller.fooditem;
 
 import balancebite.dto.UsdaFoodResponseDTO;
 import balancebite.dto.fooditem.FoodItemDTO;
@@ -6,8 +6,9 @@ import balancebite.dto.fooditem.FoodItemInputDTO;
 import balancebite.dto.fooditem.FoodItemNameDTO;
 import balancebite.errorHandling.EntityAlreadyExistsException;
 import balancebite.errorHandling.EntityNotFoundException;
+import balancebite.model.foodItem.FoodCategory;
 import balancebite.model.foodItem.FoodSource;
-import balancebite.service.FoodItemService;
+import balancebite.service.fooditem.FoodItemService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -246,4 +247,26 @@ public class FoodItemController {
         log.info("Fetching all predefined food sources.");
         return ResponseEntity.ok(FoodSource.values());
     }
+
+    @GetMapping("/by-category")
+    public ResponseEntity<?> getFoodItemsByCategory(@RequestParam("category") String category) {
+        log.info("Fetching food items with category: {}", category);
+        try {
+            FoodCategory foodCategory = FoodCategory.valueOf(category.toUpperCase());
+            List<FoodItemDTO> foodItems = foodItemService.getFoodItemsByCategory(foodCategory);
+            if (foodItems.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+            }
+            return ResponseEntity.ok(foodItems);
+        } catch (IllegalArgumentException e) {
+            log.warn("Invalid food category: {}", category);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", "Invalid food category: " + category));
+        } catch (Exception e) {
+            log.error("Error while fetching food items by category: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "An unexpected error occurred."));
+        }
+    }
+
 }

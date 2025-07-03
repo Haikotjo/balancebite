@@ -5,10 +5,13 @@ import balancebite.dto.fooditem.FoodItemInputDTO;
 import balancebite.dto.NutrientInfoDTO;
 import balancebite.model.foodItem.FoodItem;
 import balancebite.model.NutrientInfo;
+import balancebite.model.foodItem.PromotedFoodItem;
+import balancebite.service.fooditem.PromotedFoodItemService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -19,6 +22,12 @@ import java.util.stream.Collectors;
  */
 @Component
 public class FoodItemMapper {
+
+    private final PromotedFoodItemService promotedFoodItemService;
+
+    public FoodItemMapper(PromotedFoodItemService promotedFoodItemService) {
+        this.promotedFoodItemService = promotedFoodItemService;
+    }
 
     private static final Logger log = LoggerFactory.getLogger(FoodItemMapper.class);
 
@@ -46,6 +55,7 @@ public class FoodItemMapper {
                                     .map(n -> new NutrientInfo(n.getNutrientName(), n.getValue(), n.getUnitName(), n.getNutrientId()))
                                     .collect(Collectors.toList()) : List.of();
                     foodItem.setNutrients(nutrients);
+                    foodItem.setFoodCategory(dto.getFoodCategory());
 
                     log.debug("Finished mapping FoodItemInputDTO to FoodItem entity: {}", foodItem);
                     return foodItem;
@@ -68,6 +78,12 @@ public class FoodItemMapper {
             log.warn("Received null FoodItem entity, returning null for FoodItemDTO.");
             return null;
         }
+        Optional<PromotedFoodItem> promotion = promotedFoodItemService.getActivePromotion(foodItem.getId());
+
+        boolean promoted = promotion.isPresent();
+        LocalDateTime startDate = promotion.map(PromotedFoodItem::getStartDate).orElse(null);
+        LocalDateTime endDate = promotion.map(PromotedFoodItem::getEndDate).orElse(null);
+
         FoodItemDTO dto = new FoodItemDTO(
                 foodItem.getId(),
                 foodItem.getName(),
@@ -79,8 +95,13 @@ public class FoodItemMapper {
                 foodItem.getPortionDescription(),
                 foodItem.getGramWeight(),
                 foodItem.getSource(),
-                foodItem.getFoodSource()
+                foodItem.getFoodSource(),
+                promoted,
+                startDate,
+                endDate,
+                foodItem.getFoodCategory()
         );
+
 
         log.debug("Finished mapping FoodItem entity to FoodItemDTO: {}", dto);
         return dto;
