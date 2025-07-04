@@ -20,6 +20,7 @@ public class MealIngredientMapper {
     private static final Logger log = LoggerFactory.getLogger(MealIngredientMapper.class);
 
     private final FoodItemRepository foodItemRepository;
+    private final FoodItemMapper foodItemMapper;
 
     /**
      * Constructor for MealIngredientMapper, using constructor injection
@@ -27,8 +28,9 @@ public class MealIngredientMapper {
      *
      * @param foodItemRepository the repository for managing FoodItem entities.
      */
-    public MealIngredientMapper(FoodItemRepository foodItemRepository) {
+    public MealIngredientMapper(FoodItemRepository foodItemRepository, FoodItemMapper foodItemMapper) {
         this.foodItemRepository = foodItemRepository;
+        this.foodItemMapper = foodItemMapper;
     }
 
     /**
@@ -75,7 +77,8 @@ public class MealIngredientMapper {
                 mealIngredient.getMeal().getId(),
                 mealIngredient.getFoodItem().getId(),
                 mealIngredient.getFoodItem().getName(),
-                mealIngredient.getQuantity()
+                mealIngredient.getQuantity(),
+                foodItemMapper.toDTO(mealIngredient.getFoodItem())
         );
 
         log.debug("Finished mapping MealIngredient entity to MealIngredientDTO: {}", dto);

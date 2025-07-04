@@ -39,13 +39,15 @@ public class MealMapper {
     private final FileStorageService fileStorageService;
     private final SavedMealRepository savedMealRepository;
     private final UserMapper userMapper;
+    private final FoodItemMapper foodItemMapper;
 
-    public MealMapper(FoodItemRepository foodItemRepository, MealIngredientMapper mealIngredientMapper, FileStorageService fileStorageService, SavedMealRepository savedMealRepository, @Lazy UserMapper userMapper) {
+    public MealMapper(FoodItemRepository foodItemRepository, MealIngredientMapper mealIngredientMapper, FileStorageService fileStorageService, SavedMealRepository savedMealRepository, @Lazy UserMapper userMapper, FoodItemMapper foodItemMapper) {
         this.foodItemRepository = foodItemRepository;
         this.mealIngredientMapper = mealIngredientMapper;
         this.fileStorageService = fileStorageService;
         this.savedMealRepository = savedMealRepository;
         this.userMapper = userMapper;
+        this.foodItemMapper = foodItemMapper;
     }
 
     /**
@@ -84,10 +86,14 @@ public class MealMapper {
                 meal.getMealTypes(),
                 meal.getCuisines(),
                 meal.getDiets(),
-                meal.getTotalCalories(),
-                meal.getTotalProtein(),
-                meal.getTotalCarbs(),
-                meal.getTotalFat(),
+                Optional.ofNullable(meal.getTotalCalories()).orElse(0.0),
+                Optional.ofNullable(meal.getTotalProtein()).orElse(0.0),
+                Optional.ofNullable(meal.getTotalCarbs()).orElse(0.0),
+                Optional.ofNullable(meal.getTotalSugars()).orElse(0.0),
+                Optional.ofNullable(meal.getTotalSaturatedFat()).orElse(0.0),
+                Optional.ofNullable(meal.getTotalUnsaturatedFat()).orElse(0.0),
+                Optional.ofNullable(meal.getTotalFat()).orElse(0.0),
+
                 meal.getFoodItemsString(),
                 meal.getPreparationTime() != null ? meal.getPreparationTime().toString() : null,
                 saveCount,
@@ -158,16 +164,16 @@ public class MealMapper {
      */
     private MealIngredientDTO toMealIngredientDTO(MealIngredient mealIngredient) {
         log.info("Converting MealIngredient entity to MealIngredientDTO for ingredient ID: {}", mealIngredient.getId());
-        MealIngredientDTO dto = new MealIngredientDTO(
+        return new MealIngredientDTO(
                 mealIngredient.getId(),
                 mealIngredient.getMeal().getId(),
                 mealIngredient.getFoodItem() != null ? mealIngredient.getFoodItem().getId() : null,
                 mealIngredient.getFoodItemName(),
-                mealIngredient.getQuantity()
+                mealIngredient.getQuantity(),
+                mealIngredient.getFoodItem() != null ? foodItemMapper.toDTO(mealIngredient.getFoodItem()) : null
         );
-        log.debug("Finished converting MealIngredient entity to MealIngredientDTO: {}", dto);
-        return dto;
     }
+
 
     /**
      * Converts a MealIngredientInputDTO to a MealIngredient entity.

@@ -52,6 +52,7 @@ public class FoodItemMapper {
                     );
                     List<NutrientInfo> nutrients = dto.getNutrients() != null ?
                             dto.getNutrients().stream()
+                                    .filter(n -> n.getValue() != null)
                                     .map(n -> new NutrientInfo(n.getNutrientName(), n.getValue(), n.getUnitName(), n.getNutrientId()))
                                     .collect(Collectors.toList()) : List.of();
                     foodItem.setNutrients(nutrients);

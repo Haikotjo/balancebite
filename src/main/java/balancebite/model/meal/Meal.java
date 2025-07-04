@@ -155,6 +155,11 @@ public class Meal {
     @Column(name = "total_carbs", nullable = false)
     private double totalCarbs = 0.0;
 
+    private Double totalSugars;
+    private Double totalSaturatedFat;
+    private Double totalUnsaturatedFat;
+
+
     /**
      * Stores the total fat content of the meal (grams).
      */
@@ -207,41 +212,29 @@ public class Meal {
             this.totalProtein = 0.0;
             this.totalCarbs = 0.0;
             this.totalFat = 0.0;
+            this.totalSugars = 0.0;
+            this.totalSaturatedFat = 0.0;
+            this.totalUnsaturatedFat = 0.0;
             this.foodItemsString = "";
             return;
         }
 
-        this.totalCalories = mealIngredients.stream()
-                .filter(mi -> mi.getFoodItem() != null && mi.getFoodItem().getNutrients() != null)
-                .flatMap(mi -> mi.getFoodItem().getNutrients().stream()
-                        .filter(n -> "Energy".equalsIgnoreCase(n.getNutrientName()) && n.getValue() != null)
-                        .map(n -> n.getValue() * (mi.getQuantity() / 100.0)))
-                .mapToDouble(Double::doubleValue)
-                .sum();
+        this.totalCalories = getTotalByName("Energy");
+        this.totalProtein = getTotalByName("Protein");
+        this.totalCarbs = getTotalByName("Carbohydrates");
+        this.totalFat = getTotalByName("Total lipid (fat)");
 
-        this.totalProtein = mealIngredients.stream()
-                .filter(mi -> mi.getFoodItem() != null && mi.getFoodItem().getNutrients() != null)
-                .flatMap(mi -> mi.getFoodItem().getNutrients().stream()
-                        .filter(n -> "Protein".equalsIgnoreCase(n.getNutrientName()) && n.getValue() != null)
-                        .map(n -> n.getValue() * (mi.getQuantity() / 100.0)))
-                .mapToDouble(Double::doubleValue)
-                .sum();
+        List<String> sugarNames = List.of("Total Sugars", "Sugars, total");
+        List<String> saturatedFatNames = List.of("Fatty acids, total saturated");
+        List<String> unsaturatedFatNames = List.of(
+                "Fatty acids, total monounsaturated",
+                "Fatty acids, total polyunsaturated",
+                "Fatty acids, total unsaturated"
+        );
 
-        this.totalCarbs = mealIngredients.stream()
-                .filter(mi -> mi.getFoodItem() != null && mi.getFoodItem().getNutrients() != null)
-                .flatMap(mi -> mi.getFoodItem().getNutrients().stream()
-                        .filter(n -> "Carbohydrates".equalsIgnoreCase(n.getNutrientName()) && n.getValue() != null)
-                        .map(n -> n.getValue() * (mi.getQuantity() / 100.0)))
-                .mapToDouble(Double::doubleValue)
-                .sum();
-
-        this.totalFat = mealIngredients.stream()
-                .filter(mi -> mi.getFoodItem() != null && mi.getFoodItem().getNutrients() != null)
-                .flatMap(mi -> mi.getFoodItem().getNutrients().stream()
-                        .filter(n -> "Total lipid (fat)".equalsIgnoreCase(n.getNutrientName()) && n.getValue() != null)
-                        .map(n -> n.getValue() * (mi.getQuantity() / 100.0)))
-                .mapToDouble(Double::doubleValue)
-                .sum();
+        this.totalSugars = getTotalByNames(sugarNames);
+        this.totalSaturatedFat = getTotalByNames(saturatedFatNames);
+        this.totalUnsaturatedFat = getTotalByNames(unsaturatedFatNames);
 
         this.foodItemsString = mealIngredients.stream()
                 .filter(mi -> mi.getFoodItem() != null)
@@ -250,6 +243,28 @@ public class Meal {
                 .sorted()
                 .collect(Collectors.joining(", "));
     }
+
+    private double getTotalByName(String name) {
+        return mealIngredients.stream()
+                .filter(mi -> mi.getFoodItem() != null && mi.getFoodItem().getNutrients() != null)
+                .flatMap(mi -> mi.getFoodItem().getNutrients().stream()
+                        .filter(n -> name.equalsIgnoreCase(n.getNutrientName()) && n.getValue() != null)
+                        .map(n -> n.getValue() * (mi.getQuantity() / 100.0)))
+                .mapToDouble(Double::doubleValue)
+                .sum();
+    }
+
+    private double getTotalByNames(List<String> names) {
+        return mealIngredients.stream()
+                .filter(mi -> mi.getFoodItem() != null && mi.getFoodItem().getNutrients() != null)
+                .flatMap(mi -> mi.getFoodItem().getNutrients().stream()
+                        .filter(n -> names.stream().anyMatch(name -> name.equalsIgnoreCase(n.getNutrientName()))
+                                && n.getValue() != null)
+                        .map(n -> n.getValue() * (mi.getQuantity() / 100.0)))
+                .mapToDouble(Double::doubleValue)
+                .sum();
+    }
+
 
     /**
      * Constructor to initialize a Meal with a name and description.
@@ -544,6 +559,18 @@ public class Meal {
     public double getTotalCarbs() { return totalCarbs; }
 
     public double getTotalFat() { return totalFat; }
+
+    public Double getTotalSugars() {
+        return totalSugars;
+    }
+
+    public Double getTotalSaturatedFat() {
+        return totalSaturatedFat;
+    }
+
+    public Double getTotalUnsaturatedFat() {
+        return totalUnsaturatedFat;
+    }
 
     public String getFoodItemsString() { return foodItemsString; }
 

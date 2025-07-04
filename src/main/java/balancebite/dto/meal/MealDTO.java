@@ -113,6 +113,11 @@ public class MealDTO {
      */
     private final double totalFat;
 
+    private final double totalSugars;
+    private final double totalSaturatedFat;
+    private final double totalUnsaturatedFat;
+
+
     /**
      * A concatenated string of food item names in the meal.
      * This allows for searching and sorting based on included food items.
@@ -151,11 +156,14 @@ public class MealDTO {
      * @param totalProtein     the total calculated protein content of the meal (grams).
      * @param totalCarbs       the total calculated carbohydrate content of the meal (grams).
      * @param totalFat         the total calculated fat content of the meal (grams).
+     * @param totalSugars          the total calculated sugar content of the meal (grams).
+     * @param totalSaturatedFat    the total calculated saturated fat content of the meal (grams).
+     * @param totalUnsaturatedFat  the total calculated unsaturated fat content of the meal (grams).
      * @param foodItemsString  the concatenated string of food items in the meal.
      */
     public MealDTO(Long id, String name, String mealDescription, String image, String imageUrl, Long originalMealId,
                    LocalDateTime version, List<MealIngredientDTO> mealIngredients, PublicUserDTO createdBy,
-                   PublicUserDTO adjustedBy ,Boolean isTemplate, Boolean isPrivate,  Set<MealType> mealTypes, Set<Cuisine> cuisines, Set<Diet> diets, double totalCalories, double totalProtein, double totalCarbs,
+                   PublicUserDTO adjustedBy ,Boolean isTemplate, Boolean isPrivate,  Set<MealType> mealTypes, Set<Cuisine> cuisines, Set<Diet> diets, double totalCalories, double totalProtein, double totalCarbs, double totalSugars, double totalSaturatedFat, double totalUnsaturatedFat,
                    double totalFat, String foodItemsString, String preparationTime, long saveCount, long weeklySaveCount, long monthlySaveCount ) {
         this.id = id;
         this.name = name;
@@ -176,13 +184,15 @@ public class MealDTO {
         this.totalProtein = totalProtein;
         this.totalCarbs = totalCarbs;
         this.totalFat = totalFat;
+        this.totalSugars = totalSugars;
+        this.totalSaturatedFat = totalSaturatedFat;
+        this.totalUnsaturatedFat = totalUnsaturatedFat;
         this.foodItemsString = foodItemsString;
         this.preparationTime = preparationTime;
         this.saveCount = saveCount;
         this.weeklySaveCount = weeklySaveCount;
         this.monthlySaveCount = monthlySaveCount;
     }
-
 
     /**
      * Gets the unique identifier of the meal.
@@ -337,6 +347,18 @@ public class MealDTO {
      */
     public double getTotalFat() {
         return totalFat;
+    }
+
+    public double getTotalSugars() {
+        return totalSugars;
+    }
+
+    public double getTotalSaturatedFat() {
+        return totalSaturatedFat;
+    }
+
+    public double getTotalUnsaturatedFat() {
+        return totalUnsaturatedFat;
     }
 
     /**

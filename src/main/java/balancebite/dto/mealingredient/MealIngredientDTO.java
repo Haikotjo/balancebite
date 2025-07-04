@@ -1,5 +1,7 @@
 package balancebite.dto.mealingredient;
 
+import balancebite.dto.fooditem.FoodItemDTO;
+
 /**
  * Data Transfer Object (DTO) representing the data of a Meal Ingredient.
  * This class is used to transfer data between different layers of the application.
@@ -11,6 +13,7 @@ public class MealIngredientDTO {
     private final Long foodItemId;
     private final String foodItemName;
     private final double quantity;
+    private final FoodItemDTO foodItem;
 
     // Constructor
 
@@ -23,12 +26,13 @@ public class MealIngredientDTO {
      * @param foodItemName the name of the food item associated with this ingredient.
      * @param quantity the quantity of the food item in this meal.
      */
-    public MealIngredientDTO(Long id, Long mealId, Long foodItemId, String foodItemName, double quantity) {
+    public MealIngredientDTO(Long id, Long mealId, Long foodItemId, String foodItemName, double quantity, FoodItemDTO foodItem) {
         this.id = id;
         this.mealId = mealId;
         this.foodItemId = foodItemId;
         this.foodItemName = foodItemName;
         this.quantity = quantity;
+        this.foodItem = foodItem;
     }
 
     // Getters
@@ -76,5 +80,9 @@ public class MealIngredientDTO {
      */
     public double getQuantity() {
         return quantity;
+    }
+
+    public FoodItemDTO getFoodItem() {
+        return foodItem;
     }
 }
