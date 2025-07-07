@@ -58,11 +58,16 @@ public class DietPlan {
     private Double totalCarbs;
     private Double totalFat;
     private Double totalCalories;
+    private Double totalSaturatedFat;
+    private Double totalUnsaturatedFat;
+    private Double totalSugars;
     private Double avgProtein;
     private Double avgCarbs;
     private Double avgFat;
     private Double avgCalories;
-
+    private Double avgSaturatedFat;
+    private Double avgUnsaturatedFat;
+    private Double avgSugars;
     @Column(name = "save_count")
     private Long saveCount = 0L;
 
@@ -206,6 +211,31 @@ public class DietPlan {
         this.totalCalories = totalCalories;
     }
 
+    public Double getTotalSaturatedFat() {
+        return totalSaturatedFat;
+    }
+
+    public void setTotalSaturatedFat(Double totalSaturatedFat) {
+        this.totalSaturatedFat = totalSaturatedFat;
+    }
+
+    public Double getTotalUnsaturatedFat() {
+        return totalUnsaturatedFat;
+    }
+
+    public void setTotalUnsaturatedFat(Double totalUnsaturatedFat) {
+        this.totalUnsaturatedFat = totalUnsaturatedFat;
+    }
+
+    public Double getTotalSugars() {
+        return totalSugars;
+    }
+
+    public void setTotalSugars(Double totalSugars) {
+        this.totalSugars = totalSugars;
+    }
+
+
     public Double getAvgProtein() {
         return avgProtein;
     }
@@ -236,6 +266,30 @@ public class DietPlan {
 
     public void setAvgCalories(Double avgCalories) {
         this.avgCalories = avgCalories;
+    }
+
+    public Double getAvgSaturatedFat() {
+        return avgSaturatedFat;
+    }
+
+    public void setAvgSaturatedFat(Double avgSaturatedFat) {
+        this.avgSaturatedFat = avgSaturatedFat;
+    }
+
+    public Double getAvgUnsaturatedFat() {
+        return avgUnsaturatedFat;
+    }
+
+    public void setAvgUnsaturatedFat(Double avgUnsaturatedFat) {
+        this.avgUnsaturatedFat = avgUnsaturatedFat;
+    }
+
+    public Double getAvgSugars() {
+        return avgSugars;
+    }
+
+    public void setAvgSugars(Double avgSugars) {
+        this.avgSugars = avgSugars;
     }
 
     public Long getSaveCount() {

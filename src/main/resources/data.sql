@@ -863,86 +863,142 @@ UPDATE diet_plan SET
                      total_protein = 97.0,
                      total_carbs = 260.0,
                      total_fat = 150.0,
+                     total_saturated_fat = 34.5,
+                     total_unsaturated_fat = 79.2,
+                     total_sugars = 52.7,
                      avg_calories = 800.7,
                      avg_protein = 40.3,
                      avg_carbs = 86.3,
-                     avg_fat = 43.7
+                     avg_fat = 43.7,
+                     avg_saturated_fat = 11.5,
+                     avg_unsaturated_fat = 26.4,
+                     avg_sugars = 17.6
 WHERE id = 1;
+
 
 UPDATE diet_plan SET
                      total_calories = 2216.0,
                      total_protein = 94.0,
                      total_carbs = 256.0,
                      total_fat = 101.0,
+                     total_saturated_fat = 27.8,
+                     total_unsaturated_fat = 54.6,
+                     total_sugars = 48.2,
                      avg_calories = 738.7,
                      avg_protein = 31.3,
                      avg_carbs = 85.3,
-                     avg_fat = 33.7
+                     avg_fat = 33.7,
+                     avg_saturated_fat = 9.3,
+                     avg_unsaturated_fat = 18.2,
+                     avg_sugars = 16.1
 WHERE id = 2;
+
 
 UPDATE diet_plan SET
                      total_calories = 3216.0,
                      total_protein = 84.0,
                      total_carbs = 356.0,
                      total_fat = 201.0,
+                     total_saturated_fat = 33.5,
+                     total_unsaturated_fat = 62.0,
+                     total_sugars = 42.5,
                      avg_calories = 638.7,
                      avg_protein = 41.3,
                      avg_carbs = 75.3,
-                     avg_fat = 23.7
+                     avg_fat = 23.7,
+                     avg_saturated_fat = 6.7,
+                     avg_unsaturated_fat = 12.4,
+                     avg_sugars = 8.5
 WHERE id = 3;
+
 
 UPDATE diet_plan SET
                      total_calories = 2816.0,
                      total_protein = 64.0,
                      total_carbs = 296.0,
                      total_fat = 151.0,
+                     total_saturated_fat = 28.2,
+                     total_unsaturated_fat = 51.3,
+                     total_sugars = 37.8,
                      avg_calories = 798.7,
                      avg_protein = 35.3,
                      avg_carbs = 89.3,
-                     avg_fat = 31.7
+                     avg_fat = 31.7,
+                     avg_saturated_fat = 9.4,
+                     avg_unsaturated_fat = 17.1,
+                     avg_sugars = 12.6
 WHERE id = 4;
+
 
 UPDATE diet_plan SET
                      total_calories = 3216.0,
                      total_protein = 71.0,
                      total_carbs = 211.0,
                      total_fat = 144.0,
+                     total_saturated_fat = 27.6,
+                     total_unsaturated_fat = 66.9,
+                     total_sugars = 36.0,
                      avg_calories = 685.7,
                      avg_protein = 44.3,
                      avg_carbs = 99.3,
-                     avg_fat = 88.7
+                     avg_fat = 88.7,
+                     avg_saturated_fat = 9.2,
+                     avg_unsaturated_fat = 22.3,
+                     avg_sugars = 12.0
 WHERE id = 5;
+
 
 UPDATE diet_plan SET
                      total_calories = 1111.0,
                      total_protein = 11.0,
                      total_carbs = 111.0,
                      total_fat = 111.0,
+                     total_saturated_fat = 22.2,
+                     total_unsaturated_fat = 33.3,
+                     total_sugars = 44.4,
                      avg_calories = 111.7,
                      avg_protein = 11.3,
                      avg_carbs = 11.3,
-                     avg_fat = 11.7
+                     avg_fat = 11.7,
+                     avg_saturated_fat = 7.4,
+                     avg_unsaturated_fat = 11.1,
+                     avg_sugars = 14.8
 WHERE id = 6;
+
 
 UPDATE diet_plan SET
                      total_calories = 2222.0,
                      total_protein = 22.0,
                      total_carbs = 222.0,
                      total_fat = 222.0,
+                     total_saturated_fat = 44.4,
+                     total_unsaturated_fat = 66.6,
+                     total_sugars = 88.8,
                      avg_calories = 222.7,
                      avg_protein = 22.3,
                      avg_carbs = 22.3,
-                     avg_fat = 22.7
+                     avg_fat = 22.7,
+                     avg_saturated_fat = 14.8,
+                     avg_unsaturated_fat = 22.2,
+                     avg_sugars = 29.6
 WHERE id = 7;
+
 
 UPDATE diet_plan SET
                      total_calories = 3333.0,
                      total_protein = 33.0,
                      total_carbs = 333.0,
                      total_fat = 333.0,
+                     total_saturated_fat = 66.6,
+                     total_unsaturated_fat = 99.9,
+                     total_sugars = 133.2,
                      avg_calories = 333.7,
                      avg_protein = 33.3,
                      avg_carbs = 33.3,
-                     avg_fat = 33.7
+                     avg_fat = 33.7,
+                     avg_saturated_fat = 22.2,
+                     avg_unsaturated_fat = 33.3,
+                     avg_sugars = 44.4
 WHERE id = 8;
+
 

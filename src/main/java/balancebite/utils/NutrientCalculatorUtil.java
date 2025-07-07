@@ -6,10 +6,7 @@ import balancebite.model.NutrientInfo;
 import balancebite.model.diet.DietDay;
 import balancebite.model.meal.Meal;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Utility class for calculating the total nutrients in a meal,
@@ -168,49 +165,71 @@ public class NutrientCalculatorUtil {
         return nutrientNameCount;
     }
 
-    public static Map<String, NutrientInfoDTO> calculateTotalNutrientsForDiet(List<DietDay> dietDays) {
-        List<MealIngredient> allIngredients = new ArrayList<>();
+    public static Map<String, Double> calculateTotalNutrientsForDiet(List<DietDay> dietDays) {
+        Map<String, Double> totals = new HashMap<>();
+
+        double totalCalories = 0.0;
+        double totalProtein = 0.0;
+        double totalCarbs = 0.0;
+        double totalFat = 0.0;
+        double totalSaturatedFat = 0.0;
+        double totalUnsaturatedFat = 0.0;
+        double totalSugars = 0.0;
 
         for (DietDay day : dietDays) {
-            for (Meal meal : day.getMeals()) {
-                allIngredients.addAll(meal.getMealIngredients());
-            }
+            totalCalories += Optional.ofNullable(day.getTotalCalories()).orElse(0.0);
+            totalProtein += Optional.ofNullable(day.getTotalProtein()).orElse(0.0);
+            totalCarbs += Optional.ofNullable(day.getTotalCarbs()).orElse(0.0);
+            totalFat += Optional.ofNullable(day.getTotalFat()).orElse(0.0);
+            totalSaturatedFat += Optional.ofNullable(day.getTotalSaturatedFat()).orElse(0.0);
+            totalUnsaturatedFat += Optional.ofNullable(day.getTotalUnsaturatedFat()).orElse(0.0);
+            totalSugars += Optional.ofNullable(day.getTotalSugars()).orElse(0.0);
         }
 
-        return calculateTotalNutrients(allIngredients);
+        totals.put("Energy kcal", totalCalories);
+        totals.put("Protein g", totalProtein);
+        totals.put("Carbohydrates g", totalCarbs);
+        totals.put("Total lipid (fat) g", totalFat);
+        totals.put("Fatty acids, total saturated g", totalSaturatedFat);
+        totals.put("Fatty acids, total monounsaturated g", totalUnsaturatedFat);
+        totals.put("Total Sugars g", totalSugars);
+
+        return totals;
     }
 
-    public static Map<String, NutrientInfoDTO> calculateTotalNutrientsForDay(DietDay dietDay) {
-        if (dietDay == null || dietDay.getMeals() == null) {
-            return new HashMap<>();
-        }
 
-        List<MealIngredient> allIngredients = new ArrayList<>();
-        for (Meal meal : dietDay.getMeals()) {
-            if (meal != null && meal.getMealIngredients() != null) {
-                allIngredients.addAll(meal.getMealIngredients());
-            }
-        }
-
-        return calculateTotalNutrients(allIngredients);
-    }
-
-    public static Map<String, Double> calculateAverages(Map<String, NutrientInfoDTO> totalNutrients, int dayCount) {
+    public static Map<String, Double> calculateAveragesFromDietDays(List<DietDay> dietDays) {
         Map<String, Double> averages = new HashMap<>();
-        if (dayCount == 0 || totalNutrients == null) return averages;
+        int dayCount = dietDays != null ? dietDays.size() : 0;
+        if (dayCount == 0) return averages;
 
-        averages.put("avgCalories", (double) Math.round(getValue(totalNutrients, "Energy kcal") / dayCount));
-        averages.put("avgProtein", (double) Math.round(getValue(totalNutrients, "Protein g") / dayCount));
-        averages.put("avgCarbs", (double) Math.round(getValue(totalNutrients, "Carbohydrates g") / dayCount));
-        averages.put("avgFat", (double) Math.round(getValue(totalNutrients, "Total lipid (fat) g") / dayCount));
+        double totalCalories = 0.0;
+        double totalProtein = 0.0;
+        double totalCarbs = 0.0;
+        double totalFat = 0.0;
+        double totalSaturatedFat = 0.0;
+        double totalUnsaturatedFat = 0.0;
+        double totalSugars = 0.0;
+
+        for (DietDay day : dietDays) {
+            totalCalories += Optional.ofNullable(day.getTotalCalories()).orElse(0.0);
+            totalProtein += Optional.ofNullable(day.getTotalProtein()).orElse(0.0);
+            totalCarbs += Optional.ofNullable(day.getTotalCarbs()).orElse(0.0);
+            totalFat += Optional.ofNullable(day.getTotalFat()).orElse(0.0);
+            totalSaturatedFat += Optional.ofNullable(day.getTotalSaturatedFat()).orElse(0.0);
+            totalUnsaturatedFat += Optional.ofNullable(day.getTotalUnsaturatedFat()).orElse(0.0);
+            totalSugars += Optional.ofNullable(day.getTotalSugars()).orElse(0.0);
+        }
+
+        averages.put("avgCalories", totalCalories / dayCount);
+        averages.put("avgProtein", totalProtein / dayCount);
+        averages.put("avgCarbs", totalCarbs / dayCount);
+        averages.put("avgFat", totalFat / dayCount);
+        averages.put("avgSaturatedFat", totalSaturatedFat / dayCount);
+        averages.put("avgUnsaturatedFat", totalUnsaturatedFat / dayCount);
+        averages.put("avgSugars", totalSugars / dayCount);
 
         return averages;
-    }
-
-    private static double getValue(Map<String, NutrientInfoDTO> nutrients, String key) {
-        return nutrients.containsKey(key) && nutrients.get(key).getValue() != null
-                ? nutrients.get(key).getValue()
-                : 0.0;
     }
 
 }

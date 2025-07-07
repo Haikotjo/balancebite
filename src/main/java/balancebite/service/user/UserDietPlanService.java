@@ -35,6 +35,7 @@ import org.springframework.stereotype.Service;
 import java.util.*;
 import java.util.stream.Collectors;
 
+
 @Service
 @Transactional
 public class UserDietPlanService implements IUserDietPlanService {
@@ -88,7 +89,7 @@ public class UserDietPlanService implements IUserDietPlanService {
         dietPlan.setDietDescription(input.getDietDescription());
         dietPlan.setDiets(input.getDiets());
 
-        // Fallback: zorg dat er minstens één dag is
+        // Fallback: minstens één dag
         if (input.getDietDays() == null || input.getDietDays().isEmpty()) {
             DietDayInputDTO defaultDay = new DietDayInputDTO();
             defaultDay.setDietDayDescription("Default day description");
@@ -136,22 +137,43 @@ public class UserDietPlanService implements IUserDietPlanService {
         }
         dietPlan.setDiets(allDiets);
 
-        // ✅ BEREKEN NUTRIENTEN
-        var totalNutrients = NutrientCalculatorUtil.calculateTotalNutrientsForDiet(dietDays);
+        // ✅ Nieuwe nutriententotalen en gemiddelden
+        double totalCalories = 0;
+        double totalProtein = 0;
+        double totalCarbs = 0;
+        double totalFat = 0;
+        double totalSaturatedFat = 0;
+        double totalUnsaturatedFat = 0;
+        double totalSugars = 0;
+
+        for (DietDay day : dietDays) {
+            totalCalories += day.getTotalCalories();
+            totalProtein += day.getTotalProtein();
+            totalCarbs += day.getTotalCarbs();
+            totalFat += day.getTotalFat();
+            totalSaturatedFat += day.getTotalSaturatedFat();
+            totalUnsaturatedFat += day.getTotalUnsaturatedFat();
+            totalSugars += day.getTotalSugars();
+        }
+
         int dayCount = dietDays.size();
-        var averages = NutrientCalculatorUtil.calculateAverages(totalNutrients, dayCount);
+        dietPlan.setTotalCalories(totalCalories);
+        dietPlan.setTotalProtein(totalProtein);
+        dietPlan.setTotalCarbs(totalCarbs);
+        dietPlan.setTotalFat(totalFat);
+        dietPlan.setTotalSaturatedFat(totalSaturatedFat);
+        dietPlan.setTotalUnsaturatedFat(totalUnsaturatedFat);
+        dietPlan.setTotalSugars(totalSugars);
 
-        dietPlan.setTotalCalories(getValue(totalNutrients, "Energy kcal"));
-        dietPlan.setTotalProtein(getValue(totalNutrients, "Protein g"));
-        dietPlan.setTotalCarbs(getValue(totalNutrients, "Carbohydrates g"));
-        dietPlan.setTotalFat(getValue(totalNutrients, "Total lipid (fat) g"));
+        dietPlan.setAvgCalories(round1(totalCalories / dayCount));
+        dietPlan.setAvgProtein(round1(totalProtein / dayCount));
+        dietPlan.setAvgCarbs(round1(totalCarbs / dayCount));
+        dietPlan.setAvgFat(round1(totalFat / dayCount));
+        dietPlan.setAvgSaturatedFat(round1(totalSaturatedFat / dayCount));
+        dietPlan.setAvgUnsaturatedFat(round1(totalUnsaturatedFat / dayCount));
+        dietPlan.setAvgSugars(round1(totalSugars / dayCount));
 
-        dietPlan.setAvgCalories(round1(averages.getOrDefault("avgCalories", 0.0)));
-        dietPlan.setAvgProtein(round1(averages.getOrDefault("avgProtein", 0.0)));
-        dietPlan.setAvgCarbs(round1(averages.getOrDefault("avgCarbs", 0.0)));
-        dietPlan.setAvgFat(round1(averages.getOrDefault("avgFat", 0.0)));
-
-        // Opslaan en koppelen aan gebruiker
+        // Opslaan
         DietPlan saved = dietPlanRepository.save(dietPlan);
         user.getSavedDietPlans().add(saved);
         userRepository.save(user);
@@ -226,16 +248,29 @@ public class UserDietPlanService implements IUserDietPlanService {
             d.setDietDayDescription(origDay.getDietDayDescription());
             d.setDiets(new HashSet<>(origDay.getDiets()));
             d.setDiet(copy);
+
+            // ⏱️ Kopieer macro-totalen van de dag
+            d.setTotalCalories(origDay.getTotalCalories());
+            d.setTotalProtein(origDay.getTotalProtein());
+            d.setTotalCarbs(origDay.getTotalCarbs());
+            d.setTotalFat(origDay.getTotalFat());
+            d.setTotalSaturatedFat(origDay.getTotalSaturatedFat());
+            d.setTotalUnsaturatedFat(origDay.getTotalUnsaturatedFat());
+            d.setTotalSugars(origDay.getTotalSugars());
+
             List<Meal> assignedMeals = origDay.getMeals().stream()
                     .map(m -> mealAssignmentUtil.getOrAddMealToUser(userId, m.getId()))
                     .distinct()
                     .collect(Collectors.toList());
+
             if (assignedMeals.stream().filter(Objects::nonNull).count() < 2) {
                 throw new IllegalArgumentException("Each day must have at least 2 meals.");
             }
+
             d.setMeals(assignedMeals);
             return d;
         }).collect(Collectors.toList());
+
 
         Set<balancebite.model.meal.references.Diet> allDiets = new HashSet<>();
         for (DietDay day : days) {
@@ -253,7 +288,13 @@ public class UserDietPlanService implements IUserDietPlanService {
         copy.setTotalProtein(original.getTotalProtein());
         copy.setTotalCarbs(original.getTotalCarbs());
         copy.setTotalFat(original.getTotalFat());
+        copy.setTotalSaturatedFat(original.getTotalSaturatedFat());
+        copy.setTotalUnsaturatedFat(original.getTotalUnsaturatedFat());
+        copy.setTotalSugars(original.getTotalSugars());
 
+        copy.setAvgSaturatedFat(original.getAvgSaturatedFat());
+        copy.setAvgUnsaturatedFat(original.getAvgUnsaturatedFat());
+        copy.setAvgSugars(original.getAvgSugars());
         copy.setAvgCalories(original.getAvgCalories());
         copy.setAvgProtein(original.getAvgProtein());
         copy.setAvgCarbs(original.getAvgCarbs());
@@ -285,7 +326,6 @@ public class UserDietPlanService implements IUserDietPlanService {
         DietPlan dietPlan = dietPlanRepository.findById(dietPlanId)
                 .orElseThrow(() -> new DietPlanNotFoundException("Diet plan not found with ID: " + dietPlanId));
 
-        // Controleer of de gebruiker de eigenaar is
         User user = userRepository.findById(adjustedByUserId)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
 
@@ -297,7 +337,6 @@ public class UserDietPlanService implements IUserDietPlanService {
         dietPlanMapper.updateFromInputDTO(dietPlan, input, Optional.of(dietPlan.getCreatedBy()), adjustedBy);
 
         if (input.getDietDays() != null) {
-            // Maak nieuwe dagen aan
             List<DietDay> newDietDays = new ArrayList<>();
             for (int i = 0; i < input.getDietDays().size(); i++) {
                 DietDayInputDTO dayInput = input.getDietDays().get(i);
@@ -305,6 +344,11 @@ public class UserDietPlanService implements IUserDietPlanService {
                 List<Meal> meals = dayInput.getMealIds().stream()
                         .map(id -> mealAssignmentUtil.getOrAddMealToUser(adjustedByUserId, id))
                         .toList();
+
+                long validCount = meals.stream().filter(Objects::nonNull).count();
+                if (validCount < 2) {
+                    throw new IllegalArgumentException("Each day must have at least 2 meals.");
+                }
 
                 DietDay day = dietDayMapper.toEntity(dayInput, meals, i);
                 day.setDiet(dietPlan);
@@ -320,11 +364,9 @@ public class UserDietPlanService implements IUserDietPlanService {
                 newDietDays.add(day);
             }
 
-            // Verwijder oude en voeg nieuwe toe op hetzelfde object
             dietPlan.getDietDays().clear();
             dietPlan.getDietDays().addAll(newDietDays);
 
-            // Herbereken alle diets
             Set<balancebite.model.meal.references.Diet> allDiets = new HashSet<>();
             for (DietDay day : newDietDays) {
                 allDiets.addAll(day.getDiets());
@@ -332,20 +374,43 @@ public class UserDietPlanService implements IUserDietPlanService {
             dietPlan.setDiets(allDiets);
         }
 
-        // ✅ Herbereken nutriënten
-        var totalNutrients = NutrientCalculatorUtil.calculateTotalNutrientsForDiet(dietPlan.getDietDays());
-        int dayCount = dietPlan.getDietDays().size();
-        var averages = NutrientCalculatorUtil.calculateAverages(totalNutrients, dayCount);
+        // ✅ BEREKEN DIRECTE TOTALEN EN GEMIDDELDES
+        double totalCalories = 0;
+        double totalProtein = 0;
+        double totalCarbs = 0;
+        double totalFat = 0;
+        double totalSaturatedFat = 0;
+        double totalUnsaturatedFat = 0;
+        double totalSugars = 0;
 
-        dietPlan.setTotalCalories(getValue(totalNutrients, "Energy kcal"));
-        dietPlan.setTotalProtein(getValue(totalNutrients, "Protein g"));
-        dietPlan.setTotalCarbs(getValue(totalNutrients, "Carbohydrates g"));
-        dietPlan.setTotalFat(getValue(totalNutrients, "Total lipid (fat) g"));
+        List<DietDay> days = dietPlan.getDietDays();
+        int dayCount = days.size();
 
-        dietPlan.setAvgCalories(round1(averages.getOrDefault("avgCalories", 0.0)));
-        dietPlan.setAvgProtein(round1(averages.getOrDefault("avgProtein", 0.0)));
-        dietPlan.setAvgCarbs(round1(averages.getOrDefault("avgCarbs", 0.0)));
-        dietPlan.setAvgFat(round1(averages.getOrDefault("avgFat", 0.0)));
+        for (DietDay day : days) {
+            totalCalories += day.getTotalCalories();
+            totalProtein += day.getTotalProtein();
+            totalCarbs += day.getTotalCarbs();
+            totalFat += day.getTotalFat();
+            totalSaturatedFat += day.getTotalSaturatedFat();
+            totalUnsaturatedFat += day.getTotalUnsaturatedFat();
+            totalSugars += day.getTotalSugars();
+        }
+
+        dietPlan.setTotalCalories(totalCalories);
+        dietPlan.setTotalProtein(totalProtein);
+        dietPlan.setTotalCarbs(totalCarbs);
+        dietPlan.setTotalFat(totalFat);
+        dietPlan.setTotalSaturatedFat(totalSaturatedFat);
+        dietPlan.setTotalUnsaturatedFat(totalUnsaturatedFat);
+        dietPlan.setTotalSugars(totalSugars);
+
+        dietPlan.setAvgCalories(round1(totalCalories / dayCount));
+        dietPlan.setAvgProtein(round1(totalProtein / dayCount));
+        dietPlan.setAvgCarbs(round1(totalCarbs / dayCount));
+        dietPlan.setAvgFat(round1(totalFat / dayCount));
+        dietPlan.setAvgSaturatedFat(round1(totalSaturatedFat / dayCount));
+        dietPlan.setAvgUnsaturatedFat(round1(totalUnsaturatedFat / dayCount));
+        dietPlan.setAvgSugars(round1(totalSugars / dayCount));
 
         DietPlan updated = dietPlanRepository.save(dietPlan);
         return dietPlanMapper.toDTO(updated);

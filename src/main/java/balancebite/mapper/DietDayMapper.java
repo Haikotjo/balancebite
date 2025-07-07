@@ -1,17 +1,13 @@
 package balancebite.mapper;
 
-import balancebite.dto.NutrientInfoDTO;
 import balancebite.dto.diet.DietDayDTO;
 import balancebite.dto.diet.DietDayInputDTO;
 import balancebite.dto.meal.MealDTO;
 import balancebite.model.diet.DietDay;
 import balancebite.model.meal.Meal;
-import balancebite.model.meal.references.Diet;
-import balancebite.utils.NutrientCalculatorUtil;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
-import java.util.Map;
 
 @Component
 public class DietDayMapper {
@@ -29,22 +25,24 @@ public class DietDayMapper {
                 .map(mealMapper::toDTO)
                 .toList();
 
-        Map<String, NutrientInfoDTO> nutrients = NutrientCalculatorUtil.calculateTotalNutrients(
-                dietDay.getAllMealIngredients()
-        );
-
         return new DietDayDTO(
                 dietDay.getId(),
                 dietDay.getDayLabel(),
                 dietDay.getDate(),
                 mealDTOs,
-                nutrients,
                 dietDay.getDietDayDescription(),
-                dietDay.getDiets()
+                dietDay.getDiets(),
+                dietDay.getTotalCalories(),
+                dietDay.getTotalProtein(),
+                dietDay.getTotalCarbs(),
+                dietDay.getTotalFat(),
+                dietDay.getTotalSaturatedFat(),
+                dietDay.getTotalUnsaturatedFat(),
+                dietDay.getTotalSugars()
         );
     }
 
-    // 👇 Belangrijk: gebruik List<Meal> i.p.v. Set<Meal> zodat dubbele maaltijden kunnen
+    // Belangrijk: gebruik List<Meal> i.p.v. Set<Meal> zodat dubbele maaltijden kunnen
     public DietDay toEntity(DietDayInputDTO input, List<Meal> meals, int index) {
         if (input == null || meals == null) return null;
 
@@ -57,6 +55,9 @@ public class DietDayMapper {
         entity.setMeals(meals);
         entity.setDietDayDescription(input.getDietDayDescription());
         entity.setDiets(input.getDiets());
+
+        // 🔁 Bereken en zet de totalen
+        entity.updateNutrients();
 
         return entity;
     }
@@ -72,5 +73,8 @@ public class DietDayMapper {
         dietDay.setMeals(meals);
         dietDay.setDietDayDescription(input.getDietDayDescription());
         dietDay.setDiets(input.getDiets());
+
+        // 🔁 Herbereken nutrienten
+        dietDay.updateNutrients();
     }
 }

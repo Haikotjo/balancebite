@@ -26,10 +26,16 @@ public class DietPlanDTO {
     private final Double totalCarbs;
     private final Double totalFat;
     private final Double totalCalories;
+    private final Double totalSaturatedFat;
+    private final Double totalUnsaturatedFat;
+    private final Double totalSugars;
     private final Double avgProtein;
     private final Double avgCarbs;
     private final Double avgFat;
     private final Double avgCalories;
+    private final Double avgSaturatedFat;
+    private final Double avgUnsaturatedFat;
+    private final Double avgSugars;
     private final long saveCount;
     private final long weeklySaveCount;
     private final long monthlySaveCount;
@@ -50,10 +56,16 @@ public class DietPlanDTO {
                        Double totalCarbs,
                        Double totalFat,
                        Double totalCalories,
+                       Double totalSaturatedFat,
+                       Double totalUnsaturatedFat,
+                       Double totalSugars,
                        Double avgProtein,
                        Double avgCarbs,
                        Double avgFat,
                        Double avgCalories,
+                       Double avgSaturatedFat,
+                       Double avgUnsaturatedFat,
+                       Double avgSugars,
                        long saveCount,
                        long weeklySaveCount,
                        long monthlySaveCount) {
@@ -73,10 +85,16 @@ public class DietPlanDTO {
         this.totalCarbs = totalCarbs;
         this.totalFat = totalFat;
         this.totalCalories = totalCalories;
+        this.totalSaturatedFat = totalSaturatedFat;
+        this.totalUnsaturatedFat = totalUnsaturatedFat;
+        this.totalSugars = totalSugars;
         this.avgProtein = avgProtein;
         this.avgCarbs = avgCarbs;
         this.avgFat = avgFat;
         this.avgCalories = avgCalories;
+        this.avgSaturatedFat = avgSaturatedFat;
+        this.avgUnsaturatedFat = avgUnsaturatedFat;
+        this.avgSugars = avgSugars;
         this.saveCount = saveCount;
         this.weeklySaveCount = weeklySaveCount;
         this.monthlySaveCount = monthlySaveCount;
@@ -138,6 +156,18 @@ public class DietPlanDTO {
         return totalCarbs;
     }
 
+    public Double getTotalSaturatedFat() {
+        return totalSaturatedFat;
+    }
+
+    public Double getTotalUnsaturatedFat() {
+        return totalUnsaturatedFat;
+    }
+
+    public Double getTotalSugars() {
+        return totalSugars;
+    }
+
     public Double getTotalFat() {
         return totalFat;
     }
@@ -173,4 +203,17 @@ public class DietPlanDTO {
     public long getMonthlySaveCount() {
         return monthlySaveCount;
     }
+
+    public Double getAvgSaturatedFat() {
+        return avgSaturatedFat;
+    }
+
+    public Double getAvgUnsaturatedFat() {
+        return avgUnsaturatedFat;
+    }
+
+    public Double getAvgSugars() {
+        return avgSugars;
+    }
+
 }
