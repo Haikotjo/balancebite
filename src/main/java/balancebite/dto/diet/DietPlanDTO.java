@@ -14,7 +14,8 @@ public class DietPlanDTO {
     private final String name;
     private final Long originalDietId;
     private final boolean isTemplate;
-    private boolean isPrivate;
+    private final boolean isPrivate;
+    private final boolean isRestricted;
     private final LocalDateTime createdAt;
     private final LocalDateTime updatedAt;
     private final PublicUserDTO createdBy;
@@ -45,6 +46,7 @@ public class DietPlanDTO {
                        @JsonProperty("originalDietId") Long originalDietId,
                        boolean isTemplate,
                        boolean isPrivate,
+                       boolean isRestricted,
                        LocalDateTime createdAt,
                        LocalDateTime updatedAt,
                        PublicUserDTO createdBy,
@@ -74,6 +76,7 @@ public class DietPlanDTO {
         this.originalDietId = originalDietId;
         this.isTemplate = isTemplate;
         this.isPrivate = isPrivate;
+        this.isRestricted = isRestricted;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
         this.createdBy = createdBy;
@@ -118,6 +121,10 @@ public class DietPlanDTO {
 
     public boolean getIsPrivate() {
         return isPrivate;
+    }
+
+    public boolean getIsRestricted() {
+        return isRestricted;
     }
 
     public LocalDateTime getCreatedAt() {

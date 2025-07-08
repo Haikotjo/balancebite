@@ -50,6 +50,8 @@ public interface IUserMealService {
      */
     void updateMealPrivacy(Long userId, Long mealId, boolean isPrivate);
 
+    void updateMealRestriction(Long userId, Long mealId, boolean isRestricted);
+
     /**
      * Adds an existing meal to the user's list of meals.
      *

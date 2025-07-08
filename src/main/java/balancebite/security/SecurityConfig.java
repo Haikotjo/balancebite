@@ -123,6 +123,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PATCH, "/meals-admin/update-meal").hasAnyRole("ADMIN", "CHEF")
                         .requestMatchers(HttpMethod.PATCH, "/meals-admin/add-meal/{mealId}").hasAnyRole("ADMIN", "CHEF")
                         .requestMatchers(HttpMethod.DELETE, "/meals-admin/delete-meal/").hasAnyRole("ADMIN", "CHEF")
+                        // meal restriction endpoint
+                        .requestMatchers(HttpMethod.PATCH, "/users/meals/{mealId}/restriction").hasAnyRole("RESTAURANT", "DIETITIAN")
 
                         // foodItem entity endpoints
                         .requestMatchers(HttpMethod.POST, "/fooditems").authenticated()
@@ -142,7 +144,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PATCH, "/users/diet-plans/**").authenticated()
                         .requestMatchers(HttpMethod.DELETE, "/users/diet-plans/**").authenticated()
                         .requestMatchers(HttpMethod.PUT, "/users/update-diet-plans/**").authenticated()
-
+                        // diet restriction endpoint
+                        .requestMatchers(HttpMethod.PATCH, "/users/diet-plans/{dietPlanId}/restriction").hasAnyRole("RESTAURANT", "DIETITIAN")
 
                         // sticky item endpoints
                         .requestMatchers(HttpMethod.POST, "/admin/sticky-items").hasRole("ADMIN")

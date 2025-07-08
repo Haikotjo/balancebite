@@ -83,6 +83,7 @@ public class MealMapper {
                 meal.getAdjustedBy() != null ? userMapper.toPublicUserDTO(meal.getAdjustedBy()) : null,
                 meal.isTemplate(),
                 meal.isPrivate(),
+                meal.isRestricted(),
                 meal.getMealTypes(),
                 meal.getCuisines(),
                 meal.getDiets(),
@@ -126,6 +127,7 @@ public class MealMapper {
                     meal.setCuisines(dto.getCuisines());
                     meal.setDiets(dto.getDiets());
                     meal.setPrivate(dto.isPrivate());
+                    meal.setRestricted(dto.isRestricted());
 
                     if (dto.getPreparationTime() != null && !dto.getPreparationTime().isBlank()) {
                         meal.setPreparationTime(java.time.Duration.parse(dto.getPreparationTime()));

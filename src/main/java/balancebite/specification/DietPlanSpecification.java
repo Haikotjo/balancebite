@@ -106,4 +106,8 @@ public class DietPlanSpecification {
         };
     }
 
+    public static Specification<DietPlan> isNotRestricted() {
+        return (root, query, cb) -> cb.isFalse(root.get("isRestricted"));
+    }
+
 }

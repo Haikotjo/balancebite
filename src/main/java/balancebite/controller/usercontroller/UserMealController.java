@@ -226,6 +226,39 @@ public class UserMealController {
     }
 
     /**
+     * Updates the restriction status of a meal.
+     *
+     * Only users with role RESTAURANT or DIETITIAN can mark a meal as restricted or unrestricted.
+     *
+     * @param mealId The ID of the meal whose restriction status should be updated.
+     * @param isRestricted Boolean indicating whether the meal should be restricted.
+     * @param authorizationHeader The Authorization header containing the JWT token.
+     * @return ResponseEntity with 204 No Content on success, or error details.
+     */
+    @PatchMapping("/meals/{mealId}/restriction")
+    public ResponseEntity<?> updateMealRestriction(
+            @PathVariable Long mealId,
+            @RequestParam boolean isRestricted,
+            @RequestHeader("Authorization") String authorizationHeader) {
+        try {
+            String token = authorizationHeader.substring(7);
+            Long userId = jwtService.extractUserId(token);
+
+            userMealService.updateMealRestriction(userId, mealId, isRestricted);
+
+            return ResponseEntity.noContent().build();
+
+        } catch (MealNotFoundException | UserNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+        } catch (SecurityException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "Update failed."));
+        }
+    }
+
+
+    /**
      * Retrieves paginated and sorted meals for the authenticated user with optional filtering.
      *
      * Users can filter meals by cuisine, diet, meal type, and food items.

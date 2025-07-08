@@ -11,9 +11,10 @@ import balancebite.model.diet.DietDay;
 import balancebite.model.meal.Meal;
 import balancebite.model.MealIngredient;
 import balancebite.model.meal.SavedMeal;
+import balancebite.model.user.Role;
 import balancebite.model.user.User;
 import balancebite.repository.*;
-import balancebite.security.JwtService;
+import balancebite.model.user.UserRole;
 import balancebite.service.FileStorageService;
 import balancebite.service.interfaces.user.IUserMealService;
 import balancebite.utils.CheckForDuplicateTemplateMealUtil;
@@ -24,6 +25,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -145,6 +147,14 @@ public class UserMealService implements IUserMealService {
         // 🔥 **BELANGRIJK:** Update de voedingswaarden vóór opslaan!
         meal.updateNutrients();
 
+        boolean isRestricted = user.getRoles().stream()
+                .map(Role::getRolename)
+                .anyMatch(role -> role == UserRole.RESTAURANT || role == UserRole.DIETITIAN);
+
+        if (isRestricted) {
+            meal.setRestricted(true);
+        }
+
         // Save meal and user
         Meal savedMeal = mealRepository.save(meal);
         user.getSavedMeals().add(savedMeal);
@@ -182,6 +192,9 @@ public class UserMealService implements IUserMealService {
                 .orElseThrow(() -> new UserNotFoundException("User not found with ID: " + userId));
         Meal originalMeal = mealRepository.findById(mealId)
                 .orElseThrow(() -> new MealNotFoundException("Meal not found with ID: " + mealId));
+        if (originalMeal.isRestricted()) {
+            throw new AccessDeniedException("You cannot add a restricted meal.");
+        }
 
         // Check if user already has this meal (original or copy)
         boolean mealExists = user.getMeals().stream().anyMatch(
@@ -380,6 +393,27 @@ public class UserMealService implements IUserMealService {
 
 
         meal.setPrivate(isPrivate);
+        mealRepository.save(meal);
+    }
+
+    @Override
+    @Transactional
+    public void updateMealRestriction(Long userId, Long mealId, boolean isRestricted) {
+        Meal meal = mealRepository.findById(mealId)
+                .orElseThrow(() -> new MealNotFoundException("Meal not found with ID: " + mealId));
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("User not found with ID: " + userId));
+
+        boolean hasPermission = user.getRoles().stream()
+                .map(Role::getRolename)
+                .anyMatch(role -> role == UserRole.RESTAURANT || role == UserRole.DIETITIAN);
+
+        if (!hasPermission) {
+            throw new SecurityException("Only RESTAURANT or DIETITIAN users can update restriction status.");
+        }
+
+        meal.setRestricted(isRestricted);
         mealRepository.save(meal);
     }
 

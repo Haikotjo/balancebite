@@ -25,6 +25,8 @@ public class DietPlanInputDTO {
 
     private boolean isPrivate = false;
 
+    private boolean isRestricted;
+
     @NotEmpty(message = "At least one diet day is required.")
     private List<DietDayInputDTO> dietDays;
 
@@ -36,7 +38,7 @@ public class DietPlanInputDTO {
     public DietPlanInputDTO() {}
 
     public DietPlanInputDTO(String name, Long originalDietId, Long createdByUserId, Long adjustedByUserId,
-                            boolean isTemplate, boolean isPrivate, List<DietDayInputDTO> dietDays,
+                            boolean isTemplate, boolean isPrivate, boolean isRestricted, List<DietDayInputDTO> dietDays,
                             String dietDescription, Set<Diet> diets) {
         this.name = name;
         this.originalDietId = originalDietId;
@@ -44,6 +46,7 @@ public class DietPlanInputDTO {
         this.adjustedByUserId = adjustedByUserId;
         this.isTemplate = isTemplate;
         this.isPrivate = isPrivate;
+        this.isRestricted = isRestricted;
         this.dietDays = dietDays;
         this.dietDescription = dietDescription;
         this.diets = diets;
@@ -96,6 +99,14 @@ public class DietPlanInputDTO {
 
     public void setPrivate(boolean aPrivate) {
         isPrivate = aPrivate;
+    }
+
+    public boolean isRestricted() {
+        return isRestricted;
+    }
+
+    public void setRestricted(boolean restricted) {
+        isRestricted = restricted;
     }
 
     public List<DietDayInputDTO> getDietDays() {

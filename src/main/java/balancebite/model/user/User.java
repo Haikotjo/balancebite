@@ -34,16 +34,12 @@ public class User {
     private Double weight;
     private Integer age;
     private Double height;
-
     @Enumerated(EnumType.STRING)
     private Gender gender;
-
     @Enumerated(EnumType.STRING)
     private ActivityLevel activityLevel;
-
     @Enumerated(EnumType.STRING)
     private Goal goal;
-
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
             name = "user_meals",
@@ -90,6 +86,18 @@ public class User {
     )
     private Set<Meal> savedMeals = new HashSet<>();
 
+    @JsonIgnore
+    @ManyToMany
+    @JoinTable(
+            name = "user_following",
+            joinColumns = @JoinColumn(name = "follower_id"),
+            inverseJoinColumns = @JoinColumn(name = "followed_id")
+    )
+    private Set<User> following = new HashSet<>();
+
+    @JsonIgnore
+    @ManyToMany(mappedBy = "following")
+    private Set<User> followers = new HashSet<>();
 
     public User() {}
 
@@ -230,5 +238,21 @@ public class User {
 
     public void setSavedMeals(Set<Meal> savedMeals) {
         this.savedMeals = savedMeals;
+    }
+
+    public Set<User> getFollowing() {
+        return following;
+    }
+
+    public void setFollowing(Set<User> following) {
+        this.following = following;
+    }
+
+    public Set<User> getFollowers() {
+        return followers;
+    }
+
+    public void setFollowers(Set<User> followers) {
+        this.followers = followers;
     }
 }

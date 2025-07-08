@@ -71,6 +71,8 @@ public class MealInputDTO {
 
     private boolean isPrivate = false;
 
+    private boolean isRestricted;
+
     /**
      * The types of the meal (e.g., breakfast, lunch, dinner, or snack).
      * This field is optional and allows selecting multiple meal types.
@@ -111,6 +113,7 @@ public class MealInputDTO {
      * @param imageFile       MultipartFile for direct file uploads of the meal's image (optional).
      * @param createdBy       The user who created the meal (optional). Managed by the system.
      * @param isPrivate
+     * @param isRestricted
      * @param mealTypes       The types of meal (optional). Allows classifying as breakfast, lunch, dinner, or snack.
      * @param cuisines        The cuisine types of the meal (optional). Represents the cultural or regional origins.
      * @param diets           The dietary categories of the meal (optional). Used for filtering based on diet.
@@ -127,6 +130,7 @@ public class MealInputDTO {
             MultipartFile imageFile,
             @Valid UserDTO createdBy,
             boolean isPrivate,
+            boolean isRestricted,
             Set<MealType> mealTypes,
             Set<Cuisine> cuisines,
             Set<Diet> diets,
@@ -140,6 +144,7 @@ public class MealInputDTO {
         this.imageFile = imageFile;
         this.createdBy = createdBy;
         this.isPrivate = isPrivate;
+        this.isRestricted = isRestricted;
         this.mealTypes = mealTypes;
         this.cuisines = cuisines;
         this.diets = diets;
@@ -281,6 +286,14 @@ public class MealInputDTO {
 
     public void setPrivate(boolean aPrivate) {
         isPrivate = aPrivate;
+    }
+
+    public boolean isRestricted() {
+        return isRestricted;
+    }
+
+    public void setRestricted(boolean restricted) {
+        isRestricted = restricted;
     }
 
     /**

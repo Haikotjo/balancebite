@@ -5,17 +5,32 @@ package balancebite.model.user;
  */
 public enum UserRole {
     /**
-     * Represents a user role.
+     * Represents a standard user role.
      */
     USER,
 
     /**
-     * Represents an owner user role.
+     * Represents a user with the chef role.
      */
     CHEF,
 
     /**
-     * Represents an admin user role.
+     * Represents a user with administrative privileges.
      */
-    ADMIN
+    ADMIN,
+
+    /**
+     * Represents a user who is a dietitian.
+     */
+    DIETITIAN,
+
+    /**
+     * Represents a user who is a restaurant.
+     */
+    RESTAURANT,
+
+    /**
+     * Represents a user who is a supermarket.
+     */
+    SUPERMARKET
 }

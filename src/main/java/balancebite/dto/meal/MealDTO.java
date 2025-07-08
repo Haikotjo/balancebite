@@ -72,7 +72,9 @@ public class MealDTO {
 
     private final boolean isTemplate;
 
-    private boolean isPrivate;
+    private final boolean isPrivate;
+
+    private final boolean isRestricted;
 
     /**
      * The types of the meal (e.g., breakfast, lunch, dinner, or snack).
@@ -149,6 +151,7 @@ public class MealDTO {
      * @param adjustedBy       the user who adjusted the meal (if applicable).
      * @param isTemplate
      * @param isPrivate
+     * @param isRestricted
      * @param mealTypes         the types of meal (optional). Allows classification as breakfast, lunch, dinner, or snack.
      * @param cuisines          the cuisine types of the meal (optional). Represents cultural or regional origins.
      * @param diets             the dietary categories of the meal (optional). Used for filtering based on dietary preferences.
@@ -163,7 +166,7 @@ public class MealDTO {
      */
     public MealDTO(Long id, String name, String mealDescription, String image, String imageUrl, Long originalMealId,
                    LocalDateTime version, List<MealIngredientDTO> mealIngredients, PublicUserDTO createdBy,
-                   PublicUserDTO adjustedBy ,Boolean isTemplate, Boolean isPrivate,  Set<MealType> mealTypes, Set<Cuisine> cuisines, Set<Diet> diets, double totalCalories, double totalProtein, double totalCarbs, double totalSugars, double totalSaturatedFat, double totalUnsaturatedFat,
+                   PublicUserDTO adjustedBy ,boolean  isTemplate, boolean  isPrivate, boolean  isRestricted, Set<MealType> mealTypes, Set<Cuisine> cuisines, Set<Diet> diets, double totalCalories, double totalProtein, double totalCarbs, double totalSugars, double totalSaturatedFat, double totalUnsaturatedFat,
                    double totalFat, String foodItemsString, String preparationTime, long saveCount, long weeklySaveCount, long monthlySaveCount ) {
         this.id = id;
         this.name = name;
@@ -177,6 +180,7 @@ public class MealDTO {
         this.adjustedBy = adjustedBy;
         this.isTemplate = isTemplate;
         this.isPrivate = isPrivate;
+        this.isRestricted = isRestricted;
         this.mealTypes = mealTypes != null ? Set.copyOf(mealTypes) : Set.of();
         this.cuisines = cuisines != null ? Set.copyOf(cuisines) : Set.of();
         this.diets = diets != null ? Set.copyOf(diets) : Set.of();
@@ -281,6 +285,8 @@ public class MealDTO {
     public boolean getIsTemplate() {return isTemplate;}
 
     public boolean getIsPrivate() {return isPrivate;}
+
+    public boolean getIsRestricted() {return isRestricted;}
 
     /**
      * Gets the types of the meal (e.g., breakfast, lunch, dinner, or snack).

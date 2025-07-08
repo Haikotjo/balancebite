@@ -60,6 +60,7 @@ public class PublicDietPlanService implements IPublicDietPlanService {
                 : Specification.where(DietPlanSpecification.isTemplate());
 
         spec = spec.and((root, query, cb) -> cb.isFalse(root.get("isPrivate")));
+        spec = spec.and(DietPlanSpecification.isNotRestricted());
 
         if (name != null && !name.isBlank()) {
             spec = spec.and((root, query, cb) ->

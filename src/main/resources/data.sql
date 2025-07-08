@@ -14,6 +14,15 @@ SELECT 'ADMIN' WHERE NOT EXISTS (
     SELECT 1 FROM roles WHERE rolename = 'ADMIN'
 );
 
+INSERT INTO roles (rolename)
+SELECT 'RESTAURANT' WHERE NOT EXISTS (
+    SELECT 1 FROM roles WHERE rolename = 'RESTAURANT'
+);
+
+INSERT INTO roles (rolename)
+SELECT 'DIETITIAN' WHERE NOT EXISTS (
+    SELECT 1 FROM roles WHERE rolename = 'DIETITIAN'
+);
 
 -- Voeg gebruikers toe als ze nog niet bestaan
 INSERT INTO users (user_name, email, password)
@@ -81,7 +90,7 @@ WHERE NOT EXISTS (
 -- Voeg maaltijden toe (met uitgebreidere beschrijvingen)
 
 INSERT INTO meals (
-    name, meal_description, is_template, is_private,
+    name, meal_description, is_template, is_private, is_restricted,
     created_by_user_id, image_url,
     total_calories, total_protein, total_carbs, total_fat,
     total_sugars, total_saturated_fat, total_unsaturated_fat,
@@ -89,7 +98,7 @@ INSERT INTO meals (
 )
 SELECT 'Breakfast',
        'Start your day with a nourishing breakfast featuring naturally sweet bananas, creamy nonfat milk, and wholesome whole-wheat bread. This energizing combination provides a perfect balance of carbohydrates, protein, and fiber to fuel your morning and keep you satisfied until your next meal.',
-       true, false,
+       true, false, false,
        1, 'https://images.unsplash.com/photo-1473093295043-cdd812d0e601?q=80',
        267, 13, 53, 2,
        14, 0.5, 1.2,
@@ -97,9 +106,8 @@ SELECT 'Breakfast',
 WHERE NOT EXISTS (
     SELECT 1 FROM meals WHERE name = 'Breakfast' AND created_by_user_id = 1
 );
-
 INSERT INTO meals (
-    name, meal_description, is_template, is_private,
+    name, meal_description, is_template, is_private, is_restricted,
     created_by_user_id, image_url,
     total_calories, total_protein, total_carbs, total_fat,
     total_sugars, total_saturated_fat, total_unsaturated_fat,
@@ -107,7 +115,8 @@ INSERT INTO meals (
 )
 SELECT 'Lunch',
        'Enjoy a colorful and vibrant lunch packed with nutrients and flavor. This meal brings together tender peas and carrots, hearty spinach, juicy strawberries, and creamy avocado for a delicious and refreshing midday boost. A perfect choice for those seeking a plant-forward, balanced plate.',
-       true, false, 1, 'https://images.unsplash.com/photo-1485451456034-3f9391c6f769?q=80',
+       true, false, false,
+       1, 'https://images.unsplash.com/photo-1485451456034-3f9391c6f769?q=80',
        584, 25, 76, 37,
        18, 4.1, 30.0,
        'PT30M'
@@ -116,7 +125,7 @@ WHERE NOT EXISTS (
 );
 
 INSERT INTO meals (
-    name, meal_description, is_template, is_private,
+    name, meal_description, is_template, is_private, is_restricted,
     created_by_user_id, image_url,
     total_calories, total_protein, total_carbs, total_fat,
     total_sugars, total_saturated_fat, total_unsaturated_fat,
@@ -124,16 +133,16 @@ INSERT INTO meals (
 )
 SELECT 'Dinner',
        'Unwind with a comforting and hearty dinner that combines naturally sweet yellow corn, crisp cauliflower, and perfectly cooked hard-boiled eggs. This simple yet satisfying meal offers a rich blend of textures and nutrients, ideal for a lighter evening option that still nourishes and restores.',
-       true, false, 1, 'https://images.unsplash.com/photo-1505932049984-db368d92fa63?q=80',
+       true, false, false,
+       1, 'https://images.unsplash.com/photo-1505932049984-db368d92fa63?q=80',
        125, 8, 24, 4,
        6, 1.2, 2.5,
        'PT45M'
 WHERE NOT EXISTS (
     SELECT 1 FROM meals WHERE name = 'Dinner' AND created_by_user_id = 1
 );
-
 INSERT INTO meals (
-    name, meal_description, is_template, is_private,
+    name, meal_description, is_template, is_private, is_restricted,
     created_by_user_id, image_url,
     total_calories, total_protein, total_carbs, total_fat,
     total_sugars, total_saturated_fat, total_unsaturated_fat,
@@ -141,7 +150,8 @@ INSERT INTO meals (
 )
 SELECT 'Snack',
        'Recharge your energy with a delightful snack that pairs the refreshing crunch of raw apples with the rich, satisfying taste of raw almonds. Whether you’re on the go or enjoying a quick break, this simple duo provides a naturally sweet, fiber-rich, and protein-packed option to tide you over.',
-       true, false, 2, 'https://plus.unsplash.com/premium_photo-1678481245533-3b5c7a5e3d37?q=80',
+       true, false, false,
+       2, 'https://plus.unsplash.com/premium_photo-1678481245533-3b5c7a5e3d37?q=80',
        81, 6, 12, 3,
        8, 0.3, 2.2,
        'PT5M'
@@ -150,7 +160,7 @@ WHERE NOT EXISTS (
 );
 
 INSERT INTO meals (
-    name, meal_description, is_template, is_private,
+    name, meal_description, is_template, is_private, is_restricted,
     created_by_user_id, image_url,
     total_calories, total_protein, total_carbs, total_fat,
     total_sugars, total_saturated_fat, total_unsaturated_fat,
@@ -158,7 +168,8 @@ INSERT INTO meals (
 )
 SELECT 'Salad',
        'Treat yourself to a light and refreshing salad composed of crisp romaine lettuce, ripe tomatoes, and cool cucumbers. This vibrant mix is not only visually appealing but also packed with hydration, vitamins, and antioxidants, making it a perfect addition to any lunch or light dinner.',
-       true, true, 2, 'https://images.unsplash.com/photo-1505253716362-afaea1d3d1af?q=80',
+       true, true, false,
+       2, 'https://images.unsplash.com/photo-1505253716362-afaea1d3d1af?q=80',
        200, 5, 30, 5,
        6, 0.1, 0.6,
        'PT10M'
@@ -167,7 +178,7 @@ WHERE NOT EXISTS (
 );
 
 INSERT INTO meals (
-    name, meal_description, is_template, is_private,
+    name, meal_description, is_template, is_private, is_restricted,
     created_by_user_id, image_url,
     total_calories, total_protein, total_carbs, total_fat,
     total_sugars, total_saturated_fat, total_unsaturated_fat,
@@ -175,15 +186,14 @@ INSERT INTO meals (
 )
 SELECT 'Dinner Special',
        'Indulge in a hearty dinner special featuring savory roasted chicken, fluffy white rice, and fresh broccoli florets. This balanced meal delivers a satisfying combination of lean protein, energizing carbohydrates, and essential nutrients, perfect for a fulfilling and wholesome end to your day.',
-       true, false, 2, 'https://images.unsplash.com/photo-1605926637512-c8b131444a4b?q=80',
+       true, false, false,
+       2, 'https://images.unsplash.com/photo-1605926637512-c8b131444a4b?q=80',
        658, 22, 36, 48,
        3, 12, 32,
        'PT1H'
 WHERE NOT EXISTS (
     SELECT 1 FROM meals WHERE name = 'Dinner Special' AND created_by_user_id = 2
 );
-
-
 
 -- Meal types (ElementCollection)
 INSERT INTO meal_meal_types (meal_id, meal_type) SELECT 1, 'BREAKFAST'
@@ -634,22 +644,21 @@ SELECT 12, 4 WHERE NOT EXISTS (SELECT 1 FROM diet_day_meals WHERE diet_day_id = 
 
 
 -- Voeg vier unieke sample diets toe als ze nog niet bestaan
-INSERT INTO diet_plan (name, diet_description, original_diet_id, is_template, is_private, created_by_user_id)
-SELECT 'Sample Vegan Plan', 'Een plantaardig dieet voor energie en welzijn.', NULL, TRUE, FALSE, 1
+INSERT INTO diet_plan (name, diet_description, original_diet_id, is_template, is_private, is_restricted, created_by_user_id)
+SELECT 'Sample Vegan Plan', 'Een plantaardig dieet voor energie en welzijn.', NULL, TRUE, FALSE, FALSE, 1
 WHERE NOT EXISTS (SELECT 1 FROM diet_plan WHERE name = 'Sample Vegan Plan');
 
-INSERT INTO diet_plan (name, diet_description, original_diet_id, is_template, is_private, created_by_user_id)
-SELECT 'Protein Boost Plan', 'Voor spiergroei en herstel na training.', NULL, TRUE, FALSE, 2
+INSERT INTO diet_plan (name, diet_description, original_diet_id, is_template, is_private, is_restricted, created_by_user_id)
+SELECT 'Protein Boost Plan', 'Voor spiergroei en herstel na training.', NULL, TRUE, FALSE, FALSE, 2
 WHERE NOT EXISTS (SELECT 1 FROM diet_plan WHERE name = 'Protein Boost Plan');
 
-INSERT INTO diet_plan (name, diet_description, original_diet_id, is_template, is_private, created_by_user_id)
-SELECT 'Mediterranean Breeze', 'Gebaseerd op de gezonde Mediterrane keuken.', NULL, TRUE, FALSE, 3
+INSERT INTO diet_plan (name, diet_description, original_diet_id, is_template, is_private, is_restricted, created_by_user_id)
+SELECT 'Mediterranean Breeze', 'Gebaseerd op de gezonde Mediterrane keuken.', NULL, TRUE, FALSE, FALSE, 3
 WHERE NOT EXISTS (SELECT 1 FROM diet_plan WHERE name = 'Mediterranean Breeze');
 
-INSERT INTO diet_plan (name, diet_description, original_diet_id, is_template, is_private, created_by_user_id)
-SELECT 'Low Carb Lite', 'Voor een koolhydraatarme levensstijl.', NULL, TRUE, FALSE, 4
+INSERT INTO diet_plan (name, diet_description, original_diet_id, is_template, is_private, is_restricted, created_by_user_id)
+SELECT 'Low Carb Lite', 'Voor een koolhydraatarme levensstijl.', NULL, TRUE, FALSE, FALSE, 4
 WHERE NOT EXISTS (SELECT 1 FROM diet_plan WHERE name = 'Low Carb Lite');
-
 
 
 -- Voeg diets toe aan de nieuwe diet_plans als ze nog niet bestaan

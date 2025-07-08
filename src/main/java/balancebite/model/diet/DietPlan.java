@@ -24,6 +24,8 @@ public class DietPlan {
     @Column(nullable = true)
     private boolean isPrivate = false;
 
+    @Column(name = "isRestricted")
+    private boolean isRestricted = false;
 
     @Column(length = 1000)
     private String dietDescription;
@@ -77,7 +79,6 @@ public class DietPlan {
     @Column(name = "monthly_save_count")
     private Long monthlySaveCount = 0L;
 
-
     // Constructors
     public DietPlan() {}
 
@@ -121,6 +122,14 @@ public class DietPlan {
 
     public void setPrivate(boolean isPrivate) {
         this.isPrivate = isPrivate;
+    }
+
+    public boolean isRestricted() {
+        return isRestricted;
+    }
+
+    public void setRestricted(boolean restricted) {
+        isRestricted = restricted;
     }
 
     public String getDietDescription() {

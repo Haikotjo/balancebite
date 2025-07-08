@@ -111,6 +111,35 @@ public class UserDietPlanController {
         }
     }
 
+    /**
+     * Updates the restriction status of a diet plan.
+     *
+     * Only users with role RESTAURANT or DIETITIAN can mark a diet as restricted or unrestricted.
+     *
+     * @param dietPlanId The ID of the diet plan to update.
+     * @param isRestricted Boolean indicating whether the diet plan should be restricted.
+     * @param authHeader The Authorization header containing the JWT token.
+     * @return ResponseEntity with 204 No Content on success, or error details.
+     */
+    @PatchMapping("/diet-plans/{dietPlanId}/restriction")
+    public ResponseEntity<?> updateDietRestriction(@PathVariable Long dietPlanId,
+                                                   @RequestParam boolean isRestricted,
+                                                   @RequestHeader("Authorization") String authHeader) {
+        try {
+            Long userId = jwtService.extractUserId(authHeader.substring(7));
+            userDietPlanService.updateDietRestriction(userId, dietPlanId, isRestricted);
+            return ResponseEntity.noContent().build();
+        } catch (DietPlanNotFoundException | UserNotFoundException e) {
+            return ResponseEntity.status(404).body(Map.of("error", e.getMessage()));
+        } catch (SecurityException e) {
+            return ResponseEntity.status(403).body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            log.error("Failed to update restriction for diet plan ID {}", dietPlanId, e);
+            return ResponseEntity.status(500).body(Map.of("error", "Failed to update restriction"));
+        }
+    }
+
+
     @PostMapping("/diet-plans/{dietPlanId}/days/{dayIndex}/meals/{mealId}")
     public ResponseEntity<?> addMealToDietDay(@PathVariable Long dietPlanId,
                                               @PathVariable int dayIndex,

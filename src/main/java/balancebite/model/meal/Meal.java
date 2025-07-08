@@ -104,6 +104,8 @@ public class Meal {
     @Column(nullable = true)
     private boolean isPrivate = false;
 
+    @Column(name = "isRestricted")
+    private boolean isRestricted = false;
 
     /**
      * The types of meal (e.g., breakfast, lunch, dinner, or snack).
@@ -495,6 +497,14 @@ public class Meal {
 
     public void setPrivate(boolean isPrivate) {
         this.isPrivate = isPrivate;
+    }
+
+    public boolean isRestricted() {
+        return isRestricted;
+    }
+
+    public void setRestricted(boolean restricted) {
+        isRestricted = restricted;
     }
 
     /**

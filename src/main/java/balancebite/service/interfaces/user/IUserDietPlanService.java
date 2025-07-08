@@ -44,6 +44,7 @@ public interface IUserDietPlanService {
 
     void updateDietPrivacy(Long userId, Long dietPlanId, boolean isPrivate);
 
+    void updateDietRestriction(Long userId, Long dietPlanId, boolean isRestricted);
 
     DietPlanDTO removeMealFromDietDay(Long userId, Long dietPlanId, int dayIndex, Long mealId);
 

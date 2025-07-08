@@ -14,6 +14,7 @@ import balancebite.model.foodItem.FoodItem;
 import balancebite.model.meal.Meal;
 import balancebite.model.meal.references.Diet;
 import balancebite.model.user.User;
+import balancebite.model.user.UserRole;
 import balancebite.repository.DietPlanRepository;
 import balancebite.repository.MealRepository;
 import balancebite.repository.SavedDietPlanRepository;
@@ -24,9 +25,11 @@ import balancebite.mapper.UserMapper;
 import balancebite.specification.DietPlanSpecification;
 import balancebite.utils.MealAssignmentUtil;
 import balancebite.utils.NutrientCalculatorUtil;
+import balancebite.model.user.Role;
 import balancebite.utils.ShoppingCartCalculator;
 import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.transaction.annotation.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -173,6 +176,14 @@ public class UserDietPlanService implements IUserDietPlanService {
         dietPlan.setAvgUnsaturatedFat(round1(totalUnsaturatedFat / dayCount));
         dietPlan.setAvgSugars(round1(totalSugars / dayCount));
 
+        boolean isRestricted = user.getRoles().stream()
+                .map(Role::getRolename)
+                .anyMatch(role -> role == UserRole.RESTAURANT || role == UserRole.DIETITIAN);
+
+        if (isRestricted) {
+            dietPlan.setRestricted(true);
+        }
+
         // Opslaan
         DietPlan saved = dietPlanRepository.save(dietPlan);
         user.getSavedDietPlans().add(saved);
@@ -189,6 +200,9 @@ public class UserDietPlanService implements IUserDietPlanService {
                 .orElseThrow(() -> new UserNotFoundException("User not found with ID: " + userId));
         DietPlan original = dietPlanRepository.findById(dietPlanId)
                 .orElseThrow(() -> new DietPlanNotFoundException("DietPlan not found with ID: " + dietPlanId));
+        if (original.isRestricted()) {
+            throw new AccessDeniedException("You cannot add a restricted diet plan.");
+        }
 
         // ── Als jij de creator bent: geen kopie, gewoon relinken
         if (original.getCreatedBy() != null && original.getCreatedBy().getId().equals(userId)) {
@@ -432,6 +446,28 @@ public class UserDietPlanService implements IUserDietPlanService {
         diet.setPrivate(isPrivate);
         dietPlanRepository.save(diet);
     }
+
+    @Override
+    @Transactional
+    public void updateDietRestriction(Long userId, Long dietPlanId, boolean isRestricted) {
+        DietPlan diet = dietPlanRepository.findById(dietPlanId)
+                .orElseThrow(() -> new DietPlanNotFoundException("DietPlan not found with ID: " + dietPlanId));
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("User not found with ID: " + userId));
+
+        boolean hasPermission = user.getRoles().stream()
+                .map(Role::getRolename)
+                .anyMatch(role -> role == UserRole.RESTAURANT || role == UserRole.DIETITIAN);
+
+        if (!hasPermission) {
+            throw new SecurityException("Only RESTAURANT or DIETITIAN users can update restriction status.");
+        }
+
+        diet.setRestricted(isRestricted);
+        dietPlanRepository.save(diet);
+    }
+
 
     @Override
     @Transactional

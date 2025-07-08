@@ -97,13 +97,14 @@ public class MealService implements IMealService {
             Double minFat,
             Double maxFat
     )
- {
+    {
         log.info("Retrieving paginated template meals with filters and sorting.");
 
         // Retrieve all template meals
         List<Meal> meals = mealRepository.findAllTemplateMeals();
 
         meals.removeIf(Meal::isPrivate);
+        meals.removeIf(Meal::isRestricted);
 
         // ✅ **Filtering on cuisine, diet, and mealType**
         if (cuisines != null && !cuisines.isEmpty()) {
