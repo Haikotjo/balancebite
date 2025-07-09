@@ -74,6 +74,12 @@ public class FoodItem {
     @Column(name = "food_category", nullable = true)
     private FoodCategory foodCategory;
 
+    @Column
+    private String image; // Base64-encoded image
+
+    @Column
+    private String imageUrl; // externe of interne URL
+
     /**
      * No-argument constructor required by JPA.
      */
@@ -283,6 +289,23 @@ public class FoodItem {
     public void setFoodCategory(FoodCategory foodCategory) {
         this.foodCategory = foodCategory;
     }
+
+    public String getImage() {
+        return image;
+    }
+
+    public void setImage(String image) {
+        this.image = image;
+    }
+
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
+    }
+
 }
 
 
