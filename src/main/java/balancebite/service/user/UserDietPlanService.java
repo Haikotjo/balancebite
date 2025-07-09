@@ -15,10 +15,7 @@ import balancebite.model.meal.Meal;
 import balancebite.model.meal.references.Diet;
 import balancebite.model.user.User;
 import balancebite.model.user.UserRole;
-import balancebite.repository.DietPlanRepository;
-import balancebite.repository.MealRepository;
-import balancebite.repository.SavedDietPlanRepository;
-import balancebite.repository.UserRepository;
+import balancebite.repository.*;
 import balancebite.service.interfaces.user.IUserDietPlanService;
 import balancebite.dto.user.UserDTO;
 import balancebite.mapper.UserMapper;
@@ -54,6 +51,7 @@ public class UserDietPlanService implements IUserDietPlanService {
     private final UserMealService userMealService;
     private final MealAssignmentUtil mealAssignmentUtil;
     private final SavedDietPlanRepository savedDietPlanRepository;
+    private final SharedDietPlanAccessRepository sharedDietPlanAccessRepository;
 
 
     public UserDietPlanService(DietPlanRepository dietPlanRepository,
@@ -64,7 +62,8 @@ public class UserDietPlanService implements IUserDietPlanService {
                                UserMapper userMapper,
                                UserMealService userMealService,
                                MealAssignmentUtil mealAssignmentUtil,
-                               SavedDietPlanRepository savedDietPlanRepository) {
+                               SavedDietPlanRepository savedDietPlanRepository,
+                               SharedDietPlanAccessRepository sharedDietPlanAccessRepository) {
         this.dietPlanRepository = dietPlanRepository;
         this.userRepository = userRepository;
         this.mealRepository = mealRepository;
@@ -74,6 +73,7 @@ public class UserDietPlanService implements IUserDietPlanService {
         this.userMealService = userMealService;
         this.mealAssignmentUtil = mealAssignmentUtil;
         this.savedDietPlanRepository = savedDietPlanRepository;
+        this.sharedDietPlanAccessRepository = sharedDietPlanAccessRepository;
     }
 
     @Override
@@ -200,8 +200,13 @@ public class UserDietPlanService implements IUserDietPlanService {
                 .orElseThrow(() -> new UserNotFoundException("User not found with ID: " + userId));
         DietPlan original = dietPlanRepository.findById(dietPlanId)
                 .orElseThrow(() -> new DietPlanNotFoundException("DietPlan not found with ID: " + dietPlanId));
-        if (original.isRestricted()) {
-            throw new AccessDeniedException("You cannot add a restricted diet plan.");
+
+        boolean hasSharedAccess =
+                sharedDietPlanAccessRepository.existsByDietPlanIdAndUserId(dietPlanId, userId)
+                        || sharedDietPlanAccessRepository.existsByDietPlanIdAndEmailIgnoreCase(dietPlanId, user.getEmail());
+
+        if (original.isRestricted() || (original.isPrivate() && !hasSharedAccess)) {
+            throw new AccessDeniedException("You cannot add a restricted or private diet plan.");
         }
 
         // ── Als jij de creator bent: geen kopie, gewoon relinken

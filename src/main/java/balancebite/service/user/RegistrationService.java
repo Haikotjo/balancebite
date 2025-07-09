@@ -2,9 +2,11 @@ package balancebite.service.user;
 
 import balancebite.dto.user.UserRegistrationInputDTO;
 import balancebite.errorHandling.EntityAlreadyExistsException;
+import balancebite.model.user.PendingClient;
 import balancebite.model.user.Role;
 import balancebite.model.user.User;
 import balancebite.model.user.UserRole;
+import balancebite.repository.PendingClientRepository;
 import balancebite.repository.RoleRepository;
 import balancebite.repository.UserRepository;
 import balancebite.security.JwtService;
@@ -33,6 +35,8 @@ public class RegistrationService implements IRegistrationService {
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final PendingClientRepository pendingClientRepository;
+
 
     /**
      * Constructor for RegistrationService.
@@ -41,11 +45,12 @@ public class RegistrationService implements IRegistrationService {
      * @param roleRepository  The repository for managing Role entities.
      * @param passwordEncoder The encoder for hashing passwords.
      */
-    public RegistrationService(UserRepository userRepository, RoleRepository roleRepository, PasswordEncoder passwordEncoder, JwtService jwtService) {
+    public RegistrationService(UserRepository userRepository, RoleRepository roleRepository, PasswordEncoder passwordEncoder, JwtService jwtService, PendingClientRepository pendingClientRepository) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
+        this.pendingClientRepository = pendingClientRepository;
     }
 
     /**
@@ -85,6 +90,27 @@ public class RegistrationService implements IRegistrationService {
 
         // Save the user to the database
         userRepository.save(user);
+
+        // Check if this user was previously invited by any dietitian
+        List<PendingClient> pendingClients = pendingClientRepository.findAllByEmail(user.getEmail().toLowerCase().trim());
+
+        if (!pendingClients.isEmpty()) {
+            for (PendingClient pending : pendingClients) {
+                User dietitian = pending.getDietitian();
+                dietitian.getClients().add(user);
+                user.getDietitians().add(dietitian);
+            }
+            log.info("Linked user {} with {} dietitian(s) from pending invitations.", user.getEmail(), pendingClients.size());
+
+            // Save updated user and dietitians
+            userRepository.save(user);
+            pendingClients.forEach(pending -> userRepository.save(pending.getDietitian()));
+
+            // Remove all pending invitations for this email
+            pendingClientRepository.deleteAll(pendingClients);
+            log.info("Deleted {} pending client invitation(s) for email {}", pendingClients.size(), user.getEmail());
+        }
+
 
         log.info("User registered successfully with email: {}", registrationDTO.getEmail());
 

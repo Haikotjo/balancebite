@@ -79,6 +79,7 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(authz -> authz
 
+                        .requestMatchers(HttpMethod.GET, "/admins/users").hasAnyRole("ADMIN", "DIETITIAN")
                         .requestMatchers(HttpMethod.GET, "/uploads/**").permitAll()
 
                         // register endpoints
@@ -86,6 +87,7 @@ public class SecurityConfig {
 
                         // user entity endpoints
                         .requestMatchers(HttpMethod.GET, "/users/**").authenticated()
+
                         .requestMatchers(HttpMethod.GET, "/users/profile").authenticated()
                         .requestMatchers(HttpMethod.PATCH, "/users/basic-info").authenticated()
 
@@ -158,6 +160,18 @@ public class SecurityConfig {
                         .requestMatchers("/admin/dietplans/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.POST, "/admin/promotions").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/admin/promotions/{promotionId}").hasRole("ADMIN")
+
+                        // DIETITIAN-only endpoints
+                        .requestMatchers(HttpMethod.POST, "/user/dietitian/invite-client").hasRole("DIETITIAN")
+                        .requestMatchers(HttpMethod.POST, "/user/dietitian/create-meal").hasAnyRole("DIETITIAN", "ADMIN")
+
+                        // DIETITIAN-only endpoints
+                        .requestMatchers(HttpMethod.POST, "/user/dietitian/create-dietplan").hasAnyRole("DIETITIAN", "ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/user/dietitian/add-meal-access").hasAnyRole("DIETITIAN", "ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/user/dietitian/add-dietplan-access").hasAnyRole("DIETITIAN", "ADMIN")
+
+
+
 
 
                         .anyRequest().authenticated()

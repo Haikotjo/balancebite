@@ -6,12 +6,19 @@ import balancebite.errorHandling.DietPlanNotFoundException;
 import balancebite.mapper.DietPlanMapper;
 import balancebite.model.diet.DietPlan;
 import balancebite.model.meal.references.Diet;
+import balancebite.model.user.User;
+import balancebite.model.user.UserRole;
 import balancebite.repository.DietPlanRepository;
+import balancebite.repository.SharedDietPlanAccessRepository;
+import balancebite.repository.UserRepository;
+import balancebite.security.SecurityUtils;
 import balancebite.service.interfaces.diet.IPublicDietPlanService;
 import balancebite.service.meal.MealService;
 import balancebite.specification.DietPlanSpecification;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.stereotype.Service;
 import org.slf4j.Logger;
@@ -28,11 +35,16 @@ public class PublicDietPlanService implements IPublicDietPlanService {
 
     private static final Logger log = LoggerFactory.getLogger(PublicDietPlanService.class);
     private final DietPlanRepository dietPlanRepository;
+    private final UserRepository userRepository;
     private final DietPlanMapper dietPlanMapper;
 
-    public PublicDietPlanService(DietPlanRepository dietPlanRepository, DietPlanMapper dietPlanMapper) {
+    private final SharedDietPlanAccessRepository sharedDietPlanAccessRepository;
+
+    public PublicDietPlanService(DietPlanRepository dietPlanRepository, DietPlanMapper dietPlanMapper, UserRepository userRepository, SharedDietPlanAccessRepository sharedDietPlanAccessRepository) {
         this.dietPlanRepository = dietPlanRepository;
         this.dietPlanMapper = dietPlanMapper;
+        this.userRepository = userRepository;
+        this.sharedDietPlanAccessRepository = sharedDietPlanAccessRepository;
     }
 
     @Override
@@ -151,12 +163,32 @@ public class PublicDietPlanService implements IPublicDietPlanService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public DietPlanDTO getPublicDietPlanById(Long id) {
         DietPlan dietPlan = dietPlanRepository.findById(id)
-                .filter(d -> d.isTemplate() && !d.isPrivate())
-                .orElseThrow(() -> new DietPlanNotFoundException("Public diet not found with ID: " + id));
+                .orElseThrow(() -> new DietPlanNotFoundException("Diet plan not found with ID: " + id));
+
+        if (!dietPlan.isTemplate()) {
+            throw new DietPlanNotFoundException("Diet plan is not a public template");
+        }
+
+        if (dietPlan.isPrivate()) {
+            User currentUser = getCurrentUserOrThrow();
+            boolean isOwner = dietPlan.getCreatedBy().getId().equals(currentUser.getId());
+            boolean isSharedByEmail = sharedDietPlanAccessRepository.existsByDietPlanIdAndEmail(id, currentUser.getEmail());
+            boolean isSharedByUserId = sharedDietPlanAccessRepository.existsByDietPlanIdAndUserId(id, currentUser.getId());
+
+            boolean isAdmin = currentUser.getRoles().stream()
+                    .anyMatch(role -> role.getRolename() == UserRole.ADMIN);
+
+            if (!isOwner && !isSharedByEmail && !isSharedByUserId && !isAdmin) {
+                throw new AccessDeniedException("This diet plan is private.");
+            }
+        }
+
         return dietPlanMapper.toDTO(dietPlan);
     }
+
     @Override
     @Transactional(readOnly = true)
     public List<DietPlanNameDTO> getAllPublicDietPlanNames() {
@@ -164,4 +196,12 @@ public class PublicDietPlanService implements IPublicDietPlanService {
         return dietPlanRepository.findAllTemplateDietPlanNames();
     }
 
+    private User getCurrentUserOrThrow() {
+        Long userId = SecurityUtils.getCurrentAuthenticatedUserId();
+        if (userId == null) {
+            throw new AccessDeniedException("No authenticated user.");
+        }
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("User not found with ID: " + userId));
+    }
 }

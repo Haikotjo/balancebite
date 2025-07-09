@@ -89,6 +89,19 @@ public class User {
     @JsonIgnore
     @ManyToMany
     @JoinTable(
+            name = "dietitian_clients",
+            joinColumns = @JoinColumn(name = "dietitian_id"),
+            inverseJoinColumns = @JoinColumn(name = "client_id")
+    )
+    private Set<User> clients = new HashSet<>();
+
+    @JsonIgnore
+    @ManyToMany(mappedBy = "clients")
+    private Set<User> dietitians = new HashSet<>();
+
+    @JsonIgnore
+    @ManyToMany
+    @JoinTable(
             name = "user_following",
             joinColumns = @JoinColumn(name = "follower_id"),
             inverseJoinColumns = @JoinColumn(name = "followed_id")
@@ -98,6 +111,35 @@ public class User {
     @JsonIgnore
     @ManyToMany(mappedBy = "following")
     private Set<User> followers = new HashSet<>();
+
+    @Column(length = 1000)
+    private String description;
+
+    @Column
+    private String image; // Base64-encoded image
+
+    @Column
+    private String imageUrl; // URL naar afbeelding op server of CDN
+
+    @Column(length = 255)
+    private String phone;
+
+    @Column(length = 500)
+    private String address;
+
+    @Column(length = 255)
+    private String website;
+
+    @Column(length = 255)
+    private String instagram;
+
+    @Column(length = 255)
+    private String facebook;
+
+    @Column(length = 255)
+    private String linkedin;
+
+
 
     public User() {}
 
@@ -248,6 +290,7 @@ public class User {
         this.following = following;
     }
 
+
     public Set<User> getFollowers() {
         return followers;
     }
@@ -255,4 +298,64 @@ public class User {
     public void setFollowers(Set<User> followers) {
         this.followers = followers;
     }
+
+    public Set<User> getClients() {
+        return clients;
+    }
+
+    public void setClients(Set<User> clients) {
+        this.clients = clients;
+    }
+
+    public Set<User> getDietitians() {
+        return dietitians;
+    }
+
+    public void setDietitians(Set<User> dietitians) {
+        this.dietitians = dietitians;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public String getImage() {
+        return image;
+    }
+
+    public void setImage(String image) {
+        this.image = image;
+    }
+
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
+    }
+
+    public String getPhone() { return phone; }
+    public void setPhone(String phone) { this.phone = phone; }
+
+    public String getAddress() { return address; }
+    public void setAddress(String address) { this.address = address; }
+
+    public String getWebsite() { return website; }
+    public void setWebsite(String website) { this.website = website; }
+
+    public String getInstagram() { return instagram; }
+    public void setInstagram(String instagram) { this.instagram = instagram; }
+
+    public String getFacebook() { return facebook; }
+    public void setFacebook(String facebook) { this.facebook = facebook; }
+
+    public String getLinkedin() { return linkedin; }
+    public void setLinkedin(String linkedin) { this.linkedin = linkedin; }
+
+
 }

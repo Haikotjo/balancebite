@@ -24,10 +24,13 @@ public class UserDTO {
     private final Collection<Role> roles;
     private final List<RecommendedDailyIntakeDTO> recommendedDailyIntakes;
     private final RecommendedDailyIntakeDTO baseRecommendedDailyIntake;
+    private final List<UserDTO> clients;
+    private final List<UserDTO> dietitians;
+
 
     public UserDTO(Long id, String userName, String email, Double weight, Integer age, Double height, Gender gender,
                    ActivityLevel activityLevel, Goal goal, List<MealDTO> meals, Collection<Role> roles,
-                   List<RecommendedDailyIntakeDTO> recommendedDailyIntakes, RecommendedDailyIntakeDTO baseRecommendedDailyIntake) {
+                   List<RecommendedDailyIntakeDTO> recommendedDailyIntakes, RecommendedDailyIntakeDTO baseRecommendedDailyIntake, List<UserDTO> clients, List<UserDTO> dietitians) {
         this.id = id;
         this.userName = userName;
         this.email = email;
@@ -41,14 +44,16 @@ public class UserDTO {
         this.roles = (roles != null) ? List.copyOf(roles) : List.of();
         this.recommendedDailyIntakes = (recommendedDailyIntakes != null) ? List.copyOf(recommendedDailyIntakes) : List.of();
         this.baseRecommendedDailyIntake = baseRecommendedDailyIntake;
+        this.clients = (clients != null) ? List.copyOf(clients) : List.of();
+        this.dietitians = (dietitians != null) ? List.copyOf(dietitians) : List.of();
     }
 
     public UserDTO(Long id, String userName, String email) {
-        this(id, userName, email, null, null, null, null, null, null, List.of(), List.of(), List.of(), null);
+        this(id, userName, email, null, null, null, null, null, null, List.of(), List.of(), List.of(), null,   List.of(), List.of());
     }
 
     public UserDTO(Long id, String userName) {
-        this(id, userName, null, null, null, null, null, null, null, List.of(), List.of(), List.of(), null);
+        this(id, userName, null, null, null, null, null, null, null, List.of(), List.of(), List.of(), null,    List.of(), List.of());
     }
 
     public Long getId() {
@@ -101,5 +106,13 @@ public class UserDTO {
 
     public RecommendedDailyIntakeDTO getBaseRecommendedDailyIntake() {
         return baseRecommendedDailyIntake;
+    }
+
+    public List<UserDTO> getClients() {
+        return clients;
+    }
+
+    public List<UserDTO> getDietitians() {
+        return dietitians;
     }
 }

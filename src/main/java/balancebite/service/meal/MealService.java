@@ -7,9 +7,13 @@ import balancebite.dto.meal.MealNameDTO;
 import balancebite.mapper.MealIngredientMapper;
 import balancebite.mapper.MealMapper;
 import balancebite.model.meal.Meal;
+import balancebite.model.user.User;
+import balancebite.model.user.UserRole;
 import balancebite.repository.FoodItemRepository;
 import balancebite.repository.MealRepository;
+import balancebite.repository.SharedMealAccessRepository;
 import balancebite.repository.UserRepository;
+import balancebite.security.SecurityUtils;
 import balancebite.service.diet.PublicDietPlanService;
 import balancebite.service.interfaces.meal.IMealService;
 import balancebite.utils.NutrientCalculatorUtil;
@@ -42,6 +46,7 @@ public class MealService implements IMealService {
     private final MealMapper mealMapper;
     private final MealIngredientMapper mealIngredientMapper;
     private final CheckForDuplicateTemplateMealUtil checkForDuplicateTemplateMeal;
+    private final SharedMealAccessRepository sharedMealAccessRepository;
 
     /**
      * Constructor for MealService, using constructor injection.
@@ -51,13 +56,14 @@ public class MealService implements IMealService {
      * @param userRepository     the repository for managing User entities.
      * @param mealMapper         the mapper for converting Meal entities to DTOs.
      */
-    public MealService(MealRepository mealRepository, FoodItemRepository foodItemRepository, UserRepository userRepository, MealMapper mealMapper, MealIngredientMapper mealIngredientMapper, CheckForDuplicateTemplateMealUtil checkForDuplicateTemplateMeal) {
+    public MealService(MealRepository mealRepository, FoodItemRepository foodItemRepository, UserRepository userRepository, MealMapper mealMapper, MealIngredientMapper mealIngredientMapper, CheckForDuplicateTemplateMealUtil checkForDuplicateTemplateMeal, SharedMealAccessRepository sharedMealAccessRepository) {
         this.mealRepository = mealRepository;
         this.foodItemRepository = foodItemRepository;
         this.userRepository = userRepository;
         this.mealMapper = mealMapper;
         this.mealIngredientMapper = mealIngredientMapper;
         this.checkForDuplicateTemplateMeal = checkForDuplicateTemplateMeal;
+        this.sharedMealAccessRepository = sharedMealAccessRepository;
     }
 
     /**
@@ -216,13 +222,20 @@ public class MealService implements IMealService {
                 .orElseThrow(() -> new EntityNotFoundException("Meal not found with ID: " + id));
 
         if (meal.isPrivate()) {
-            log.warn("Attempt to access private meal with ID: {}", id);
-            throw new AccessDeniedException("This meal is private.");
+            User currentUser = getCurrentUserOrThrow();
+            boolean isOwner = meal.getCreatedBy().getId().equals(currentUser.getId());
+            boolean isSharedByEmail = sharedMealAccessRepository.existsByMealIdAndEmail(id, currentUser.getEmail());
+            boolean isSharedByUserId = sharedMealAccessRepository.existsByMealIdAndUserId(id, currentUser.getId());
+            boolean isAdmin = currentUser.getRoles().stream()
+                    .anyMatch(role -> role.getRolename() == UserRole.ADMIN);
+
+            if (!isOwner && !isSharedByEmail && !isSharedByUserId && !isAdmin) {
+                log.warn("Access denied for user {} to private meal ID: {}", currentUser.getId(), id);
+                throw new AccessDeniedException("This meal is private.");
+            }
         }
 
-        MealDTO mealDTO = mealMapper.toDTO(meal);
-        log.info("Successfully retrieved meal with ID: {}", id);
-        return mealDTO;
+        return mealMapper.toDTO(meal);
     }
 
     /**
@@ -282,4 +295,14 @@ public class MealService implements IMealService {
         log.info("Fetching all food item names and IDs.");
         return mealRepository.findAllMealNames();
     }
+
+    private User getCurrentUserOrThrow() {
+        Long userId = SecurityUtils.getCurrentAuthenticatedUserId();
+        if (userId == null) {
+            throw new AccessDeniedException("No authenticated user.");
+        }
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("User not found with ID: " + userId));
+    }
+
 }

@@ -67,6 +67,18 @@ public class UserMapper {
                 ? recommendedDailyIntakeMapper.toDTO(user.getBaseRecommendedDailyIntake())
                 : null;
 
+        List<UserDTO> clientDTOs = user.getClients() != null
+                ? user.getClients().stream()
+                .map(this::toBasicDTO)
+                .collect(Collectors.toList())
+                : List.of();
+
+        List<UserDTO> dietitianDTOs = user.getDietitians() != null
+                ? user.getDietitians().stream()
+                .map(this::toBasicDTO)
+                .collect(Collectors.toList())
+                : List.of();
+
         return new UserDTO(
                 user.getId(),
                 user.getUserName(),
@@ -80,7 +92,9 @@ public class UserMapper {
                 mealDTOs,
                 user.getRoles(),
                 recommendedDailyIntakeDTOs,
-                baseRecommendedDailyIntakeDTO
+                baseRecommendedDailyIntakeDTO,
+                clientDTOs,
+                dietitianDTOs
         );
     }
 
@@ -140,24 +154,14 @@ public class UserMapper {
         }
     }
 
-    /**
-     * Processes UserLoginInputDTO for authentication purposes.
-     * This method does not perform any conversion but ensures valid input is logged.
-     *
-     * @param loginDTO The input DTO containing login details.
-     */
-    public void validateLoginDTO(UserLoginInputDTO loginDTO) {
-        log.info("Validating UserLoginInputDTO for email: {}", loginDTO.getEmail());
-        if (loginDTO == null) {
-            log.error("UserLoginInputDTO is null.");
-            throw new IllegalArgumentException("UserLoginInputDTO cannot be null.");
-        }
-        log.debug("UserLoginInputDTO validation passed for email: {}", loginDTO.getEmail());
-    }
-
     public PublicUserDTO toPublicUserDTO(User user) {
         if (user == null) return null;
         return new PublicUserDTO(user.getId(), user.getUserName(), user.getRoles());
+    }
+
+    public UserDTO toBasicDTO(User user) {
+        if (user == null) return null;
+        return new UserDTO(user.getId(), user.getUserName(), user.getEmail());
     }
 
 }

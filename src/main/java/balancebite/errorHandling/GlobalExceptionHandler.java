@@ -218,4 +218,9 @@ public class GlobalExceptionHandler {
                         "diets", ex.getDietNames()
                 ));
     }
+
+    @ExceptionHandler(ForbiddenActionException.class)
+    public ResponseEntity<Map<String, String>> handleForbiddenActionException(ForbiddenActionException ex) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", ex.getMessage()));
+    }
 }

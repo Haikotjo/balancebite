@@ -149,7 +149,7 @@ public class UserMealService implements IUserMealService {
 
         boolean isRestricted = user.getRoles().stream()
                 .map(Role::getRolename)
-                .anyMatch(role -> role == UserRole.RESTAURANT || role == UserRole.DIETITIAN);
+                .anyMatch(role -> role == UserRole.RESTAURANT);
 
         if (isRestricted) {
             meal.setRestricted(true);
