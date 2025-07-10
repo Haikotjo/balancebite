@@ -3,6 +3,8 @@ package balancebite.model.foodItem;
 import balancebite.model.MealIngredient;
 import balancebite.model.NutrientInfo;
 import jakarta.persistence.*;
+
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -79,6 +81,12 @@ public class FoodItem {
 
     @Column
     private String imageUrl; // externe of interne URL
+
+    private BigDecimal price;
+    private BigDecimal salePrice;
+    private BigDecimal salePercentage;
+    private String saleDescription;
+    private BigDecimal grams;
 
     /**
      * No-argument constructor required by JPA.
@@ -306,6 +314,45 @@ public class FoodItem {
         this.imageUrl = imageUrl;
     }
 
+    public BigDecimal getPrice() {
+        return price;
+    }
+
+    public void setPrice(BigDecimal price) {
+        this.price = price;
+    }
+
+    public BigDecimal getSalePrice() {
+        return salePrice;
+    }
+
+    public void setSalePrice(BigDecimal salePrice) {
+        this.salePrice = salePrice;
+    }
+
+    public BigDecimal getSalePercentage() {
+        return salePercentage;
+    }
+
+    public void setSalePercentage(BigDecimal salePercentage) {
+        this.salePercentage = salePercentage;
+    }
+
+    public String getSaleDescription() {
+        return saleDescription;
+    }
+
+    public void setSaleDescription(String saleDescription) {
+        this.saleDescription = saleDescription;
+    }
+
+    public BigDecimal getGrams() {
+        return grams;
+    }
+
+    public void setGrams(BigDecimal grams) {
+        this.grams = grams;
+    }
 }
 
 
