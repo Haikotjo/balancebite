@@ -1,0 +1,57 @@
+spring:
+  application:
+    name: balancebite
+  config:
+    import: optional:classpath:.env
+  profiles:
+    active: prod
+
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+
+  sql:
+    init:
+      mode: never
+      platform: postgres
+
+  jpa:
+    database: postgresql
+    show-sql: false
+    generate-ddl: true
+    hibernate:
+      ddl-auto: update
+    defer-datasource-initialization: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+  usda:
+    api:
+      key: ${USDA_API_KEY}
+
+    file:
+      upload-dir: /var/www/uploads/
+
+food:
+  fdcIds:
+    - "170513"
+    - "169287"
+    - "169999"
+    - "173944"
+    - "323505"
+    - "169910"
+    - "2346409"
+    - "2685573"
+    - "1999634"
+    - "747447"
+    - "171705"
+    - "169124"
+    - "2344766"
+    - "173424"
+    - "172688"
+    - "171409"
+    - "171269"
+    - "174276"

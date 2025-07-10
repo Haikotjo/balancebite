@@ -3,13 +3,19 @@ spring:
     name: balancebite
   config:
     import: optional:classpath:.env
+  profiles:
+    active: prod
 
   datasource:
-    platform: postgres
     url: jdbc:postgresql://localhost:5432/balancebite
     username: postgres
     password: password
     driver-class-name: org.postgresql.Driver
+
+  sql:
+    init:
+      mode: always
+      platform: postgres
 
   jpa:
     database: postgresql
@@ -30,10 +36,6 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
-
-  sql:
-    init:
-      mode: always
 
 # Email configuration for sending notifications
 #mail:
