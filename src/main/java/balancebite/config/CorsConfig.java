@@ -18,7 +18,7 @@ public class CorsConfig {
 //                        .allowedOrigins("http://localhost:5173")
 
                         // Voor productie ook je frontend-URL toestaan, bijvoorbeeld:
-                        .allowedOrigins("http://localhost:5173", "https://balancebite-frontend.vercel.app")
+                        .allowedOrigins("https://balancebite-frontend.vercel.app")
                         // ↑ En comment de regel erboven dan uit
 
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "PATCH")
