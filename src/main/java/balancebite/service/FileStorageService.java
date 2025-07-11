@@ -50,9 +50,9 @@ public class FileStorageService {
             log.info("⏫ Saved file: {} -> {}", uniqueFileName, filePath.toAbsolutePath());
 
             // Generate and return the full URL
-            String fullUrl = getFullUrl(uniqueFileName);
-            log.info("Generated full URL for uploaded file: {}", fullUrl);
-            return fullUrl;
+
+            log.info("Generated full URL for uploaded file: {}", uniqueFileName);
+            return uniqueFileName;
         } catch (IOException e) {
             log.error("Failed to store file: {}", e.getMessage());
             throw new FileStorageException("Failed to store file: " + e.getMessage(), e);
