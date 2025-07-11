@@ -151,8 +151,18 @@ public class PublicDietPlanService implements IPublicDietPlanService {
         );
 
 
-        String mappedSortBy = sortFieldMap.getOrDefault(sortBy, "createdAt");
-        Sort.Direction direction = sortOrder.equalsIgnoreCase("asc") ? Sort.Direction.ASC : Sort.Direction.DESC;
+        String mappedSortBy = sortFieldMap.getOrDefault(
+                (sortBy == null || sortBy.isBlank()) ? "createdAt" : sortBy,
+                "createdAt"
+        );
+
+        Sort.Direction direction;
+        try {
+            direction = Sort.Direction.fromString(sortOrder);
+        } catch (Exception e) {
+            direction = Sort.Direction.DESC; // fallback
+        }
+
         Pageable sortedPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Sort.by(direction, mappedSortBy));
 
         log.info("Hallo!!! DIET FILTERS:minCarbs={}, maxCarbs={}, minProtein={}, maxProtein={}, minFat={}, maxFat={}, minCalories={}, maxCalories={}",

@@ -626,13 +626,24 @@ public class UserDietPlanService implements IUserDietPlanService {
         );
 
 
-        String mappedSortBy = sortFieldMap.getOrDefault(sortBy, "createdAt");
-        Sort.Direction direction = sortOrder.equalsIgnoreCase("asc") ? Sort.Direction.ASC : Sort.Direction.DESC;
-        Pageable sortedPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Sort.by(direction, mappedSortBy));
+        String mappedSortBy = sortFieldMap.getOrDefault(
+                (sortBy == null || sortBy.isBlank()) ? "createdAt" : sortBy,
+                "createdAt"
+        );
 
-//        log.info("Hallo!!! DIET FILTERS: minCarbs={}, maxCarbs={}, minProtein={}, maxProtein={}, minFat={}, maxFat={}, minCalories={}, maxCalories={}",
-//             minCarbs, maxCarbs, minProtein, maxProtein,  minFat, maxFat, minCalories, maxCalories
-//        );
+        Sort.Direction direction;
+        try {
+            direction = Sort.Direction.fromString(sortOrder);
+        } catch (Exception e) {
+            direction = Sort.Direction.DESC;
+        }
+
+        Pageable sortedPageable = PageRequest.of(
+                pageable.getPageNumber(),
+                pageable.getPageSize(),
+                Sort.by(direction, mappedSortBy)
+        );
+
 
         return dietPlanRepository.findAll(spec, sortedPageable)
                 .map(dietPlanMapper::toDTO);
