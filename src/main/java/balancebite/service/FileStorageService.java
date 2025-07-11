@@ -22,7 +22,7 @@ public class FileStorageService {
     @Value("${file.upload-dir:uploads/}")
     private String uploadDir;
 
-    @Value("${server.base-url:http://localhost:8080/}")
+    @Value("${server.base-url:https://balancebite-production.up.railway.app/}")
     private String baseUrl;
 
     /**
