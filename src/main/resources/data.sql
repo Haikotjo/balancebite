@@ -1,1013 +1,1013 @@
--- Voeg rollen toe, maar alleen als ze nog niet bestaan
-INSERT INTO roles (rolename)
-SELECT 'USER' WHERE NOT EXISTS (
-    SELECT 1 FROM roles WHERE rolename = 'USER'
-);
-
-INSERT INTO roles (rolename)
-SELECT 'CHEF' WHERE NOT EXISTS (
-    SELECT 1 FROM roles WHERE rolename = 'CHEF'
-);
-
-INSERT INTO roles (rolename)
-SELECT 'ADMIN' WHERE NOT EXISTS (
-    SELECT 1 FROM roles WHERE rolename = 'ADMIN'
-);
-
-INSERT INTO roles (rolename)
-SELECT 'RESTAURANT' WHERE NOT EXISTS (
-    SELECT 1 FROM roles WHERE rolename = 'RESTAURANT'
-);
-
-INSERT INTO roles (rolename)
-SELECT 'DIETITIAN' WHERE NOT EXISTS (
-    SELECT 1 FROM roles WHERE rolename = 'DIETITIAN'
-);
-
--- Voeg gebruikers toe als ze nog niet bestaan
-INSERT INTO users (user_name, email, password)
-SELECT 'John Doe', 'johndoe@example.com', '$2a$10$jPPPOnf7yp7gCZu8MVzApO4euavXZ.RFWFYjuEOPRewVLcWgJQR1C'
-WHERE NOT EXISTS (SELECT 1 FROM users WHERE email = 'johndoe@example.com');
-
-INSERT INTO users (user_name, email, password)
-SELECT 'Jane Smith', 'janesmith@example.com', '$2a$10$EeRkWfH4ZL7rYL2kdtuaHOUAOgr731Z5kjUu0AoxzxUaadjnyi12K'
-WHERE NOT EXISTS (SELECT 1 FROM users WHERE email = 'janesmith@example.com');
-
-INSERT INTO users (user_name, email, password)
-SELECT 'Tom Brown', 'tombrown@example.com', '$2a$10$8kNk0oZxjHrBPqSGg1d9xuhga/0tX8KQkVTBRfvQylu/InVzOQpm2'
-WHERE NOT EXISTS (SELECT 1 FROM users WHERE email = 'tombrown@example.com');
-
-INSERT INTO users (user_name, email, password)
-SELECT 'Emily White', 'emilywhite@example.com', '$2a$10$VZAkFVLuVhPf08LLoK2Z/enlk2gpgzvPMDlb8K1surRSrRz4QN1NO'
-WHERE NOT EXISTS (SELECT 1 FROM users WHERE email = 'emilywhite@example.com');
-
-INSERT INTO users (user_name, email, password)
-SELECT 'Haiko White', 'haikowhite@example.com', '$2a$10$WdJdBTECeJE7TfzngaGFK.3xF45rnmmwiUUYeVt4xt0vVSJstKWIW'
-WHERE NOT EXISTS (SELECT 1 FROM users WHERE email = 'haikowhite@example.com');
-
-INSERT INTO users (user_name, email, password)
-SELECT 'Mieke White', 'miekewhite@example.com', '$2a$10$5wHAveL167oKGageyZgfGuLP9JJzRFbBHrtGgGd6V2w0hpueNbci6'
-WHERE NOT EXISTS (SELECT 1 FROM users WHERE email = 'miekewhite@example.com');
-
--- Koppel gebruikers aan rollen
-INSERT INTO user_roles (user_id, roles_rolename)
-SELECT 1, 'USER'
-WHERE NOT EXISTS (
-    SELECT 1 FROM user_roles WHERE user_id = 1 AND roles_rolename = 'USER'
-);
-
-INSERT INTO user_roles (user_id, roles_rolename)
-SELECT 2, 'USER'
-WHERE NOT EXISTS (
-    SELECT 1 FROM user_roles WHERE user_id = 2 AND roles_rolename = 'USER'
-);
-
-INSERT INTO user_roles (user_id, roles_rolename)
-SELECT 3, 'USER'
-WHERE NOT EXISTS (
-    SELECT 1 FROM user_roles WHERE user_id = 3 AND roles_rolename = 'USER'
-);
-
-INSERT INTO user_roles (user_id, roles_rolename)
-SELECT 4, 'ADMIN'
-WHERE NOT EXISTS (
-    SELECT 1 FROM user_roles WHERE user_id = 4 AND roles_rolename = 'ADMIN'
-);
-
-INSERT INTO user_roles (user_id, roles_rolename)
-SELECT 5, 'ADMIN'
-WHERE NOT EXISTS (
-    SELECT 1 FROM user_roles WHERE user_id = 5 AND roles_rolename = 'ADMIN'
-);
-
-INSERT INTO user_roles (user_id, roles_rolename)
-SELECT 6, 'CHEF'
-WHERE NOT EXISTS (
-    SELECT 1 FROM user_roles WHERE user_id = 6 AND roles_rolename = 'CHEF'
-);
-
-
--- Voeg maaltijden toe (met uitgebreidere beschrijvingen)
-
-INSERT INTO meals (
-    name, meal_description, is_template, is_private, is_restricted,
-    created_by_user_id, image_url,
-    total_calories, total_protein, total_carbs, total_fat,
-    total_sugars, total_saturated_fat, total_unsaturated_fat,
-    preparation_time
-)
-SELECT 'Breakfast',
-       'Start your day with a nourishing breakfast featuring naturally sweet bananas, creamy nonfat milk, and wholesome whole-wheat bread. This energizing combination provides a perfect balance of carbohydrates, protein, and fiber to fuel your morning and keep you satisfied until your next meal.',
-       true, false, false,
-       1, 'https://images.unsplash.com/photo-1473093295043-cdd812d0e601?q=80',
-       267, 13, 53, 2,
-       14, 0.5, 1.2,
-       'PT15M'
-WHERE NOT EXISTS (
-    SELECT 1 FROM meals WHERE name = 'Breakfast' AND created_by_user_id = 1
-);
-INSERT INTO meals (
-    name, meal_description, is_template, is_private, is_restricted,
-    created_by_user_id, image_url,
-    total_calories, total_protein, total_carbs, total_fat,
-    total_sugars, total_saturated_fat, total_unsaturated_fat,
-    preparation_time
-)
-SELECT 'Lunch',
-       'Enjoy a colorful and vibrant lunch packed with nutrients and flavor. This meal brings together tender peas and carrots, hearty spinach, juicy strawberries, and creamy avocado for a delicious and refreshing midday boost. A perfect choice for those seeking a plant-forward, balanced plate.',
-       true, false, false,
-       1, 'https://images.unsplash.com/photo-1485451456034-3f9391c6f769?q=80',
-       584, 25, 76, 37,
-       18, 4.1, 30.0,
-       'PT30M'
-WHERE NOT EXISTS (
-    SELECT 1 FROM meals WHERE name = 'Lunch' AND created_by_user_id = 1
-);
-
-INSERT INTO meals (
-    name, meal_description, is_template, is_private, is_restricted,
-    created_by_user_id, image_url,
-    total_calories, total_protein, total_carbs, total_fat,
-    total_sugars, total_saturated_fat, total_unsaturated_fat,
-    preparation_time
-)
-SELECT 'Dinner',
-       'Unwind with a comforting and hearty dinner that combines naturally sweet yellow corn, crisp cauliflower, and perfectly cooked hard-boiled eggs. This simple yet satisfying meal offers a rich blend of textures and nutrients, ideal for a lighter evening option that still nourishes and restores.',
-       true, false, false,
-       1, 'https://images.unsplash.com/photo-1505932049984-db368d92fa63?q=80',
-       125, 8, 24, 4,
-       6, 1.2, 2.5,
-       'PT45M'
-WHERE NOT EXISTS (
-    SELECT 1 FROM meals WHERE name = 'Dinner' AND created_by_user_id = 1
-);
-INSERT INTO meals (
-    name, meal_description, is_template, is_private, is_restricted,
-    created_by_user_id, image_url,
-    total_calories, total_protein, total_carbs, total_fat,
-    total_sugars, total_saturated_fat, total_unsaturated_fat,
-    preparation_time
-)
-SELECT 'Snack',
-       'Recharge your energy with a delightful snack that pairs the refreshing crunch of raw apples with the rich, satisfying taste of raw almonds. Whether you’re on the go or enjoying a quick break, this simple duo provides a naturally sweet, fiber-rich, and protein-packed option to tide you over.',
-       true, false, false,
-       2, 'https://plus.unsplash.com/premium_photo-1678481245533-3b5c7a5e3d37?q=80',
-       81, 6, 12, 3,
-       8, 0.3, 2.2,
-       'PT5M'
-WHERE NOT EXISTS (
-    SELECT 1 FROM meals WHERE name = 'Snack' AND created_by_user_id = 2
-);
-
-INSERT INTO meals (
-    name, meal_description, is_template, is_private, is_restricted,
-    created_by_user_id, image_url,
-    total_calories, total_protein, total_carbs, total_fat,
-    total_sugars, total_saturated_fat, total_unsaturated_fat,
-    preparation_time
-)
-SELECT 'Salad',
-       'Treat yourself to a light and refreshing salad composed of crisp romaine lettuce, ripe tomatoes, and cool cucumbers. This vibrant mix is not only visually appealing but also packed with hydration, vitamins, and antioxidants, making it a perfect addition to any lunch or light dinner.',
-       true, true, false,
-       2, 'https://images.unsplash.com/photo-1505253716362-afaea1d3d1af?q=80',
-       200, 5, 30, 5,
-       6, 0.1, 0.6,
-       'PT10M'
-WHERE NOT EXISTS (
-    SELECT 1 FROM meals WHERE name = 'Salad' AND created_by_user_id = 2
-);
-
-INSERT INTO meals (
-    name, meal_description, is_template, is_private, is_restricted,
-    created_by_user_id, image_url,
-    total_calories, total_protein, total_carbs, total_fat,
-    total_sugars, total_saturated_fat, total_unsaturated_fat,
-    preparation_time
-)
-SELECT 'Dinner Special',
-       'Indulge in a hearty dinner special featuring savory roasted chicken, fluffy white rice, and fresh broccoli florets. This balanced meal delivers a satisfying combination of lean protein, energizing carbohydrates, and essential nutrients, perfect for a fulfilling and wholesome end to your day.',
-       true, false, false,
-       2, 'https://images.unsplash.com/photo-1605926637512-c8b131444a4b?q=80',
-       658, 22, 36, 48,
-       3, 12, 32,
-       'PT1H'
-WHERE NOT EXISTS (
-    SELECT 1 FROM meals WHERE name = 'Dinner Special' AND created_by_user_id = 2
-);
-
--- Meal types (ElementCollection)
-INSERT INTO meal_meal_types (meal_id, meal_type) SELECT 1, 'BREAKFAST'
-WHERE NOT EXISTS (SELECT 1 FROM meal_meal_types WHERE meal_id = 1 AND meal_type = 'BREAKFAST');
-
-INSERT INTO meal_meal_types (meal_id, meal_type) SELECT 1, 'SNACK'
-WHERE NOT EXISTS (SELECT 1 FROM meal_meal_types WHERE meal_id = 1 AND meal_type = 'SNACK');
-
-INSERT INTO meal_meal_types (meal_id, meal_type) SELECT 2, 'LUNCH'
-WHERE NOT EXISTS (SELECT 1 FROM meal_meal_types WHERE meal_id = 2 AND meal_type = 'LUNCH');
-
-INSERT INTO meal_meal_types (meal_id, meal_type) SELECT 3, 'DINNER'
-WHERE NOT EXISTS (SELECT 1 FROM meal_meal_types WHERE meal_id = 3 AND meal_type = 'DINNER');
-
-INSERT INTO meal_meal_types (meal_id, meal_type) SELECT 4, 'SNACK'
-WHERE NOT EXISTS (SELECT 1 FROM meal_meal_types WHERE meal_id = 4 AND meal_type = 'SNACK');
-
-INSERT INTO meal_meal_types (meal_id, meal_type) SELECT 5, 'LUNCH'
-WHERE NOT EXISTS (SELECT 1 FROM meal_meal_types WHERE meal_id = 5 AND meal_type = 'LUNCH');
-
-INSERT INTO meal_meal_types (meal_id, meal_type) SELECT 6, 'DINNER'
-WHERE NOT EXISTS (SELECT 1 FROM meal_meal_types WHERE meal_id = 6 AND meal_type = 'DINNER');
-
--- Cuisines (ElementCollection)
-INSERT INTO meal_cuisines (meal_id, cuisine) SELECT 1, 'AMERICAN'
-WHERE NOT EXISTS (SELECT 1 FROM meal_cuisines WHERE meal_id = 1 AND cuisine = 'AMERICAN');
-
-INSERT INTO meal_cuisines (meal_id, cuisine) SELECT 1, 'FRENCH'
-WHERE NOT EXISTS (SELECT 1 FROM meal_cuisines WHERE meal_id = 1 AND cuisine = 'FRENCH');
-
-INSERT INTO meal_cuisines (meal_id, cuisine) SELECT 2, 'ITALIAN'
-WHERE NOT EXISTS (SELECT 1 FROM meal_cuisines WHERE meal_id = 2 AND cuisine = 'ITALIAN');
-
-INSERT INTO meal_cuisines (meal_id, cuisine) SELECT 2, 'GREEK'
-WHERE NOT EXISTS (SELECT 1 FROM meal_cuisines WHERE meal_id = 2 AND cuisine = 'GREEK');
-
-INSERT INTO meal_cuisines (meal_id, cuisine) SELECT 3, 'JAPANESE'
-WHERE NOT EXISTS (SELECT 1 FROM meal_cuisines WHERE meal_id = 3 AND cuisine = 'JAPANESE');
-
-INSERT INTO meal_cuisines (meal_id, cuisine) SELECT 3, 'KOREAN'
-WHERE NOT EXISTS (SELECT 1 FROM meal_cuisines WHERE meal_id = 3 AND cuisine = 'KOREAN');
-
-INSERT INTO meal_cuisines (meal_id, cuisine) SELECT 4, 'GREEK'
-WHERE NOT EXISTS (SELECT 1 FROM meal_cuisines WHERE meal_id = 4 AND cuisine = 'GREEK');
-
-INSERT INTO meal_cuisines (meal_id, cuisine) SELECT 5, 'ITALIAN'
-WHERE NOT EXISTS (SELECT 1 FROM meal_cuisines WHERE meal_id = 5 AND cuisine = 'ITALIAN');
-
-INSERT INTO meal_cuisines (meal_id, cuisine) SELECT 5, 'SPANISH'
-WHERE NOT EXISTS (SELECT 1 FROM meal_cuisines WHERE meal_id = 5 AND cuisine = 'SPANISH');
-
-INSERT INTO meal_cuisines (meal_id, cuisine) SELECT 6, 'AMERICAN'
-WHERE NOT EXISTS (SELECT 1 FROM meal_cuisines WHERE meal_id = 6 AND cuisine = 'AMERICAN');
-
-INSERT INTO meal_cuisines (meal_id, cuisine) SELECT 6, 'MEXICAN'
-WHERE NOT EXISTS (SELECT 1 FROM meal_cuisines WHERE meal_id = 6 AND cuisine = 'MEXICAN');
-
--- Diets (ElementCollection)
-INSERT INTO meal_diets (meal_id, diet) SELECT 1, 'VEGETARIAN'
-WHERE NOT EXISTS (SELECT 1 FROM meal_diets WHERE meal_id = 1 AND diet = 'VEGETARIAN');
-
-INSERT INTO meal_diets (meal_id, diet) SELECT 1, 'DAIRY_FREE'
-WHERE NOT EXISTS (SELECT 1 FROM meal_diets WHERE meal_id = 1 AND diet = 'DAIRY_FREE');
-
-INSERT INTO meal_diets (meal_id, diet) SELECT 2, 'VEGETARIAN'
-WHERE NOT EXISTS (SELECT 1 FROM meal_diets WHERE meal_id = 2 AND diet = 'VEGETARIAN');
-
-INSERT INTO meal_diets (meal_id, diet) SELECT 2, 'LOW_CARB'
-WHERE NOT EXISTS (SELECT 1 FROM meal_diets WHERE meal_id = 2 AND diet = 'LOW_CARB');
-
-INSERT INTO meal_diets (meal_id, diet) SELECT 3, 'PESCATARIAN'
-WHERE NOT EXISTS (SELECT 1 FROM meal_diets WHERE meal_id = 3 AND diet = 'PESCATARIAN');
-
-INSERT INTO meal_diets (meal_id, diet) SELECT 4, 'VEGAN'
-WHERE NOT EXISTS (SELECT 1 FROM meal_diets WHERE meal_id = 4 AND diet = 'VEGAN');
-
-INSERT INTO meal_diets (meal_id, diet) SELECT 4, 'NUT_FREE'
-WHERE NOT EXISTS (SELECT 1 FROM meal_diets WHERE meal_id = 4 AND diet = 'NUT_FREE');
-
-INSERT INTO meal_diets (meal_id, diet) SELECT 5, 'LOW_FAT'
-WHERE NOT EXISTS (SELECT 1 FROM meal_diets WHERE meal_id = 5 AND diet = 'LOW_FAT');
-
-INSERT INTO meal_diets (meal_id, diet) SELECT 6, 'HIGH_PROTEIN'
-WHERE NOT EXISTS (SELECT 1 FROM meal_diets WHERE meal_id = 6 AND diet = 'HIGH_PROTEIN');
-
-INSERT INTO meal_diets (meal_id, diet) SELECT 6, 'LOW_SODIUM'
-WHERE NOT EXISTS (SELECT 1 FROM meal_diets WHERE meal_id = 6 AND diet = 'LOW_SODIUM');
-
--- Ingrediënten voor alle maaltijden (met veilige koppeling via fdc_id)
-INSERT INTO meal_ingredients (meal_id, food_item_id, quantity, food_item_name)
-SELECT 1, id, 126, 'Bananas, raw' FROM food_items WHERE fdc_id = 173944
-                                                    AND NOT EXISTS (
-        SELECT 1 FROM meal_ingredients WHERE meal_id = 1 AND food_item_id = (SELECT id FROM food_items WHERE fdc_id = 173944)
-    );
-
-INSERT INTO meal_ingredients (meal_id, food_item_id, quantity, food_item_name)
-SELECT 1, id, 245, 'Milk, nonfat...' FROM food_items WHERE fdc_id = 171269
-                                                       AND NOT EXISTS (
-        SELECT 1 FROM meal_ingredients WHERE meal_id = 1 AND food_item_id = (SELECT id FROM food_items WHERE fdc_id = 171269)
-    );
-
-INSERT INTO meal_ingredients (meal_id, food_item_id, quantity, food_item_name)
-SELECT 1, id, 28.35, 'Bread, whole-wheat' FROM food_items WHERE fdc_id = 172688
-                                                            AND NOT EXISTS (
-        SELECT 1 FROM meal_ingredients WHERE meal_id = 1 AND food_item_id = (SELECT id FROM food_items WHERE fdc_id = 172688)
-    );
-
--- Maaltijd 2
-INSERT INTO meal_ingredients (meal_id, food_item_id, quantity, food_item_name)
-SELECT 2, id, 278, 'Peas and carrots' FROM food_items WHERE fdc_id = 170513
-                                                        AND NOT EXISTS (
-        SELECT 1 FROM meal_ingredients WHERE meal_id = 2 AND food_item_id = (SELECT id FROM food_items WHERE fdc_id = 170513)
-    );
-
-INSERT INTO meal_ingredients (meal_id, food_item_id, quantity, food_item_name)
-SELECT 2, id, 284, 'Spinach' FROM food_items WHERE fdc_id = 169287
-                                               AND NOT EXISTS (
-        SELECT 1 FROM meal_ingredients WHERE meal_id = 2 AND food_item_id = (SELECT id FROM food_items WHERE fdc_id = 169287)
-    );
-
-INSERT INTO meal_ingredients (meal_id, food_item_id, quantity, food_item_name)
-SELECT 2, id, 200, 'Strawberries' FROM food_items WHERE fdc_id = 2346409
-                                                    AND NOT EXISTS (
-        SELECT 1 FROM meal_ingredients WHERE meal_id = 2 AND food_item_id = (SELECT id FROM food_items WHERE fdc_id = 2346409)
-    );
-
-INSERT INTO meal_ingredients (meal_id, food_item_id, quantity, food_item_name)
-SELECT 2, id, 230, 'Avocados' FROM food_items WHERE fdc_id = 171705
-                                                AND NOT EXISTS (
-        SELECT 1 FROM meal_ingredients WHERE meal_id = 2 AND food_item_id = (SELECT id FROM food_items WHERE fdc_id = 171705)
-    );
-
--- Maaltijd 3
-INSERT INTO meal_ingredients (meal_id, food_item_id, quantity, food_item_name)
-SELECT 3, id, 89, 'Corn' FROM food_items WHERE fdc_id = 169999
-                                           AND NOT EXISTS (
-        SELECT 1 FROM meal_ingredients WHERE meal_id = 3 AND food_item_id = (SELECT id FROM food_items WHERE fdc_id = 169999)
-    );
-
-INSERT INTO meal_ingredients (meal_id, food_item_id, quantity, food_item_name)
-SELECT 3, id, 100, 'Cauliflower' FROM food_items WHERE fdc_id = 2685573
-                                                   AND NOT EXISTS (
-        SELECT 1 FROM meal_ingredients WHERE meal_id = 3 AND food_item_id = (SELECT id FROM food_items WHERE fdc_id = 2685573)
-    );
-
-INSERT INTO meal_ingredients (meal_id, food_item_id, quantity, food_item_name)
-SELECT 3, id, 25.5, 'Egg, hard-boiled' FROM food_items WHERE fdc_id = 173424
-                                                         AND NOT EXISTS (
-        SELECT 1 FROM meal_ingredients WHERE meal_id = 3 AND food_item_id = (SELECT id FROM food_items WHERE fdc_id = 173424)
-    );
-
--- Maaltijd 4
-INSERT INTO meal_ingredients (meal_id, food_item_id, quantity, food_item_name)
-SELECT 4, id, 182, 'Kale' FROM food_items WHERE fdc_id = 323505
-                                            AND NOT EXISTS (
-        SELECT 1 FROM meal_ingredients WHERE meal_id = 4 AND food_item_id = (SELECT id FROM food_items WHERE fdc_id = 323505)
-    );
-
-INSERT INTO meal_ingredients (meal_id, food_item_id, quantity, food_item_name)
-SELECT 4, id, 28, 'Mangos' FROM food_items WHERE fdc_id = 169910
-                                             AND NOT EXISTS (
-        SELECT 1 FROM meal_ingredients WHERE meal_id = 4 AND food_item_id = (SELECT id FROM food_items WHERE fdc_id = 169910)
-    );
-
--- Maaltijd 5
-INSERT INTO meal_ingredients (meal_id, food_item_id, quantity, food_item_name)
-SELECT 5, id, 140, 'Berries' FROM food_items WHERE fdc_id = 2344766
-                                               AND NOT EXISTS (
-        SELECT 1 FROM meal_ingredients WHERE meal_id = 5 AND food_item_id = (SELECT id FROM food_items WHERE fdc_id = 2344766)
-    );
-
-INSERT INTO meal_ingredients (meal_id, food_item_id, quantity, food_item_name)
-SELECT 5, id, 158, 'Egg, hard-boiled' FROM food_items WHERE fdc_id = 173424
-                                                        AND NOT EXISTS (
-        SELECT 1 FROM meal_ingredients WHERE meal_id = 5 AND food_item_id = (SELECT id FROM food_items WHERE fdc_id = 173424)
-    );
-
-INSERT INTO meal_ingredients (meal_id, food_item_id, quantity, food_item_name)
-SELECT 5, id, 91, 'Sandwich spread' FROM food_items WHERE fdc_id = 171409
-                                                      AND NOT EXISTS (
-        SELECT 1 FROM meal_ingredients WHERE meal_id = 5 AND food_item_id = (SELECT id FROM food_items WHERE fdc_id = 171409)
-    );
-
--- Maaltijd 6 (Dinner Special)
-INSERT INTO meal_ingredients (meal_id, food_item_id, quantity, food_item_name)
-SELECT 6, id, 200, 'Chicken, roasted' FROM food_items WHERE fdc_id = 747447
-                                                        AND NOT EXISTS (
-        SELECT 1 FROM meal_ingredients WHERE meal_id = 6 AND food_item_id = (SELECT id FROM food_items WHERE fdc_id = 747447)
-    );
-
-INSERT INTO meal_ingredients (meal_id, food_item_id, quantity, food_item_name)
-SELECT 6, id, 185, 'Rice, white, cooked' FROM food_items WHERE fdc_id = 174276
-                                                           AND NOT EXISTS (
-        SELECT 1 FROM meal_ingredients WHERE meal_id = 6 AND food_item_id = (SELECT id FROM food_items WHERE fdc_id = 174276)
-    );
-
-INSERT INTO meal_ingredients (meal_id, food_item_id, quantity, food_item_name)
-SELECT 6, id, 91, 'Broccoli florets' FROM food_items WHERE fdc_id = 169124
-                                                       AND NOT EXISTS (
-        SELECT 1 FROM meal_ingredients WHERE meal_id = 6 AND food_item_id = (SELECT id FROM food_items WHERE fdc_id = 169124)
-    );
-
-
--- Koppel maaltijden aan gebruikers (veilig)
-INSERT INTO user_meals (user_id, meal_id)
-SELECT 1, 1 WHERE NOT EXISTS (SELECT 1 FROM user_meals WHERE user_id = 1 AND meal_id = 1);
-INSERT INTO user_meals (user_id, meal_id)
-SELECT 1, 2 WHERE NOT EXISTS (SELECT 1 FROM user_meals WHERE user_id = 1 AND meal_id = 2);
-INSERT INTO user_meals (user_id, meal_id)
-SELECT 1, 3 WHERE NOT EXISTS (SELECT 1 FROM user_meals WHERE user_id = 1 AND meal_id = 3);
-
-INSERT INTO user_meals (user_id, meal_id)
-SELECT 2, 4 WHERE NOT EXISTS (SELECT 1 FROM user_meals WHERE user_id = 2 AND meal_id = 4);
-INSERT INTO user_meals (user_id, meal_id)
-SELECT 2, 5 WHERE NOT EXISTS (SELECT 1 FROM user_meals WHERE user_id = 2 AND meal_id = 5);
-INSERT INTO user_meals (user_id, meal_id)
-SELECT 2, 6 WHERE NOT EXISTS (SELECT 1 FROM user_meals WHERE user_id = 2 AND meal_id = 6);
-
--- Voeg TestFoodItem toe als hij nog niet bestaat
-INSERT INTO food_items (name, fdc_id, portion_description, gram_weight, source)
-SELECT 'TestFoodItem', 999999, '1 portie (200g)', 200, 'Albert Heijn'
-WHERE NOT EXISTS (
-    SELECT 1 FROM food_items WHERE fdc_id = 999999
-);
-
-
--- Voeg voedingswaarden toe voor TestFoodItem als ze nog niet bestaan
-INSERT INTO food_item_nutrients (food_item_id, nutrient_name, value, unit_name, nutrient_id)
-SELECT fi.id, 'Energy', 100, 'kcal', 1008
-FROM food_items fi
-WHERE fi.fdc_id = 999999
-  AND NOT EXISTS (
-    SELECT 1 FROM food_item_nutrients n
-    WHERE n.food_item_id = fi.id AND n.nutrient_id = 1008
-);
-
-INSERT INTO food_item_nutrients (food_item_id, nutrient_name, value, unit_name, nutrient_id)
-SELECT fi.id, 'Protein', 100, 'g', 1003
-FROM food_items fi
-WHERE fi.fdc_id = 999999
-  AND NOT EXISTS (
-    SELECT 1 FROM food_item_nutrients n
-    WHERE n.food_item_id = fi.id AND n.nutrient_id = 1003
-);
-
-INSERT INTO food_item_nutrients (food_item_id, nutrient_name, value, unit_name, nutrient_id)
-SELECT fi.id, 'Carbohydrates', 100, 'g', 1005
-FROM food_items fi
-WHERE fi.fdc_id = 999999
-  AND NOT EXISTS (
-    SELECT 1 FROM food_item_nutrients n
-    WHERE n.food_item_id = fi.id AND n.nutrient_id = 1005
-);
-
-INSERT INTO food_item_nutrients (food_item_id, nutrient_name, value, unit_name, nutrient_id)
-SELECT fi.id, 'Total lipid (fat)', 100, 'g', 1004
-FROM food_items fi
-WHERE fi.fdc_id = 999999
-  AND NOT EXISTS (
-    SELECT 1 FROM food_item_nutrients n
-    WHERE n.food_item_id = fi.id AND n.nutrient_id = 1004
-);
-
-INSERT INTO diet_plan (name, diet_description, original_diet_id, is_template, is_private, created_by_user_id)
-SELECT 'Beginner Veggie Diet', 'A beginner-friendly vegetarian diet designed for those new to plant-based eating.', NULL, TRUE, FALSE, 1
-WHERE NOT EXISTS (
-    SELECT 1 FROM diet_plan WHERE name = 'Beginner Veggie Diet'
-);
-
-INSERT INTO diet_plan (name, diet_description, original_diet_id, is_template, is_private, created_by_user_id)
-SELECT 'High Protein 3-Day Plan', 'A high-protein meal plan to boost muscle gain over three days.', NULL, TRUE, true, 2
-WHERE NOT EXISTS (
-    SELECT 1 FROM diet_plan WHERE name = 'High Protein 3-Day Plan'
-);
-
-INSERT INTO diet_plan (name, diet_description, original_diet_id, is_template, is_private, created_by_user_id)
-SELECT 'Mediterranean Diet', 'A balanced diet with an emphasis on fresh vegetables, fruits, whole grains, and healthy fats.', NULL, TRUE, FALSE, 3
-WHERE NOT EXISTS (
-    SELECT 1 FROM diet_plan WHERE name = 'Mediterranean Diet'
-);
-
-INSERT INTO diet_plan (name, diet_description, original_diet_id, is_template, is_private, created_by_user_id)
-SELECT 'Low Carb Diet', 'A diet focused on low carbohydrate intake to assist in weight loss and improve metabolic health.', NULL, TRUE, FALSE, 4
-WHERE NOT EXISTS (
-    SELECT 1 FROM diet_plan WHERE name = 'Low Carb Diet'
-);
-
-
-
--- === Voeg diet_days toe als ze nog niet bestaan ===
-
--- Veggie Plan
-INSERT INTO diet_day (day_label, date, diet_plan_id, diet_day_description)
-SELECT 'Day 1', NULL, 1, 'Start your vegetarian journey with easy-to-make, nutrient-packed meals.'
-WHERE NOT EXISTS (SELECT 1 FROM diet_day WHERE diet_plan_id = 1 AND day_label = 'Day 1');
-
-INSERT INTO diet_day (day_label, date, diet_plan_id, diet_day_description)
-SELECT 'Day 2', NULL, 1, 'Continue your vegetarian meals with fresh ingredients and healthy options.'
-WHERE NOT EXISTS (SELECT 1 FROM diet_day WHERE diet_plan_id = 1 AND day_label = 'Day 2');
-
-INSERT INTO diet_day (day_label, date, diet_plan_id, diet_day_description)
-SELECT 'Day 3', NULL, 1, 'End your vegetarian plan with some light, delicious, and filling meals.'
-WHERE NOT EXISTS (SELECT 1 FROM diet_day WHERE diet_plan_id = 1 AND day_label = 'Day 3');
-
--- High Protein Plan
-INSERT INTO diet_day (day_label, date, diet_plan_id, diet_day_description)
-SELECT 'Day 1', NULL, 2, 'High-protein meals to kickstart muscle-building and boost energy.'
-WHERE NOT EXISTS (SELECT 1 FROM diet_day WHERE diet_plan_id = 2 AND day_label = 'Day 1');
-
-INSERT INTO diet_day (day_label, date, diet_plan_id, diet_day_description)
-SELECT 'Day 2', NULL, 2, 'Continue your high-protein meals to maintain muscle recovery and growth.'
-WHERE NOT EXISTS (SELECT 1 FROM diet_day WHERE diet_plan_id = 2 AND day_label = 'Day 2');
-
-INSERT INTO diet_day (day_label, date, diet_plan_id, diet_day_description)
-SELECT 'Day 3', NULL, 2, 'Wrap up your high-protein plan with a strong finish to maximize results.'
-WHERE NOT EXISTS (SELECT 1 FROM diet_day WHERE diet_plan_id = 2 AND day_label = 'Day 3');
-
--- Mediterranean Plan
-INSERT INTO diet_day (day_label, date, diet_plan_id, diet_day_description)
-SELECT 'Day 1', NULL, 3, 'Start with a fresh salad and whole-grain bread for a light meal.'
-WHERE NOT EXISTS (SELECT 1 FROM diet_day WHERE diet_plan_id = 3 AND day_label = 'Day 1');
-
-INSERT INTO diet_day (day_label, date, diet_plan_id, diet_day_description)
-SELECT 'Day 2', NULL, 3, 'Enjoy grilled vegetables, lean meats, and healthy fats like olive oil.'
-WHERE NOT EXISTS (SELECT 1 FROM diet_day WHERE diet_plan_id = 3 AND day_label = 'Day 2');
-
-INSERT INTO diet_day (day_label, date, diet_plan_id, diet_day_description)
-SELECT 'Day 3', NULL, 3, 'Finish with a hearty fish dish paired with fresh fruits.'
-WHERE NOT EXISTS (SELECT 1 FROM diet_day WHERE diet_plan_id = 3 AND day_label = 'Day 3');
-
--- Low Carb Plan
-INSERT INTO diet_day (day_label, date, diet_plan_id, diet_day_description)
-SELECT 'Day 1', NULL, 4, 'Start with a protein-heavy meal with minimal carbs.'
-WHERE NOT EXISTS (SELECT 1 FROM diet_day WHERE diet_plan_id = 4 AND day_label = 'Day 1');
-
-INSERT INTO diet_day (day_label, date, diet_plan_id, diet_day_description)
-SELECT 'Day 2', NULL, 4, 'Focus on low-carb, high-protein meals and fresh vegetables.'
-WHERE NOT EXISTS (SELECT 1 FROM diet_day WHERE diet_plan_id = 4 AND day_label = 'Day 2');
-
-INSERT INTO diet_day (day_label, date, diet_plan_id, diet_day_description)
-SELECT 'Day 3', NULL, 4, 'Conclude with filling low-carb meals that leave you satisfied.'
-WHERE NOT EXISTS (SELECT 1 FROM diet_day WHERE diet_plan_id = 4 AND day_label = 'Day 3');
-
-
--- === Voeg diet_day_diets toe als ze nog niet bestaan ===
-
-INSERT INTO diet_day_diets (diet_day_id, diet)
-SELECT 1, 'VEGAN' WHERE NOT EXISTS (SELECT 1 FROM diet_day_diets WHERE diet_day_id = 1 AND diet = 'VEGAN');
-INSERT INTO diet_day_diets (diet_day_id, diet)
-SELECT 2, 'VEGAN' WHERE NOT EXISTS (SELECT 1 FROM diet_day_diets WHERE diet_day_id = 2 AND diet = 'VEGAN');
-INSERT INTO diet_day_diets (diet_day_id, diet)
-SELECT 3, 'VEGAN' WHERE NOT EXISTS (SELECT 1 FROM diet_day_diets WHERE diet_day_id = 3 AND diet = 'VEGAN');
-
-INSERT INTO diet_day_diets (diet_day_id, diet)
-SELECT 4, 'HIGH_PROTEIN' WHERE NOT EXISTS (SELECT 1 FROM diet_day_diets WHERE diet_day_id = 4 AND diet = 'HIGH_PROTEIN');
-INSERT INTO diet_day_diets (diet_day_id, diet)
-SELECT 5, 'HIGH_PROTEIN' WHERE NOT EXISTS (SELECT 1 FROM diet_day_diets WHERE diet_day_id = 5 AND diet = 'HIGH_PROTEIN');
-INSERT INTO diet_day_diets (diet_day_id, diet)
-SELECT 6, 'HIGH_PROTEIN' WHERE NOT EXISTS (SELECT 1 FROM diet_day_diets WHERE diet_day_id = 6 AND diet = 'HIGH_PROTEIN');
-
-INSERT INTO diet_day_diets (diet_day_id, diet)
-SELECT 7, 'MEDITERRANEAN' WHERE NOT EXISTS (SELECT 1 FROM diet_day_diets WHERE diet_day_id = 7 AND diet = 'MEDITERRANEAN');
-INSERT INTO diet_day_diets (diet_day_id, diet)
-SELECT 8, 'MEDITERRANEAN' WHERE NOT EXISTS (SELECT 1 FROM diet_day_diets WHERE diet_day_id = 8 AND diet = 'MEDITERRANEAN');
-INSERT INTO diet_day_diets (diet_day_id, diet)
-SELECT 9, 'MEDITERRANEAN' WHERE NOT EXISTS (SELECT 1 FROM diet_day_diets WHERE diet_day_id = 9 AND diet = 'MEDITERRANEAN');
-
-INSERT INTO diet_day_diets (diet_day_id, diet)
-SELECT 10, 'LOW_CARB' WHERE NOT EXISTS (SELECT 1 FROM diet_day_diets WHERE diet_day_id = 10 AND diet = 'LOW_CARB');
-INSERT INTO diet_day_diets (diet_day_id, diet)
-SELECT 11, 'LOW_CARB' WHERE NOT EXISTS (SELECT 1 FROM diet_day_diets WHERE diet_day_id = 11 AND diet = 'LOW_CARB');
-INSERT INTO diet_day_diets (diet_day_id, diet)
-SELECT 12, 'LOW_CARB' WHERE NOT EXISTS (SELECT 1 FROM diet_day_diets WHERE diet_day_id = 12 AND diet = 'LOW_CARB');
-
-
--- === Voeg diet_plan_diets toe als ze nog niet bestaan ===
-
-INSERT INTO dietplan_diets (dietplan_id, diet)
-SELECT 1, 'VEGAN' WHERE NOT EXISTS (SELECT 1 FROM dietplan_diets WHERE dietplan_id = 1 AND diet = 'VEGAN');
-
-INSERT INTO dietplan_diets (dietplan_id, diet)
-SELECT 2, 'HIGH_PROTEIN' WHERE NOT EXISTS (SELECT 1 FROM dietplan_diets WHERE dietplan_id = 2 AND diet = 'HIGH_PROTEIN');
-
-INSERT INTO dietplan_diets (dietplan_id, diet)
-SELECT 3, 'MEDITERRANEAN' WHERE NOT EXISTS (SELECT 1 FROM dietplan_diets WHERE dietplan_id = 3 AND diet = 'MEDITERRANEAN');
-
-INSERT INTO dietplan_diets (dietplan_id, diet)
-SELECT 4, 'LOW_CARB' WHERE NOT EXISTS (SELECT 1 FROM dietplan_diets WHERE dietplan_id = 4 AND diet = 'LOW_CARB');
-
-
--- === Koppel meals aan diet_days als ze nog niet bestaan ===
-
--- Veggie
-INSERT INTO diet_day_meals (diet_day_id, meal_id)
-SELECT 1, 1 WHERE NOT EXISTS (SELECT 1 FROM diet_day_meals WHERE diet_day_id = 1 AND meal_id = 1);
-INSERT INTO diet_day_meals (diet_day_id, meal_id)
-SELECT 1, 2 WHERE NOT EXISTS (SELECT 1 FROM diet_day_meals WHERE diet_day_id = 1 AND meal_id = 2);
-INSERT INTO diet_day_meals (diet_day_id, meal_id)
-SELECT 2, 3 WHERE NOT EXISTS (SELECT 1 FROM diet_day_meals WHERE diet_day_id = 2 AND meal_id = 3);
-INSERT INTO diet_day_meals (diet_day_id, meal_id)
-SELECT 2, 4 WHERE NOT EXISTS (SELECT 1 FROM diet_day_meals WHERE diet_day_id = 2 AND meal_id = 4);
-INSERT INTO diet_day_meals (diet_day_id, meal_id)
-SELECT 3, 5 WHERE NOT EXISTS (SELECT 1 FROM diet_day_meals WHERE diet_day_id = 3 AND meal_id = 5);
-INSERT INTO diet_day_meals (diet_day_id, meal_id)
-SELECT 3, 6 WHERE NOT EXISTS (SELECT 1 FROM diet_day_meals WHERE diet_day_id = 3 AND meal_id = 6);
-
--- High Protein
-INSERT INTO diet_day_meals (diet_day_id, meal_id)
-SELECT 4, 6 WHERE NOT EXISTS (SELECT 1 FROM diet_day_meals WHERE diet_day_id = 4 AND meal_id = 6);
-INSERT INTO diet_day_meals (diet_day_id, meal_id)
-SELECT 4, 5 WHERE NOT EXISTS (SELECT 1 FROM diet_day_meals WHERE diet_day_id = 4 AND meal_id = 5);
-INSERT INTO diet_day_meals (diet_day_id, meal_id)
-SELECT 5, 4 WHERE NOT EXISTS (SELECT 1 FROM diet_day_meals WHERE diet_day_id = 5 AND meal_id = 4);
-INSERT INTO diet_day_meals (diet_day_id, meal_id)
-SELECT 5, 3 WHERE NOT EXISTS (SELECT 1 FROM diet_day_meals WHERE diet_day_id = 5 AND meal_id = 3);
-INSERT INTO diet_day_meals (diet_day_id, meal_id)
-SELECT 6, 2 WHERE NOT EXISTS (SELECT 1 FROM diet_day_meals WHERE diet_day_id = 6 AND meal_id = 2);
-INSERT INTO diet_day_meals (diet_day_id, meal_id)
-SELECT 6, 1 WHERE NOT EXISTS (SELECT 1 FROM diet_day_meals WHERE diet_day_id = 6 AND meal_id = 1);
-
--- Mediterranean
-INSERT INTO diet_day_meals (diet_day_id, meal_id)
-SELECT 7, 2 WHERE NOT EXISTS (SELECT 1 FROM diet_day_meals WHERE diet_day_id = 7 AND meal_id = 2);
-INSERT INTO diet_day_meals (diet_day_id, meal_id)
-SELECT 7, 5 WHERE NOT EXISTS (SELECT 1 FROM diet_day_meals WHERE diet_day_id = 7 AND meal_id = 5);
-INSERT INTO diet_day_meals (diet_day_id, meal_id)
-SELECT 8, 1 WHERE NOT EXISTS (SELECT 1 FROM diet_day_meals WHERE diet_day_id = 8 AND meal_id = 1);
-INSERT INTO diet_day_meals (diet_day_id, meal_id)
-SELECT 8, 6 WHERE NOT EXISTS (SELECT 1 FROM diet_day_meals WHERE diet_day_id = 8 AND meal_id = 6);
-INSERT INTO diet_day_meals (diet_day_id, meal_id)
-SELECT 9, 4 WHERE NOT EXISTS (SELECT 1 FROM diet_day_meals WHERE diet_day_id = 9 AND meal_id = 4);
-INSERT INTO diet_day_meals (diet_day_id, meal_id)
-SELECT 9, 3 WHERE NOT EXISTS (SELECT 1 FROM diet_day_meals WHERE diet_day_id = 9 AND meal_id = 3);
-
--- Low Carb
-INSERT INTO diet_day_meals (diet_day_id, meal_id)
-SELECT 10, 6 WHERE NOT EXISTS (SELECT 1 FROM diet_day_meals WHERE diet_day_id = 10 AND meal_id = 6);
-INSERT INTO diet_day_meals (diet_day_id, meal_id)
-SELECT 10, 2 WHERE NOT EXISTS (SELECT 1 FROM diet_day_meals WHERE diet_day_id = 10 AND meal_id = 2);
-INSERT INTO diet_day_meals (diet_day_id, meal_id)
-SELECT 11, 5 WHERE NOT EXISTS (SELECT 1 FROM diet_day_meals WHERE diet_day_id = 11 AND meal_id = 5);
-INSERT INTO diet_day_meals (diet_day_id, meal_id)
-SELECT 11, 1 WHERE NOT EXISTS (SELECT 1 FROM diet_day_meals WHERE diet_day_id = 11 AND meal_id = 1);
-INSERT INTO diet_day_meals (diet_day_id, meal_id)
-SELECT 12, 3 WHERE NOT EXISTS (SELECT 1 FROM diet_day_meals WHERE diet_day_id = 12 AND meal_id = 3);
-INSERT INTO diet_day_meals (diet_day_id, meal_id)
-SELECT 12, 4 WHERE NOT EXISTS (SELECT 1 FROM diet_day_meals WHERE diet_day_id = 12 AND meal_id = 4);
-
-
--- Voeg vier unieke sample diets toe als ze nog niet bestaan
-INSERT INTO diet_plan (name, diet_description, original_diet_id, is_template, is_private, is_restricted, created_by_user_id)
-SELECT 'Sample Vegan Plan', 'Een plantaardig dieet voor energie en welzijn.', NULL, TRUE, FALSE, FALSE, 1
-WHERE NOT EXISTS (SELECT 1 FROM diet_plan WHERE name = 'Sample Vegan Plan');
-
-INSERT INTO diet_plan (name, diet_description, original_diet_id, is_template, is_private, is_restricted, created_by_user_id)
-SELECT 'Protein Boost Plan', 'Voor spiergroei en herstel na training.', NULL, TRUE, FALSE, FALSE, 2
-WHERE NOT EXISTS (SELECT 1 FROM diet_plan WHERE name = 'Protein Boost Plan');
-
-INSERT INTO diet_plan (name, diet_description, original_diet_id, is_template, is_private, is_restricted, created_by_user_id)
-SELECT 'Mediterranean Breeze', 'Gebaseerd op de gezonde Mediterrane keuken.', NULL, TRUE, FALSE, FALSE, 3
-WHERE NOT EXISTS (SELECT 1 FROM diet_plan WHERE name = 'Mediterranean Breeze');
-
-INSERT INTO diet_plan (name, diet_description, original_diet_id, is_template, is_private, is_restricted, created_by_user_id)
-SELECT 'Low Carb Lite', 'Voor een koolhydraatarme levensstijl.', NULL, TRUE, FALSE, FALSE, 4
-WHERE NOT EXISTS (SELECT 1 FROM diet_plan WHERE name = 'Low Carb Lite');
-
-
--- Voeg diets toe aan de nieuwe diet_plans als ze nog niet bestaan
-INSERT INTO dietplan_diets (dietplan_id, diet)
-SELECT 5, 'VEGAN'
-WHERE NOT EXISTS (
-    SELECT 1 FROM dietplan_diets WHERE dietplan_id = 5 AND diet = 'VEGAN'
-);
-
-INSERT INTO dietplan_diets (dietplan_id, diet)
-SELECT 6, 'HIGH_PROTEIN'
-WHERE NOT EXISTS (
-    SELECT 1 FROM dietplan_diets WHERE dietplan_id = 6 AND diet = 'HIGH_PROTEIN'
-);
-
-INSERT INTO dietplan_diets (dietplan_id, diet)
-SELECT 7, 'MEDITERRANEAN'
-WHERE NOT EXISTS (
-    SELECT 1 FROM dietplan_diets WHERE dietplan_id = 7 AND diet = 'MEDITERRANEAN'
-);
-
-INSERT INTO dietplan_diets (dietplan_id, diet)
-SELECT 8, 'LOW_CARB'
-WHERE NOT EXISTS (
-    SELECT 1 FROM dietplan_diets WHERE dietplan_id = 8 AND diet = 'LOW_CARB'
-);
-
--- Voeg drie dagen toe per dieet als ze nog niet bestaan
-INSERT INTO diet_day (day_label, date, diet_plan_id, diet_day_description)
-SELECT 'Dag A', NULL, 5, 'Vegan startdag'
-WHERE NOT EXISTS (
-    SELECT 1 FROM diet_day WHERE day_label = 'Dag A' AND diet_plan_id = 5
-);
-
-INSERT INTO diet_day (day_label, date, diet_plan_id, diet_day_description)
-SELECT 'Dag B', NULL, 5, 'Vegan kernmaaltijden'
-WHERE NOT EXISTS (
-    SELECT 1 FROM diet_day WHERE day_label = 'Dag B' AND diet_plan_id = 5
-);
-
-INSERT INTO diet_day (day_label, date, diet_plan_id, diet_day_description)
-SELECT 'Dag C', NULL, 5, 'Vegan afsluiting'
-WHERE NOT EXISTS (
-    SELECT 1 FROM diet_day WHERE day_label = 'Dag C' AND diet_plan_id = 5
-);
-
-INSERT INTO diet_day (day_label, date, diet_plan_id, diet_day_description)
-SELECT 'Maandag', NULL, 6, 'Eiwitrijk begin'
-WHERE NOT EXISTS (
-    SELECT 1 FROM diet_day WHERE day_label = 'Maandag' AND diet_plan_id = 6
-);
-
-INSERT INTO diet_day (day_label, date, diet_plan_id, diet_day_description)
-SELECT 'Woensdag', NULL, 6, 'Eiwitdag 2'
-WHERE NOT EXISTS (
-    SELECT 1 FROM diet_day WHERE day_label = 'Woensdag' AND diet_plan_id = 6
-);
-
-INSERT INTO diet_day (day_label, date, diet_plan_id, diet_day_description)
-SELECT 'Vrijdag', NULL, 6, 'Herstel & eiwit'
-WHERE NOT EXISTS (
-    SELECT 1 FROM diet_day WHERE day_label = 'Vrijdag' AND diet_plan_id = 6
-);
-
-INSERT INTO diet_day (day_label, date, diet_plan_id, diet_day_description)
-SELECT 'Lunedì', NULL, 7, 'Zuid-Europees begin'
-WHERE NOT EXISTS (
-    SELECT 1 FROM diet_day WHERE day_label = 'Lunedì' AND diet_plan_id = 7
-);
-
-INSERT INTO diet_day (day_label, date, diet_plan_id, diet_day_description)
-SELECT 'Mercoledì', NULL, 7, 'Zon en smaak'
-WHERE NOT EXISTS (
-    SELECT 1 FROM diet_day WHERE day_label = 'Mercoledì' AND diet_plan_id = 7
-);
-
-INSERT INTO diet_day (day_label, date, diet_plan_id, diet_day_description)
-SELECT 'Venerdì', NULL, 7, 'Licht en fris'
-WHERE NOT EXISTS (
-    SELECT 1 FROM diet_day WHERE day_label = 'Venerdì' AND diet_plan_id = 7
-);
-
-INSERT INTO diet_day (day_label, date, diet_plan_id, diet_day_description)
-SELECT 'LC Dag 1', NULL, 8, 'Koolhydraatarm intro'
-WHERE NOT EXISTS (
-    SELECT 1 FROM diet_day WHERE day_label = 'LC Dag 1' AND diet_plan_id = 8
-);
-
-INSERT INTO diet_day (day_label, date, diet_plan_id, diet_day_description)
-SELECT 'LC Dag 2', NULL, 8, 'Focus op vetten en eiwitten'
-WHERE NOT EXISTS (
-    SELECT 1 FROM diet_day WHERE day_label = 'LC Dag 2' AND diet_plan_id = 8
-);
-
-INSERT INTO diet_day (day_label, date, diet_plan_id, diet_day_description)
-SELECT 'LC Dag 3', NULL, 8, 'Afsluitende dag laag in carbs'
-WHERE NOT EXISTS (
-    SELECT 1 FROM diet_day WHERE day_label = 'LC Dag 3' AND diet_plan_id = 8
-);
-
-
--- Koppel dezelfde dieet-enum als het plan
-INSERT INTO diet_day_diets (diet_day_id, diet)
-SELECT 13, 'VEGAN'
-WHERE NOT EXISTS (SELECT 1 FROM diet_day_diets WHERE diet_day_id = 13 AND diet = 'VEGAN');
-
-INSERT INTO diet_day_diets (diet_day_id, diet)
-SELECT 14, 'VEGAN'
-WHERE NOT EXISTS (SELECT 1 FROM diet_day_diets WHERE diet_day_id = 14 AND diet = 'VEGAN');
-
-INSERT INTO diet_day_diets (diet_day_id, diet)
-SELECT 15, 'VEGAN'
-WHERE NOT EXISTS (SELECT 1 FROM diet_day_diets WHERE diet_day_id = 15 AND diet = 'VEGAN');
-
-INSERT INTO diet_day_diets (diet_day_id, diet)
-SELECT 16, 'HIGH_PROTEIN'
-WHERE NOT EXISTS (SELECT 1 FROM diet_day_diets WHERE diet_day_id = 16 AND diet = 'HIGH_PROTEIN');
-
-INSERT INTO diet_day_diets (diet_day_id, diet)
-SELECT 17, 'HIGH_PROTEIN'
-WHERE NOT EXISTS (SELECT 1 FROM diet_day_diets WHERE diet_day_id = 17 AND diet = 'HIGH_PROTEIN');
-
-INSERT INTO diet_day_diets (diet_day_id, diet)
-SELECT 18, 'HIGH_PROTEIN'
-WHERE NOT EXISTS (SELECT 1 FROM diet_day_diets WHERE diet_day_id = 18 AND diet = 'HIGH_PROTEIN');
-
-INSERT INTO diet_day_diets (diet_day_id, diet)
-SELECT 19, 'MEDITERRANEAN'
-WHERE NOT EXISTS (SELECT 1 FROM diet_day_diets WHERE diet_day_id = 19 AND diet = 'MEDITERRANEAN');
-
-INSERT INTO diet_day_diets (diet_day_id, diet)
-SELECT 20, 'MEDITERRANEAN'
-WHERE NOT EXISTS (SELECT 1 FROM diet_day_diets WHERE diet_day_id = 20 AND diet = 'MEDITERRANEAN');
-
-INSERT INTO diet_day_diets (diet_day_id, diet)
-SELECT 21, 'MEDITERRANEAN'
-WHERE NOT EXISTS (SELECT 1 FROM diet_day_diets WHERE diet_day_id = 21 AND diet = 'MEDITERRANEAN');
-
-INSERT INTO diet_day_diets (diet_day_id, diet)
-SELECT 22, 'LOW_CARB'
-WHERE NOT EXISTS (SELECT 1 FROM diet_day_diets WHERE diet_day_id = 22 AND diet = 'LOW_CARB');
-
-INSERT INTO diet_day_diets (diet_day_id, diet)
-SELECT 23, 'LOW_CARB'
-WHERE NOT EXISTS (SELECT 1 FROM diet_day_diets WHERE diet_day_id = 23 AND diet = 'LOW_CARB');
-
-INSERT INTO diet_day_diets (diet_day_id, diet)
-SELECT 24, 'LOW_CARB'
-WHERE NOT EXISTS (SELECT 1 FROM diet_day_diets WHERE diet_day_id = 24 AND diet = 'LOW_CARB');
-
-
--- Vegan: meals 1 & 2, 3 & 4, 5 & 6
-INSERT INTO diet_day_meals (diet_day_id, meal_id)
-SELECT 13, 1 WHERE NOT EXISTS (SELECT 1 FROM diet_day_meals WHERE diet_day_id = 13 AND meal_id = 1);
-INSERT INTO diet_day_meals (diet_day_id, meal_id)
-SELECT 13, 2 WHERE NOT EXISTS (SELECT 1 FROM diet_day_meals WHERE diet_day_id = 13 AND meal_id = 2);
-INSERT INTO diet_day_meals (diet_day_id, meal_id)
-SELECT 14, 3 WHERE NOT EXISTS (SELECT 1 FROM diet_day_meals WHERE diet_day_id = 14 AND meal_id = 3);
-INSERT INTO diet_day_meals (diet_day_id, meal_id)
-SELECT 14, 4 WHERE NOT EXISTS (SELECT 1 FROM diet_day_meals WHERE diet_day_id = 14 AND meal_id = 4);
-INSERT INTO diet_day_meals (diet_day_id, meal_id)
-SELECT 15, 5 WHERE NOT EXISTS (SELECT 1 FROM diet_day_meals WHERE diet_day_id = 15 AND meal_id = 5);
-INSERT INTO diet_day_meals (diet_day_id, meal_id)
-SELECT 15, 6 WHERE NOT EXISTS (SELECT 1 FROM diet_day_meals WHERE diet_day_id = 15 AND meal_id = 6);
-
--- High Protein
-INSERT INTO diet_day_meals (diet_day_id, meal_id)
-SELECT 16, 2 WHERE NOT EXISTS (SELECT 1 FROM diet_day_meals WHERE diet_day_id = 16 AND meal_id = 2);
-INSERT INTO diet_day_meals (diet_day_id, meal_id)
-SELECT 16, 3 WHERE NOT EXISTS (SELECT 1 FROM diet_day_meals WHERE diet_day_id = 16 AND meal_id = 3);
-INSERT INTO diet_day_meals (diet_day_id, meal_id)
-SELECT 17, 4 WHERE NOT EXISTS (SELECT 1 FROM diet_day_meals WHERE diet_day_id = 17 AND meal_id = 4);
-INSERT INTO diet_day_meals (diet_day_id, meal_id)
-SELECT 17, 5 WHERE NOT EXISTS (SELECT 1 FROM diet_day_meals WHERE diet_day_id = 17 AND meal_id = 5);
-INSERT INTO diet_day_meals (diet_day_id, meal_id)
-SELECT 18, 6 WHERE NOT EXISTS (SELECT 1 FROM diet_day_meals WHERE diet_day_id = 18 AND meal_id = 6);
-INSERT INTO diet_day_meals (diet_day_id, meal_id)
-SELECT 18, 1 WHERE NOT EXISTS (SELECT 1 FROM diet_day_meals WHERE diet_day_id = 18 AND meal_id = 1);
-
--- Mediterranean
-INSERT INTO diet_day_meals (diet_day_id, meal_id)
-SELECT 19, 3 WHERE NOT EXISTS (SELECT 1 FROM diet_day_meals WHERE diet_day_id = 19 AND meal_id = 3);
-INSERT INTO diet_day_meals (diet_day_id, meal_id)
-SELECT 19, 1 WHERE NOT EXISTS (SELECT 1 FROM diet_day_meals WHERE diet_day_id = 19 AND meal_id = 1);
-INSERT INTO diet_day_meals (diet_day_id, meal_id)
-SELECT 20, 2 WHERE NOT EXISTS (SELECT 1 FROM diet_day_meals WHERE diet_day_id = 20 AND meal_id = 2);
-INSERT INTO diet_day_meals (diet_day_id, meal_id)
-SELECT 20, 5 WHERE NOT EXISTS (SELECT 1 FROM diet_day_meals WHERE diet_day_id = 20 AND meal_id = 5);
-INSERT INTO diet_day_meals (diet_day_id, meal_id)
-SELECT 21, 4 WHERE NOT EXISTS (SELECT 1 FROM diet_day_meals WHERE diet_day_id = 21 AND meal_id = 4);
-INSERT INTO diet_day_meals (diet_day_id, meal_id)
-SELECT 21, 6 WHERE NOT EXISTS (SELECT 1 FROM diet_day_meals WHERE diet_day_id = 21 AND meal_id = 6);
-
--- Low Carb
-INSERT INTO diet_day_meals (diet_day_id, meal_id)
-SELECT 22, 5 WHERE NOT EXISTS (SELECT 1 FROM diet_day_meals WHERE diet_day_id = 22 AND meal_id = 5);
-INSERT INTO diet_day_meals (diet_day_id, meal_id)
-SELECT 22, 1 WHERE NOT EXISTS (SELECT 1 FROM diet_day_meals WHERE diet_day_id = 22 AND meal_id = 1);
-INSERT INTO diet_day_meals (diet_day_id, meal_id)
-SELECT 23, 2 WHERE NOT EXISTS (SELECT 1 FROM diet_day_meals WHERE diet_day_id = 23 AND meal_id = 2);
-INSERT INTO diet_day_meals (diet_day_id, meal_id)
-SELECT 23, 6 WHERE NOT EXISTS (SELECT 1 FROM diet_day_meals WHERE diet_day_id = 23 AND meal_id = 6);
-INSERT INTO diet_day_meals (diet_day_id, meal_id)
-SELECT 24, 3 WHERE NOT EXISTS (SELECT 1 FROM diet_day_meals WHERE diet_day_id = 24 AND meal_id = 3);
-INSERT INTO diet_day_meals (diet_day_id, meal_id)
-SELECT 24, 4 WHERE NOT EXISTS (SELECT 1 FROM diet_day_meals WHERE diet_day_id = 24 AND meal_id = 4);
-
-
-UPDATE diet_plan SET
-                     total_calories = 1524.0,
-                     total_protein = 97.0,
-                     total_carbs = 260.0,
-                     total_fat = 150.0,
-                     total_saturated_fat = 34.5,
-                     total_unsaturated_fat = 79.2,
-                     total_sugars = 52.7,
-                     avg_calories = 800.7,
-                     avg_protein = 40.3,
-                     avg_carbs = 86.3,
-                     avg_fat = 43.7,
-                     avg_saturated_fat = 11.5,
-                     avg_unsaturated_fat = 26.4,
-                     avg_sugars = 17.6
-WHERE id = 1;
-
-
-UPDATE diet_plan SET
-                     total_calories = 2216.0,
-                     total_protein = 94.0,
-                     total_carbs = 256.0,
-                     total_fat = 101.0,
-                     total_saturated_fat = 27.8,
-                     total_unsaturated_fat = 54.6,
-                     total_sugars = 48.2,
-                     avg_calories = 738.7,
-                     avg_protein = 31.3,
-                     avg_carbs = 85.3,
-                     avg_fat = 33.7,
-                     avg_saturated_fat = 9.3,
-                     avg_unsaturated_fat = 18.2,
-                     avg_sugars = 16.1
-WHERE id = 2;
-
-
-UPDATE diet_plan SET
-                     total_calories = 3216.0,
-                     total_protein = 84.0,
-                     total_carbs = 356.0,
-                     total_fat = 201.0,
-                     total_saturated_fat = 33.5,
-                     total_unsaturated_fat = 62.0,
-                     total_sugars = 42.5,
-                     avg_calories = 638.7,
-                     avg_protein = 41.3,
-                     avg_carbs = 75.3,
-                     avg_fat = 23.7,
-                     avg_saturated_fat = 6.7,
-                     avg_unsaturated_fat = 12.4,
-                     avg_sugars = 8.5
-WHERE id = 3;
-
-
-UPDATE diet_plan SET
-                     total_calories = 2816.0,
-                     total_protein = 64.0,
-                     total_carbs = 296.0,
-                     total_fat = 151.0,
-                     total_saturated_fat = 28.2,
-                     total_unsaturated_fat = 51.3,
-                     total_sugars = 37.8,
-                     avg_calories = 798.7,
-                     avg_protein = 35.3,
-                     avg_carbs = 89.3,
-                     avg_fat = 31.7,
-                     avg_saturated_fat = 9.4,
-                     avg_unsaturated_fat = 17.1,
-                     avg_sugars = 12.6
-WHERE id = 4;
-
-
-UPDATE diet_plan SET
-                     total_calories = 3216.0,
-                     total_protein = 71.0,
-                     total_carbs = 211.0,
-                     total_fat = 144.0,
-                     total_saturated_fat = 27.6,
-                     total_unsaturated_fat = 66.9,
-                     total_sugars = 36.0,
-                     avg_calories = 685.7,
-                     avg_protein = 44.3,
-                     avg_carbs = 99.3,
-                     avg_fat = 88.7,
-                     avg_saturated_fat = 9.2,
-                     avg_unsaturated_fat = 22.3,
-                     avg_sugars = 12.0
-WHERE id = 5;
-
-
-UPDATE diet_plan SET
-                     total_calories = 1111.0,
-                     total_protein = 11.0,
-                     total_carbs = 111.0,
-                     total_fat = 111.0,
-                     total_saturated_fat = 22.2,
-                     total_unsaturated_fat = 33.3,
-                     total_sugars = 44.4,
-                     avg_calories = 111.7,
-                     avg_protein = 11.3,
-                     avg_carbs = 11.3,
-                     avg_fat = 11.7,
-                     avg_saturated_fat = 7.4,
-                     avg_unsaturated_fat = 11.1,
-                     avg_sugars = 14.8
-WHERE id = 6;
-
-
-UPDATE diet_plan SET
-                     total_calories = 2222.0,
-                     total_protein = 22.0,
-                     total_carbs = 222.0,
-                     total_fat = 222.0,
-                     total_saturated_fat = 44.4,
-                     total_unsaturated_fat = 66.6,
-                     total_sugars = 88.8,
-                     avg_calories = 222.7,
-                     avg_protein = 22.3,
-                     avg_carbs = 22.3,
-                     avg_fat = 22.7,
-                     avg_saturated_fat = 14.8,
-                     avg_unsaturated_fat = 22.2,
-                     avg_sugars = 29.6
-WHERE id = 7;
-
-
-UPDATE diet_plan SET
-                     total_calories = 3333.0,
-                     total_protein = 33.0,
-                     total_carbs = 333.0,
-                     total_fat = 333.0,
-                     total_saturated_fat = 66.6,
-                     total_unsaturated_fat = 99.9,
-                     total_sugars = 133.2,
-                     avg_calories = 333.7,
-                     avg_protein = 33.3,
-                     avg_carbs = 33.3,
-                     avg_fat = 33.7,
-                     avg_saturated_fat = 22.2,
-                     avg_unsaturated_fat = 33.3,
-                     avg_sugars = 44.4
-WHERE id = 8;
-
-
+-- -- Voeg rollen toe, maar alleen als ze nog niet bestaan
+-- INSERT INTO roles (rolename)
+-- SELECT 'USER' WHERE NOT EXISTS (
+--     SELECT 1 FROM roles WHERE rolename = 'USER'
+-- );
+--
+-- INSERT INTO roles (rolename)
+-- SELECT 'CHEF' WHERE NOT EXISTS (
+--     SELECT 1 FROM roles WHERE rolename = 'CHEF'
+-- );
+--
+-- INSERT INTO roles (rolename)
+-- SELECT 'ADMIN' WHERE NOT EXISTS (
+--     SELECT 1 FROM roles WHERE rolename = 'ADMIN'
+-- );
+--
+-- INSERT INTO roles (rolename)
+-- SELECT 'RESTAURANT' WHERE NOT EXISTS (
+--     SELECT 1 FROM roles WHERE rolename = 'RESTAURANT'
+-- );
+--
+-- INSERT INTO roles (rolename)
+-- SELECT 'DIETITIAN' WHERE NOT EXISTS (
+--     SELECT 1 FROM roles WHERE rolename = 'DIETITIAN'
+-- );
+--
+-- -- Voeg gebruikers toe als ze nog niet bestaan
+-- INSERT INTO users (user_name, email, password)
+-- SELECT 'John Doe', 'johndoe@example.com', '$2a$10$jPPPOnf7yp7gCZu8MVzApO4euavXZ.RFWFYjuEOPRewVLcWgJQR1C'
+-- WHERE NOT EXISTS (SELECT 1 FROM users WHERE email = 'johndoe@example.com');
+--
+-- INSERT INTO users (user_name, email, password)
+-- SELECT 'Jane Smith', 'janesmith@example.com', '$2a$10$EeRkWfH4ZL7rYL2kdtuaHOUAOgr731Z5kjUu0AoxzxUaadjnyi12K'
+-- WHERE NOT EXISTS (SELECT 1 FROM users WHERE email = 'janesmith@example.com');
+--
+-- INSERT INTO users (user_name, email, password)
+-- SELECT 'Tom Brown', 'tombrown@example.com', '$2a$10$8kNk0oZxjHrBPqSGg1d9xuhga/0tX8KQkVTBRfvQylu/InVzOQpm2'
+-- WHERE NOT EXISTS (SELECT 1 FROM users WHERE email = 'tombrown@example.com');
+--
+-- INSERT INTO users (user_name, email, password)
+-- SELECT 'Emily White', 'emilywhite@example.com', '$2a$10$VZAkFVLuVhPf08LLoK2Z/enlk2gpgzvPMDlb8K1surRSrRz4QN1NO'
+-- WHERE NOT EXISTS (SELECT 1 FROM users WHERE email = 'emilywhite@example.com');
+--
+-- INSERT INTO users (user_name, email, password)
+-- SELECT 'Haiko White', 'haikowhite@example.com', '$2a$10$WdJdBTECeJE7TfzngaGFK.3xF45rnmmwiUUYeVt4xt0vVSJstKWIW'
+-- WHERE NOT EXISTS (SELECT 1 FROM users WHERE email = 'haikowhite@example.com');
+--
+-- INSERT INTO users (user_name, email, password)
+-- SELECT 'Mieke White', 'miekewhite@example.com', '$2a$10$5wHAveL167oKGageyZgfGuLP9JJzRFbBHrtGgGd6V2w0hpueNbci6'
+-- WHERE NOT EXISTS (SELECT 1 FROM users WHERE email = 'miekewhite@example.com');
+--
+-- -- Koppel gebruikers aan rollen
+-- INSERT INTO user_roles (user_id, roles_rolename)
+-- SELECT 1, 'USER'
+-- WHERE NOT EXISTS (
+--     SELECT 1 FROM user_roles WHERE user_id = 1 AND roles_rolename = 'USER'
+-- );
+--
+-- INSERT INTO user_roles (user_id, roles_rolename)
+-- SELECT 2, 'USER'
+-- WHERE NOT EXISTS (
+--     SELECT 1 FROM user_roles WHERE user_id = 2 AND roles_rolename = 'USER'
+-- );
+--
+-- INSERT INTO user_roles (user_id, roles_rolename)
+-- SELECT 3, 'USER'
+-- WHERE NOT EXISTS (
+--     SELECT 1 FROM user_roles WHERE user_id = 3 AND roles_rolename = 'USER'
+-- );
+--
+-- INSERT INTO user_roles (user_id, roles_rolename)
+-- SELECT 4, 'ADMIN'
+-- WHERE NOT EXISTS (
+--     SELECT 1 FROM user_roles WHERE user_id = 4 AND roles_rolename = 'ADMIN'
+-- );
+--
+-- INSERT INTO user_roles (user_id, roles_rolename)
+-- SELECT 5, 'ADMIN'
+-- WHERE NOT EXISTS (
+--     SELECT 1 FROM user_roles WHERE user_id = 5 AND roles_rolename = 'ADMIN'
+-- );
+--
+-- INSERT INTO user_roles (user_id, roles_rolename)
+-- SELECT 6, 'CHEF'
+-- WHERE NOT EXISTS (
+--     SELECT 1 FROM user_roles WHERE user_id = 6 AND roles_rolename = 'CHEF'
+-- );
+--
+--
+-- -- Voeg maaltijden toe (met uitgebreidere beschrijvingen)
+--
+-- INSERT INTO meals (
+--     name, meal_description, is_template, is_private, is_restricted,
+--     created_by_user_id, image_url,
+--     total_calories, total_protein, total_carbs, total_fat,
+--     total_sugars, total_saturated_fat, total_unsaturated_fat,
+--     preparation_time
+-- )
+-- SELECT 'Breakfast',
+--        'Start your day with a nourishing breakfast featuring naturally sweet bananas, creamy nonfat milk, and wholesome whole-wheat bread. This energizing combination provides a perfect balance of carbohydrates, protein, and fiber to fuel your morning and keep you satisfied until your next meal.',
+--        true, false, false,
+--        1, 'https://images.unsplash.com/photo-1473093295043-cdd812d0e601?q=80',
+--        267, 13, 53, 2,
+--        14, 0.5, 1.2,
+--        'PT15M'
+-- WHERE NOT EXISTS (
+--     SELECT 1 FROM meals WHERE name = 'Breakfast' AND created_by_user_id = 1
+-- );
+-- INSERT INTO meals (
+--     name, meal_description, is_template, is_private, is_restricted,
+--     created_by_user_id, image_url,
+--     total_calories, total_protein, total_carbs, total_fat,
+--     total_sugars, total_saturated_fat, total_unsaturated_fat,
+--     preparation_time
+-- )
+-- SELECT 'Lunch',
+--        'Enjoy a colorful and vibrant lunch packed with nutrients and flavor. This meal brings together tender peas and carrots, hearty spinach, juicy strawberries, and creamy avocado for a delicious and refreshing midday boost. A perfect choice for those seeking a plant-forward, balanced plate.',
+--        true, false, false,
+--        1, 'https://images.unsplash.com/photo-1485451456034-3f9391c6f769?q=80',
+--        584, 25, 76, 37,
+--        18, 4.1, 30.0,
+--        'PT30M'
+-- WHERE NOT EXISTS (
+--     SELECT 1 FROM meals WHERE name = 'Lunch' AND created_by_user_id = 1
+-- );
+--
+-- INSERT INTO meals (
+--     name, meal_description, is_template, is_private, is_restricted,
+--     created_by_user_id, image_url,
+--     total_calories, total_protein, total_carbs, total_fat,
+--     total_sugars, total_saturated_fat, total_unsaturated_fat,
+--     preparation_time
+-- )
+-- SELECT 'Dinner',
+--        'Unwind with a comforting and hearty dinner that combines naturally sweet yellow corn, crisp cauliflower, and perfectly cooked hard-boiled eggs. This simple yet satisfying meal offers a rich blend of textures and nutrients, ideal for a lighter evening option that still nourishes and restores.',
+--        true, false, false,
+--        1, 'https://images.unsplash.com/photo-1505932049984-db368d92fa63?q=80',
+--        125, 8, 24, 4,
+--        6, 1.2, 2.5,
+--        'PT45M'
+-- WHERE NOT EXISTS (
+--     SELECT 1 FROM meals WHERE name = 'Dinner' AND created_by_user_id = 1
+-- );
+-- INSERT INTO meals (
+--     name, meal_description, is_template, is_private, is_restricted,
+--     created_by_user_id, image_url,
+--     total_calories, total_protein, total_carbs, total_fat,
+--     total_sugars, total_saturated_fat, total_unsaturated_fat,
+--     preparation_time
+-- )
+-- SELECT 'Snack',
+--        'Recharge your energy with a delightful snack that pairs the refreshing crunch of raw apples with the rich, satisfying taste of raw almonds. Whether you’re on the go or enjoying a quick break, this simple duo provides a naturally sweet, fiber-rich, and protein-packed option to tide you over.',
+--        true, false, false,
+--        2, 'https://plus.unsplash.com/premium_photo-1678481245533-3b5c7a5e3d37?q=80',
+--        81, 6, 12, 3,
+--        8, 0.3, 2.2,
+--        'PT5M'
+-- WHERE NOT EXISTS (
+--     SELECT 1 FROM meals WHERE name = 'Snack' AND created_by_user_id = 2
+-- );
+--
+-- INSERT INTO meals (
+--     name, meal_description, is_template, is_private, is_restricted,
+--     created_by_user_id, image_url,
+--     total_calories, total_protein, total_carbs, total_fat,
+--     total_sugars, total_saturated_fat, total_unsaturated_fat,
+--     preparation_time
+-- )
+-- SELECT 'Salad',
+--        'Treat yourself to a light and refreshing salad composed of crisp romaine lettuce, ripe tomatoes, and cool cucumbers. This vibrant mix is not only visually appealing but also packed with hydration, vitamins, and antioxidants, making it a perfect addition to any lunch or light dinner.',
+--        true, true, false,
+--        2, 'https://images.unsplash.com/photo-1505253716362-afaea1d3d1af?q=80',
+--        200, 5, 30, 5,
+--        6, 0.1, 0.6,
+--        'PT10M'
+-- WHERE NOT EXISTS (
+--     SELECT 1 FROM meals WHERE name = 'Salad' AND created_by_user_id = 2
+-- );
+--
+-- INSERT INTO meals (
+--     name, meal_description, is_template, is_private, is_restricted,
+--     created_by_user_id, image_url,
+--     total_calories, total_protein, total_carbs, total_fat,
+--     total_sugars, total_saturated_fat, total_unsaturated_fat,
+--     preparation_time
+-- )
+-- SELECT 'Dinner Special',
+--        'Indulge in a hearty dinner special featuring savory roasted chicken, fluffy white rice, and fresh broccoli florets. This balanced meal delivers a satisfying combination of lean protein, energizing carbohydrates, and essential nutrients, perfect for a fulfilling and wholesome end to your day.',
+--        true, false, false,
+--        2, 'https://images.unsplash.com/photo-1605926637512-c8b131444a4b?q=80',
+--        658, 22, 36, 48,
+--        3, 12, 32,
+--        'PT1H'
+-- WHERE NOT EXISTS (
+--     SELECT 1 FROM meals WHERE name = 'Dinner Special' AND created_by_user_id = 2
+-- );
+--
+-- -- Meal types (ElementCollection)
+-- INSERT INTO meal_meal_types (meal_id, meal_type) SELECT 1, 'BREAKFAST'
+-- WHERE NOT EXISTS (SELECT 1 FROM meal_meal_types WHERE meal_id = 1 AND meal_type = 'BREAKFAST');
+--
+-- INSERT INTO meal_meal_types (meal_id, meal_type) SELECT 1, 'SNACK'
+-- WHERE NOT EXISTS (SELECT 1 FROM meal_meal_types WHERE meal_id = 1 AND meal_type = 'SNACK');
+--
+-- INSERT INTO meal_meal_types (meal_id, meal_type) SELECT 2, 'LUNCH'
+-- WHERE NOT EXISTS (SELECT 1 FROM meal_meal_types WHERE meal_id = 2 AND meal_type = 'LUNCH');
+--
+-- INSERT INTO meal_meal_types (meal_id, meal_type) SELECT 3, 'DINNER'
+-- WHERE NOT EXISTS (SELECT 1 FROM meal_meal_types WHERE meal_id = 3 AND meal_type = 'DINNER');
+--
+-- INSERT INTO meal_meal_types (meal_id, meal_type) SELECT 4, 'SNACK'
+-- WHERE NOT EXISTS (SELECT 1 FROM meal_meal_types WHERE meal_id = 4 AND meal_type = 'SNACK');
+--
+-- INSERT INTO meal_meal_types (meal_id, meal_type) SELECT 5, 'LUNCH'
+-- WHERE NOT EXISTS (SELECT 1 FROM meal_meal_types WHERE meal_id = 5 AND meal_type = 'LUNCH');
+--
+-- INSERT INTO meal_meal_types (meal_id, meal_type) SELECT 6, 'DINNER'
+-- WHERE NOT EXISTS (SELECT 1 FROM meal_meal_types WHERE meal_id = 6 AND meal_type = 'DINNER');
+--
+-- -- Cuisines (ElementCollection)
+-- INSERT INTO meal_cuisines (meal_id, cuisine) SELECT 1, 'AMERICAN'
+-- WHERE NOT EXISTS (SELECT 1 FROM meal_cuisines WHERE meal_id = 1 AND cuisine = 'AMERICAN');
+--
+-- INSERT INTO meal_cuisines (meal_id, cuisine) SELECT 1, 'FRENCH'
+-- WHERE NOT EXISTS (SELECT 1 FROM meal_cuisines WHERE meal_id = 1 AND cuisine = 'FRENCH');
+--
+-- INSERT INTO meal_cuisines (meal_id, cuisine) SELECT 2, 'ITALIAN'
+-- WHERE NOT EXISTS (SELECT 1 FROM meal_cuisines WHERE meal_id = 2 AND cuisine = 'ITALIAN');
+--
+-- INSERT INTO meal_cuisines (meal_id, cuisine) SELECT 2, 'GREEK'
+-- WHERE NOT EXISTS (SELECT 1 FROM meal_cuisines WHERE meal_id = 2 AND cuisine = 'GREEK');
+--
+-- INSERT INTO meal_cuisines (meal_id, cuisine) SELECT 3, 'JAPANESE'
+-- WHERE NOT EXISTS (SELECT 1 FROM meal_cuisines WHERE meal_id = 3 AND cuisine = 'JAPANESE');
+--
+-- INSERT INTO meal_cuisines (meal_id, cuisine) SELECT 3, 'KOREAN'
+-- WHERE NOT EXISTS (SELECT 1 FROM meal_cuisines WHERE meal_id = 3 AND cuisine = 'KOREAN');
+--
+-- INSERT INTO meal_cuisines (meal_id, cuisine) SELECT 4, 'GREEK'
+-- WHERE NOT EXISTS (SELECT 1 FROM meal_cuisines WHERE meal_id = 4 AND cuisine = 'GREEK');
+--
+-- INSERT INTO meal_cuisines (meal_id, cuisine) SELECT 5, 'ITALIAN'
+-- WHERE NOT EXISTS (SELECT 1 FROM meal_cuisines WHERE meal_id = 5 AND cuisine = 'ITALIAN');
+--
+-- INSERT INTO meal_cuisines (meal_id, cuisine) SELECT 5, 'SPANISH'
+-- WHERE NOT EXISTS (SELECT 1 FROM meal_cuisines WHERE meal_id = 5 AND cuisine = 'SPANISH');
+--
+-- INSERT INTO meal_cuisines (meal_id, cuisine) SELECT 6, 'AMERICAN'
+-- WHERE NOT EXISTS (SELECT 1 FROM meal_cuisines WHERE meal_id = 6 AND cuisine = 'AMERICAN');
+--
+-- INSERT INTO meal_cuisines (meal_id, cuisine) SELECT 6, 'MEXICAN'
+-- WHERE NOT EXISTS (SELECT 1 FROM meal_cuisines WHERE meal_id = 6 AND cuisine = 'MEXICAN');
+--
+-- -- Diets (ElementCollection)
+-- INSERT INTO meal_diets (meal_id, diet) SELECT 1, 'VEGETARIAN'
+-- WHERE NOT EXISTS (SELECT 1 FROM meal_diets WHERE meal_id = 1 AND diet = 'VEGETARIAN');
+--
+-- INSERT INTO meal_diets (meal_id, diet) SELECT 1, 'DAIRY_FREE'
+-- WHERE NOT EXISTS (SELECT 1 FROM meal_diets WHERE meal_id = 1 AND diet = 'DAIRY_FREE');
+--
+-- INSERT INTO meal_diets (meal_id, diet) SELECT 2, 'VEGETARIAN'
+-- WHERE NOT EXISTS (SELECT 1 FROM meal_diets WHERE meal_id = 2 AND diet = 'VEGETARIAN');
+--
+-- INSERT INTO meal_diets (meal_id, diet) SELECT 2, 'LOW_CARB'
+-- WHERE NOT EXISTS (SELECT 1 FROM meal_diets WHERE meal_id = 2 AND diet = 'LOW_CARB');
+--
+-- INSERT INTO meal_diets (meal_id, diet) SELECT 3, 'PESCATARIAN'
+-- WHERE NOT EXISTS (SELECT 1 FROM meal_diets WHERE meal_id = 3 AND diet = 'PESCATARIAN');
+--
+-- INSERT INTO meal_diets (meal_id, diet) SELECT 4, 'VEGAN'
+-- WHERE NOT EXISTS (SELECT 1 FROM meal_diets WHERE meal_id = 4 AND diet = 'VEGAN');
+--
+-- INSERT INTO meal_diets (meal_id, diet) SELECT 4, 'NUT_FREE'
+-- WHERE NOT EXISTS (SELECT 1 FROM meal_diets WHERE meal_id = 4 AND diet = 'NUT_FREE');
+--
+-- INSERT INTO meal_diets (meal_id, diet) SELECT 5, 'LOW_FAT'
+-- WHERE NOT EXISTS (SELECT 1 FROM meal_diets WHERE meal_id = 5 AND diet = 'LOW_FAT');
+--
+-- INSERT INTO meal_diets (meal_id, diet) SELECT 6, 'HIGH_PROTEIN'
+-- WHERE NOT EXISTS (SELECT 1 FROM meal_diets WHERE meal_id = 6 AND diet = 'HIGH_PROTEIN');
+--
+-- INSERT INTO meal_diets (meal_id, diet) SELECT 6, 'LOW_SODIUM'
+-- WHERE NOT EXISTS (SELECT 1 FROM meal_diets WHERE meal_id = 6 AND diet = 'LOW_SODIUM');
+--
+-- -- Ingrediënten voor alle maaltijden (met veilige koppeling via fdc_id)
+-- INSERT INTO meal_ingredients (meal_id, food_item_id, quantity, food_item_name)
+-- SELECT 1, id, 126, 'Bananas, raw' FROM food_items WHERE fdc_id = 173944
+--                                                     AND NOT EXISTS (
+--         SELECT 1 FROM meal_ingredients WHERE meal_id = 1 AND food_item_id = (SELECT id FROM food_items WHERE fdc_id = 173944)
+--     );
+--
+-- INSERT INTO meal_ingredients (meal_id, food_item_id, quantity, food_item_name)
+-- SELECT 1, id, 245, 'Milk, nonfat...' FROM food_items WHERE fdc_id = 171269
+--                                                        AND NOT EXISTS (
+--         SELECT 1 FROM meal_ingredients WHERE meal_id = 1 AND food_item_id = (SELECT id FROM food_items WHERE fdc_id = 171269)
+--     );
+--
+-- INSERT INTO meal_ingredients (meal_id, food_item_id, quantity, food_item_name)
+-- SELECT 1, id, 28.35, 'Bread, whole-wheat' FROM food_items WHERE fdc_id = 172688
+--                                                             AND NOT EXISTS (
+--         SELECT 1 FROM meal_ingredients WHERE meal_id = 1 AND food_item_id = (SELECT id FROM food_items WHERE fdc_id = 172688)
+--     );
+--
+-- -- Maaltijd 2
+-- INSERT INTO meal_ingredients (meal_id, food_item_id, quantity, food_item_name)
+-- SELECT 2, id, 278, 'Peas and carrots' FROM food_items WHERE fdc_id = 170513
+--                                                         AND NOT EXISTS (
+--         SELECT 1 FROM meal_ingredients WHERE meal_id = 2 AND food_item_id = (SELECT id FROM food_items WHERE fdc_id = 170513)
+--     );
+--
+-- INSERT INTO meal_ingredients (meal_id, food_item_id, quantity, food_item_name)
+-- SELECT 2, id, 284, 'Spinach' FROM food_items WHERE fdc_id = 169287
+--                                                AND NOT EXISTS (
+--         SELECT 1 FROM meal_ingredients WHERE meal_id = 2 AND food_item_id = (SELECT id FROM food_items WHERE fdc_id = 169287)
+--     );
+--
+-- INSERT INTO meal_ingredients (meal_id, food_item_id, quantity, food_item_name)
+-- SELECT 2, id, 200, 'Strawberries' FROM food_items WHERE fdc_id = 2346409
+--                                                     AND NOT EXISTS (
+--         SELECT 1 FROM meal_ingredients WHERE meal_id = 2 AND food_item_id = (SELECT id FROM food_items WHERE fdc_id = 2346409)
+--     );
+--
+-- INSERT INTO meal_ingredients (meal_id, food_item_id, quantity, food_item_name)
+-- SELECT 2, id, 230, 'Avocados' FROM food_items WHERE fdc_id = 171705
+--                                                 AND NOT EXISTS (
+--         SELECT 1 FROM meal_ingredients WHERE meal_id = 2 AND food_item_id = (SELECT id FROM food_items WHERE fdc_id = 171705)
+--     );
+--
+-- -- Maaltijd 3
+-- INSERT INTO meal_ingredients (meal_id, food_item_id, quantity, food_item_name)
+-- SELECT 3, id, 89, 'Corn' FROM food_items WHERE fdc_id = 169999
+--                                            AND NOT EXISTS (
+--         SELECT 1 FROM meal_ingredients WHERE meal_id = 3 AND food_item_id = (SELECT id FROM food_items WHERE fdc_id = 169999)
+--     );
+--
+-- INSERT INTO meal_ingredients (meal_id, food_item_id, quantity, food_item_name)
+-- SELECT 3, id, 100, 'Cauliflower' FROM food_items WHERE fdc_id = 2685573
+--                                                    AND NOT EXISTS (
+--         SELECT 1 FROM meal_ingredients WHERE meal_id = 3 AND food_item_id = (SELECT id FROM food_items WHERE fdc_id = 2685573)
+--     );
+--
+-- INSERT INTO meal_ingredients (meal_id, food_item_id, quantity, food_item_name)
+-- SELECT 3, id, 25.5, 'Egg, hard-boiled' FROM food_items WHERE fdc_id = 173424
+--                                                          AND NOT EXISTS (
+--         SELECT 1 FROM meal_ingredients WHERE meal_id = 3 AND food_item_id = (SELECT id FROM food_items WHERE fdc_id = 173424)
+--     );
+--
+-- -- Maaltijd 4
+-- INSERT INTO meal_ingredients (meal_id, food_item_id, quantity, food_item_name)
+-- SELECT 4, id, 182, 'Kale' FROM food_items WHERE fdc_id = 323505
+--                                             AND NOT EXISTS (
+--         SELECT 1 FROM meal_ingredients WHERE meal_id = 4 AND food_item_id = (SELECT id FROM food_items WHERE fdc_id = 323505)
+--     );
+--
+-- INSERT INTO meal_ingredients (meal_id, food_item_id, quantity, food_item_name)
+-- SELECT 4, id, 28, 'Mangos' FROM food_items WHERE fdc_id = 169910
+--                                              AND NOT EXISTS (
+--         SELECT 1 FROM meal_ingredients WHERE meal_id = 4 AND food_item_id = (SELECT id FROM food_items WHERE fdc_id = 169910)
+--     );
+--
+-- -- Maaltijd 5
+-- INSERT INTO meal_ingredients (meal_id, food_item_id, quantity, food_item_name)
+-- SELECT 5, id, 140, 'Berries' FROM food_items WHERE fdc_id = 2344766
+--                                                AND NOT EXISTS (
+--         SELECT 1 FROM meal_ingredients WHERE meal_id = 5 AND food_item_id = (SELECT id FROM food_items WHERE fdc_id = 2344766)
+--     );
+--
+-- INSERT INTO meal_ingredients (meal_id, food_item_id, quantity, food_item_name)
+-- SELECT 5, id, 158, 'Egg, hard-boiled' FROM food_items WHERE fdc_id = 173424
+--                                                         AND NOT EXISTS (
+--         SELECT 1 FROM meal_ingredients WHERE meal_id = 5 AND food_item_id = (SELECT id FROM food_items WHERE fdc_id = 173424)
+--     );
+--
+-- INSERT INTO meal_ingredients (meal_id, food_item_id, quantity, food_item_name)
+-- SELECT 5, id, 91, 'Sandwich spread' FROM food_items WHERE fdc_id = 171409
+--                                                       AND NOT EXISTS (
+--         SELECT 1 FROM meal_ingredients WHERE meal_id = 5 AND food_item_id = (SELECT id FROM food_items WHERE fdc_id = 171409)
+--     );
+--
+-- -- Maaltijd 6 (Dinner Special)
+-- INSERT INTO meal_ingredients (meal_id, food_item_id, quantity, food_item_name)
+-- SELECT 6, id, 200, 'Chicken, roasted' FROM food_items WHERE fdc_id = 747447
+--                                                         AND NOT EXISTS (
+--         SELECT 1 FROM meal_ingredients WHERE meal_id = 6 AND food_item_id = (SELECT id FROM food_items WHERE fdc_id = 747447)
+--     );
+--
+-- INSERT INTO meal_ingredients (meal_id, food_item_id, quantity, food_item_name)
+-- SELECT 6, id, 185, 'Rice, white, cooked' FROM food_items WHERE fdc_id = 174276
+--                                                            AND NOT EXISTS (
+--         SELECT 1 FROM meal_ingredients WHERE meal_id = 6 AND food_item_id = (SELECT id FROM food_items WHERE fdc_id = 174276)
+--     );
+--
+-- INSERT INTO meal_ingredients (meal_id, food_item_id, quantity, food_item_name)
+-- SELECT 6, id, 91, 'Broccoli florets' FROM food_items WHERE fdc_id = 169124
+--                                                        AND NOT EXISTS (
+--         SELECT 1 FROM meal_ingredients WHERE meal_id = 6 AND food_item_id = (SELECT id FROM food_items WHERE fdc_id = 169124)
+--     );
+--
+--
+-- -- Koppel maaltijden aan gebruikers (veilig)
+-- INSERT INTO user_meals (user_id, meal_id)
+-- SELECT 1, 1 WHERE NOT EXISTS (SELECT 1 FROM user_meals WHERE user_id = 1 AND meal_id = 1);
+-- INSERT INTO user_meals (user_id, meal_id)
+-- SELECT 1, 2 WHERE NOT EXISTS (SELECT 1 FROM user_meals WHERE user_id = 1 AND meal_id = 2);
+-- INSERT INTO user_meals (user_id, meal_id)
+-- SELECT 1, 3 WHERE NOT EXISTS (SELECT 1 FROM user_meals WHERE user_id = 1 AND meal_id = 3);
+--
+-- INSERT INTO user_meals (user_id, meal_id)
+-- SELECT 2, 4 WHERE NOT EXISTS (SELECT 1 FROM user_meals WHERE user_id = 2 AND meal_id = 4);
+-- INSERT INTO user_meals (user_id, meal_id)
+-- SELECT 2, 5 WHERE NOT EXISTS (SELECT 1 FROM user_meals WHERE user_id = 2 AND meal_id = 5);
+-- INSERT INTO user_meals (user_id, meal_id)
+-- SELECT 2, 6 WHERE NOT EXISTS (SELECT 1 FROM user_meals WHERE user_id = 2 AND meal_id = 6);
+--
+-- -- Voeg TestFoodItem toe als hij nog niet bestaat
+-- INSERT INTO food_items (name, fdc_id, portion_description, gram_weight, source)
+-- SELECT 'TestFoodItem', 999999, '1 portie (200g)', 200, 'Albert Heijn'
+-- WHERE NOT EXISTS (
+--     SELECT 1 FROM food_items WHERE fdc_id = 999999
+-- );
+--
+--
+-- -- Voeg voedingswaarden toe voor TestFoodItem als ze nog niet bestaan
+-- INSERT INTO food_item_nutrients (food_item_id, nutrient_name, value, unit_name, nutrient_id)
+-- SELECT fi.id, 'Energy', 100, 'kcal', 1008
+-- FROM food_items fi
+-- WHERE fi.fdc_id = 999999
+--   AND NOT EXISTS (
+--     SELECT 1 FROM food_item_nutrients n
+--     WHERE n.food_item_id = fi.id AND n.nutrient_id = 1008
+-- );
+--
+-- INSERT INTO food_item_nutrients (food_item_id, nutrient_name, value, unit_name, nutrient_id)
+-- SELECT fi.id, 'Protein', 100, 'g', 1003
+-- FROM food_items fi
+-- WHERE fi.fdc_id = 999999
+--   AND NOT EXISTS (
+--     SELECT 1 FROM food_item_nutrients n
+--     WHERE n.food_item_id = fi.id AND n.nutrient_id = 1003
+-- );
+--
+-- INSERT INTO food_item_nutrients (food_item_id, nutrient_name, value, unit_name, nutrient_id)
+-- SELECT fi.id, 'Carbohydrates', 100, 'g', 1005
+-- FROM food_items fi
+-- WHERE fi.fdc_id = 999999
+--   AND NOT EXISTS (
+--     SELECT 1 FROM food_item_nutrients n
+--     WHERE n.food_item_id = fi.id AND n.nutrient_id = 1005
+-- );
+--
+-- INSERT INTO food_item_nutrients (food_item_id, nutrient_name, value, unit_name, nutrient_id)
+-- SELECT fi.id, 'Total lipid (fat)', 100, 'g', 1004
+-- FROM food_items fi
+-- WHERE fi.fdc_id = 999999
+--   AND NOT EXISTS (
+--     SELECT 1 FROM food_item_nutrients n
+--     WHERE n.food_item_id = fi.id AND n.nutrient_id = 1004
+-- );
+--
+-- INSERT INTO diet_plan (name, diet_description, original_diet_id, is_template, is_private, created_by_user_id)
+-- SELECT 'Beginner Veggie Diet', 'A beginner-friendly vegetarian diet designed for those new to plant-based eating.', NULL, TRUE, FALSE, 1
+-- WHERE NOT EXISTS (
+--     SELECT 1 FROM diet_plan WHERE name = 'Beginner Veggie Diet'
+-- );
+--
+-- INSERT INTO diet_plan (name, diet_description, original_diet_id, is_template, is_private, created_by_user_id)
+-- SELECT 'High Protein 3-Day Plan', 'A high-protein meal plan to boost muscle gain over three days.', NULL, TRUE, true, 2
+-- WHERE NOT EXISTS (
+--     SELECT 1 FROM diet_plan WHERE name = 'High Protein 3-Day Plan'
+-- );
+--
+-- INSERT INTO diet_plan (name, diet_description, original_diet_id, is_template, is_private, created_by_user_id)
+-- SELECT 'Mediterranean Diet', 'A balanced diet with an emphasis on fresh vegetables, fruits, whole grains, and healthy fats.', NULL, TRUE, FALSE, 3
+-- WHERE NOT EXISTS (
+--     SELECT 1 FROM diet_plan WHERE name = 'Mediterranean Diet'
+-- );
+--
+-- INSERT INTO diet_plan (name, diet_description, original_diet_id, is_template, is_private, created_by_user_id)
+-- SELECT 'Low Carb Diet', 'A diet focused on low carbohydrate intake to assist in weight loss and improve metabolic health.', NULL, TRUE, FALSE, 4
+-- WHERE NOT EXISTS (
+--     SELECT 1 FROM diet_plan WHERE name = 'Low Carb Diet'
+-- );
+--
+--
+--
+-- -- === Voeg diet_days toe als ze nog niet bestaan ===
+--
+-- -- Veggie Plan
+-- INSERT INTO diet_day (day_label, date, diet_plan_id, diet_day_description)
+-- SELECT 'Day 1', NULL, 1, 'Start your vegetarian journey with easy-to-make, nutrient-packed meals.'
+-- WHERE NOT EXISTS (SELECT 1 FROM diet_day WHERE diet_plan_id = 1 AND day_label = 'Day 1');
+--
+-- INSERT INTO diet_day (day_label, date, diet_plan_id, diet_day_description)
+-- SELECT 'Day 2', NULL, 1, 'Continue your vegetarian meals with fresh ingredients and healthy options.'
+-- WHERE NOT EXISTS (SELECT 1 FROM diet_day WHERE diet_plan_id = 1 AND day_label = 'Day 2');
+--
+-- INSERT INTO diet_day (day_label, date, diet_plan_id, diet_day_description)
+-- SELECT 'Day 3', NULL, 1, 'End your vegetarian plan with some light, delicious, and filling meals.'
+-- WHERE NOT EXISTS (SELECT 1 FROM diet_day WHERE diet_plan_id = 1 AND day_label = 'Day 3');
+--
+-- -- High Protein Plan
+-- INSERT INTO diet_day (day_label, date, diet_plan_id, diet_day_description)
+-- SELECT 'Day 1', NULL, 2, 'High-protein meals to kickstart muscle-building and boost energy.'
+-- WHERE NOT EXISTS (SELECT 1 FROM diet_day WHERE diet_plan_id = 2 AND day_label = 'Day 1');
+--
+-- INSERT INTO diet_day (day_label, date, diet_plan_id, diet_day_description)
+-- SELECT 'Day 2', NULL, 2, 'Continue your high-protein meals to maintain muscle recovery and growth.'
+-- WHERE NOT EXISTS (SELECT 1 FROM diet_day WHERE diet_plan_id = 2 AND day_label = 'Day 2');
+--
+-- INSERT INTO diet_day (day_label, date, diet_plan_id, diet_day_description)
+-- SELECT 'Day 3', NULL, 2, 'Wrap up your high-protein plan with a strong finish to maximize results.'
+-- WHERE NOT EXISTS (SELECT 1 FROM diet_day WHERE diet_plan_id = 2 AND day_label = 'Day 3');
+--
+-- -- Mediterranean Plan
+-- INSERT INTO diet_day (day_label, date, diet_plan_id, diet_day_description)
+-- SELECT 'Day 1', NULL, 3, 'Start with a fresh salad and whole-grain bread for a light meal.'
+-- WHERE NOT EXISTS (SELECT 1 FROM diet_day WHERE diet_plan_id = 3 AND day_label = 'Day 1');
+--
+-- INSERT INTO diet_day (day_label, date, diet_plan_id, diet_day_description)
+-- SELECT 'Day 2', NULL, 3, 'Enjoy grilled vegetables, lean meats, and healthy fats like olive oil.'
+-- WHERE NOT EXISTS (SELECT 1 FROM diet_day WHERE diet_plan_id = 3 AND day_label = 'Day 2');
+--
+-- INSERT INTO diet_day (day_label, date, diet_plan_id, diet_day_description)
+-- SELECT 'Day 3', NULL, 3, 'Finish with a hearty fish dish paired with fresh fruits.'
+-- WHERE NOT EXISTS (SELECT 1 FROM diet_day WHERE diet_plan_id = 3 AND day_label = 'Day 3');
+--
+-- -- Low Carb Plan
+-- INSERT INTO diet_day (day_label, date, diet_plan_id, diet_day_description)
+-- SELECT 'Day 1', NULL, 4, 'Start with a protein-heavy meal with minimal carbs.'
+-- WHERE NOT EXISTS (SELECT 1 FROM diet_day WHERE diet_plan_id = 4 AND day_label = 'Day 1');
+--
+-- INSERT INTO diet_day (day_label, date, diet_plan_id, diet_day_description)
+-- SELECT 'Day 2', NULL, 4, 'Focus on low-carb, high-protein meals and fresh vegetables.'
+-- WHERE NOT EXISTS (SELECT 1 FROM diet_day WHERE diet_plan_id = 4 AND day_label = 'Day 2');
+--
+-- INSERT INTO diet_day (day_label, date, diet_plan_id, diet_day_description)
+-- SELECT 'Day 3', NULL, 4, 'Conclude with filling low-carb meals that leave you satisfied.'
+-- WHERE NOT EXISTS (SELECT 1 FROM diet_day WHERE diet_plan_id = 4 AND day_label = 'Day 3');
+--
+--
+-- -- === Voeg diet_day_diets toe als ze nog niet bestaan ===
+--
+-- INSERT INTO diet_day_diets (diet_day_id, diet)
+-- SELECT 1, 'VEGAN' WHERE NOT EXISTS (SELECT 1 FROM diet_day_diets WHERE diet_day_id = 1 AND diet = 'VEGAN');
+-- INSERT INTO diet_day_diets (diet_day_id, diet)
+-- SELECT 2, 'VEGAN' WHERE NOT EXISTS (SELECT 1 FROM diet_day_diets WHERE diet_day_id = 2 AND diet = 'VEGAN');
+-- INSERT INTO diet_day_diets (diet_day_id, diet)
+-- SELECT 3, 'VEGAN' WHERE NOT EXISTS (SELECT 1 FROM diet_day_diets WHERE diet_day_id = 3 AND diet = 'VEGAN');
+--
+-- INSERT INTO diet_day_diets (diet_day_id, diet)
+-- SELECT 4, 'HIGH_PROTEIN' WHERE NOT EXISTS (SELECT 1 FROM diet_day_diets WHERE diet_day_id = 4 AND diet = 'HIGH_PROTEIN');
+-- INSERT INTO diet_day_diets (diet_day_id, diet)
+-- SELECT 5, 'HIGH_PROTEIN' WHERE NOT EXISTS (SELECT 1 FROM diet_day_diets WHERE diet_day_id = 5 AND diet = 'HIGH_PROTEIN');
+-- INSERT INTO diet_day_diets (diet_day_id, diet)
+-- SELECT 6, 'HIGH_PROTEIN' WHERE NOT EXISTS (SELECT 1 FROM diet_day_diets WHERE diet_day_id = 6 AND diet = 'HIGH_PROTEIN');
+--
+-- INSERT INTO diet_day_diets (diet_day_id, diet)
+-- SELECT 7, 'MEDITERRANEAN' WHERE NOT EXISTS (SELECT 1 FROM diet_day_diets WHERE diet_day_id = 7 AND diet = 'MEDITERRANEAN');
+-- INSERT INTO diet_day_diets (diet_day_id, diet)
+-- SELECT 8, 'MEDITERRANEAN' WHERE NOT EXISTS (SELECT 1 FROM diet_day_diets WHERE diet_day_id = 8 AND diet = 'MEDITERRANEAN');
+-- INSERT INTO diet_day_diets (diet_day_id, diet)
+-- SELECT 9, 'MEDITERRANEAN' WHERE NOT EXISTS (SELECT 1 FROM diet_day_diets WHERE diet_day_id = 9 AND diet = 'MEDITERRANEAN');
+--
+-- INSERT INTO diet_day_diets (diet_day_id, diet)
+-- SELECT 10, 'LOW_CARB' WHERE NOT EXISTS (SELECT 1 FROM diet_day_diets WHERE diet_day_id = 10 AND diet = 'LOW_CARB');
+-- INSERT INTO diet_day_diets (diet_day_id, diet)
+-- SELECT 11, 'LOW_CARB' WHERE NOT EXISTS (SELECT 1 FROM diet_day_diets WHERE diet_day_id = 11 AND diet = 'LOW_CARB');
+-- INSERT INTO diet_day_diets (diet_day_id, diet)
+-- SELECT 12, 'LOW_CARB' WHERE NOT EXISTS (SELECT 1 FROM diet_day_diets WHERE diet_day_id = 12 AND diet = 'LOW_CARB');
+--
+--
+-- -- === Voeg diet_plan_diets toe als ze nog niet bestaan ===
+--
+-- INSERT INTO dietplan_diets (dietplan_id, diet)
+-- SELECT 1, 'VEGAN' WHERE NOT EXISTS (SELECT 1 FROM dietplan_diets WHERE dietplan_id = 1 AND diet = 'VEGAN');
+--
+-- INSERT INTO dietplan_diets (dietplan_id, diet)
+-- SELECT 2, 'HIGH_PROTEIN' WHERE NOT EXISTS (SELECT 1 FROM dietplan_diets WHERE dietplan_id = 2 AND diet = 'HIGH_PROTEIN');
+--
+-- INSERT INTO dietplan_diets (dietplan_id, diet)
+-- SELECT 3, 'MEDITERRANEAN' WHERE NOT EXISTS (SELECT 1 FROM dietplan_diets WHERE dietplan_id = 3 AND diet = 'MEDITERRANEAN');
+--
+-- INSERT INTO dietplan_diets (dietplan_id, diet)
+-- SELECT 4, 'LOW_CARB' WHERE NOT EXISTS (SELECT 1 FROM dietplan_diets WHERE dietplan_id = 4 AND diet = 'LOW_CARB');
+--
+--
+-- -- === Koppel meals aan diet_days als ze nog niet bestaan ===
+--
+-- -- Veggie
+-- INSERT INTO diet_day_meals (diet_day_id, meal_id)
+-- SELECT 1, 1 WHERE NOT EXISTS (SELECT 1 FROM diet_day_meals WHERE diet_day_id = 1 AND meal_id = 1);
+-- INSERT INTO diet_day_meals (diet_day_id, meal_id)
+-- SELECT 1, 2 WHERE NOT EXISTS (SELECT 1 FROM diet_day_meals WHERE diet_day_id = 1 AND meal_id = 2);
+-- INSERT INTO diet_day_meals (diet_day_id, meal_id)
+-- SELECT 2, 3 WHERE NOT EXISTS (SELECT 1 FROM diet_day_meals WHERE diet_day_id = 2 AND meal_id = 3);
+-- INSERT INTO diet_day_meals (diet_day_id, meal_id)
+-- SELECT 2, 4 WHERE NOT EXISTS (SELECT 1 FROM diet_day_meals WHERE diet_day_id = 2 AND meal_id = 4);
+-- INSERT INTO diet_day_meals (diet_day_id, meal_id)
+-- SELECT 3, 5 WHERE NOT EXISTS (SELECT 1 FROM diet_day_meals WHERE diet_day_id = 3 AND meal_id = 5);
+-- INSERT INTO diet_day_meals (diet_day_id, meal_id)
+-- SELECT 3, 6 WHERE NOT EXISTS (SELECT 1 FROM diet_day_meals WHERE diet_day_id = 3 AND meal_id = 6);
+--
+-- -- High Protein
+-- INSERT INTO diet_day_meals (diet_day_id, meal_id)
+-- SELECT 4, 6 WHERE NOT EXISTS (SELECT 1 FROM diet_day_meals WHERE diet_day_id = 4 AND meal_id = 6);
+-- INSERT INTO diet_day_meals (diet_day_id, meal_id)
+-- SELECT 4, 5 WHERE NOT EXISTS (SELECT 1 FROM diet_day_meals WHERE diet_day_id = 4 AND meal_id = 5);
+-- INSERT INTO diet_day_meals (diet_day_id, meal_id)
+-- SELECT 5, 4 WHERE NOT EXISTS (SELECT 1 FROM diet_day_meals WHERE diet_day_id = 5 AND meal_id = 4);
+-- INSERT INTO diet_day_meals (diet_day_id, meal_id)
+-- SELECT 5, 3 WHERE NOT EXISTS (SELECT 1 FROM diet_day_meals WHERE diet_day_id = 5 AND meal_id = 3);
+-- INSERT INTO diet_day_meals (diet_day_id, meal_id)
+-- SELECT 6, 2 WHERE NOT EXISTS (SELECT 1 FROM diet_day_meals WHERE diet_day_id = 6 AND meal_id = 2);
+-- INSERT INTO diet_day_meals (diet_day_id, meal_id)
+-- SELECT 6, 1 WHERE NOT EXISTS (SELECT 1 FROM diet_day_meals WHERE diet_day_id = 6 AND meal_id = 1);
+--
+-- -- Mediterranean
+-- INSERT INTO diet_day_meals (diet_day_id, meal_id)
+-- SELECT 7, 2 WHERE NOT EXISTS (SELECT 1 FROM diet_day_meals WHERE diet_day_id = 7 AND meal_id = 2);
+-- INSERT INTO diet_day_meals (diet_day_id, meal_id)
+-- SELECT 7, 5 WHERE NOT EXISTS (SELECT 1 FROM diet_day_meals WHERE diet_day_id = 7 AND meal_id = 5);
+-- INSERT INTO diet_day_meals (diet_day_id, meal_id)
+-- SELECT 8, 1 WHERE NOT EXISTS (SELECT 1 FROM diet_day_meals WHERE diet_day_id = 8 AND meal_id = 1);
+-- INSERT INTO diet_day_meals (diet_day_id, meal_id)
+-- SELECT 8, 6 WHERE NOT EXISTS (SELECT 1 FROM diet_day_meals WHERE diet_day_id = 8 AND meal_id = 6);
+-- INSERT INTO diet_day_meals (diet_day_id, meal_id)
+-- SELECT 9, 4 WHERE NOT EXISTS (SELECT 1 FROM diet_day_meals WHERE diet_day_id = 9 AND meal_id = 4);
+-- INSERT INTO diet_day_meals (diet_day_id, meal_id)
+-- SELECT 9, 3 WHERE NOT EXISTS (SELECT 1 FROM diet_day_meals WHERE diet_day_id = 9 AND meal_id = 3);
+--
+-- -- Low Carb
+-- INSERT INTO diet_day_meals (diet_day_id, meal_id)
+-- SELECT 10, 6 WHERE NOT EXISTS (SELECT 1 FROM diet_day_meals WHERE diet_day_id = 10 AND meal_id = 6);
+-- INSERT INTO diet_day_meals (diet_day_id, meal_id)
+-- SELECT 10, 2 WHERE NOT EXISTS (SELECT 1 FROM diet_day_meals WHERE diet_day_id = 10 AND meal_id = 2);
+-- INSERT INTO diet_day_meals (diet_day_id, meal_id)
+-- SELECT 11, 5 WHERE NOT EXISTS (SELECT 1 FROM diet_day_meals WHERE diet_day_id = 11 AND meal_id = 5);
+-- INSERT INTO diet_day_meals (diet_day_id, meal_id)
+-- SELECT 11, 1 WHERE NOT EXISTS (SELECT 1 FROM diet_day_meals WHERE diet_day_id = 11 AND meal_id = 1);
+-- INSERT INTO diet_day_meals (diet_day_id, meal_id)
+-- SELECT 12, 3 WHERE NOT EXISTS (SELECT 1 FROM diet_day_meals WHERE diet_day_id = 12 AND meal_id = 3);
+-- INSERT INTO diet_day_meals (diet_day_id, meal_id)
+-- SELECT 12, 4 WHERE NOT EXISTS (SELECT 1 FROM diet_day_meals WHERE diet_day_id = 12 AND meal_id = 4);
+--
+--
+-- -- Voeg vier unieke sample diets toe als ze nog niet bestaan
+-- INSERT INTO diet_plan (name, diet_description, original_diet_id, is_template, is_private, is_restricted, created_by_user_id)
+-- SELECT 'Sample Vegan Plan', 'Een plantaardig dieet voor energie en welzijn.', NULL, TRUE, FALSE, FALSE, 1
+-- WHERE NOT EXISTS (SELECT 1 FROM diet_plan WHERE name = 'Sample Vegan Plan');
+--
+-- INSERT INTO diet_plan (name, diet_description, original_diet_id, is_template, is_private, is_restricted, created_by_user_id)
+-- SELECT 'Protein Boost Plan', 'Voor spiergroei en herstel na training.', NULL, TRUE, FALSE, FALSE, 2
+-- WHERE NOT EXISTS (SELECT 1 FROM diet_plan WHERE name = 'Protein Boost Plan');
+--
+-- INSERT INTO diet_plan (name, diet_description, original_diet_id, is_template, is_private, is_restricted, created_by_user_id)
+-- SELECT 'Mediterranean Breeze', 'Gebaseerd op de gezonde Mediterrane keuken.', NULL, TRUE, FALSE, FALSE, 3
+-- WHERE NOT EXISTS (SELECT 1 FROM diet_plan WHERE name = 'Mediterranean Breeze');
+--
+-- INSERT INTO diet_plan (name, diet_description, original_diet_id, is_template, is_private, is_restricted, created_by_user_id)
+-- SELECT 'Low Carb Lite', 'Voor een koolhydraatarme levensstijl.', NULL, TRUE, FALSE, FALSE, 4
+-- WHERE NOT EXISTS (SELECT 1 FROM diet_plan WHERE name = 'Low Carb Lite');
+--
+--
+-- -- Voeg diets toe aan de nieuwe diet_plans als ze nog niet bestaan
+-- INSERT INTO dietplan_diets (dietplan_id, diet)
+-- SELECT 5, 'VEGAN'
+-- WHERE NOT EXISTS (
+--     SELECT 1 FROM dietplan_diets WHERE dietplan_id = 5 AND diet = 'VEGAN'
+-- );
+--
+-- INSERT INTO dietplan_diets (dietplan_id, diet)
+-- SELECT 6, 'HIGH_PROTEIN'
+-- WHERE NOT EXISTS (
+--     SELECT 1 FROM dietplan_diets WHERE dietplan_id = 6 AND diet = 'HIGH_PROTEIN'
+-- );
+--
+-- INSERT INTO dietplan_diets (dietplan_id, diet)
+-- SELECT 7, 'MEDITERRANEAN'
+-- WHERE NOT EXISTS (
+--     SELECT 1 FROM dietplan_diets WHERE dietplan_id = 7 AND diet = 'MEDITERRANEAN'
+-- );
+--
+-- INSERT INTO dietplan_diets (dietplan_id, diet)
+-- SELECT 8, 'LOW_CARB'
+-- WHERE NOT EXISTS (
+--     SELECT 1 FROM dietplan_diets WHERE dietplan_id = 8 AND diet = 'LOW_CARB'
+-- );
+--
+-- -- Voeg drie dagen toe per dieet als ze nog niet bestaan
+-- INSERT INTO diet_day (day_label, date, diet_plan_id, diet_day_description)
+-- SELECT 'Dag A', NULL, 5, 'Vegan startdag'
+-- WHERE NOT EXISTS (
+--     SELECT 1 FROM diet_day WHERE day_label = 'Dag A' AND diet_plan_id = 5
+-- );
+--
+-- INSERT INTO diet_day (day_label, date, diet_plan_id, diet_day_description)
+-- SELECT 'Dag B', NULL, 5, 'Vegan kernmaaltijden'
+-- WHERE NOT EXISTS (
+--     SELECT 1 FROM diet_day WHERE day_label = 'Dag B' AND diet_plan_id = 5
+-- );
+--
+-- INSERT INTO diet_day (day_label, date, diet_plan_id, diet_day_description)
+-- SELECT 'Dag C', NULL, 5, 'Vegan afsluiting'
+-- WHERE NOT EXISTS (
+--     SELECT 1 FROM diet_day WHERE day_label = 'Dag C' AND diet_plan_id = 5
+-- );
+--
+-- INSERT INTO diet_day (day_label, date, diet_plan_id, diet_day_description)
+-- SELECT 'Maandag', NULL, 6, 'Eiwitrijk begin'
+-- WHERE NOT EXISTS (
+--     SELECT 1 FROM diet_day WHERE day_label = 'Maandag' AND diet_plan_id = 6
+-- );
+--
+-- INSERT INTO diet_day (day_label, date, diet_plan_id, diet_day_description)
+-- SELECT 'Woensdag', NULL, 6, 'Eiwitdag 2'
+-- WHERE NOT EXISTS (
+--     SELECT 1 FROM diet_day WHERE day_label = 'Woensdag' AND diet_plan_id = 6
+-- );
+--
+-- INSERT INTO diet_day (day_label, date, diet_plan_id, diet_day_description)
+-- SELECT 'Vrijdag', NULL, 6, 'Herstel & eiwit'
+-- WHERE NOT EXISTS (
+--     SELECT 1 FROM diet_day WHERE day_label = 'Vrijdag' AND diet_plan_id = 6
+-- );
+--
+-- INSERT INTO diet_day (day_label, date, diet_plan_id, diet_day_description)
+-- SELECT 'Lunedì', NULL, 7, 'Zuid-Europees begin'
+-- WHERE NOT EXISTS (
+--     SELECT 1 FROM diet_day WHERE day_label = 'Lunedì' AND diet_plan_id = 7
+-- );
+--
+-- INSERT INTO diet_day (day_label, date, diet_plan_id, diet_day_description)
+-- SELECT 'Mercoledì', NULL, 7, 'Zon en smaak'
+-- WHERE NOT EXISTS (
+--     SELECT 1 FROM diet_day WHERE day_label = 'Mercoledì' AND diet_plan_id = 7
+-- );
+--
+-- INSERT INTO diet_day (day_label, date, diet_plan_id, diet_day_description)
+-- SELECT 'Venerdì', NULL, 7, 'Licht en fris'
+-- WHERE NOT EXISTS (
+--     SELECT 1 FROM diet_day WHERE day_label = 'Venerdì' AND diet_plan_id = 7
+-- );
+--
+-- INSERT INTO diet_day (day_label, date, diet_plan_id, diet_day_description)
+-- SELECT 'LC Dag 1', NULL, 8, 'Koolhydraatarm intro'
+-- WHERE NOT EXISTS (
+--     SELECT 1 FROM diet_day WHERE day_label = 'LC Dag 1' AND diet_plan_id = 8
+-- );
+--
+-- INSERT INTO diet_day (day_label, date, diet_plan_id, diet_day_description)
+-- SELECT 'LC Dag 2', NULL, 8, 'Focus op vetten en eiwitten'
+-- WHERE NOT EXISTS (
+--     SELECT 1 FROM diet_day WHERE day_label = 'LC Dag 2' AND diet_plan_id = 8
+-- );
+--
+-- INSERT INTO diet_day (day_label, date, diet_plan_id, diet_day_description)
+-- SELECT 'LC Dag 3', NULL, 8, 'Afsluitende dag laag in carbs'
+-- WHERE NOT EXISTS (
+--     SELECT 1 FROM diet_day WHERE day_label = 'LC Dag 3' AND diet_plan_id = 8
+-- );
+--
+--
+-- -- Koppel dezelfde dieet-enum als het plan
+-- INSERT INTO diet_day_diets (diet_day_id, diet)
+-- SELECT 13, 'VEGAN'
+-- WHERE NOT EXISTS (SELECT 1 FROM diet_day_diets WHERE diet_day_id = 13 AND diet = 'VEGAN');
+--
+-- INSERT INTO diet_day_diets (diet_day_id, diet)
+-- SELECT 14, 'VEGAN'
+-- WHERE NOT EXISTS (SELECT 1 FROM diet_day_diets WHERE diet_day_id = 14 AND diet = 'VEGAN');
+--
+-- INSERT INTO diet_day_diets (diet_day_id, diet)
+-- SELECT 15, 'VEGAN'
+-- WHERE NOT EXISTS (SELECT 1 FROM diet_day_diets WHERE diet_day_id = 15 AND diet = 'VEGAN');
+--
+-- INSERT INTO diet_day_diets (diet_day_id, diet)
+-- SELECT 16, 'HIGH_PROTEIN'
+-- WHERE NOT EXISTS (SELECT 1 FROM diet_day_diets WHERE diet_day_id = 16 AND diet = 'HIGH_PROTEIN');
+--
+-- INSERT INTO diet_day_diets (diet_day_id, diet)
+-- SELECT 17, 'HIGH_PROTEIN'
+-- WHERE NOT EXISTS (SELECT 1 FROM diet_day_diets WHERE diet_day_id = 17 AND diet = 'HIGH_PROTEIN');
+--
+-- INSERT INTO diet_day_diets (diet_day_id, diet)
+-- SELECT 18, 'HIGH_PROTEIN'
+-- WHERE NOT EXISTS (SELECT 1 FROM diet_day_diets WHERE diet_day_id = 18 AND diet = 'HIGH_PROTEIN');
+--
+-- INSERT INTO diet_day_diets (diet_day_id, diet)
+-- SELECT 19, 'MEDITERRANEAN'
+-- WHERE NOT EXISTS (SELECT 1 FROM diet_day_diets WHERE diet_day_id = 19 AND diet = 'MEDITERRANEAN');
+--
+-- INSERT INTO diet_day_diets (diet_day_id, diet)
+-- SELECT 20, 'MEDITERRANEAN'
+-- WHERE NOT EXISTS (SELECT 1 FROM diet_day_diets WHERE diet_day_id = 20 AND diet = 'MEDITERRANEAN');
+--
+-- INSERT INTO diet_day_diets (diet_day_id, diet)
+-- SELECT 21, 'MEDITERRANEAN'
+-- WHERE NOT EXISTS (SELECT 1 FROM diet_day_diets WHERE diet_day_id = 21 AND diet = 'MEDITERRANEAN');
+--
+-- INSERT INTO diet_day_diets (diet_day_id, diet)
+-- SELECT 22, 'LOW_CARB'
+-- WHERE NOT EXISTS (SELECT 1 FROM diet_day_diets WHERE diet_day_id = 22 AND diet = 'LOW_CARB');
+--
+-- INSERT INTO diet_day_diets (diet_day_id, diet)
+-- SELECT 23, 'LOW_CARB'
+-- WHERE NOT EXISTS (SELECT 1 FROM diet_day_diets WHERE diet_day_id = 23 AND diet = 'LOW_CARB');
+--
+-- INSERT INTO diet_day_diets (diet_day_id, diet)
+-- SELECT 24, 'LOW_CARB'
+-- WHERE NOT EXISTS (SELECT 1 FROM diet_day_diets WHERE diet_day_id = 24 AND diet = 'LOW_CARB');
+--
+--
+-- -- Vegan: meals 1 & 2, 3 & 4, 5 & 6
+-- INSERT INTO diet_day_meals (diet_day_id, meal_id)
+-- SELECT 13, 1 WHERE NOT EXISTS (SELECT 1 FROM diet_day_meals WHERE diet_day_id = 13 AND meal_id = 1);
+-- INSERT INTO diet_day_meals (diet_day_id, meal_id)
+-- SELECT 13, 2 WHERE NOT EXISTS (SELECT 1 FROM diet_day_meals WHERE diet_day_id = 13 AND meal_id = 2);
+-- INSERT INTO diet_day_meals (diet_day_id, meal_id)
+-- SELECT 14, 3 WHERE NOT EXISTS (SELECT 1 FROM diet_day_meals WHERE diet_day_id = 14 AND meal_id = 3);
+-- INSERT INTO diet_day_meals (diet_day_id, meal_id)
+-- SELECT 14, 4 WHERE NOT EXISTS (SELECT 1 FROM diet_day_meals WHERE diet_day_id = 14 AND meal_id = 4);
+-- INSERT INTO diet_day_meals (diet_day_id, meal_id)
+-- SELECT 15, 5 WHERE NOT EXISTS (SELECT 1 FROM diet_day_meals WHERE diet_day_id = 15 AND meal_id = 5);
+-- INSERT INTO diet_day_meals (diet_day_id, meal_id)
+-- SELECT 15, 6 WHERE NOT EXISTS (SELECT 1 FROM diet_day_meals WHERE diet_day_id = 15 AND meal_id = 6);
+--
+-- -- High Protein
+-- INSERT INTO diet_day_meals (diet_day_id, meal_id)
+-- SELECT 16, 2 WHERE NOT EXISTS (SELECT 1 FROM diet_day_meals WHERE diet_day_id = 16 AND meal_id = 2);
+-- INSERT INTO diet_day_meals (diet_day_id, meal_id)
+-- SELECT 16, 3 WHERE NOT EXISTS (SELECT 1 FROM diet_day_meals WHERE diet_day_id = 16 AND meal_id = 3);
+-- INSERT INTO diet_day_meals (diet_day_id, meal_id)
+-- SELECT 17, 4 WHERE NOT EXISTS (SELECT 1 FROM diet_day_meals WHERE diet_day_id = 17 AND meal_id = 4);
+-- INSERT INTO diet_day_meals (diet_day_id, meal_id)
+-- SELECT 17, 5 WHERE NOT EXISTS (SELECT 1 FROM diet_day_meals WHERE diet_day_id = 17 AND meal_id = 5);
+-- INSERT INTO diet_day_meals (diet_day_id, meal_id)
+-- SELECT 18, 6 WHERE NOT EXISTS (SELECT 1 FROM diet_day_meals WHERE diet_day_id = 18 AND meal_id = 6);
+-- INSERT INTO diet_day_meals (diet_day_id, meal_id)
+-- SELECT 18, 1 WHERE NOT EXISTS (SELECT 1 FROM diet_day_meals WHERE diet_day_id = 18 AND meal_id = 1);
+--
+-- -- Mediterranean
+-- INSERT INTO diet_day_meals (diet_day_id, meal_id)
+-- SELECT 19, 3 WHERE NOT EXISTS (SELECT 1 FROM diet_day_meals WHERE diet_day_id = 19 AND meal_id = 3);
+-- INSERT INTO diet_day_meals (diet_day_id, meal_id)
+-- SELECT 19, 1 WHERE NOT EXISTS (SELECT 1 FROM diet_day_meals WHERE diet_day_id = 19 AND meal_id = 1);
+-- INSERT INTO diet_day_meals (diet_day_id, meal_id)
+-- SELECT 20, 2 WHERE NOT EXISTS (SELECT 1 FROM diet_day_meals WHERE diet_day_id = 20 AND meal_id = 2);
+-- INSERT INTO diet_day_meals (diet_day_id, meal_id)
+-- SELECT 20, 5 WHERE NOT EXISTS (SELECT 1 FROM diet_day_meals WHERE diet_day_id = 20 AND meal_id = 5);
+-- INSERT INTO diet_day_meals (diet_day_id, meal_id)
+-- SELECT 21, 4 WHERE NOT EXISTS (SELECT 1 FROM diet_day_meals WHERE diet_day_id = 21 AND meal_id = 4);
+-- INSERT INTO diet_day_meals (diet_day_id, meal_id)
+-- SELECT 21, 6 WHERE NOT EXISTS (SELECT 1 FROM diet_day_meals WHERE diet_day_id = 21 AND meal_id = 6);
+--
+-- -- Low Carb
+-- INSERT INTO diet_day_meals (diet_day_id, meal_id)
+-- SELECT 22, 5 WHERE NOT EXISTS (SELECT 1 FROM diet_day_meals WHERE diet_day_id = 22 AND meal_id = 5);
+-- INSERT INTO diet_day_meals (diet_day_id, meal_id)
+-- SELECT 22, 1 WHERE NOT EXISTS (SELECT 1 FROM diet_day_meals WHERE diet_day_id = 22 AND meal_id = 1);
+-- INSERT INTO diet_day_meals (diet_day_id, meal_id)
+-- SELECT 23, 2 WHERE NOT EXISTS (SELECT 1 FROM diet_day_meals WHERE diet_day_id = 23 AND meal_id = 2);
+-- INSERT INTO diet_day_meals (diet_day_id, meal_id)
+-- SELECT 23, 6 WHERE NOT EXISTS (SELECT 1 FROM diet_day_meals WHERE diet_day_id = 23 AND meal_id = 6);
+-- INSERT INTO diet_day_meals (diet_day_id, meal_id)
+-- SELECT 24, 3 WHERE NOT EXISTS (SELECT 1 FROM diet_day_meals WHERE diet_day_id = 24 AND meal_id = 3);
+-- INSERT INTO diet_day_meals (diet_day_id, meal_id)
+-- SELECT 24, 4 WHERE NOT EXISTS (SELECT 1 FROM diet_day_meals WHERE diet_day_id = 24 AND meal_id = 4);
+--
+--
+-- UPDATE diet_plan SET
+--                      total_calories = 1524.0,
+--                      total_protein = 97.0,
+--                      total_carbs = 260.0,
+--                      total_fat = 150.0,
+--                      total_saturated_fat = 34.5,
+--                      total_unsaturated_fat = 79.2,
+--                      total_sugars = 52.7,
+--                      avg_calories = 800.7,
+--                      avg_protein = 40.3,
+--                      avg_carbs = 86.3,
+--                      avg_fat = 43.7,
+--                      avg_saturated_fat = 11.5,
+--                      avg_unsaturated_fat = 26.4,
+--                      avg_sugars = 17.6
+-- WHERE id = 1;
+--
+--
+-- UPDATE diet_plan SET
+--                      total_calories = 2216.0,
+--                      total_protein = 94.0,
+--                      total_carbs = 256.0,
+--                      total_fat = 101.0,
+--                      total_saturated_fat = 27.8,
+--                      total_unsaturated_fat = 54.6,
+--                      total_sugars = 48.2,
+--                      avg_calories = 738.7,
+--                      avg_protein = 31.3,
+--                      avg_carbs = 85.3,
+--                      avg_fat = 33.7,
+--                      avg_saturated_fat = 9.3,
+--                      avg_unsaturated_fat = 18.2,
+--                      avg_sugars = 16.1
+-- WHERE id = 2;
+--
+--
+-- UPDATE diet_plan SET
+--                      total_calories = 3216.0,
+--                      total_protein = 84.0,
+--                      total_carbs = 356.0,
+--                      total_fat = 201.0,
+--                      total_saturated_fat = 33.5,
+--                      total_unsaturated_fat = 62.0,
+--                      total_sugars = 42.5,
+--                      avg_calories = 638.7,
+--                      avg_protein = 41.3,
+--                      avg_carbs = 75.3,
+--                      avg_fat = 23.7,
+--                      avg_saturated_fat = 6.7,
+--                      avg_unsaturated_fat = 12.4,
+--                      avg_sugars = 8.5
+-- WHERE id = 3;
+--
+--
+-- UPDATE diet_plan SET
+--                      total_calories = 2816.0,
+--                      total_protein = 64.0,
+--                      total_carbs = 296.0,
+--                      total_fat = 151.0,
+--                      total_saturated_fat = 28.2,
+--                      total_unsaturated_fat = 51.3,
+--                      total_sugars = 37.8,
+--                      avg_calories = 798.7,
+--                      avg_protein = 35.3,
+--                      avg_carbs = 89.3,
+--                      avg_fat = 31.7,
+--                      avg_saturated_fat = 9.4,
+--                      avg_unsaturated_fat = 17.1,
+--                      avg_sugars = 12.6
+-- WHERE id = 4;
+--
+--
+-- UPDATE diet_plan SET
+--                      total_calories = 3216.0,
+--                      total_protein = 71.0,
+--                      total_carbs = 211.0,
+--                      total_fat = 144.0,
+--                      total_saturated_fat = 27.6,
+--                      total_unsaturated_fat = 66.9,
+--                      total_sugars = 36.0,
+--                      avg_calories = 685.7,
+--                      avg_protein = 44.3,
+--                      avg_carbs = 99.3,
+--                      avg_fat = 88.7,
+--                      avg_saturated_fat = 9.2,
+--                      avg_unsaturated_fat = 22.3,
+--                      avg_sugars = 12.0
+-- WHERE id = 5;
+--
+--
+-- UPDATE diet_plan SET
+--                      total_calories = 1111.0,
+--                      total_protein = 11.0,
+--                      total_carbs = 111.0,
+--                      total_fat = 111.0,
+--                      total_saturated_fat = 22.2,
+--                      total_unsaturated_fat = 33.3,
+--                      total_sugars = 44.4,
+--                      avg_calories = 111.7,
+--                      avg_protein = 11.3,
+--                      avg_carbs = 11.3,
+--                      avg_fat = 11.7,
+--                      avg_saturated_fat = 7.4,
+--                      avg_unsaturated_fat = 11.1,
+--                      avg_sugars = 14.8
+-- WHERE id = 6;
+--
+--
+-- UPDATE diet_plan SET
+--                      total_calories = 2222.0,
+--                      total_protein = 22.0,
+--                      total_carbs = 222.0,
+--                      total_fat = 222.0,
+--                      total_saturated_fat = 44.4,
+--                      total_unsaturated_fat = 66.6,
+--                      total_sugars = 88.8,
+--                      avg_calories = 222.7,
+--                      avg_protein = 22.3,
+--                      avg_carbs = 22.3,
+--                      avg_fat = 22.7,
+--                      avg_saturated_fat = 14.8,
+--                      avg_unsaturated_fat = 22.2,
+--                      avg_sugars = 29.6
+-- WHERE id = 7;
+--
+--
+-- UPDATE diet_plan SET
+--                      total_calories = 3333.0,
+--                      total_protein = 33.0,
+--                      total_carbs = 333.0,
+--                      total_fat = 333.0,
+--                      total_saturated_fat = 66.6,
+--                      total_unsaturated_fat = 99.9,
+--                      total_sugars = 133.2,
+--                      avg_calories = 333.7,
+--                      avg_protein = 33.3,
+--                      avg_carbs = 33.3,
+--                      avg_fat = 33.7,
+--                      avg_saturated_fat = 22.2,
+--                      avg_unsaturated_fat = 33.3,
+--                      avg_sugars = 44.4
+-- WHERE id = 8;
+--
+--
