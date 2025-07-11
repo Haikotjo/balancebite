@@ -13,11 +13,17 @@ public class CorsConfig {
         return new WebMvcConfigurer() {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
-                registry.addMapping("/**") // Allow all endpoints
-                        .allowedOrigins("http://localhost:5173") // Allow only your frontend URL
-                        .allowedMethods("GET", "POST", "PUT", "DELETE", "PATCH") // Specify allowed HTTP methods
-                        .allowCredentials(true) // Allow cookies or authentication credentials
-                        .allowedHeaders("*"); // Allow all headers
+                registry.addMapping("/**")
+                        // Alleen lokaal (origineel):
+//                        .allowedOrigins("http://localhost:5173")
+
+                        // Voor productie ook je frontend-URL toestaan, bijvoorbeeld:
+                        .allowedOrigins("http://localhost:5173", "https://jouw-frontend-url.app")
+                        // ↑ En comment de regel erboven dan uit
+
+                        .allowedMethods("GET", "POST", "PUT", "DELETE", "PATCH")
+                        .allowCredentials(true)
+                        .allowedHeaders("*");
             }
         };
     }
