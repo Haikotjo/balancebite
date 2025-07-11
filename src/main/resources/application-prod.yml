@@ -15,7 +15,7 @@ spring:
 
   sql:
     init:
-      mode: never
+      mode: always
       platform: postgres
 
   jpa:
