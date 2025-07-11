@@ -3,8 +3,6 @@ spring:
     name: balancebite
   config:
     import: optional:classpath:.env
-  profiles:
-    active: prod
 
   datasource:
     url: ${DB_URL}
