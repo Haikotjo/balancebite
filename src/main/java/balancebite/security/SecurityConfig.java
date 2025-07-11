@@ -78,6 +78,7 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(authz -> authz
+                        .requestMatchers(HttpMethod.GET, "/").permitAll()
 
                         .requestMatchers(HttpMethod.GET, "/admins/users").hasAnyRole("ADMIN", "DIETITIAN")
                         .requestMatchers(HttpMethod.GET, "/uploads/**").permitAll()
