@@ -107,7 +107,7 @@ public class UserMealService implements IUserMealService {
         meal.setDiets(mealInputDTO.getDiets());
 
         // Process image from the DTO only if not already handled in the mapper
-        if (meal.getImageUrl() == null && mealInputDTO.getImageFile() != null && !mealInputDTO.getImageFile().isEmpty()) {
+        if (mealInputDTO.getImageFile() != null && !mealInputDTO.getImageFile().isEmpty()) {
             String imageUrl = cloudinaryService.uploadFile(mealInputDTO.getImageFile());
             meal.setImageUrl(imageUrl);
         }
