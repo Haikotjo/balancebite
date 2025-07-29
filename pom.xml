@@ -161,6 +161,13 @@
             <artifactId>spring-boot-starter</artifactId>
         </dependency>
 
+        <!-- ✅ Cloudinary Java SDK: required for uploading and managing images using Cloudinary -->
+        <dependency>
+            <groupId>com.cloudinary</groupId>
+            <artifactId>cloudinary-http44</artifactId>
+            <version>1.37.0</version>
+        </dependency>
+
     </dependencies>
 
     <build>

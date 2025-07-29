@@ -15,6 +15,7 @@ import balancebite.model.user.Role;
 import balancebite.model.user.User;
 import balancebite.repository.*;
 import balancebite.model.user.UserRole;
+import balancebite.service.CloudinaryService;
 import balancebite.service.FileStorageService;
 import balancebite.service.interfaces.user.IUserMealService;
 import balancebite.utils.CheckForDuplicateTemplateMealUtil;
@@ -53,8 +54,8 @@ public class UserMealService implements IUserMealService {
     private final CheckForDuplicateTemplateMealUtil checkForDuplicateTemplateMeal;
     private final UserUpdateHelper userUpdateHelper;
     private final FileStorageService fileStorageService;
-
     private final SavedMealRepository savedMealRepository;
+    private final CloudinaryService cloudinaryService;
 
     public UserMealService(UserRepository userRepository,
                            MealRepository mealRepository,
@@ -65,7 +66,8 @@ public class UserMealService implements IUserMealService {
                            CheckForDuplicateTemplateMealUtil checkForDuplicateTemplateMeal,
                            UserUpdateHelper userUpdateHelper,
                            FileStorageService fileStorageService,
-                           SavedMealRepository savedMealRepository) {
+                           SavedMealRepository savedMealRepository,
+                           CloudinaryService cloudinaryService) {
         this.userRepository = userRepository;
         this.mealRepository = mealRepository;
         this.dietDayRepository = dietDayRepository;
@@ -76,6 +78,7 @@ public class UserMealService implements IUserMealService {
         this.userUpdateHelper = userUpdateHelper;
         this.fileStorageService = fileStorageService;
         this.savedMealRepository = savedMealRepository;
+        this.cloudinaryService = cloudinaryService;
     }
 
     /**
@@ -105,7 +108,7 @@ public class UserMealService implements IUserMealService {
 
         // Process image from the DTO only if not already handled in the mapper
         if (meal.getImageUrl() == null && mealInputDTO.getImageFile() != null && !mealInputDTO.getImageFile().isEmpty()) {
-            String imageUrl = fileStorageService.saveFile(mealInputDTO.getImageFile());
+            String imageUrl = cloudinaryService.uploadFile(mealInputDTO.getImageFile());
             meal.setImageUrl(imageUrl);
         }
 
@@ -329,7 +332,7 @@ public class UserMealService implements IUserMealService {
             if (meal.getImageUrl() != null) {
                 fileStorageService.deleteFileByUrl(meal.getImageUrl());
             }
-            String imageUrl = fileStorageService.saveFile(mealInputDTO.getImageFile());
+            String imageUrl = cloudinaryService.uploadFile(mealInputDTO.getImageFile());
             meal.setImageUrl(imageUrl);
             log.info("✅ New image URL set on meal: {}", imageUrl);
         }
