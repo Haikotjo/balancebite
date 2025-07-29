@@ -326,26 +326,27 @@ public class UserMealService implements IUserMealService {
         meal.setAdjustedBy(user);
         meal.setVersion(LocalDateTime.now());
 
-        // 🔥 Nieuwe afbeelding uploaden
+        // 🔥 New image file provided: upload and replace old image
         if (mealInputDTO.getImageFile() != null && !mealInputDTO.getImageFile().isEmpty()) {
             log.info("📷 New image file detected: {}", mealInputDTO.getImageFile().getOriginalFilename());
             if (meal.getImageUrl() != null) {
-                fileStorageService.deleteFileByUrl(meal.getImageUrl());
+                cloudinaryService.deleteFileByUrl(meal.getImageUrl());
             }
             String imageUrl = cloudinaryService.uploadFile(mealInputDTO.getImageFile());
             meal.setImageUrl(imageUrl);
             log.info("✅ New image URL set on meal: {}", imageUrl);
         }
 
-        // 🧼 Verwijder afbeelding als user oude verwijderd heeft en geen nieuwe gaf
+        // 🧼 Remove image if user cleared it and no new file or URL is provided
         if ((mealInputDTO.getImageFile() == null || mealInputDTO.getImageFile().isEmpty())
                 && (mealInputDTO.getImageUrl() == null || mealInputDTO.getImageUrl().isBlank())
                 && meal.getImageUrl() != null) {
             log.info("🧼 Removing image because frontend cleared it and no new file was provided.");
-            fileStorageService.deleteFileByUrl(meal.getImageUrl());
+            cloudinaryService.deleteFileByUrl(meal.getImageUrl());
             meal.setImageUrl(null);
         }
 
+        // 🖼 Use image URL directly (fallback case)
         if ((mealInputDTO.getImageFile() == null || mealInputDTO.getImageFile().isEmpty())
                 && mealInputDTO.getImageUrl() != null && !mealInputDTO.getImageUrl().isBlank()) {
             log.info("🖼 Using image URL directly: {}", mealInputDTO.getImageUrl());

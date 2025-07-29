@@ -19,6 +19,7 @@ import balancebite.repository.DietDayRepository;
 import balancebite.repository.FoodItemRepository;
 import balancebite.repository.MealRepository;
 import balancebite.repository.UserRepository;
+import balancebite.service.CloudinaryService;
 import balancebite.service.interfaces.meal.IMealAdminService;
 import balancebite.utils.CheckForDuplicateTemplateMealUtil;
 import jakarta.persistence.EntityNotFoundException;
@@ -46,8 +47,8 @@ public class MealAdminService implements IMealAdminService {
     private final UserMapper userMapper;
     private final MealIngredientMapper mealIngredientMapper;
     private final CheckForDuplicateTemplateMealUtil checkForDuplicateTemplateMeal;
-
     private final DietDayRepository dietDayRepository;
+    private final CloudinaryService cloudinaryService;
 
     /**
      * Constructor for MealAdminService, using constructor injection.
@@ -57,7 +58,8 @@ public class MealAdminService implements IMealAdminService {
      * @param userRepository     the repository for managing User entities.
      * @param mealMapper         the mapper for converting Meal entities to DTOs.
      */
-    public MealAdminService(MealRepository mealRepository, FoodItemRepository foodItemRepository, UserRepository userRepository, MealMapper mealMapper, UserMapper userMapper, MealIngredientMapper mealIngredientMapper, CheckForDuplicateTemplateMealUtil checkForDuplicateTemplateMeal, DietDayRepository dietDayRepository) {
+    public MealAdminService(MealRepository mealRepository, FoodItemRepository foodItemRepository, UserRepository userRepository, MealMapper mealMapper, UserMapper userMapper, MealIngredientMapper mealIngredientMapper, CheckForDuplicateTemplateMealUtil checkForDuplicateTemplateMeal, DietDayRepository dietDayRepository,
+                            CloudinaryService cloudinaryService) {
         this.mealRepository = mealRepository;
         this.foodItemRepository = foodItemRepository;
         this.userRepository = userRepository;
@@ -66,6 +68,7 @@ public class MealAdminService implements IMealAdminService {
         this.mealIngredientMapper = mealIngredientMapper;
         this.checkForDuplicateTemplateMeal = checkForDuplicateTemplateMeal;
         this.dietDayRepository = dietDayRepository;
+        this.cloudinaryService = cloudinaryService;
     }
 
     /**
@@ -95,14 +98,9 @@ public class MealAdminService implements IMealAdminService {
         Meal meal = mealMapper.toEntity(mealInputDTO);
 
         // Handle image and imageUrl logic
-        if (mealInputDTO.getImage() != null) {
-            log.info("Using uploaded image for the meal.");
-            meal.setImage(mealInputDTO.getImage());
-        } else if (mealInputDTO.getImageUrl() != null) {
-            log.info("Using provided image URL for the meal.");
-            meal.setImageUrl(mealInputDTO.getImageUrl());
-        } else {
-            log.info("No image or imageUrl provided for the meal.");
+        if (mealInputDTO.getImageFile() != null && !mealInputDTO.getImageFile().isEmpty()) {
+            String imageUrl = cloudinaryService.uploadFile(mealInputDTO.getImageFile());
+            meal.setImageUrl(imageUrl);
         }
 
         // Collect all FoodItem IDs from the Meal's ingredients
@@ -168,12 +166,10 @@ public class MealAdminService implements IMealAdminService {
             List<Long> foodItemIds = mealInputDTO.getMealIngredients().stream()
                     .map(MealIngredientInputDTO::getFoodItemId)
                     .toList();
-
-            // Use CheckForDuplicateTemplateMealUtil to check for duplicate template meals, passing the current meal ID
             checkForDuplicateTemplateMeal.checkForDuplicateTemplateMeal(foodItemIds, id);
         }
 
-        // Proceed with updating the meal fields
+        // Update basic fields
         if (mealInputDTO.getName() != null) {
             existingMeal.setName(mealInputDTO.getName());
         }
@@ -181,14 +177,53 @@ public class MealAdminService implements IMealAdminService {
             existingMeal.setMealDescription(mealInputDTO.getMealDescription());
         }
 
+        existingMeal.setMealTypes(mealInputDTO.getMealTypes());
+        existingMeal.setCuisines(mealInputDTO.getCuisines());
+        existingMeal.setDiets(mealInputDTO.getDiets());
+
+        if (mealInputDTO.getPreparationTime() != null && !mealInputDTO.getPreparationTime().isBlank()) {
+            existingMeal.setPreparationTime(Duration.parse(mealInputDTO.getPreparationTime()));
+        } else {
+            existingMeal.setPreparationTime(null);
+        }
+
+        // 🔥 Nieuwe afbeelding uploaden
+        if (mealInputDTO.getImageFile() != null && !mealInputDTO.getImageFile().isEmpty()) {
+            log.info("📷 New image file detected: {}", mealInputDTO.getImageFile().getOriginalFilename());
+            if (existingMeal.getImageUrl() != null) {
+                cloudinaryService.deleteFileByUrl(existingMeal.getImageUrl());
+            }
+            String imageUrl = cloudinaryService.uploadFile(mealInputDTO.getImageFile());
+            existingMeal.setImageUrl(imageUrl);
+            log.info("✅ New image URL set on meal: {}", imageUrl);
+        }
+
+        // 🧼 Verwijder afbeelding als frontend aangeeft dat deze weg moet
+        if ((mealInputDTO.getImageFile() == null || mealInputDTO.getImageFile().isEmpty())
+                && (mealInputDTO.getImageUrl() == null || mealInputDTO.getImageUrl().isBlank())
+                && existingMeal.getImageUrl() != null) {
+            log.info("🧼 Removing image because frontend cleared it and no new file was provided.");
+            cloudinaryService.deleteFileByUrl(existingMeal.getImageUrl());
+            existingMeal.setImageUrl(null);
+        }
+
+        // 🖼 Gebruik directe URL als die opgegeven is
+        if ((mealInputDTO.getImageFile() == null || mealInputDTO.getImageFile().isEmpty())
+                && mealInputDTO.getImageUrl() != null && !mealInputDTO.getImageUrl().isBlank()) {
+            log.info("🖼 Using image URL directly: {}", mealInputDTO.getImageUrl());
+            existingMeal.setImageUrl(mealInputDTO.getImageUrl());
+        }
+
+        // Update ingrediënten
         if (mealInputDTO.getMealIngredients() != null) {
-            // Clear existing ingredients only if we have a new list to replace them with
             existingMeal.getMealIngredients().clear();
             List<MealIngredient> updatedIngredients = mealInputDTO.getMealIngredients().stream()
                     .map(inputDTO -> mealIngredientMapper.toEntity(inputDTO, existingMeal))
                     .toList();
             existingMeal.addMealIngredients(updatedIngredients);
         }
+
+        existingMeal.updateNutrients();
 
         Meal savedMeal = mealRepository.save(existingMeal);
         log.info("Successfully updated meal with ID: {}", id);

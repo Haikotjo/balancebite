@@ -7,6 +7,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.net.URI;
+import java.nio.file.Paths;
 import java.util.Map;
 
 import org.slf4j.Logger;
@@ -41,4 +43,19 @@ public class CloudinaryService {
             throw new RuntimeException("Cloudinary upload failed", e);
         }
     }
+
+    public void deleteFileByUrl(String imageUrl) {
+        try {
+            // Extract the public ID (zonder extensie)
+            URI uri = URI.create(imageUrl);
+            String filename = Paths.get(uri.getPath()).getFileName().toString(); // bv. abc123_xyz.jpg
+            String publicId = filename.substring(0, filename.lastIndexOf(".")); // "abc123_xyz"
+
+            Map result = cloudinary.uploader().destroy(publicId, ObjectUtils.emptyMap());
+            log.info("Deleted image from Cloudinary: {}", result);
+        } catch (Exception e) {
+            log.error("Failed to delete image from Cloudinary: {}", e.getMessage());
+        }
+    }
+
 }
