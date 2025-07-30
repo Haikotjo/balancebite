@@ -18,6 +18,7 @@ import balancebite.model.user.UserRole;
 import balancebite.service.CloudinaryService;
 import balancebite.service.FileStorageService;
 import balancebite.service.interfaces.user.IUserMealService;
+import balancebite.service.util.ImageHandlerService;
 import balancebite.utils.CheckForDuplicateTemplateMealUtil;
 import balancebite.utils.UserUpdateHelper;
 import jakarta.persistence.EntityNotFoundException;
@@ -56,6 +57,7 @@ public class UserMealService implements IUserMealService {
     private final FileStorageService fileStorageService;
     private final SavedMealRepository savedMealRepository;
     private final CloudinaryService cloudinaryService;
+    private final ImageHandlerService imageHandlerService;
 
     public UserMealService(UserRepository userRepository,
                            MealRepository mealRepository,
@@ -67,7 +69,8 @@ public class UserMealService implements IUserMealService {
                            UserUpdateHelper userUpdateHelper,
                            FileStorageService fileStorageService,
                            SavedMealRepository savedMealRepository,
-                           CloudinaryService cloudinaryService) {
+                           CloudinaryService cloudinaryService,
+                           ImageHandlerService imageHandlerService) {
         this.userRepository = userRepository;
         this.mealRepository = mealRepository;
         this.dietDayRepository = dietDayRepository;
@@ -79,6 +82,7 @@ public class UserMealService implements IUserMealService {
         this.fileStorageService = fileStorageService;
         this.savedMealRepository = savedMealRepository;
         this.cloudinaryService = cloudinaryService;
+        this.imageHandlerService = imageHandlerService;
     }
 
     /**
@@ -106,11 +110,15 @@ public class UserMealService implements IUserMealService {
         meal.setCuisines(mealInputDTO.getCuisines());
         meal.setDiets(mealInputDTO.getDiets());
 
-        // Process image from the DTO only if not already handled in the mapper
-        if (mealInputDTO.getImageFile() != null && !mealInputDTO.getImageFile().isEmpty()) {
-            String imageUrl = cloudinaryService.uploadFile(mealInputDTO.getImageFile());
-            meal.setImageUrl(imageUrl);
-        }
+        // Process image using handler: supports file upload or direct URL
+        String imageUrl = imageHandlerService.handleImage(
+                null, // no existing image during creation
+                mealInputDTO.getImageFile(),
+                mealInputDTO.getImageUrl(),
+                true // this is a create operation
+        );
+        meal.setImageUrl(imageUrl);
+
 
         meal.setPreparationTime(
                 mealInputDTO.getPreparationTime() != null && !mealInputDTO.getPreparationTime().isBlank()
