@@ -2,6 +2,7 @@ package balancebite.service.user;
 
 import balancebite.dto.meal.MealDTO;
 import balancebite.dto.meal.MealInputDTO;
+import balancebite.dto.mealingredient.MealIngredientInputDTO;
 import balancebite.dto.user.UserDTO;
 import balancebite.errorHandling.*;
 import balancebite.mapper.MealIngredientMapper;
@@ -102,6 +103,11 @@ public class UserMealService implements IUserMealService {
     public MealDTO createMealForUser(MealInputDTO mealInputDTO, Long userId) {
         log.info("Attempting to create a new meal for user ID: {}", userId);
 
+        // Validate that both image and imageUrl are not provided simultaneously
+        if (mealInputDTO.getImage() != null && mealInputDTO.getImageUrl() != null) {
+            log.error("Both image and imageUrl provided. Only one of them is allowed.");
+            throw new IllegalArgumentException("You can only provide either an image or an imageUrl, not both.");
+        }
         // Convert DTO to Meal entity
         Meal meal = mealMapper.toEntity(mealInputDTO);
 
@@ -118,7 +124,6 @@ public class UserMealService implements IUserMealService {
                 true // this is a create operation
         );
         meal.setImageUrl(imageUrl);
-
 
         meal.setPreparationTime(
                 mealInputDTO.getPreparationTime() != null && !mealInputDTO.getPreparationTime().isBlank()
@@ -138,10 +143,12 @@ public class UserMealService implements IUserMealService {
             }
         }
 
-        // Validate and check for duplicate ingredients in template meals
+        // Extract FoodItem IDs for duplicate template check
         List<Long> foodItemIds = meal.getMealIngredients().stream()
                 .map(ingredient -> ingredient.getFoodItem().getId())
                 .collect(Collectors.toList());
+
+        // Use CheckForDuplicateTemplateMealUtil to check for duplicate template meals
         checkForDuplicateTemplateMeal.checkForDuplicateTemplateMeal(foodItemIds, null);
 
         // Retrieve user or throw exception
@@ -155,9 +162,10 @@ public class UserMealService implements IUserMealService {
         meal.setCreatedBy(user);
         user.getMeals().add(meal);
 
-        // 🔥 **BELANGRIJK:** Update de voedingswaarden vóór opslaan!
+        // 🔥 IMPORTANT: Update nutrient values before saving!
         meal.updateNutrients();
 
+        // If the user creating the meal is a restaurant, mark the meal as restricted
         boolean isRestricted = user.getRoles().stream()
                 .map(Role::getRolename)
                 .anyMatch(role -> role == UserRole.RESTAURANT);
@@ -317,15 +325,32 @@ public class UserMealService implements IUserMealService {
         Meal meal = mealRepository.findById(mealId)
                 .orElseThrow(() -> new MealNotFoundException("Meal not found with ID: " + mealId));
 
+        // Duplicate check for template meals (isTemplate = true)
+        if (meal.isTemplate() && mealInputDTO.getMealIngredients() != null) {
+            List<Long> foodItemIds = mealInputDTO.getMealIngredients().stream()
+                    .map(MealIngredientInputDTO::getFoodItemId)
+                    .toList();
+            checkForDuplicateTemplateMeal.checkForDuplicateTemplateMeal(foodItemIds, mealId);
+        }
+
         if (!meal.getCreatedBy().getId().equals(userId) && !meal.getAdjustedBy().getId().equals(userId)) {
             throw new SecurityException("User is not allowed to update this meal.");
         }
 
         meal.setName(mealInputDTO.getName());
-        meal.setMealDescription(mealInputDTO.getMealDescription());
-        meal.setMealTypes(mealInputDTO.getMealTypes());
-        meal.setCuisines(mealInputDTO.getCuisines());
-        meal.setDiets(mealInputDTO.getDiets());
+        if (mealInputDTO.getMealDescription() != null) {
+            meal.setMealDescription(mealInputDTO.getMealDescription());
+        }
+        if (mealInputDTO.getMealTypes() != null) {
+            meal.setMealTypes(mealInputDTO.getMealTypes());
+        }
+        if (mealInputDTO.getCuisines() != null) {
+            meal.setCuisines(mealInputDTO.getCuisines());
+        }
+        if (mealInputDTO.getDiets() != null) {
+            meal.setDiets(mealInputDTO.getDiets());
+        }
+
         if (mealInputDTO.getPreparationTime() != null && !mealInputDTO.getPreparationTime().isBlank()) {
             meal.setPreparationTime(Duration.parse(mealInputDTO.getPreparationTime()));
         } else {
@@ -334,32 +359,14 @@ public class UserMealService implements IUserMealService {
         meal.setAdjustedBy(user);
         meal.setVersion(LocalDateTime.now());
 
-        // 🔥 New image file provided: upload and replace old image
-        if (mealInputDTO.getImageFile() != null && !mealInputDTO.getImageFile().isEmpty()) {
-            log.info("📷 New image file detected: {}", mealInputDTO.getImageFile().getOriginalFilename());
-            if (meal.getImageUrl() != null) {
-                cloudinaryService.deleteFileByUrl(meal.getImageUrl());
-            }
-            String imageUrl = cloudinaryService.uploadFile(mealInputDTO.getImageFile());
-            meal.setImageUrl(imageUrl);
-            log.info("✅ New image URL set on meal: {}", imageUrl);
-        }
-
-        // 🧼 Remove image if user cleared it and no new file or URL is provided
-        if ((mealInputDTO.getImageFile() == null || mealInputDTO.getImageFile().isEmpty())
-                && (mealInputDTO.getImageUrl() == null || mealInputDTO.getImageUrl().isBlank())
-                && meal.getImageUrl() != null) {
-            log.info("🧼 Removing image because frontend cleared it and no new file was provided.");
-            cloudinaryService.deleteFileByUrl(meal.getImageUrl());
-            meal.setImageUrl(null);
-        }
-
-        // 🖼 Use image URL directly (fallback case)
-        if ((mealInputDTO.getImageFile() == null || mealInputDTO.getImageFile().isEmpty())
-                && mealInputDTO.getImageUrl() != null && !mealInputDTO.getImageUrl().isBlank()) {
-            log.info("🖼 Using image URL directly: {}", mealInputDTO.getImageUrl());
-            meal.setImageUrl(mealInputDTO.getImageUrl());
-        }
+        // ☁️ Handle image logic (upload, replace, delete, or fallback URL)
+        String imageUrl = imageHandlerService.handleImage(
+                meal.getImageUrl(),
+                mealInputDTO.getImageFile(),
+                mealInputDTO.getImageUrl(),
+                false
+        );
+        meal.setImageUrl(imageUrl);
 
         meal.getMealIngredients().clear();
         mealInputDTO.getMealIngredients().forEach(inputIngredient -> {
