@@ -564,7 +564,9 @@ public class UserMealService implements IUserMealService {
         // Fetch meals where createdBy matches the user ID
         List<Meal> createdMeals = mealRepository.findByCreatedBy_Id(userId);
 
-        createdMeals.removeIf(meal -> meal.getAdjustedBy() != null);
+        createdMeals.removeIf(meal ->
+                meal.getAdjustedBy() != null && !meal.getAdjustedBy().getId().equals(userId)
+        );
 
         // ✅ **Apply filters**
         if (cuisines != null && !cuisines.isEmpty()) {
