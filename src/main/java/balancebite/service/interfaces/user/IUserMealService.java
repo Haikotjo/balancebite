@@ -88,4 +88,18 @@ public interface IUserMealService {
 
     void forceRemoveMealFromUser(Long userId, Long mealId);
 
+    /**
+     * Cancels a meal created by the user (preview/cancel use case).
+     * ALWAYS performs a hard delete:
+     * - Ownership check (must be the creator)
+     * - Removes meal from all DietDays
+     * - Unlinks from all user collections (meals, savedMeals)
+     * - Cleans up associated image/blob
+     * - Deletes the meal entity regardless of template/restriction/usage flags
+     *
+     * @param userId The ID of the acting user (must be the creator).
+     * @param mealId The ID of the meal to cancel permanently.
+     * @throws MealNotFoundException if the meal does not exist.
+     */
+    void cancelMeal(Long userId, Long mealId);
 }

@@ -770,5 +770,47 @@ public class UserMealService implements IUserMealService {
         log.info("Force-removal completed for meal ID {} and user ID {}", mealId, userId);
     }
 
+    @Override
+    @Transactional
+    public void cancelMeal(Long userId, Long mealId) {
+        log.info("Cancelling meal ID {} for user ID {}", mealId, userId);
+
+        Meal meal = mealRepository.findById(mealId)
+                .orElseThrow(() -> new MealNotFoundException("Meal not found: " + mealId));
+
+        // Ownership check
+        if (!meal.getCreatedBy().getId().equals(userId)) {
+            throw new AccessDeniedException("You can only cancel your own meal.");
+        }
+
+        // Haal meal uit alle DietDays
+        List<DietDay> daysWithMeal = dietDayRepository.findByMealsContainingWithDietFetched(meal);
+        for (DietDay day : daysWithMeal) {
+            day.getMeals().remove(meal);
+        }
+        if (!daysWithMeal.isEmpty()) {
+            dietDayRepository.saveAll(daysWithMeal);
+        }
+
+        // Verwijder links bij user
+        User owner = meal.getCreatedBy();
+        owner.getMeals().remove(meal);
+        owner.getSavedMeals().remove(meal);
+
+        // Image cleanup
+        if (meal.getImageUrl() != null && !meal.getImageUrl().isBlank()) {
+            try {
+                imageHandlerService.deleteImage(meal.getImageUrl());
+            } catch (Exception ex) {
+                log.warn("Image cleanup failed for meal {}: {}", mealId, ex.getMessage());
+            }
+        }
+
+        // Helemaal weggooien
+        mealRepository.delete(meal);
+        userRepository.save(owner);
+
+        log.info("Meal ID {} fully cancelled and deleted for user ID {}", mealId, userId);
+    }
 
 }

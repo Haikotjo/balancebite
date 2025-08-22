@@ -48,4 +48,13 @@ public class ImageHandlerService {
 
         return currentUrl;
     }
+
+    /**
+     * Deletes an image by URL if present.
+     * Safe to call; ignores null/blank.
+     */
+    public void deleteImage(String imageUrl) {
+        if (imageUrl == null || imageUrl.isBlank()) return;
+        cloudinaryService.deleteFileByUrl(imageUrl);
+    }
 }

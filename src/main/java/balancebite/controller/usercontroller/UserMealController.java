@@ -490,4 +490,45 @@ public class UserMealController {
         }
     }
 
+    /**
+     * Cancels a meal created by the authenticated user (preview/cancel).
+     * ALWAYS hard-deletes:
+     * - Removes from all diets
+     * - Unlinks from user's lists
+     * - Deletes associated image
+     * - Deletes the meal entity
+     *
+     * @param mealId The ID of the meal to cancel permanently.
+     * @param authorizationHeader The Authorization header containing the JWT token.
+     * @return 204 No Content on success, or an error response.
+     */
+    @DeleteMapping("/meal/{mealId}/cancel")
+    public ResponseEntity<?> cancelMeal(
+            @PathVariable Long mealId,
+            @RequestHeader("Authorization") String authorizationHeader) {
+        try {
+            log.info("Cancel requested for meal ID {} by authenticated user", mealId);
+
+            String token = authorizationHeader.substring(7); // strip "Bearer "
+            Long userId = jwtService.extractUserId(token);
+
+            userMealService.cancelMeal(userId, mealId);
+
+            log.info("Meal ID {} cancelled (hard-deleted) for user ID {}", mealId, userId);
+            return ResponseEntity.noContent().build();
+
+        } catch (MealNotFoundException e) {
+            log.warn("Cancel failed: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+
+        } catch (SecurityException | org.springframework.security.access.AccessDeniedException e) {
+            log.warn("Cancel forbidden: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", e.getMessage()));
+
+        } catch (Exception e) {
+            log.error("Unexpected error during cancelMeal for {}: {}", mealId, e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "An unexpected error occurred."));
+        }
+    }
+
 }
