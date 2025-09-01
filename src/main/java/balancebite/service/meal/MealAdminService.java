@@ -17,10 +17,7 @@ import balancebite.model.MealIngredient;
 import balancebite.model.user.Role;
 import balancebite.model.user.User;
 import balancebite.model.user.UserRole;
-import balancebite.repository.DietDayRepository;
-import balancebite.repository.FoodItemRepository;
-import balancebite.repository.MealRepository;
-import balancebite.repository.UserRepository;
+import balancebite.repository.*;
 import balancebite.service.CloudinaryService;
 import balancebite.service.interfaces.meal.IMealAdminService;
 import balancebite.service.util.ImageHandlerService;
@@ -58,6 +55,8 @@ public class MealAdminService implements IMealAdminService {
     private final CloudinaryService cloudinaryService;
     private final ImageHandlerService imageHandlerService;
 
+    private final MealIngredientRepository mealIngredientRepository;
+
     /**
      * Constructor for MealAdminService, using constructor injection.
      *
@@ -72,7 +71,8 @@ public class MealAdminService implements IMealAdminService {
                             MealMapper mealMapper, UserMapper userMapper,
                             MealIngredientMapper mealIngredientMapper, CheckForDuplicateTemplateMealUtil checkForDuplicateTemplateMeal, DietDayRepository dietDayRepository,
                             CloudinaryService cloudinaryService,
-                            ImageHandlerService imageHandlerService) {
+                            ImageHandlerService imageHandlerService,
+                            MealIngredientRepository mealIngredientRepository                            ) {
         this.mealRepository = mealRepository;
         this.foodItemRepository = foodItemRepository;
         this.userRepository = userRepository;
@@ -83,6 +83,7 @@ public class MealAdminService implements IMealAdminService {
         this.dietDayRepository = dietDayRepository;
         this.cloudinaryService = cloudinaryService;
         this.imageHandlerService = imageHandlerService;
+        this.mealIngredientRepository = mealIngredientRepository;
     }
 
     /**
@@ -357,23 +358,25 @@ public class MealAdminService implements IMealAdminService {
         Meal meal = mealRepository.findById(mealId)
                 .orElseThrow(() -> new EntityNotFoundException("Meal not found with ID: " + mealId));
 
-        // Loop through users associated with the meal and remove the association
+        // 1. Remove all MealIngredients linked to this meal
+        mealIngredientRepository.deleteAllByMealId(mealId);
+        log.info("Deleted all MealIngredients for Meal ID: {}", mealId);
+
+        // 2. Remove associations with users
         List<User> associatedUsers = userRepository.findAllByMealsContaining(meal);
         for (User user : associatedUsers) {
             log.info("Removing association between User ID: {} and Meal ID: {}", user.getId(), meal.getId());
             user.getMeals().remove(meal);
         }
-
         List<User> usersWithSavedMeal = userRepository.findAllBySavedMealsContaining(meal);
         for (User user : usersWithSavedMeal) {
             log.info("Removing saved meal association for User ID: {} and Meal ID: {}", user.getId(), meal.getId());
             user.getSavedMeals().remove(meal);
         }
+        userRepository.saveAll(associatedUsers);
         userRepository.saveAll(usersWithSavedMeal);
 
-        // Save updated users back to the database to ensure association is removed
-        userRepository.saveAll(associatedUsers);
-
+        // 3. Remove associations with diet days
         List<DietDay> dietDaysWithMeal = dietDayRepository.findAllByMealsContaining(meal);
         for (DietDay day : dietDaysWithMeal) {
             log.info("Removing meal from DietDay ID: {}", day.getId());
@@ -381,11 +384,9 @@ public class MealAdminService implements IMealAdminService {
         }
         dietDayRepository.saveAll(dietDaysWithMeal);
 
-        meal.getMealIngredients().size();
-        meal.getMealIngredients().clear();
-
-        // Delete the meal after cleaning up the relationships
+        // 4. Delete the meal itself
         mealRepository.delete(meal);
         log.info("Successfully deleted meal with ID: {}", mealId);
     }
+
 }
