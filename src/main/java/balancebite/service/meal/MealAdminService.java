@@ -27,6 +27,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -54,8 +56,9 @@ public class MealAdminService implements IMealAdminService {
     private final DietDayRepository dietDayRepository;
     private final CloudinaryService cloudinaryService;
     private final ImageHandlerService imageHandlerService;
-
     private final MealIngredientRepository mealIngredientRepository;
+    @PersistenceContext
+    private EntityManager entityManager;
 
     /**
      * Constructor for MealAdminService, using constructor injection.
@@ -354,39 +357,41 @@ public class MealAdminService implements IMealAdminService {
     public void deleteMeal(Long mealId) {
         log.info("Attempting to delete meal with ID: {}", mealId);
 
-        // Retrieve the meal or throw an exception if not found
         Meal meal = mealRepository.findById(mealId)
                 .orElseThrow(() -> new EntityNotFoundException("Meal not found with ID: " + mealId));
 
-        // 1. Remove all MealIngredients linked to this meal
+        // 1. Verwijder MealIngredients
         mealIngredientRepository.deleteAllByMealId(mealId);
         log.info("Deleted all MealIngredients for Meal ID: {}", mealId);
 
-        // 2. Remove associations with users
+        // 2. Verwijder koppelingen met users (self-made meals)
         List<User> associatedUsers = userRepository.findAllByMealsContaining(meal);
         for (User user : associatedUsers) {
-            log.info("Removing association between User ID: {} and Meal ID: {}", user.getId(), meal.getId());
             user.getMeals().remove(meal);
         }
+        userRepository.saveAll(associatedUsers);
+
+        // 3. Verwijder koppelingen met users (saved meals → saved_meal join-table)
         List<User> usersWithSavedMeal = userRepository.findAllBySavedMealsContaining(meal);
         for (User user : usersWithSavedMeal) {
-            log.info("Removing saved meal association for User ID: {} and Meal ID: {}", user.getId(), meal.getId());
             user.getSavedMeals().remove(meal);
         }
-        userRepository.saveAll(associatedUsers);
         userRepository.saveAll(usersWithSavedMeal);
 
-        // 3. Remove associations with diet days
+        // extra flush zodat saved_meal echt weg is vóór de meal delete
+        entityManager.flush();
+
+        // 4. Verwijder koppelingen met dietDays
         List<DietDay> dietDaysWithMeal = dietDayRepository.findAllByMealsContaining(meal);
         for (DietDay day : dietDaysWithMeal) {
-            log.info("Removing meal from DietDay ID: {}", day.getId());
             day.getMeals().remove(meal);
         }
         dietDayRepository.saveAll(dietDaysWithMeal);
 
-        // 4. Delete the meal itself
+        // 5. Verwijder de meal zelf
         mealRepository.delete(meal);
         log.info("Successfully deleted meal with ID: {}", mealId);
     }
+
 
 }
