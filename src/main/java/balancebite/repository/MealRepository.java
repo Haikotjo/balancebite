@@ -12,8 +12,10 @@ import balancebite.model.user.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Comparator;
 import java.util.List;
@@ -155,5 +157,12 @@ public interface MealRepository extends JpaRepository<Meal, Long> {
      */
     @Query("SELECT DISTINCT new balancebite.dto.meal.MealNameDTO(m.id, m.name) FROM Meal m WHERE m.isTemplate = true")
     List<MealNameDTO> findAllMealNames();
+
+    @Modifying
+    @Transactional
+    @Query(value = "DELETE FROM saved_meal WHERE meal_id = :mealId", nativeQuery = true)
+    void deleteFromSavedMeal(long mealId);
 }
+
+
 
