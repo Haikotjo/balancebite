@@ -380,6 +380,9 @@ public class MealAdminService implements IMealAdminService {
             day.getMeals().remove(meal);
         }
         dietDayRepository.saveAll(dietDaysWithMeal);
+
+        mealRepository.flush();
+        imageHandlerService.deleteImage(meal.getImageUrl());
         // Delete the meal after cleaning up the relationships
         mealRepository.delete(meal);
         log.info("Successfully deleted meal with ID: {}", mealId);

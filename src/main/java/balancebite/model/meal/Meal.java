@@ -611,4 +611,16 @@ public class Meal {
     public void setSaveCount(Long saveCount) {
         this.saveCount = saveCount;
     }
+
+    // equals/hashCode on id so Set.remove() works with proxies
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Meal m)) return false;
+        return id != null && id.equals(m.id);
+    }
+
+    @Override
+    public int hashCode() { return 31; }
+
 }
