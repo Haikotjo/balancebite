@@ -98,10 +98,6 @@ public class MealController {
                     minCalories, maxCalories, minProtein, maxProtein, minCarbs, maxCarbs, minFat, maxFat
             );
 
-            if (mealDTOs.isEmpty()) {
-                return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
-            }
-
             return ResponseEntity.ok(mealDTOs);
         } catch (Exception e) {
             log.error("Unexpected error during retrieval of meals: {}", e.getMessage(), e);
