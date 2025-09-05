@@ -19,7 +19,7 @@ import balancebite.model.meal.SharedMealAccess;
 import balancebite.model.user.PendingClient;
 import balancebite.model.user.User;
 import balancebite.repository.*;
-import balancebite.service.FileStorageService;
+import balancebite.service.util.ImageHandlerService;
 import balancebite.service.interfaces.meal.IDietitianService;
 import balancebite.utils.CheckForDuplicateTemplateMealUtil;
 import balancebite.utils.MealAssignmentUtil;
@@ -41,7 +41,6 @@ public class UserDietitianService implements IDietitianService {
     private final PendingClientRepository pendingClientRepository;
     private final UserRepository userRepository;
     private final MealMapper mealMapper;
-    private final FileStorageService fileStorageService;
     private final MealRepository mealRepository;
     private final SharedMealAccessRepository sharedMealAccessRepository;
     private final CheckForDuplicateTemplateMealUtil checkForDuplicateTemplateMeal;
@@ -50,13 +49,13 @@ public class UserDietitianService implements IDietitianService {
     private final DietPlanMapper dietPlanMapper;
     private final DietDayMapper dietDayMapper;
     private final SharedDietPlanAccessRepository sharedDietPlanAccessRepository;
+    private final ImageHandlerService imageHandlerService;
 
 
     public UserDietitianService(
             PendingClientRepository pendingClientRepository,
             UserRepository userRepository,
             MealMapper mealMapper,
-            FileStorageService fileStorageService,
             MealRepository mealRepository,
             SharedMealAccessRepository sharedMealAccessRepository,
             CheckForDuplicateTemplateMealUtil checkForDuplicateTemplateMeal,
@@ -64,12 +63,12 @@ public class UserDietitianService implements IDietitianService {
             MealAssignmentUtil mealAssignmentUtil,
             DietPlanMapper dietPlanMapper,
             DietDayMapper dietDayMapper,
-            SharedDietPlanAccessRepository sharedDietPlanAccessRepository
+            SharedDietPlanAccessRepository sharedDietPlanAccessRepository,
+            ImageHandlerService imageHandlerService
     ) {
         this.pendingClientRepository = pendingClientRepository;
         this.userRepository = userRepository;
         this.mealMapper = mealMapper;
-        this.fileStorageService = fileStorageService;
         this.mealRepository = mealRepository;
         this.sharedMealAccessRepository = sharedMealAccessRepository;
         this.checkForDuplicateTemplateMeal = checkForDuplicateTemplateMeal;
@@ -78,6 +77,7 @@ public class UserDietitianService implements IDietitianService {
         this.dietPlanMapper = dietPlanMapper;
         this.dietDayMapper = dietDayMapper;
         this.sharedDietPlanAccessRepository = sharedDietPlanAccessRepository;
+        this.imageHandlerService = imageHandlerService;
     }
     @Override
     @Transactional
@@ -120,56 +120,82 @@ public class UserDietitianService implements IDietitianService {
 
     @Override
     @Transactional
-    public MealDTO createMealAsDietitian(MealInputDTO mealInputDTO, Long dietitianId, List<Long> sharedUserIds, List<String> sharedEmails) {
+    public MealDTO createMealAsDietitian(MealInputDTO mealInputDTO,
+                                         Long dietitianId,
+                                         List<Long> sharedUserIds,
+                                         List<String> sharedEmails) {
         log.info("Dietitian ID {} is creating a new private meal", dietitianId);
 
-        // Convert DTO to Meal entity
-        Meal meal = mealMapper.toEntity(mealInputDTO);
-        meal.setMealTypes(mealInputDTO.getMealTypes());
-        meal.setCuisines(mealInputDTO.getCuisines());
-        meal.setDiets(mealInputDTO.getDiets());
-
-        if (meal.getImageUrl() == null && mealInputDTO.getImageFile() != null && !mealInputDTO.getImageFile().isEmpty()) {
-            String imageUrl = fileStorageService.saveFile(mealInputDTO.getImageFile());
-            meal.setImageUrl(imageUrl);
+        // 1) Enforce single image source (file | url | base64)
+        int sources = 0;
+        if (mealInputDTO.getImageFile() != null && !mealInputDTO.getImageFile().isEmpty()) sources++;
+        if (mealInputDTO.getImageUrl() != null && !mealInputDTO.getImageUrl().isBlank())  sources++;
+        if (mealInputDTO.getImage() != null && !mealInputDTO.getImage().isBlank())        sources++;
+        if (sources > 1) {
+            throw new IllegalArgumentException("Provide exactly one of: imageFile, imageUrl, or image (base64).");
         }
 
+        // 2) Map DTO -> entity (mapper already sets mealTypes/cuisines/diets)
+        Meal meal = mealMapper.toEntity(mealInputDTO);
+        meal.setVersion(LocalDateTime.now());
+
+        // 3) Image handling (same as createMealForUser)
+        String finalUrl = imageHandlerService.handleImage(
+                null,                               // currentUrl (create flow)
+                mealInputDTO.getImageFile(),        // may be null
+                mealInputDTO.getImageUrl(),         // may be null/blank
+                true                                // isCreate
+        );
+        meal.setImageUrl(finalUrl);
+        // keep base64 only if it was the only provided source and no URL resulted
+        if (finalUrl != null) {
+            meal.setImage(null);
+        } else {
+            meal.setImage((sources == 1 && mealInputDTO.getImage() != null && !mealInputDTO.getImage().isBlank())
+                    ? mealInputDTO.getImage()
+                    : null);
+        }
+
+        // 4) Preparation time
         meal.setPreparationTime(
                 mealInputDTO.getPreparationTime() != null && !mealInputDTO.getPreparationTime().isBlank()
                         ? Duration.parse(mealInputDTO.getPreparationTime())
                         : null
         );
 
-        meal.setVersion(LocalDateTime.now());
-
-        // Check for duplicate food items (same name + quantity)
+        // 5) Validate ingredient duplicates by (name + quantity)
         Set<String> uniqueFoodItems = new HashSet<>();
         for (MealIngredient ingredient : meal.getMealIngredients()) {
-            String key = ingredient.getFoodItem().getName() + "-" + ingredient.getQuantity();
+            String itemName = ingredient.getFoodItem() != null
+                    ? ingredient.getFoodItem().getName()
+                    : ingredient.getFoodItemName();
+            if (itemName == null) {
+                throw new InvalidFoodItemException("Ingredient must reference a valid FoodItem or provide a name.");
+            }
+            String key = itemName + "-" + ingredient.getQuantity();
             if (!uniqueFoodItems.add(key)) {
-                throw new InvalidFoodItemException("Duplicate food item with same quantity: " + ingredient.getFoodItem().getName());
+                throw new InvalidFoodItemException("Duplicate food item with same quantity: " + itemName);
             }
         }
 
+        // 6) Duplicate template check (order-insensitive by IDs)
         List<Long> foodItemIds = meal.getMealIngredients().stream()
                 .map(i -> i.getFoodItem().getId())
                 .collect(Collectors.toList());
         checkForDuplicateTemplateMeal.checkForDuplicateTemplateMeal(foodItemIds, null);
 
-        // Ophalen van de dietitian (creator)
+        // 7) Link dietitian, set flags, compute nutrients
         User dietitian = userRepository.findById(dietitianId)
                 .orElseThrow(() -> new UserNotFoundException("Dietitian not found with ID: " + dietitianId));
-
-        // Associate meal
         meal.setCreatedBy(dietitian);
-        meal.setPrivate(true); // 🔒 altijd privé bij aanmaken
+        meal.setPrivate(true); // always private for dietitians
         meal.updateNutrients();
 
         Meal savedMeal = mealRepository.save(meal);
         dietitian.getSavedMeals().add(savedMeal);
         userRepository.save(dietitian);
 
-        // Deel met specifieke users
+        // 8) Share with users by IDs
         if (sharedUserIds != null) {
             for (Long userId : sharedUserIds) {
                 userRepository.findById(userId).ifPresent(user -> {
@@ -180,17 +206,16 @@ public class UserDietitianService implements IDietitianService {
             }
         }
 
-        // Deel met e-mailadres (optioneel)
+        // 9) Share with first email (if provided) + manage client link/pending
         if (sharedEmails != null && !sharedEmails.isEmpty()) {
             String email = sharedEmails.get(0).trim().toLowerCase();
 
-            // Altijd SharedMealAccess aanmaken
+            // Always create shared access entry for the email
             SharedMealAccess access = new SharedMealAccess(savedMeal, null, email);
             sharedMealAccessRepository.save(access);
             log.info("SharedMealAccess created for email {} and meal ID {}", email, savedMeal.getId());
 
             Optional<User> userOpt = userRepository.findByEmailIgnoreCase(email);
-
             if (userOpt.isPresent()) {
                 User user = userOpt.get();
                 if (!dietitian.getClients().contains(user)) {
@@ -200,9 +225,7 @@ public class UserDietitianService implements IDietitianService {
                 } else {
                     log.info("User {} is already a client of dietitian {}", email, dietitian.getEmail());
                 }
-            }
-            else {
-                // Geen account nog -> uitnodigen
+            } else {
                 boolean alreadyPending = pendingClientRepository.findByEmailAndDietitian(email, dietitian).isPresent();
                 if (!alreadyPending) {
                     PendingClient pendingClient = new PendingClient(email, dietitian);
@@ -217,6 +240,7 @@ public class UserDietitianService implements IDietitianService {
         log.info("Private meal created by dietitian ID: {}", dietitianId);
         return mealMapper.toDTO(savedMeal);
     }
+
 
     @Override
     @Transactional
