@@ -9,11 +9,14 @@ import balancebite.errorHandling.EntityNotFoundException;
 import balancebite.model.foodItem.FoodCategory;
 import balancebite.model.foodItem.FoodSource;
 import balancebite.service.fooditem.FoodItemService;
+import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Map;
@@ -38,25 +41,82 @@ public class FoodItemController {
         this.foodItemService = foodItemService;
     }
 
-    /**
-     * Endpoint to manually create a new FoodItem.
-     * Accepts a JSON body with the FoodItemInputDTO structure.
-     *
-     * @param inputDTO The DTO containing food item details from the user.
-     * @return A ResponseEntity with the created FoodItemDTO.
-     */
-    @PostMapping
-    public ResponseEntity<?> createFoodItem(@RequestBody FoodItemInputDTO inputDTO) {
-        log.info("Received request to create new FoodItem: {}", inputDTO.getName());
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> createFoodItem(
+            @RequestPart("foodItemInputDTO") String foodItemInputDTOJson,
+            @RequestPart(value = "imageFile", required = false) MultipartFile imageFile
+    ) {
         try {
+            // Parse JSON -> DTO (simple, no bean needed)
+            com.fasterxml.jackson.databind.ObjectMapper om = new com.fasterxml.jackson.databind.ObjectMapper();
+            om.configure(com.fasterxml.jackson.databind.DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT, true);
+            FoodItemInputDTO inputDTO = om.readValue(foodItemInputDTOJson, FoodItemInputDTO.class);
+
+            // Attach file (may be null)
+            inputDTO.setImageFile(imageFile);
+
             FoodItemDTO created = foodItemService.createFoodItem(inputDTO);
             return ResponseEntity.status(HttpStatus.CREATED).body(created);
+
+        } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Invalid foodItemInputDTO JSON"));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
-            log.error("Error while creating FoodItem: {}", e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "An unexpected error occurred while creating the food item."));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "Create failed."));
         }
     }
+
+    @PatchMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> updateFoodItem(
+            @PathVariable Long id,
+            @RequestPart("foodItemInputDTO") String foodItemInputDTOJson,
+            @RequestPart(value = "imageFile", required = false) MultipartFile imageFile
+    ) {
+        try {
+            com.fasterxml.jackson.databind.ObjectMapper om = new com.fasterxml.jackson.databind.ObjectMapper();
+            om.configure(com.fasterxml.jackson.databind.DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT, true);
+            FoodItemInputDTO inputDTO = om.readValue(foodItemInputDTOJson, FoodItemInputDTO.class);
+
+            // Always pass file (may be null)
+            inputDTO.setImageFile(imageFile);
+
+            FoodItemDTO updated = foodItemService.updateFoodItem(id, inputDTO);
+            return ResponseEntity.ok(updated);
+
+        } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Invalid foodItemInputDTO JSON"));
+        } catch (balancebite.errorHandling.EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "Update failed."));
+        }
+    }
+
+
+    /**
+     * Updates a FoodItem by ID using a JSON body.
+     * If you need file upload for images, switch to the multipart variant below.
+     */
+    @PutMapping("/{id}")
+    public ResponseEntity<?> updateFoodItem(@PathVariable Long id,
+                                            @RequestBody @Valid FoodItemInputDTO inputDTO) {
+        log.info("Updating food item with ID: {}", id);
+        try {
+            FoodItemDTO updated = foodItemService.updateFoodItem(id, inputDTO);
+            return ResponseEntity.ok(updated);
+        } catch (EntityNotFoundException e) {
+            log.warn("Food item not found for update with ID: {}", id);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            log.error("Unexpected error while updating food item with ID {}: {}", id, e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "An unexpected error occurred."));
+        }
+    }
+
 
     /**
      * Endpoint to fetch and save a single FoodItem by FDC ID.
@@ -264,6 +324,25 @@ public class FoodItemController {
                     .body(Map.of("error", "Invalid food category: " + category));
         } catch (Exception e) {
             log.error("Error while fetching food items by category: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "An unexpected error occurred."));
+        }
+    }
+
+    /**
+     * Searches items by substring (case-insensitive).
+     * Example: /fooditems/search?q=spinazie
+     */
+    @GetMapping("/search")
+    public ResponseEntity<?> searchFoodItems(@RequestParam("q") String q) {
+        log.info("Searching food items containing: {}", q);
+        try {
+            List<FoodItemDTO> foodItems = foodItemService.searchByNameSubstring(q);
+            return ResponseEntity.ok(foodItems);
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            log.error("Unexpected error while searching food items: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", "An unexpected error occurred."));
         }

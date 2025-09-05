@@ -4,6 +4,8 @@ import balancebite.dto.NutrientInfoDTO;
 import balancebite.model.foodItem.FoodCategory;
 import jakarta.validation.constraints.*;
 import balancebite.model.foodItem.FoodSource;
+import org.springframework.web.multipart.MultipartFile;
+import java.math.BigDecimal;
 
 
 import java.util.List;
@@ -61,6 +63,36 @@ public class FoodItemInputDTO {
     private FoodSource foodSource;
 
     private FoodCategory foodCategory;
+
+    /**
+     * Base64-encoded image representing the meal.
+     * Optional field for meal creation or update.
+     */
+    @Size(max = 500000, message = "Image size must not exceed 500 KB.")
+    private String image;
+
+    /**
+     * URL of the image representing the meal.
+     * Optional field for meal creation or update.
+     */
+    @Size(max = 2048, message = "Image URL must not exceed 2048 characters.")
+    private String imageUrl;
+
+    /**
+     * MultipartFile for handling direct file uploads of the meal's image.
+     * This field is optional.
+     */
+    private MultipartFile imageFile;
+
+    @DecimalMin(value = "0.0", inclusive = true, message = "Price must be ≥ 0.")
+    private BigDecimal price;
+
+
+    /** Net weight in grams for pricing context (optional). */
+    @DecimalMin(value = "0.0", inclusive = true, message = "Grams must be ≥ 0.")
+    private BigDecimal grams;
+
+    private Boolean storeBrand;
 
     // Constructor, getters, and setters
 
@@ -131,4 +163,67 @@ public class FoodItemInputDTO {
         this.foodCategory = foodCategory;
     }
 
+    /**
+     * Gets the Base64-encoded image of the meal.
+     *
+     * @return The Base64-encoded image of the meal.
+     */
+    public String getImage() {
+        return image;
+    }
+
+    /**
+     * Sets the Base64-encoded image of the meal.
+     *
+     * @param image The Base64-encoded image of the meal.
+     */
+    public void setImage(String image) {
+        this.image = image;
+    }
+
+    /**
+     * Gets the URL of the image representing the meal.
+     *
+     * @return The URL of the image.
+     */
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    /**
+     * Sets the URL of the image representing the meal.
+     *
+     * @param imageUrl The URL of the image.
+     */
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
+    }
+
+    /**
+     * Gets the uploaded file of the image.
+     *
+     * @return The MultipartFile containing the uploaded image.
+     */
+    public MultipartFile getImageFile() {
+        return imageFile;
+    }
+
+    /**
+     * Sets the uploaded file of the image.
+     *
+     * @param imageFile The MultipartFile containing the uploaded image.
+     */
+    public void setImageFile(MultipartFile imageFile) {
+        this.imageFile = imageFile;
+    }
+
+    public BigDecimal getPrice() { return price; }
+    public void setPrice(BigDecimal price) { this.price = price; }
+
+    public BigDecimal getGrams() { return grams; }
+
+    public void setGrams(BigDecimal grams) { this.grams = grams; }
+
+    public Boolean getStoreBrand() { return storeBrand; }
+    public void setStoreBrand(Boolean storeBrand) { this.storeBrand = storeBrand; }
 }

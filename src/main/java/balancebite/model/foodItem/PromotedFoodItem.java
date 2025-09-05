@@ -1,8 +1,11 @@
 package balancebite.model.foodItem;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 
 import java.time.LocalDateTime;
+import java.math.BigDecimal;
 
 @Entity
 @Table(name = "promoted_food_items")
@@ -21,6 +24,13 @@ public class PromotedFoodItem {
 
     @Column(nullable = false)
     private LocalDateTime endDate;
+
+    private BigDecimal promoPrice;      // optional: fixed promo price
+
+    @Column
+    private Integer salePercentage;  // optional: 0..100
+
+    private String saleDescription;     // optional label
 
     // Constructors
 
@@ -56,5 +66,29 @@ public class PromotedFoodItem {
 
     public void setEndDate(LocalDateTime endDate) {
         this.endDate = endDate;
+    }
+
+    public BigDecimal getPromoPrice() {
+        return promoPrice;
+    }
+
+    public void setPromoPrice(BigDecimal promoPrice) {
+        this.promoPrice = promoPrice;
+    }
+
+    public Integer getSalePercentage() {
+        return salePercentage;
+    }
+
+    public void setSalePercentage(Integer salePercentage) {
+        this.salePercentage = salePercentage;
+    }
+
+    public String getSaleDescription() {
+        return saleDescription;
+    }
+
+    public void setSaleDescription(String saleDescription) {
+        this.saleDescription = saleDescription;
     }
 }

@@ -82,106 +82,114 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(authz -> authz
 
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // preflight toestaan
+                                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // preflight toestaan
 
-                        .requestMatchers(HttpMethod.GET, "/").permitAll()
+                                .requestMatchers(HttpMethod.GET, "/").permitAll()
 
-                        .requestMatchers(HttpMethod.GET, "/admins/users").hasAnyRole("ADMIN", "DIETITIAN")
-                        .requestMatchers(HttpMethod.GET, "/uploads/**").permitAll()
+                                .requestMatchers(HttpMethod.GET, "/admins/users").hasAnyRole("ADMIN", "DIETITIAN")
+                                .requestMatchers(HttpMethod.GET, "/uploads/**").permitAll()
 
-                        // register endpoints
-                        .requestMatchers(HttpMethod.POST, "/auth/**").permitAll()
+                                // register endpoints
+                                .requestMatchers(HttpMethod.POST, "/auth/**").permitAll()
 
-                        // user entity endpoints
-                        .requestMatchers(HttpMethod.GET, "/users/**").authenticated()
+                                // user entity endpoints
+                                .requestMatchers(HttpMethod.GET, "/users/**").authenticated()
 
-                        .requestMatchers(HttpMethod.GET, "/users/profile").authenticated()
-                        .requestMatchers(HttpMethod.PATCH, "/users/basic-info").authenticated()
+                                .requestMatchers(HttpMethod.GET, "/users/profile").authenticated()
+                                .requestMatchers(HttpMethod.PATCH, "/users/basic-info").authenticated()
 
-                        .requestMatchers(HttpMethod.POST, "/users/create-meal").authenticated()
-                        .requestMatchers(HttpMethod.PATCH, "/users/update-meal/{mealId}").authenticated()
-                        .requestMatchers(HttpMethod.PATCH, "/users/add-meal/{mealId}").authenticated()
+                                .requestMatchers(HttpMethod.POST, "/users/create-meal").authenticated()
+                                .requestMatchers(HttpMethod.PATCH, "/users/update-meal/{mealId}").authenticated()
+                                .requestMatchers(HttpMethod.PATCH, "/users/add-meal/{mealId}").authenticated()
 
-                        .requestMatchers(HttpMethod.GET, "/users/meals**").authenticated()
-                        .requestMatchers(HttpMethod.GET, "/users/created-meals").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/users/meal/{mealId}").authenticated()
+                                .requestMatchers(HttpMethod.GET, "/users/meals**").authenticated()
+                                .requestMatchers(HttpMethod.GET, "/users/created-meals").permitAll()
+                                .requestMatchers(HttpMethod.GET, "/users/meal/{mealId}").authenticated()
 
-                        .requestMatchers(HttpMethod.DELETE, "/users/meal/{mealId}").authenticated()
+                                .requestMatchers(HttpMethod.DELETE, "/users/meal/{mealId}").authenticated()
 
-                        .requestMatchers(HttpMethod.POST, "/users/consume-meal/{mealId}").authenticated()
+                                .requestMatchers(HttpMethod.POST, "/users/consume-meal/{mealId}").authenticated()
 
-                        .requestMatchers(HttpMethod.PATCH, "/users/**").authenticated()
-                        .requestMatchers(HttpMethod.PUT, "/users/**").authenticated()
-                        .requestMatchers("/admins/**").hasRole("ADMIN")
+                                .requestMatchers(HttpMethod.PATCH, "/users/**").authenticated()
+                                .requestMatchers(HttpMethod.PUT, "/users/**").authenticated()
+                                .requestMatchers("/admins/**").hasRole("ADMIN")
 
-                        .requestMatchers(HttpMethod.POST, "/daily-intake/user").authenticated()
-                        .requestMatchers(HttpMethod.POST, "/user/profile").authenticated()
+                                .requestMatchers(HttpMethod.POST, "/daily-intake/user").authenticated()
+                                .requestMatchers(HttpMethod.POST, "/user/profile").authenticated()
 
-                        // meal entity endpoints
-                        .requestMatchers(HttpMethod.GET, "/meals**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/meals/names").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/meals-admin/all").hasAnyRole("ADMIN", "CHEF")
-                        .requestMatchers(HttpMethod.GET, "/meals-admin/meal/{id}").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.GET, "/meals/{id}").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/meals/nutrients/{id}").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/meals/nutrients-per-food-item/{id}").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/meals/sorted").permitAll()
-                        .requestMatchers(HttpMethod.PATCH, "/users/update-meal/**").authenticated()
+                                // meal entity endpoints
+                                .requestMatchers(HttpMethod.GET, "/meals**").permitAll()
+                                .requestMatchers(HttpMethod.GET, "/meals/names").permitAll()
+                                .requestMatchers(HttpMethod.GET, "/meals-admin/all").hasAnyRole("ADMIN", "CHEF")
+                                .requestMatchers(HttpMethod.GET, "/meals-admin/meal/{id}").hasRole("ADMIN")
+                                .requestMatchers(HttpMethod.GET, "/meals/{id}").permitAll()
+                                .requestMatchers(HttpMethod.GET, "/meals/nutrients/{id}").permitAll()
+                                .requestMatchers(HttpMethod.GET, "/meals/nutrients-per-food-item/{id}").permitAll()
+                                .requestMatchers(HttpMethod.GET, "/meals/sorted").permitAll()
+                                .requestMatchers(HttpMethod.PATCH, "/users/update-meal/**").authenticated()
 
-                        .requestMatchers(HttpMethod.POST, "/meals-admin/create-meal").hasAnyRole("ADMIN", "CHEF")
-                        .requestMatchers(HttpMethod.PATCH, "/meals-admin/update-meal").hasAnyRole("ADMIN", "CHEF")
-                        .requestMatchers(HttpMethod.PATCH, "/meals-admin/add-meal/{mealId}").hasAnyRole("ADMIN", "CHEF")
-                        .requestMatchers(HttpMethod.DELETE, "/meals-admin/delete-meal/").hasAnyRole("ADMIN", "CHEF")
-                        // meal restriction endpoint
-                        .requestMatchers(HttpMethod.PATCH, "/users/meals/{mealId}/restriction").hasAnyRole("RESTAURANT", "DIETITIAN")
+                                .requestMatchers(HttpMethod.POST, "/meals-admin/create-meal").hasAnyRole("ADMIN", "CHEF")
+                                .requestMatchers(HttpMethod.PATCH, "/meals-admin/update-meal").hasAnyRole("ADMIN", "CHEF")
+                                .requestMatchers(HttpMethod.PATCH, "/meals-admin/add-meal/{mealId}").hasAnyRole("ADMIN", "CHEF")
+                                .requestMatchers(HttpMethod.DELETE, "/meals-admin/delete-meal/").hasAnyRole("ADMIN", "CHEF")
+                                // meal restriction endpoint
+                                .requestMatchers(HttpMethod.PATCH, "/users/meals/{mealId}/restriction").hasAnyRole("RESTAURANT", "DIETITIAN")
 
-                        // foodItem entity endpoints
-                        .requestMatchers(HttpMethod.POST, "/fooditems").authenticated()
-                        .requestMatchers(HttpMethod.GET, "/fooditems/search-by-name").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/fooditems").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/fooditems/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/fooditems/sources").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/fooditems/fetch/**").authenticated()
-                        .requestMatchers(HttpMethod.POST, "/fooditems/bulk-fetch-items").authenticated()
+                                // foodItem entity endpoints
+                                .requestMatchers(HttpMethod.POST, "/fooditems").hasAnyRole("ADMIN", "SUPERMARKET")
+                                .requestMatchers(HttpMethod.PATCH, "/fooditems/**").hasAnyRole("ADMIN", "SUPERMARKET")
 
-                        // diet entity endpoints
-                        .requestMatchers(HttpMethod.GET, "/public/**").permitAll()
+                                .requestMatchers(HttpMethod.GET, "/fooditems/search-by-name").permitAll()
+                                .requestMatchers(HttpMethod.GET, "/fooditems").permitAll()
+                                .requestMatchers(HttpMethod.GET, "/fooditems/**").permitAll()
+                                .requestMatchers(HttpMethod.GET, "/fooditems/sources").permitAll()
 
-                        .requestMatchers(HttpMethod.GET, "/users/diet-plans/**").authenticated()
-                        .requestMatchers(HttpMethod.POST, "/users/diet-plans/**").authenticated()
-                        .requestMatchers(HttpMethod.PUT, "/users/diet-plans/**").authenticated()
-                        .requestMatchers(HttpMethod.PATCH, "/users/diet-plans/**").authenticated()
-                        .requestMatchers(HttpMethod.DELETE, "/users/diet-plans/**").authenticated()
-                        .requestMatchers(HttpMethod.PUT, "/users/update-diet-plans/**").authenticated()
-                        // diet restriction endpoint
-                        .requestMatchers(HttpMethod.PATCH, "/users/diet-plans/{dietPlanId}/restriction").hasAnyRole("RESTAURANT", "DIETITIAN")
-
-                        // sticky item endpoints
-                        .requestMatchers(HttpMethod.POST, "/admin/sticky-items").hasRole("ADMIN")
-
-                        .requestMatchers(HttpMethod.GET, "/sticky-items").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/sticky-items/all").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/sticky-items/latest").permitAll()
-
-                        // admin-only endpoints
-                        .requestMatchers("/admin/dietplans/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.POST, "/admin/promotions").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/admin/promotions/{promotionId}").hasRole("ADMIN")
-
-                        // DIETITIAN-only endpoints
-                        .requestMatchers(HttpMethod.POST, "/user/dietitian/invite-client").hasRole("DIETITIAN")
-                        .requestMatchers(HttpMethod.POST, "/user/dietitian/create-meal").hasAnyRole("DIETITIAN", "ADMIN")
-
-                        // DIETITIAN-only endpoints
-                        .requestMatchers(HttpMethod.POST, "/user/dietitian/create-dietplan").hasAnyRole("DIETITIAN", "ADMIN")
-                        .requestMatchers(HttpMethod.POST, "/user/dietitian/add-meal-access").hasAnyRole("DIETITIAN", "ADMIN")
-                        .requestMatchers(HttpMethod.POST, "/user/dietitian/add-dietplan-access").hasAnyRole("DIETITIAN", "ADMIN")
+                                .requestMatchers(HttpMethod.GET, "/fooditems/fetch/**").authenticated()
+                                .requestMatchers(HttpMethod.POST, "/fooditems/bulk-fetch-items").authenticated()
 
 
+                                // diet entity endpoints
+                                .requestMatchers(HttpMethod.GET, "/public/**").permitAll()
+
+                                .requestMatchers(HttpMethod.GET, "/users/diet-plans/**").authenticated()
+                                .requestMatchers(HttpMethod.POST, "/users/diet-plans/**").authenticated()
+                                .requestMatchers(HttpMethod.PUT, "/users/diet-plans/**").authenticated()
+                                .requestMatchers(HttpMethod.PATCH, "/users/diet-plans/**").authenticated()
+                                .requestMatchers(HttpMethod.DELETE, "/users/diet-plans/**").authenticated()
+                                .requestMatchers(HttpMethod.PUT, "/users/update-diet-plans/**").authenticated()
+                                // diet restriction endpoint
+                                .requestMatchers(HttpMethod.PATCH, "/users/diet-plans/{dietPlanId}/restriction").hasAnyRole("RESTAURANT", "DIETITIAN")
+
+                                // sticky item endpoints
+                                .requestMatchers(HttpMethod.POST, "/admin/sticky-items").hasRole("ADMIN")
+
+                                .requestMatchers(HttpMethod.GET, "/sticky-items").permitAll()
+                                .requestMatchers(HttpMethod.GET, "/sticky-items/all").permitAll()
+                                .requestMatchers(HttpMethod.GET, "/sticky-items/latest").permitAll()
+
+                                // admin-only endpoints
+                                .requestMatchers("/admin/dietplans/**").hasRole("ADMIN")
+
+                                // promotions (ADMIN + SUPERMARKET)
+                                .requestMatchers(HttpMethod.POST,   "/admin/promotions").hasAnyRole("ADMIN","SUPERMARKET")
+                                .requestMatchers(HttpMethod.PUT,    "/admin/promotions/**").hasAnyRole("ADMIN","SUPERMARKET")
+                                .requestMatchers(HttpMethod.DELETE, "/admin/promotions/**").hasAnyRole("ADMIN","SUPERMARKET")
+
+
+                                // DIETITIAN-only endpoints
+                                .requestMatchers(HttpMethod.POST, "/user/dietitian/invite-client").hasRole("DIETITIAN")
+                                .requestMatchers(HttpMethod.POST, "/user/dietitian/create-meal").hasAnyRole("DIETITIAN", "ADMIN")
+
+                                // DIETITIAN-only endpoints
+                                .requestMatchers(HttpMethod.POST, "/user/dietitian/create-dietplan").hasAnyRole("DIETITIAN", "ADMIN")
+                                .requestMatchers(HttpMethod.POST, "/user/dietitian/add-meal-access").hasAnyRole("DIETITIAN", "ADMIN")
+                                .requestMatchers(HttpMethod.POST, "/user/dietitian/add-dietplan-access").hasAnyRole("DIETITIAN", "ADMIN")
 
 
 
-                        .anyRequest().authenticated()
+
+
+                                .anyRequest().authenticated()
                 )
                 .exceptionHandling(exception -> exception.authenticationEntryPoint(customAuthenticationEntryPoint))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

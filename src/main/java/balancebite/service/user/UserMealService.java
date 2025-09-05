@@ -17,7 +17,6 @@ import balancebite.model.user.User;
 import balancebite.repository.*;
 import balancebite.model.user.UserRole;
 import balancebite.service.CloudinaryService;
-import balancebite.service.FileStorageService;
 import balancebite.service.interfaces.user.IUserMealService;
 import balancebite.service.util.ImageHandlerService;
 import balancebite.utils.CheckForDuplicateTemplateMealUtil;
@@ -55,7 +54,6 @@ public class UserMealService implements IUserMealService {
     private final MealIngredientMapper mealIngredientMapper;
     private final CheckForDuplicateTemplateMealUtil checkForDuplicateTemplateMeal;
     private final UserUpdateHelper userUpdateHelper;
-    private final FileStorageService fileStorageService;
     private final SavedMealRepository savedMealRepository;
     private final CloudinaryService cloudinaryService;
     private final ImageHandlerService imageHandlerService;
@@ -68,7 +66,6 @@ public class UserMealService implements IUserMealService {
                            MealIngredientMapper mealIngredientMapper,
                            CheckForDuplicateTemplateMealUtil checkForDuplicateTemplateMeal,
                            UserUpdateHelper userUpdateHelper,
-                           FileStorageService fileStorageService,
                            SavedMealRepository savedMealRepository,
                            CloudinaryService cloudinaryService,
                            ImageHandlerService imageHandlerService) {
@@ -80,109 +77,107 @@ public class UserMealService implements IUserMealService {
         this.mealIngredientMapper = mealIngredientMapper;
         this.checkForDuplicateTemplateMeal = checkForDuplicateTemplateMeal;
         this.userUpdateHelper = userUpdateHelper;
-        this.fileStorageService = fileStorageService;
         this.savedMealRepository = savedMealRepository;
         this.cloudinaryService = cloudinaryService;
         this.imageHandlerService = imageHandlerService;
     }
 
-    /**
-     * Creates a new Meal entity for a specific user based on the provided MealInputDTO.
-     * Converts the input DTO to a Meal entity, validates the meal, associates it with the user,
-     * updates nutrient calculations, persists the entity, and returns the resulting DTO.
-     *
-     * @param mealInputDTO The DTO containing the input data for creating the Meal.
-     * @param userId       The ID of the user to whom the meal will be associated.
-     * @return The created MealDTO with the persisted meal information.
-     * @throws UserNotFoundException    If the user with the specified ID does not exist.
-     * @throws DuplicateMealException   If a template meal with the same ingredients already exists.
-     * @throws InvalidFoodItemException If any food item in the meal is invalid.
-     */
     @Override
     @Transactional
     public MealDTO createMealForUser(MealInputDTO mealInputDTO, Long userId) {
         log.info("Attempting to create a new meal for user ID: {}", userId);
 
-        // Validate that both image and imageUrl are not provided simultaneously
-        if (mealInputDTO.getImage() != null && mealInputDTO.getImageUrl() != null) {
-            log.error("Both image and imageUrl provided. Only one of them is allowed.");
-            throw new IllegalArgumentException("You can only provide either an image or an imageUrl, not both.");
+        // --- 1) Enforce image source exclusivity: at most ONE of (imageFile | imageUrl | image base64) ---
+        int sources = 0;
+        if (mealInputDTO.getImageFile() != null && !mealInputDTO.getImageFile().isEmpty()) sources++;
+        if (mealInputDTO.getImageUrl() != null && !mealInputDTO.getImageUrl().isBlank())  sources++;
+        if (mealInputDTO.getImage() != null && !mealInputDTO.getImage().isBlank())        sources++;
+        if (sources > 1) {
+            log.error("Multiple image sources provided (imageFile/imageUrl/image). Only one is allowed.");
+            throw new IllegalArgumentException("Provide exactly one of: imageFile, imageUrl, or image (base64).");
         }
-        // Convert DTO to Meal entity
+
+        // --- 2) Map DTO -> Entity (mapper does NOT upload files; only copies simple fields) ---
         Meal meal = mealMapper.toEntity(mealInputDTO);
 
-        // Set meal type, cuisine, and diet if provided
-        meal.setMealTypes(mealInputDTO.getMealTypes());
-        meal.setCuisines(mealInputDTO.getCuisines());
-        meal.setDiets(mealInputDTO.getDiets());
+        // NOTE: mealTypes, cuisines, diets, preparationTime are already set by the mapper.
+        // Do NOT set them again here to avoid inconsistencies.
 
-        // Process image using handler: supports file upload or direct URL
-        String imageUrl = imageHandlerService.handleImage(
-                null, // no existing image during creation
-                mealInputDTO.getImageFile(),
-                mealInputDTO.getImageUrl(),
-                true // this is a create operation
-        );
-        meal.setImageUrl(imageUrl);
-
-        meal.setPreparationTime(
-                mealInputDTO.getPreparationTime() != null && !mealInputDTO.getPreparationTime().isBlank()
-                        ? Duration.parse(mealInputDTO.getPreparationTime())
-                        : null
-        );
-
+        // Set versioning timestamp for this create
         meal.setVersion(LocalDateTime.now());
 
-        // Ensure no duplicate food items (same name AND same quantity)
+        // --- 3) Image handling via Cloudinary (create flow => currentUrl = null) ---
+        // Upload if imageFile present, otherwise accept direct URL, otherwise null.
+        String finalUrl = imageHandlerService.handleImage(
+                null,                               // no current image on create
+                mealInputDTO.getImageFile(),        // may be null/empty
+                mealInputDTO.getImageUrl(),         // may be null/blank
+                true                                // isCreate = true
+        );
+        meal.setImageUrl(finalUrl);
+
+        // If we have a final URL, do not keep base64; else keep base64 only if it was the single provided source
+        if (finalUrl != null) {
+            meal.setImage(null);
+        } else {
+            meal.setImage((sources == 1 && mealInputDTO.getImage() != null && !mealInputDTO.getImage().isBlank())
+                    ? mealInputDTO.getImage()
+                    : null);
+        }
+
+        // --- 4) Validate ingredients: no duplicates by (name + quantity) ---
         Set<String> uniqueFoodItems = new HashSet<>();
         for (MealIngredient ingredient : meal.getMealIngredients()) {
-            String key = ingredient.getFoodItem().getName() + "-" + ingredient.getQuantity(); // Combine name + quantity
+            // Fallback to stored name if FoodItem is not loaded
+            String itemName = ingredient.getFoodItem() != null
+                    ? ingredient.getFoodItem().getName()
+                    : ingredient.getFoodItemName();
+            if (itemName == null) {
+                log.error("Ingredient without a valid FoodItem or name encountered.");
+                throw new InvalidFoodItemException("Ingredient must reference a valid FoodItem or provide a name.");
+            }
+            String key = itemName + "-" + ingredient.getQuantity();
             if (!uniqueFoodItems.add(key)) {
-                throw new InvalidFoodItemException("Duplicate food item with same quantity found: " + ingredient.getFoodItem().getName()
-                        + " (" + ingredient.getQuantity() + ")");
+                throw new InvalidFoodItemException("Duplicate food item with same quantity: "
+                        + itemName + " (" + ingredient.getQuantity() + ")");
             }
         }
 
-        // Extract FoodItem IDs for duplicate template check
+        // --- 5) Duplicate template check by FoodItem IDs (order-insensitive) ---
         List<Long> foodItemIds = meal.getMealIngredients().stream()
                 .map(ingredient -> ingredient.getFoodItem().getId())
                 .collect(Collectors.toList());
-
-        // Use CheckForDuplicateTemplateMealUtil to check for duplicate template meals
         checkForDuplicateTemplateMeal.checkForDuplicateTemplateMeal(foodItemIds, null);
 
-        // Retrieve user or throw exception
+        // --- 6) Fetch user and associate ---
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> {
                     log.error("User with ID {} not found", userId);
                     return new UserNotFoundException("User not found with ID: " + userId);
                 });
-
-        // Associate meal with user
         meal.setCreatedBy(user);
         user.getMeals().add(meal);
 
-        // 🔥 IMPORTANT: Update nutrient values before saving!
+        // --- 7) Compute aggregated nutrients before persisting ---
         meal.updateNutrients();
 
-        // If the user creating the meal is a restaurant, mark the meal as restricted
+        // --- 8) Role-based flag: restaurant users produce restricted meals ---
         boolean isRestricted = user.getRoles().stream()
                 .map(Role::getRolename)
                 .anyMatch(role -> role == UserRole.RESTAURANT);
-
         if (isRestricted) {
             meal.setRestricted(true);
         }
 
-        // Save meal and user
+        // --- 9) Persist and return DTO ---
         Meal savedMeal = mealRepository.save(meal);
         user.getSavedMeals().add(savedMeal);
         userRepository.save(user);
-        log.info("Successfully created meal for user ID: {}", userId);
 
-        // Return the saved meal as a DTO
+        log.info("Successfully created meal {} for user ID: {}", savedMeal.getId(), userId);
         return mealMapper.toDTO(savedMeal);
     }
+
 
     /**
      * Adds an existing meal to a user's list of meals.
@@ -303,17 +298,6 @@ public class UserMealService implements IUserMealService {
         return userMapper.toDTO(user);
     }
 
-    /**
-     * Updates a user's meal by overwriting the existing meal.
-     * This method allows users to modify their own meals, including updating ingredients and image.
-     *
-     * @param userId        The ID of the user requesting the update.
-     * @param mealId        The ID of the meal to be updated.
-     * @param mealInputDTO  The DTO containing the updated meal data.
-     * @return              The updated MealDTO.
-     * @throws UserNotFoundException If the user with the specified ID does not exist.
-     * @throws MealNotFoundException If the meal with the specified ID does not exist.
-     */
     @Override
     @Transactional
     public MealDTO updateUserMeal(Long userId, Long mealId, MealInputDTO mealInputDTO) {
@@ -325,7 +309,13 @@ public class UserMealService implements IUserMealService {
         Meal meal = mealRepository.findById(mealId)
                 .orElseThrow(() -> new MealNotFoundException("Meal not found with ID: " + mealId));
 
-        // Duplicate check for template meals (isTemplate = true)
+        // Ownership check (allow creator OR previous adjuster)
+        Long adjustedById = meal.getAdjustedBy() != null ? meal.getAdjustedBy().getId() : null;
+        if (!meal.getCreatedBy().getId().equals(userId) && (adjustedById == null || !adjustedById.equals(userId))) {
+            throw new SecurityException("User is not allowed to update this meal.");
+        }
+
+        // Template duplicate check (if applicable)
         if (meal.isTemplate() && mealInputDTO.getMealIngredients() != null) {
             List<Long> foodItemIds = mealInputDTO.getMealIngredients().stream()
                     .map(MealIngredientInputDTO::getFoodItemId)
@@ -333,52 +323,66 @@ public class UserMealService implements IUserMealService {
             checkForDuplicateTemplateMeal.checkForDuplicateTemplateMeal(foodItemIds, mealId);
         }
 
-        if (!meal.getCreatedBy().getId().equals(userId) && !meal.getAdjustedBy().getId().equals(userId)) {
-            throw new SecurityException("User is not allowed to update this meal.");
+        // --- Image input exclusivity: at most one of (file | url | base64) ---
+        int sources = 0;
+        if (mealInputDTO.getImageFile() != null && !mealInputDTO.getImageFile().isEmpty()) sources++;
+        if (mealInputDTO.getImageUrl() != null && !mealInputDTO.getImageUrl().isBlank())  sources++;
+        if (mealInputDTO.getImage() != null && !mealInputDTO.getImage().isBlank())        sources++;
+        if (sources > 1) {
+            throw new IllegalArgumentException("Provide exactly one of: imageFile, imageUrl, or image (base64).");
         }
 
-        meal.setName(mealInputDTO.getName());
-        if (mealInputDTO.getMealDescription() != null) {
-            meal.setMealDescription(mealInputDTO.getMealDescription());
-        }
-        if (mealInputDTO.getMealTypes() != null) {
-            meal.setMealTypes(mealInputDTO.getMealTypes());
-        }
-        if (mealInputDTO.getCuisines() != null) {
-            meal.setCuisines(mealInputDTO.getCuisines());
-        }
-        if (mealInputDTO.getDiets() != null) {
-            meal.setDiets(mealInputDTO.getDiets());
+        // --- Update simple fields (only when provided) ---
+        if (mealInputDTO.getName() != null)               meal.setName(mealInputDTO.getName());
+        if (mealInputDTO.getMealDescription() != null)    meal.setMealDescription(mealInputDTO.getMealDescription());
+        if (mealInputDTO.getMealTypes() != null)          meal.setMealTypes(mealInputDTO.getMealTypes());
+        if (mealInputDTO.getCuisines() != null)           meal.setCuisines(mealInputDTO.getCuisines());
+        if (mealInputDTO.getDiets() != null)              meal.setDiets(mealInputDTO.getDiets());
+
+        if (mealInputDTO.getPreparationTime() != null) {
+            meal.setPreparationTime(
+                    mealInputDTO.getPreparationTime().isBlank()
+                            ? null
+                            : Duration.parse(mealInputDTO.getPreparationTime())
+            );
         }
 
-        if (mealInputDTO.getPreparationTime() != null && !mealInputDTO.getPreparationTime().isBlank()) {
-            meal.setPreparationTime(Duration.parse(mealInputDTO.getPreparationTime()));
-        } else {
-            meal.setPreparationTime(null);
-        }
         meal.setAdjustedBy(user);
         meal.setVersion(LocalDateTime.now());
 
-        // ☁️ Handle image logic (upload, replace, delete, or fallback URL)
-        String imageUrl = imageHandlerService.handleImage(
-                meal.getImageUrl(),
-                mealInputDTO.getImageFile(),
-                mealInputDTO.getImageUrl(),
-                false
+        // --- Image handling (create=false so handler may delete old when switching/clearing) ---
+        String newFinalUrl = imageHandlerService.handleImage(
+                meal.getImageUrl(),                 // currentUrl
+                mealInputDTO.getImageFile(),        // new file (may be null/empty)
+                mealInputDTO.getImageUrl(),         // new direct URL (may be null/blank)
+                false                               // update flow
         );
-        meal.setImageUrl(imageUrl);
+        meal.setImageUrl(newFinalUrl);
 
+        // Keep base64 only if it is the single provided source and no URL resulted
+        if (newFinalUrl != null) {
+            meal.setImage(null); // URL wins -> do not store base64
+        } else {
+            meal.setImage((sources == 1 && mealInputDTO.getImage() != null && !mealInputDTO.getImage().isBlank())
+                    ? mealInputDTO.getImage()
+                    : null);
+        }
+
+        // --- Replace ingredients entirely (current approach) ---
         meal.getMealIngredients().clear();
         mealInputDTO.getMealIngredients().forEach(inputIngredient -> {
             MealIngredient ingredient = mealIngredientMapper.toEntity(inputIngredient, meal);
             meal.addMealIngredient(ingredient);
         });
 
+        // Optional: validate duplicates (name + quantity) similar to create-flow
+
         meal.updateNutrients();
 
         Meal saved = mealRepository.save(meal);
         return mealMapper.toDTO(saved);
     }
+
 
     /**
      * Updates the privacy status of a specific Meal.

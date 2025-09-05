@@ -2,6 +2,7 @@ package balancebite.dto.fooditem;
 
 import balancebite.dto.NutrientInfoDTO;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -64,6 +65,28 @@ public class FoodItemDTO {
     private final FoodCategory foodCategory;
 
     /**
+     * Base64-encoded image representing the meal.
+     * This field is optional.
+     */
+    private final String image;
+
+    /**
+     * URL of the image representing the meal.
+     * This field is optional.
+     */
+    private final String imageUrl;
+
+    /** Base price (regular). */
+    private final BigDecimal price;
+
+    /** Net weight in grams for pricing context (optional). */
+    private final BigDecimal grams;
+
+    private final BigDecimal pricePer100g;
+
+    private final Boolean storeBrand;
+
+    /**
      * Parameterized constructor to create a FoodItemDTO.
      * Calculates the combined values for healthy and unhealthy fats.
      *
@@ -75,8 +98,10 @@ public class FoodItemDTO {
      * @param gramWeight The gram weight of the portion.
      *                     * @param source The source where the food item can be purchased (optional).
      * @param foodSource The source where the food item was purchased (optional).
+     * @param image            the Base64-encoded image of the meal (optional).
+     * @param imageUrl         the URL of the meal image (optional).
      */
-    public FoodItemDTO(Long id, String name, int fdcId, List<NutrientInfoDTO> nutrients, String portionDescription, double gramWeight, String source, FoodSource foodSource, boolean promoted, LocalDateTime promotionStartDate, LocalDateTime promotionEndDate, FoodCategory foodCategory) {
+    public FoodItemDTO(Long id, String name, int fdcId, List<NutrientInfoDTO> nutrients, String portionDescription, double gramWeight, String source, FoodSource foodSource, boolean promoted, LocalDateTime promotionStartDate, LocalDateTime promotionEndDate, FoodCategory foodCategory, String image, String imageUrl, BigDecimal price, BigDecimal grams, BigDecimal pricePer100g, Boolean storeBrand) {
         this.id = id;
         this.name = name;
         this.fdcId = fdcId;
@@ -89,6 +114,12 @@ public class FoodItemDTO {
         this.promotionStartDate = promotionStartDate;
         this.promotionEndDate = promotionEndDate;
         this.foodCategory = foodCategory;
+        this.image = image;
+        this.imageUrl = imageUrl;
+        this.price = price;
+        this.grams = grams;
+        this.pricePer100g = pricePer100g;
+        this.storeBrand = storeBrand;
     }
 
     /**
@@ -237,4 +268,31 @@ public class FoodItemDTO {
     public FoodCategory getFoodCategory() {
         return foodCategory;
     }
+
+    /**
+     * Gets the Base64-encoded image of the meal.
+     *
+     * @return the Base64-encoded image of the meal.
+     */
+    public String getImage() {
+        return image;
+    }
+
+    /**
+     * Gets the URL of the image representing the meal.
+     *
+     * @return the URL of the image.
+     */
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    /** Regular price. */
+    public BigDecimal getPrice() { return price; }
+
+    /** Weight in grams used for pricing. */
+    public BigDecimal getGrams() { return grams; }
+
+    public BigDecimal getPricePer100g() { return pricePer100g; }
+    public Boolean getStoreBrand() { return storeBrand; }
 }

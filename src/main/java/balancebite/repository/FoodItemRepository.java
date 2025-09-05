@@ -57,4 +57,5 @@ public interface FoodItemRepository extends JpaRepository<FoodItem, Long> {
 
     List<FoodItem> findByFoodCategory(FoodCategory category);
 
+    List<FoodItem> findByNameContainingIgnoreCase(String q);
 }

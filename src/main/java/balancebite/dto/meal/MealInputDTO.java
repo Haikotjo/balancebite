@@ -53,7 +53,7 @@ public class MealInputDTO {
      * URL of the image representing the meal.
      * Optional field for meal creation or update.
      */
-    @Size(max = 500, message = "Image URL must not exceed 500 characters.")
+    @Size(max = 2048, message = "Image URL must not exceed 2048 characters.")
     private String imageUrl;
 
     /**
@@ -97,61 +97,13 @@ public class MealInputDTO {
      */
     private String preparationTime;
 
+
+    // Constructor, getters, and setters
+
     /**
      * Default constructor for frameworks that require a no-argument constructor.
      */
     public MealInputDTO() {}
-
-    /**
-     * Constructor for creating a MealInputDTO with basic meal information.
-     *
-     * @param name            The name of the meal. Must not be blank and must not exceed 100 characters.
-     * @param mealIngredients The list of ingredients that make up the meal. Must not be empty.
-     * @param mealDescription The description of the meal (optional). Must not exceed 1000 characters.
-     * @param image           Base64-encoded image of the meal (optional). Maximum size: 500 KB.
-     * @param imageUrl        URL of the image representing the meal (optional). Maximum length: 500 characters.
-     * @param imageFile       MultipartFile for direct file uploads of the meal's image (optional).
-     * @param createdBy       The user who created the meal (optional). Managed by the system.
-     * @param isPrivate
-     * @param isRestricted
-     * @param mealTypes       The types of meal (optional). Allows classifying as breakfast, lunch, dinner, or snack.
-     * @param cuisines        The cuisine types of the meal (optional). Represents the cultural or regional origins.
-     * @param diets           The dietary categories of the meal (optional). Used for filtering based on diet.
-     * @param preparationTime Estimated preparation time in minutes (optional).
-     */
-    public MealInputDTO(
-            @NotBlank(message = "The name of the meal cannot be blank. Please provide a valid name.")
-            @Size(max = 100, message = "The name of the meal must not exceed 100 characters.") String name,
-            @NotEmpty(message = "The meal must contain at least one ingredient. Please provide ingredients.")
-            @Valid List<MealIngredientInputDTO> mealIngredients,
-            @Size(max = 1000, message = "The meal description must not exceed 1000 characters.") String mealDescription,
-            @Size(max = 500000, message = "Image size must not exceed 500 KB.") String image,
-            @Size(max = 500, message = "Image URL must not exceed 500 characters.") String imageUrl,
-            MultipartFile imageFile,
-            @Valid UserDTO createdBy,
-            boolean isPrivate,
-            boolean isRestricted,
-            Set<MealType> mealTypes,
-            Set<Cuisine> cuisines,
-            Set<Diet> diets,
-            String preparationTime
-    ) {
-        this.name = name;
-        this.mealIngredients = mealIngredients;
-        this.mealDescription = mealDescription;
-        this.image = image;
-        this.imageUrl = imageUrl;
-        this.imageFile = imageFile;
-        this.createdBy = createdBy;
-        this.isPrivate = isPrivate;
-        this.isRestricted = isRestricted;
-        this.mealTypes = mealTypes;
-        this.cuisines = cuisines;
-        this.diets = diets;
-        this.preparationTime = preparationTime;
-    }
-
-
 
     /**
      * Gets the name of the meal.

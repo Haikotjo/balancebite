@@ -6,80 +6,74 @@ import balancebite.dto.mealingredient.MealIngredientDTO;
 import balancebite.dto.mealingredient.MealIngredientInputDTO;
 import balancebite.dto.user.UserDTO;
 import balancebite.errorHandling.InvalidFoodItemException;
+import balancebite.model.MealIngredient;
 import balancebite.model.foodItem.FoodItem;
 import balancebite.model.meal.Meal;
-import balancebite.model.MealIngredient;
 import balancebite.model.user.User;
 import balancebite.repository.FoodItemRepository;
-import balancebite.repository.SavedDietPlanRepository;
-import balancebite.repository.SavedMealRepository;
-import balancebite.repository.UserRepository;
-import balancebite.service.FileStorageService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
- * Mapper class for converting between Meal entities and DTOs.
- * Handles the transformation of Meal entities, including their ingredients,
- * into corresponding Data Transfer Objects (DTOs).
+ * Maps between Meal entities and DTOs.
+ *
+ * IMPORTANT:
+ * - This mapper NEVER uploads files. It only copies fields.
+ * - If a MultipartFile was provided (dto.getImageFile()),
+ *   your Service layer must upload it (e.g., Cloudinary) and set meal.setImageUrl(...)
+ *   BEFORE saving the entity.
+ * - Direct imageUrl and base64 image are passed through if present.
  */
 @Component
 public class MealMapper {
+
     private static final Logger log = LoggerFactory.getLogger(MealMapper.class);
 
     private final FoodItemRepository foodItemRepository;
     private final MealIngredientMapper mealIngredientMapper;
-    private final FileStorageService fileStorageService;
-    private final SavedMealRepository savedMealRepository;
     private final UserMapper userMapper;
     private final FoodItemMapper foodItemMapper;
 
-    public MealMapper(FoodItemRepository foodItemRepository, MealIngredientMapper mealIngredientMapper, FileStorageService fileStorageService, SavedMealRepository savedMealRepository, @Lazy UserMapper userMapper, FoodItemMapper foodItemMapper) {
+    public MealMapper(FoodItemRepository foodItemRepository,
+                      MealIngredientMapper mealIngredientMapper,
+                      @Lazy UserMapper userMapper,
+                      FoodItemMapper foodItemMapper) {
         this.foodItemRepository = foodItemRepository;
         this.mealIngredientMapper = mealIngredientMapper;
-        this.fileStorageService = fileStorageService;
-        this.savedMealRepository = savedMealRepository;
         this.userMapper = userMapper;
         this.foodItemMapper = foodItemMapper;
     }
 
-    /**
-     * Converts a Meal entity to a MealDTO.
-     * This includes converting the meal's ingredients, user count, creator, adjusted user, and optional image fields.
-     *
-     * @param meal the Meal entity to be converted.
-     * @return the created MealDTO.
-     */
+    // -------- Entity -> DTO --------
+
     public MealDTO toDTO(Meal meal) {
-        log.info("Converting Meal entity to MealDTO for meal ID: {}", meal.getId());
         if (meal == null) {
-            log.warn("Received null Meal entity, returning null for MealDTO.");
+            log.warn("toDTO called with null Meal");
             return null;
         }
 
-        long saveCount = Optional.ofNullable(meal.getSaveCount()).orElse(0L);
-        long weeklySaveCount = Optional.ofNullable(meal.getWeeklySaveCount()).orElse(0L);
+        long saveCount        = Optional.ofNullable(meal.getSaveCount()).orElse(0L);
+        long weeklySaveCount  = Optional.ofNullable(meal.getWeeklySaveCount()).orElse(0L);
         long monthlySaveCount = Optional.ofNullable(meal.getMonthlySaveCount()).orElse(0L);
 
-        MealDTO dto = new MealDTO(
+        return new MealDTO(
                 meal.getId(),
                 meal.getName(),
                 meal.getMealDescription(),
-                meal.getImage(),
-                meal.getImageUrl(),
+                meal.getImage(),                 // base64 (if you still store it)
+                meal.getImageUrl(),              // final URL (Cloudinary or other)
                 meal.getOriginalMealId(),
                 meal.getVersion(),
                 meal.getMealIngredients().stream()
                         .map(this::toMealIngredientDTO)
                         .collect(Collectors.toList()),
-                meal.getCreatedBy() != null ? userMapper.toPublicUserDTO(meal.getCreatedBy()) : null,
+                meal.getCreatedBy()  != null ? userMapper.toPublicUserDTO(meal.getCreatedBy())   : null,
                 meal.getAdjustedBy() != null ? userMapper.toPublicUserDTO(meal.getAdjustedBy()) : null,
                 meal.isTemplate(),
                 meal.isPrivate(),
@@ -94,140 +88,101 @@ public class MealMapper {
                 Optional.ofNullable(meal.getTotalSaturatedFat()).orElse(0.0),
                 Optional.ofNullable(meal.getTotalUnsaturatedFat()).orElse(0.0),
                 Optional.ofNullable(meal.getTotalFat()).orElse(0.0),
-
                 meal.getFoodItemsString(),
                 meal.getPreparationTime() != null ? meal.getPreparationTime().toString() : null,
                 saveCount,
                 weeklySaveCount,
                 monthlySaveCount
         );
-
-        log.debug("Finished converting Meal entity to MealDTO: {}", dto);
-        return dto;
     }
 
-
-
-    /**
-     * Converts a MealInputDTO to a Meal entity.
-     * Used for creating or updating a Meal entity, including optional image fields.
-     *
-     * @param mealInputDTO the MealInputDTO containing the meal data.
-     * @return the Meal entity created from the input DTO.
-     */
-    public Meal toEntity(MealInputDTO mealInputDTO) {
-        log.info("Converting MealInputDTO to Meal entity.");
-        return Optional.ofNullable(mealInputDTO)
-                .map(dto -> {
-                    log.debug("Mapping fields from MealInputDTO to Meal entity.");
-                    Meal meal = new Meal();
-                    meal.setName(dto.getName());
-                    meal.setMealDescription(dto.getMealDescription());
-                    meal.setMealTypes(dto.getMealTypes());
-                    meal.setCuisines(dto.getCuisines());
-                    meal.setDiets(dto.getDiets());
-                    meal.setPrivate(dto.isPrivate());
-                    meal.setRestricted(dto.isRestricted());
-
-                    if (dto.getPreparationTime() != null && !dto.getPreparationTime().isBlank()) {
-                        meal.setPreparationTime(java.time.Duration.parse(dto.getPreparationTime()));
-                    }
-
-                    // Verwerk Base64 of URL afbeelding
-                    if (dto.getImageFile() != null && !dto.getImageFile().isEmpty()) {
-                        String imageUrl = fileStorageService.saveFile(dto.getImageFile());
-                        meal.setImageUrl(imageUrl);
-                    } else if (dto.getImage() != null) {
-                        meal.setImage(dto.getImage());
-                    } else if (dto.getImageUrl() != null) {
-                        meal.setImageUrl(dto.getImageUrl()); // Zet expliciet de imageUrl
-                    }
-
-                    List<MealIngredient> mealIngredients = dto.getMealIngredients().stream()
-                            .map(input -> mealIngredientMapper.toEntity(input, meal))
-                            .collect(Collectors.toList());
-                    meal.addMealIngredients(mealIngredients);
-
-                    meal.setCreatedBy(dto.getCreatedBy() != null ? toUserEntity(dto.getCreatedBy()) : null);
-                    log.debug("Finished mapping MealInputDTO to Meal entity: {}", meal);
-                    return meal;
-                })
-                .orElseGet(() -> {
-                    log.warn("Received null MealInputDTO, returning null for Meal entity.");
-                    return null;
-                });
-    }
-
-    /**
-     * Converts a MealIngredient entity to a MealIngredientDTO.
-     *
-     * @param mealIngredient the MealIngredient entity to be converted.
-     * @return the MealIngredientDTO created from the entity.
-     */
-    private MealIngredientDTO toMealIngredientDTO(MealIngredient mealIngredient) {
-        log.info("Converting MealIngredient entity to MealIngredientDTO for ingredient ID: {}", mealIngredient.getId());
+    private MealIngredientDTO toMealIngredientDTO(MealIngredient mi) {
         return new MealIngredientDTO(
-                mealIngredient.getId(),
-                mealIngredient.getMeal().getId(),
-                mealIngredient.getFoodItem() != null ? mealIngredient.getFoodItem().getId() : null,
-                mealIngredient.getFoodItemName(),
-                mealIngredient.getQuantity(),
-                mealIngredient.getFoodItem() != null ? foodItemMapper.toDTO(mealIngredient.getFoodItem()) : null
+                mi.getId(),
+                mi.getMeal().getId(),
+                mi.getFoodItem() != null ? mi.getFoodItem().getId() : null,
+                mi.getFoodItemName(),
+                mi.getQuantity(),
+                mi.getFoodItem() != null ? foodItemMapper.toDTO(mi.getFoodItem()) : null
         );
     }
 
+    // -------- DTO -> Entity --------
 
     /**
-     * Converts a MealIngredientInputDTO to a MealIngredient entity.
+     * Builds a new Meal entity from MealInputDTO.
      *
-     * @param inputDTO the MealIngredientInputDTO containing the ingredient data.
-     * @return the MealIngredient entity created from the input DTO.
+     * IMAGE RULES:
+     * - No upload is performed here.
+     * - If dto.imageUrl is present, it is copied to entity.imageUrl.
+     * - If dto.image (base64) is present, it is copied to entity.image.
+     * - If dto.imageFile is present, DO NOTHING here (Service must upload and set imageUrl).
      */
+    public Meal toEntity(MealInputDTO dto) {
+        if (dto == null) {
+            log.warn("toEntity called with null MealInputDTO");
+            return null;
+        }
+
+        Meal meal = new Meal();
+        meal.setName(dto.getName());
+        meal.setMealDescription(dto.getMealDescription());
+        meal.setMealTypes(dto.getMealTypes());
+        meal.setCuisines(dto.getCuisines());
+        meal.setDiets(dto.getDiets());
+        meal.setPrivate(dto.isPrivate());
+        meal.setRestricted(dto.isRestricted());
+
+        if (dto.getPreparationTime() != null && !dto.getPreparationTime().isBlank()) {
+            meal.setPreparationTime(java.time.Duration.parse(dto.getPreparationTime()));
+        }
+
+        // Image pass-through (NO upload here)
+        if (dto.getImageUrl() != null && !dto.getImageUrl().isBlank()) {
+            meal.setImageUrl(dto.getImageUrl());
+        }
+        if (dto.getImage() != null) {
+            meal.setImage(dto.getImage()); // if you still support base64 storage
+        }
+        // dto.getImageFile() is intentionally ignored here.
+
+        // Ingredients
+        List<MealIngredient> mealIngredients = dto.getMealIngredients().stream()
+                .map(input -> mealIngredientMapper.toEntity(input, meal))
+                .collect(Collectors.toList());
+        meal.addMealIngredients(mealIngredients);
+
+        // Creator
+        meal.setCreatedBy(dto.getCreatedBy() != null ? toUserEntity(dto.getCreatedBy()) : null);
+
+        return meal;
+    }
+
+    // -------- Helpers --------
+
+    private UserDTO toUserDTO(User user) {
+        if (user == null) return null;
+        return new UserDTO(user.getId(), user.getUserName(), user.getEmail());
+    }
+
+    private User toUserEntity(UserDTO userDTO) {
+        if (userDTO == null) return null;
+        User user = new User();
+        user.setUserName(userDTO.getUserName());
+        user.setEmail(userDTO.getEmail());
+        return user;
+    }
+
+    // If you still need this for other mappers, keep it; otherwise you can remove it.
+    @SuppressWarnings("unused")
     private MealIngredient toMealIngredientEntity(MealIngredientInputDTO inputDTO) {
-        log.info("Converting MealIngredientInputDTO to MealIngredient entity.");
         MealIngredient ingredient = new MealIngredient();
         ingredient.setQuantity(inputDTO.getQuantity());
 
         FoodItem foodItem = foodItemRepository.findById(inputDTO.getFoodItemId())
-                .orElseThrow(() -> {
-                    log.error("Invalid food item ID: {}", inputDTO.getFoodItemId());
-                    return new InvalidFoodItemException("Invalid food item ID: " + inputDTO.getFoodItemId());
-                });
+                .orElseThrow(() -> new InvalidFoodItemException("Invalid food item ID: " + inputDTO.getFoodItemId()));
         ingredient.setFoodItem(foodItem);
 
-        log.debug("Finished converting MealIngredientInputDTO to MealIngredient entity: {}", ingredient);
         return ingredient;
-    }
-
-    /**
-     * Converts a User entity to a UserDTO.
-     *
-     * @param user the User entity to be converted.
-     * @return the UserDTO created from the entity.
-     */
-    private UserDTO toUserDTO(User user) {
-        log.info("Converting User entity to UserDTO for user ID: {}", user.getId());
-        UserDTO dto = new UserDTO(user.getId(), user.getUserName(), user.getEmail());
-        log.debug("Finished converting User entity to UserDTO: {}", dto);
-        return dto;
-    }
-
-    /**
-     * Converts a UserDTO to a User entity.
-     *
-     * @param userDTO the UserDTO containing the user data.
-     * @return the User entity created from the DTO.
-     */
-    private User toUserEntity(UserDTO userDTO) {
-        log.info("Converting UserDTO to User entity.");
-        return Optional.ofNullable(userDTO)
-                .map(dto -> {
-                    User user = new User();
-                    user.setUserName(dto.getUserName());
-                    user.setEmail(dto.getEmail());
-                    log.debug("Finished converting UserDTO to User entity: {}", user);
-                    return user;
-                })
-                .orElse(null);
     }
 }

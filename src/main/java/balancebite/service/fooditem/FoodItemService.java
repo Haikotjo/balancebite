@@ -7,19 +7,23 @@ import balancebite.dto.fooditem.FoodItemNameDTO;
 import balancebite.errorHandling.EntityAlreadyExistsException;
 import balancebite.errorHandling.UsdaApiException;
 import balancebite.mapper.FoodItemMapper;
+import balancebite.model.NutrientInfo;
 import balancebite.model.foodItem.FoodCategory;
 import balancebite.model.foodItem.FoodItem;
 import balancebite.model.foodItem.FoodSource;
 import balancebite.repository.FoodItemRepository;
+import balancebite.service.CloudinaryService;
 import balancebite.service.UsdaApiService;
 import balancebite.service.interfaces.fooditem.IFoodItemService;
 import balancebite.errorHandling.EntityNotFoundException;
+import balancebite.service.util.ImageHandlerService;
 import balancebite.utils.FoodItemBulkFetchUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -37,6 +41,8 @@ public class FoodItemService implements IFoodItemService {
     private final FoodItemRepository foodItemRepository;
     private final UsdaApiService usdaApiService;
     private final FoodItemMapper foodItemMapper;
+    private final ImageHandlerService imageHandlerService;
+    private final CloudinaryService cloudinaryService;
 
     /**
      * Constructor for dependency injection.
@@ -45,10 +51,12 @@ public class FoodItemService implements IFoodItemService {
      * @param usdaApiService Service for interacting with the USDA API.
      * @param foodItemMapper Mapper for converting between FoodItem entities and DTOs.
      */
-    public FoodItemService(FoodItemRepository foodItemRepository, UsdaApiService usdaApiService, FoodItemMapper foodItemMapper) {
+    public FoodItemService(FoodItemRepository foodItemRepository, UsdaApiService usdaApiService, FoodItemMapper foodItemMapper, ImageHandlerService imageHandlerService, CloudinaryService cloudinaryService) {
         this.foodItemRepository = foodItemRepository;
         this.usdaApiService = usdaApiService;
         this.foodItemMapper = foodItemMapper;
+        this.imageHandlerService = imageHandlerService;
+        this.cloudinaryService = cloudinaryService;
     }
 
     /**
@@ -61,11 +69,115 @@ public class FoodItemService implements IFoodItemService {
     public FoodItemDTO createFoodItem(FoodItemInputDTO inputDTO) {
         log.info("Creating new FoodItem from user input: {}", inputDTO.getName());
 
-        FoodItem foodItem = foodItemMapper.toEntity(inputDTO);
-        foodItemRepository.save(foodItem);
+        // 1) Enforce image exclusivity: at most ONE of (file | url | base64)
+        int sources = 0;
+        if (inputDTO.getImageFile() != null && !inputDTO.getImageFile().isEmpty()) sources++;
+        if (inputDTO.getImageUrl() != null && !inputDTO.getImageUrl().isBlank())  sources++;
+        if (inputDTO.getImage() != null && !inputDTO.getImage().isBlank())        sources++;
+        if (sources > 1) {
+            throw new IllegalArgumentException("Provide exactly one of: imageFile, imageUrl, or image (base64).");
+        }
 
+        // 2) Map DTO -> entity (mapper does NOT upload files)
+        FoodItem foodItem = foodItemMapper.toEntity(inputDTO);
+
+        // 3) Image handling (create flow => currentUrl = null)
+        String finalUrl = imageHandlerService.handleImage(
+                null,                       // currentUrl on create
+                inputDTO.getImageFile(),    // may be null/empty
+                inputDTO.getImageUrl(),     // may be null/blank
+                true                        // isCreate = true
+        );
+        foodItem.setImageUrl(finalUrl);
+
+        // Do not keep base64 if we have a URL; else keep base64 only if it was the single source
+        if (finalUrl != null) {
+            foodItem.setImage(null);
+        } else {
+            foodItem.setImage((sources == 1 && inputDTO.getImage() != null && !inputDTO.getImage().isBlank())
+                    ? inputDTO.getImage()
+                    : null);
+        }
+
+        // 4) Persist and return
+        foodItemRepository.save(foodItem);
         log.info("Successfully created FoodItem: {}", foodItem.getName());
         return foodItemMapper.toDTO(foodItem);
+    }
+
+    /**
+     * Updates an existing {@link FoodItem} using the supplied DTO.
+     * <p>
+     * Strategy:
+     * <ul>
+     *   <li>Load the entity by ID or throw {@link EntityNotFoundException}.</li>
+     *   <li>Overwrite all basic fields (name, fdcId, portion, weight, source, enums, flags).</li>
+     *   <li>Replace nutrients entirely (keep only entries that have a value).</li>
+     *   <li>Image precedence matches MealMapper: file → base64 → url.</li>
+     *   <li>Set price and grams as provided.</li>
+     * </ul>
+     *
+     * @param id    the FoodItem ID to update
+     * @param input the incoming values
+     * @return the updated item as {@link FoodItemDTO}
+     */
+    @Transactional
+    public FoodItemDTO updateFoodItem(Long id, FoodItemInputDTO input) {
+        FoodItem existing = foodItemRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Food item with ID " + id + " not found."));
+
+        // --- 0) Enforce image source exclusivity: at most ONE of (file | url | base64) ---
+        int sources = 0;
+        if (input.getImageFile() != null && !input.getImageFile().isEmpty()) sources++;
+        if (input.getImageUrl() != null && !input.getImageUrl().isBlank())  sources++;
+        if (input.getImage() != null && !input.getImage().isBlank())        sources++;
+        if (sources > 1) {
+            throw new IllegalArgumentException("Provide exactly one of: imageFile, imageUrl, or image (base64).");
+        }
+
+        // --- 1) Basic fields ---
+        existing.setName(input.getName());
+        existing.setFdcId(input.getFdcId());
+        existing.setPortionDescription(input.getPortionDescription());
+        existing.setGramWeight(input.getGramWeight());
+        existing.setSource(input.getSource());
+        existing.setFoodSource(input.getFoodSource());
+        existing.setFoodCategory(input.getFoodCategory());
+        existing.setStoreBrand(input.getStoreBrand());
+
+        // --- 2) Nutrients (replace collection) ---
+        List<NutrientInfo> nutrients = (input.getNutrients() == null) ? List.of()
+                : input.getNutrients().stream()
+                .filter(n -> n.getValue() != null)
+                .map(n -> new NutrientInfo(n.getNutrientName(), n.getValue(), n.getUnitName(), n.getNutrientId()))
+                .collect(Collectors.toList());
+        existing.getNutrients().clear();
+        existing.getNutrients().addAll(nutrients);
+
+        // --- 3) Image handling via central handler (update flow => may delete old when switching/clearing) ---
+        String finalUrl = imageHandlerService.handleImage(
+                existing.getImageUrl(),     // current URL (may be null)
+                input.getImageFile(),       // new file (may be null/empty)
+                input.getImageUrl(),        // new direct URL (may be null/blank)
+                false                       // isCreate = false (so handler can delete old)
+        );
+        existing.setImageUrl(finalUrl);
+
+        // Keep base64 only if it is the single provided source and no URL resulted
+        if (finalUrl != null) {
+            existing.setImage(null); // URL wins -> do not store base64
+        } else {
+            existing.setImage((sources == 1 && input.getImage() != null && !input.getImage().isBlank())
+                    ? input.getImage()
+                    : null);
+        }
+
+        // --- 4) Pricing ---
+        existing.setPrice(input.getPrice());
+        existing.setGrams(input.getGrams());
+
+        foodItemRepository.save(existing);
+        return foodItemMapper.toDTO(existing);
     }
 
     /**
@@ -294,4 +406,20 @@ public class FoodItemService implements IFoodItemService {
                 .map(foodItemMapper::toDTO)
                 .collect(Collectors.toList());
     }
+
+    /**
+     * Finds items whose name contains the given query (case-insensitive).
+     *
+     * @param q substring to look for (e.g., "spinazie")
+     * @return list of matching DTOs
+     * @throws EntityNotFoundException when no items match
+     */
+    public List<FoodItemDTO> searchByNameSubstring(String q) {
+        List<FoodItem> items = foodItemRepository.findByNameContainingIgnoreCase(q);
+        if (items.isEmpty()) {
+            throw new EntityNotFoundException("No food items found containing: " + q);
+        }
+        return items.stream().map(foodItemMapper::toDTO).collect(Collectors.toList());
+    }
+
 }

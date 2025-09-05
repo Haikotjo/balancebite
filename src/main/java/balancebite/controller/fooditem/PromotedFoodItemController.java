@@ -1,7 +1,9 @@
 package balancebite.controller.fooditem;
 
+import balancebite.dto.fooditem.PromotedFoodItemDTO;
 import balancebite.dto.fooditem.PromotedFoodItemInputDTO;
 import balancebite.errorHandling.EntityNotFoundException;
+import balancebite.mapper.PromotedFoodItemMapper;
 import balancebite.model.foodItem.PromotedFoodItem;
 import balancebite.service.fooditem.PromotedFoodItemService;
 import jakarta.validation.Valid;
@@ -14,69 +16,82 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
-/**
- * REST controller for managing promoted food items.
- */
 @RestController
-@RequestMapping("admin/promotions")
+@RequestMapping("/admin/promotions")
 public class PromotedFoodItemController {
 
     private static final Logger log = LoggerFactory.getLogger(PromotedFoodItemController.class);
 
     private final PromotedFoodItemService promotedFoodItemService;
+    private final PromotedFoodItemMapper promotedFoodItemMapper;
 
-    public PromotedFoodItemController(PromotedFoodItemService promotedFoodItemService) {
+    public PromotedFoodItemController(PromotedFoodItemService promotedFoodItemService,
+                                      PromotedFoodItemMapper promotedFoodItemMapper) {
         this.promotedFoodItemService = promotedFoodItemService;
+        this.promotedFoodItemMapper = promotedFoodItemMapper;
     }
 
     /**
-     * Creates a new promotion for a food item.
-     *
-     * @param inputDTO The input data for the promotion.
-     * @return The created PromotedFoodItem with 201 status code.
+     * Create a new promotion for a FoodItem.
+     * Returns DTO (calculated fields computed in mapper).
      */
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN','SUPERMARKET')")
     @PostMapping
     public ResponseEntity<?> createPromotion(@Valid @RequestBody PromotedFoodItemInputDTO inputDTO) {
-        log.info("Creating new promotion for foodItemId={}", inputDTO.getFoodItemId());
-
+        log.info("Create promotion for foodItemId={}", inputDTO.getFoodItemId());
         try {
-            PromotedFoodItem promotion = promotedFoodItemService.createPromotion(inputDTO);
-            log.info("Promotion successfully created with ID: {}", promotion.getId());
-            return ResponseEntity.status(HttpStatus.CREATED).body(promotion);
+            PromotedFoodItem saved = promotedFoodItemService.createPromotion(inputDTO);
+            PromotedFoodItemDTO dto = promotedFoodItemMapper.toDTO(saved);
+            return ResponseEntity.status(HttpStatus.CREATED).body(dto);
         } catch (EntityNotFoundException e) {
-            log.warn("Food item not found: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
-        } catch (IllegalStateException e) {
-            log.warn("Promotion conflict: {}", e.getMessage());
+        } catch (IllegalStateException e) { // already promoted, overlap, etc.
             return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", e.getMessage()));
+        } catch (IllegalArgumentException e) { // window invalid, validation, etc.
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
-            log.error("Unexpected error during promotion creation", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "An unexpected error occurred."));
+            log.error("Create promotion failed", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "Unexpected error"));
         }
     }
 
     /**
-     * Deletes an existing promotion by its ID.
-     *
-     * @param promotionId The ID of the promotion to delete.
-     * @return 204 No Content if successful.
+     * Update an existing promotion by ID (keeps same FoodItem).
      */
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN','SUPERMARKET')")
+    @PutMapping("/{promotionId}")
+    public ResponseEntity<?> updatePromotion(@PathVariable Long promotionId,
+                                             @Valid @RequestBody PromotedFoodItemInputDTO inputDTO) {
+        log.info("Update promotion id={} for foodItemId={}", promotionId, inputDTO.getFoodItemId());
+        try {
+            PromotedFoodItem updated = promotedFoodItemService.updatePromotion(promotionId, inputDTO);
+            PromotedFoodItemDTO dto = promotedFoodItemMapper.toDTO(updated);
+            return ResponseEntity.ok(dto);
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+        } catch (IllegalArgumentException e) { // window invalid, foodItemId mismatch, etc.
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            log.error("Update promotion failed", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "Unexpected error"));
+        }
+    }
+
+    /**
+     * Delete a promotion by ID.
+     */
+    @PreAuthorize("hasAnyRole('ADMIN','SUPERMARKET')")
     @DeleteMapping("/{promotionId}")
     public ResponseEntity<?> deletePromotion(@PathVariable Long promotionId) {
-        log.info("Deleting promotion with ID: {}", promotionId);
-
+        log.info("Delete promotion id={}", promotionId);
         try {
             promotedFoodItemService.deletePromotion(promotionId);
-            log.info("Promotion with ID={} successfully deleted", promotionId);
             return ResponseEntity.noContent().build();
         } catch (EntityNotFoundException e) {
-            log.warn("Promotion not found: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
-            log.error("Unexpected error during promotion deletion", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "An unexpected error occurred."));
+            log.error("Delete promotion failed", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "Unexpected error"));
         }
     }
 }

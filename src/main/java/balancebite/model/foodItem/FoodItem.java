@@ -83,10 +83,10 @@ public class FoodItem {
     private String imageUrl; // externe of interne URL
 
     private BigDecimal price;
-    private BigDecimal salePrice;
-    private BigDecimal salePercentage;
-    private String saleDescription;
+
     private BigDecimal grams;
+
+    private Boolean storeBrand;
 
     /**
      * No-argument constructor required by JPA.
@@ -322,30 +322,6 @@ public class FoodItem {
         this.price = price;
     }
 
-    public BigDecimal getSalePrice() {
-        return salePrice;
-    }
-
-    public void setSalePrice(BigDecimal salePrice) {
-        this.salePrice = salePrice;
-    }
-
-    public BigDecimal getSalePercentage() {
-        return salePercentage;
-    }
-
-    public void setSalePercentage(BigDecimal salePercentage) {
-        this.salePercentage = salePercentage;
-    }
-
-    public String getSaleDescription() {
-        return saleDescription;
-    }
-
-    public void setSaleDescription(String saleDescription) {
-        this.saleDescription = saleDescription;
-    }
-
     public BigDecimal getGrams() {
         return grams;
     }
@@ -353,6 +329,9 @@ public class FoodItem {
     public void setGrams(BigDecimal grams) {
         this.grams = grams;
     }
+
+    public Boolean getStoreBrand() { return storeBrand; }
+    public void setStoreBrand(Boolean storeBrand) { this.storeBrand = storeBrand; }
 }
 
 
