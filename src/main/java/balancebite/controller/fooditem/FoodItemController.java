@@ -348,4 +348,35 @@ public class FoodItemController {
         }
     }
 
+
+    @GetMapping("/promoted-by-source")
+    public ResponseEntity<?> getPromotedBySource(@RequestParam String source) {
+        try {
+            var list = foodItemService
+                    .getFoodItemsByFoodSource(FoodSource.valueOf(source.toUpperCase()))
+                    .stream()
+                    .filter(FoodItemDTO::isPromoted)
+                    .toList();
+
+            return list.isEmpty() ? ResponseEntity.noContent().build() : ResponseEntity.ok(list);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Invalid food source: " + source));
+        }
+    }
+
+    @GetMapping("/promoted-by-category")
+    public ResponseEntity<?> getPromotedByCategory(@RequestParam String category) {
+        try {
+            var list = foodItemService
+                    .getFoodItemsByCategory(FoodCategory.valueOf(category.toUpperCase()))
+                    .stream()
+                    .filter(FoodItemDTO::isPromoted)
+                    .toList();
+
+            return list.isEmpty() ? ResponseEntity.noContent().build() : ResponseEntity.ok(list);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Invalid food category: " + category));
+        }
+    }
+
 }

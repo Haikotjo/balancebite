@@ -135,17 +135,21 @@ public class SecurityConfig {
                                 // meal restriction endpoint
                                 .requestMatchers(HttpMethod.PATCH, "/users/meals/{mealId}/restriction").hasAnyRole("RESTAURANT", "DIETITIAN")
 
-                                // foodItem entity endpoints
-                                .requestMatchers(HttpMethod.POST, "/fooditems").hasAnyRole("ADMIN", "SUPERMARKET")
-                                .requestMatchers(HttpMethod.PATCH, "/fooditems/**").hasAnyRole("ADMIN", "SUPERMARKET")
+                                // FoodItem entity endpoints
+                                .requestMatchers(HttpMethod.POST,  "/fooditems").hasAnyRole("ADMIN","SUPERMARKET")
+                                .requestMatchers(HttpMethod.PATCH, "/fooditems/**").hasAnyRole("ADMIN","SUPERMARKET")
 
+                                // ---- AUTHENTICATED EERST (specifieker dan wildcard) ----
+                                .requestMatchers(HttpMethod.GET,  "/fooditems/fetch/**").hasAnyRole("ADMIN")
+                                .requestMatchers(HttpMethod.POST, "/fooditems/bulk-fetch-items").hasAnyRole("ADMIN")
+
+                        // ---- PUBLIEK (permitAll) ----
+                                .requestMatchers(HttpMethod.GET, "/fooditems/promoted-by-source").permitAll()
+                                .requestMatchers(HttpMethod.GET, "/fooditems/promoted-by-category").permitAll()
+                                .requestMatchers(HttpMethod.GET, "/fooditems/sources").permitAll()
                                 .requestMatchers(HttpMethod.GET, "/fooditems/search-by-name").permitAll()
                                 .requestMatchers(HttpMethod.GET, "/fooditems").permitAll()
                                 .requestMatchers(HttpMethod.GET, "/fooditems/**").permitAll()
-                                .requestMatchers(HttpMethod.GET, "/fooditems/sources").permitAll()
-
-                                .requestMatchers(HttpMethod.GET, "/fooditems/fetch/**").authenticated()
-                                .requestMatchers(HttpMethod.POST, "/fooditems/bulk-fetch-items").authenticated()
 
 
                                 // diet entity endpoints
