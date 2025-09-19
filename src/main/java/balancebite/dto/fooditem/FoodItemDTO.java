@@ -86,6 +86,11 @@ public class FoodItemDTO {
 
     private final Boolean storeBrand;
 
+    private final BigDecimal promoPrice;
+    private final Integer salePercentage;
+    private final String saleDescription;
+    private final BigDecimal effectivePrice;
+
     /**
      * Parameterized constructor to create a FoodItemDTO.
      * Calculates the combined values for healthy and unhealthy fats.
@@ -101,7 +106,7 @@ public class FoodItemDTO {
      * @param image            the Base64-encoded image of the meal (optional).
      * @param imageUrl         the URL of the meal image (optional).
      */
-    public FoodItemDTO(Long id, String name, int fdcId, List<NutrientInfoDTO> nutrients, String portionDescription, double gramWeight, String source, FoodSource foodSource, boolean promoted, LocalDateTime promotionStartDate, LocalDateTime promotionEndDate, FoodCategory foodCategory, String image, String imageUrl, BigDecimal price, BigDecimal grams, BigDecimal pricePer100g, Boolean storeBrand) {
+    public FoodItemDTO(Long id, String name, int fdcId, List<NutrientInfoDTO> nutrients, String portionDescription, double gramWeight, String source, FoodSource foodSource, boolean promoted, LocalDateTime promotionStartDate, LocalDateTime promotionEndDate, FoodCategory foodCategory, String image, String imageUrl, BigDecimal price, BigDecimal grams, BigDecimal pricePer100g, Boolean storeBrand, BigDecimal promoPrice, Integer salePercentage, String saleDescription, BigDecimal effectivePrice) {
         this.id = id;
         this.name = name;
         this.fdcId = fdcId;
@@ -120,6 +125,10 @@ public class FoodItemDTO {
         this.grams = grams;
         this.pricePer100g = pricePer100g;
         this.storeBrand = storeBrand;
+        this.promoPrice = promoPrice;
+        this.salePercentage = salePercentage;
+        this.saleDescription = saleDescription;
+        this.effectivePrice = effectivePrice;
     }
 
     /**
@@ -295,4 +304,20 @@ public class FoodItemDTO {
 
     public BigDecimal getPricePer100g() { return pricePer100g; }
     public Boolean getStoreBrand() { return storeBrand; }
+
+    public BigDecimal getPromoPrice() {
+        return promoPrice;
+    }
+
+    public Integer getSalePercentage() {
+        return salePercentage;
+    }
+
+    public String getSaleDescription() {
+        return saleDescription;
+    }
+
+    public BigDecimal getEffectivePrice() {
+        return effectivePrice;
+    }
 }

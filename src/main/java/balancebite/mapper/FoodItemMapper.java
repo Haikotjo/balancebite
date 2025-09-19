@@ -103,6 +103,7 @@ public class FoodItemMapper {
      * Convert FoodItem entity to FoodItemDTO.
      * - Adds promo flags (promoted + start/end).
      * - Computes pricePer100g = price * 100 / grams (2 decimals, HALF_UP) when possible.
+     * - Passes through raw promo fields + calculated effectivePrice.
      */
     public FoodItemDTO toDTO(FoodItem foodItem) {
         log.info("Converting FoodItem entity to FoodItemDTO.");
@@ -139,6 +140,14 @@ public class FoodItemMapper {
                                 n.getNutrientId()))
                         .collect(Collectors.toList());
 
+        // Raw promo fields (pass-through so UI can show them regardless of base price)
+        BigDecimal promoPrice = promotion.map(PromotedFoodItem::getPromoPrice).orElse(null);
+        Integer salePct       = promotion.map(PromotedFoodItem::getSalePercentage).orElse(null);
+        String saleDesc       = promotion.map(PromotedFoodItem::getSaleDescription).orElse(null);
+
+        // Calculated effective price (nullable if inputs insufficient)
+        BigDecimal effectivePrice = computeEffectivePrice(foodItem.getPrice(), promoPrice, salePct);
+
         // Build DTO
         FoodItemDTO dto = new FoodItemDTO(
                 foodItem.getId(),
@@ -158,7 +167,12 @@ public class FoodItemMapper {
                 foodItem.getPrice(),
                 foodItem.getGrams(),
                 pricePer100g,
-                foodItem.getStoreBrand()
+                foodItem.getStoreBrand(),
+                // NEW promo fields for UI
+                promoPrice,
+                salePct,
+                saleDesc,
+                effectivePrice
         );
 
         log.debug("Finished mapping FoodItem entity to FoodItemDTO: {}", dto);
@@ -168,5 +182,25 @@ public class FoodItemMapper {
     // -------- Helpers --------
     private static boolean hasText(String s) {
         return s != null && !s.isBlank();
+    }
+
+    /**
+     * Compute effective price:
+     * - If promoPrice != null, use it.
+     * - Else if basePrice != null and salePercentage != null, apply percentage.
+     * - Else return null.
+     */
+    private static BigDecimal computeEffectivePrice(BigDecimal basePrice,
+                                                    BigDecimal promoPrice,
+                                                    Integer salePercentage) {
+        if (promoPrice != null) {
+            return promoPrice.setScale(2, RoundingMode.HALF_UP);
+        }
+        if (basePrice == null || salePercentage == null) {
+            return null;
+        }
+        BigDecimal pctLeft = BigDecimal.valueOf(100 - salePercentage);
+        return basePrice.multiply(pctLeft)
+                .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
     }
 }
