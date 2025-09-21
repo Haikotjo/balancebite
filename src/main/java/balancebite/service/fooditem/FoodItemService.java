@@ -12,6 +12,7 @@ import balancebite.model.foodItem.FoodCategory;
 import balancebite.model.foodItem.FoodItem;
 import balancebite.model.foodItem.FoodSource;
 import balancebite.repository.FoodItemRepository;
+import balancebite.repository.PromotedFoodItemRepository;
 import balancebite.service.CloudinaryService;
 import balancebite.service.UsdaApiService;
 import balancebite.service.interfaces.fooditem.IFoodItemService;
@@ -43,6 +44,7 @@ public class FoodItemService implements IFoodItemService {
     private final FoodItemMapper foodItemMapper;
     private final ImageHandlerService imageHandlerService;
     private final CloudinaryService cloudinaryService;
+    private final PromotedFoodItemRepository promotedFoodItemRepository;
 
     /**
      * Constructor for dependency injection.
@@ -51,12 +53,13 @@ public class FoodItemService implements IFoodItemService {
      * @param usdaApiService Service for interacting with the USDA API.
      * @param foodItemMapper Mapper for converting between FoodItem entities and DTOs.
      */
-    public FoodItemService(FoodItemRepository foodItemRepository, UsdaApiService usdaApiService, FoodItemMapper foodItemMapper, ImageHandlerService imageHandlerService, CloudinaryService cloudinaryService) {
+    public FoodItemService(FoodItemRepository foodItemRepository, UsdaApiService usdaApiService, FoodItemMapper foodItemMapper, ImageHandlerService imageHandlerService, CloudinaryService cloudinaryService, PromotedFoodItemRepository promotedFoodItemRepository) {
         this.foodItemRepository = foodItemRepository;
         this.usdaApiService = usdaApiService;
         this.foodItemMapper = foodItemMapper;
         this.imageHandlerService = imageHandlerService;
         this.cloudinaryService = cloudinaryService;
+        this.promotedFoodItemRepository = promotedFoodItemRepository;
     }
 
     /**
@@ -336,16 +339,17 @@ public class FoodItemService implements IFoodItemService {
      *
      * @param id The ID of the food item to delete.
      */
+    @Transactional
     @Override
     public void deleteFoodItemById(Long id) {
         log.info("Deleting food item with ID: {}", id);
-        if (foodItemRepository.existsById(id)) {
-            foodItemRepository.deleteById(id);
-            log.info("Successfully deleted food item with ID: {}", id);
-        } else {
+        if (!foodItemRepository.existsById(id)) {
             log.error("Food item with ID {} not found", id);
             throw new EntityNotFoundException("Food item with ID " + id + " not found.");
         }
+        promotedFoodItemRepository.deleteByFoodItem_Id(id); // remove promo first
+        foodItemRepository.deleteById(id);                  // then delete the item
+        log.info("Successfully deleted food item with ID: {}", id);
     }
 
     /**

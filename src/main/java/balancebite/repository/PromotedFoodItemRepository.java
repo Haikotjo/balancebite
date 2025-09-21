@@ -10,7 +10,7 @@ import java.util.Optional;
 public interface PromotedFoodItemRepository extends JpaRepository<PromotedFoodItem, Long> {
 
     Optional<PromotedFoodItem> findByFoodItemId(Long foodItemId);
-
+    void deleteByFoodItem_Id(Long foodItemId);
     List<PromotedFoodItem> findByEndDateBefore(LocalDateTime time);
 
 }

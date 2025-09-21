@@ -3,8 +3,6 @@ package balancebite.model.foodItem;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
-import org.hibernate.annotations.OnDelete;
-import org.hibernate.annotations.OnDeleteAction;
 
 import java.time.LocalDateTime;
 import java.math.BigDecimal;
@@ -19,7 +17,6 @@ public class PromotedFoodItem {
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "food_item_id", nullable = false, unique = true)
-    @OnDelete(action = OnDeleteAction.CASCADE) // DB cascades when FoodItem is deleted
     private FoodItem foodItem;
 
     @Column(nullable = false)
