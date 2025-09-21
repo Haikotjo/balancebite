@@ -102,9 +102,11 @@ public class FoodItemMapper {
     /**
      * Convert FoodItem entity to FoodItemDTO.
      * - Adds promo flags (promoted + start/end).
-     * - Computes pricePer100g = price * 100 / grams (2 decimals, HALF_UP) when possible.
-     * - Passes through raw promo fields + calculated effectivePrice.
+     * - Computes effectivePrice: uses promoPrice if present; else applies salePercentage to base price; else null.
+     * - Computes pricePer100g from effectivePrice when available, otherwise from base price (2 decimals, HALF_UP).
+     * - Passes through raw promo fields (promoPrice, salePercentage, saleDescription).
      */
+
     public FoodItemDTO toDTO(FoodItem foodItem) {
         log.info("Converting FoodItem entity to FoodItemDTO.");
         if (foodItem == null) {
@@ -112,23 +114,32 @@ public class FoodItemMapper {
             return null;
         }
 
-        // Active promotion window for this item (if any)
+        // Active promotion
         Optional<PromotedFoodItem> promotion = promotedFoodItemService.getActivePromotion(foodItem.getId());
         boolean promoted = promotion.isPresent();
         LocalDateTime startDate = promotion.map(PromotedFoodItem::getStartDate).orElse(null);
         LocalDateTime endDate   = promotion.map(PromotedFoodItem::getEndDate).orElse(null);
 
-        // Compute price per 100g when both price and grams are valid
+        // Raw promo fields (always pass-through)
+        BigDecimal promoPrice = promotion.map(PromotedFoodItem::getPromoPrice).orElse(null);
+        Integer salePct       = promotion.map(PromotedFoodItem::getSalePercentage).orElse(null);
+        String saleDesc       = promotion.map(PromotedFoodItem::getSaleDescription).orElse(null);
+
+        // 1) Compute effective price first (promoPrice wins, else percentage on base)
+        BigDecimal effectivePrice = computeEffectivePrice(foodItem.getPrice(), promoPrice, salePct);
+
+        // 2) price per 100g: prefer effectivePrice over base price
         BigDecimal pricePer100g = null;
-        if (foodItem.getPrice() != null
-                && foodItem.getGrams() != null
-                && foodItem.getGrams().compareTo(BigDecimal.ZERO) > 0) {
-            pricePer100g = foodItem.getPrice()
-                    .multiply(BigDecimal.valueOf(100))
-                    .divide(foodItem.getGrams(), 2, RoundingMode.HALF_UP);
+        BigDecimal grams = foodItem.getGrams();
+        if (grams != null && grams.compareTo(BigDecimal.ZERO) > 0) {
+            BigDecimal priceForCalc = (effectivePrice != null) ? effectivePrice : foodItem.getPrice();
+            if (priceForCalc != null) {
+                pricePer100g = priceForCalc.multiply(BigDecimal.valueOf(100))
+                        .divide(grams, 2, RoundingMode.HALF_UP);
+            }
         }
 
-        // Nutrients -> DTOs
+        // Nutrients -> DTOs (unchanged)
         List<NutrientInfoDTO> nutrientDTOs =
                 foodItem.getNutrients() == null
                         ? Collections.emptyList()
@@ -140,16 +151,8 @@ public class FoodItemMapper {
                                 n.getNutrientId()))
                         .collect(Collectors.toList());
 
-        // Raw promo fields (pass-through so UI can show them regardless of base price)
-        BigDecimal promoPrice = promotion.map(PromotedFoodItem::getPromoPrice).orElse(null);
-        Integer salePct       = promotion.map(PromotedFoodItem::getSalePercentage).orElse(null);
-        String saleDesc       = promotion.map(PromotedFoodItem::getSaleDescription).orElse(null);
-
-        // Calculated effective price (nullable if inputs insufficient)
-        BigDecimal effectivePrice = computeEffectivePrice(foodItem.getPrice(), promoPrice, salePct);
-
         // Build DTO
-        FoodItemDTO dto = new FoodItemDTO(
+        return new FoodItemDTO(
                 foodItem.getId(),
                 foodItem.getName(),
                 foodItem.getFdcId(),
@@ -165,19 +168,17 @@ public class FoodItemMapper {
                 foodItem.getImage(),
                 foodItem.getImageUrl(),
                 foodItem.getPrice(),
-                foodItem.getGrams(),
+                grams,
                 pricePer100g,
                 foodItem.getStoreBrand(),
-                // NEW promo fields for UI
+                // promo fields
                 promoPrice,
                 salePct,
                 saleDesc,
                 effectivePrice
         );
-
-        log.debug("Finished mapping FoodItem entity to FoodItemDTO: {}", dto);
-        return dto;
     }
+
 
     // -------- Helpers --------
     private static boolean hasText(String s) {
