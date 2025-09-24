@@ -7,6 +7,7 @@ import balancebite.model.meal.references.Cuisine;
 import balancebite.model.meal.references.Diet;
 import balancebite.model.meal.references.MealType;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
@@ -136,6 +137,9 @@ public class MealDTO {
     private final long weeklySaveCount;
     private final long monthlySaveCount;
 
+    private final BigDecimal mealPrice;
+    private final boolean hasUnknownPrices;
+
     /**
      * Constructor for creating a MealDTO with essential meal information.
      *
@@ -167,7 +171,7 @@ public class MealDTO {
     public MealDTO(Long id, String name, String mealDescription, String image, String imageUrl, Long originalMealId,
                    LocalDateTime version, List<MealIngredientDTO> mealIngredients, PublicUserDTO createdBy,
                    PublicUserDTO adjustedBy ,boolean  isTemplate, boolean  isPrivate, boolean  isRestricted, Set<MealType> mealTypes, Set<Cuisine> cuisines, Set<Diet> diets, double totalCalories, double totalProtein, double totalCarbs, double totalSugars, double totalSaturatedFat, double totalUnsaturatedFat,
-                   double totalFat, String foodItemsString, String preparationTime, long saveCount, long weeklySaveCount, long monthlySaveCount ) {
+                   double totalFat, String foodItemsString, String preparationTime, long saveCount, long weeklySaveCount, long monthlySaveCount, BigDecimal mealPrice, boolean hasUnknownPrices ) {
         this.id = id;
         this.name = name;
         this.mealDescription = mealDescription;
@@ -196,6 +200,8 @@ public class MealDTO {
         this.saveCount = saveCount;
         this.weeklySaveCount = weeklySaveCount;
         this.monthlySaveCount = monthlySaveCount;
+        this.mealPrice = mealPrice;
+        this.hasUnknownPrices = hasUnknownPrices;
     }
 
     /**
@@ -395,5 +401,13 @@ public class MealDTO {
 
     public long getMonthlySaveCount() {
         return monthlySaveCount;
+    }
+
+    public BigDecimal getMealPrice() {
+        return mealPrice;
+    }
+
+    public boolean isHasUnknownPrices() {
+        return hasUnknownPrices;
     }
 }

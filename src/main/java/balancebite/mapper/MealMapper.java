@@ -16,7 +16,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -52,6 +55,11 @@ public class MealMapper {
 
     // -------- Entity -> DTO --------
 
+  import java.math.BigDecimal;           // add
+import java.math.RoundingMode;         // add
+import java.util.Objects;              // add
+import java.util.stream.Collectors;    // already present
+
     public MealDTO toDTO(Meal meal) {
         if (meal == null) {
             log.warn("toDTO called with null Meal");
@@ -62,17 +70,36 @@ public class MealMapper {
         long weeklySaveCount  = Optional.ofNullable(meal.getWeeklySaveCount()).orElse(0L);
         long monthlySaveCount = Optional.ofNullable(meal.getMonthlySaveCount()).orElse(0L);
 
+        // Map ingredients once
+        var items = meal.getMealIngredients().stream()
+                .map(mealIngredientMapper::toDTO)
+                .collect(Collectors.toList());
+
+        // Sum known item costs -> mealPrice (nullable if none known)
+        var knownCosts = items.stream()
+                .map(MealIngredientDTO::getItemCost)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+
+        BigDecimal mealPrice = knownCosts.isEmpty()
+                ? null
+                : knownCosts.stream()
+                .reduce(BigDecimal.ZERO, BigDecimal::add)
+                .setScale(2, RoundingMode.HALF_UP);
+
+        // Any unknown prices?
+        boolean hasUnknownPrices = items.stream()
+                .anyMatch(i -> i.getItemCost() == null);
+
         return new MealDTO(
                 meal.getId(),
                 meal.getName(),
                 meal.getMealDescription(),
-                meal.getImage(),                 // base64 (if you still store it)
-                meal.getImageUrl(),              // final URL (Cloudinary or other)
+                meal.getImage(),
+                meal.getImageUrl(),
                 meal.getOriginalMealId(),
                 meal.getVersion(),
-                meal.getMealIngredients().stream()
-                        .map(mealIngredientMapper::toDTO)
-                        .collect(Collectors.toList()),
+                items, // use the mapped list
                 meal.getCreatedBy()  != null ? userMapper.toPublicUserDTO(meal.getCreatedBy())   : null,
                 meal.getAdjustedBy() != null ? userMapper.toPublicUserDTO(meal.getAdjustedBy()) : null,
                 meal.isTemplate(),
@@ -92,9 +119,12 @@ public class MealMapper {
                 meal.getPreparationTime() != null ? meal.getPreparationTime().toString() : null,
                 saveCount,
                 weeklySaveCount,
-                monthlySaveCount
+                monthlySaveCount,
+                mealPrice,
+                hasUnknownPrices
         );
     }
+
 
     // -------- DTO -> Entity --------
 
