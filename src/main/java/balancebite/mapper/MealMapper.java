@@ -55,11 +55,6 @@ public class MealMapper {
 
     // -------- Entity -> DTO --------
 
-  import java.math.BigDecimal;           // add
-import java.math.RoundingMode;         // add
-import java.util.Objects;              // add
-import java.util.stream.Collectors;    // already present
-
     public MealDTO toDTO(Meal meal) {
         if (meal == null) {
             log.warn("toDTO called with null Meal");
