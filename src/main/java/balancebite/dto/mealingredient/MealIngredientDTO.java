@@ -2,6 +2,8 @@ package balancebite.dto.mealingredient;
 
 import balancebite.dto.fooditem.FoodItemDTO;
 
+import java.math.BigDecimal;
+
 /**
  * Data Transfer Object (DTO) representing the data of a Meal Ingredient.
  * This class is used to transfer data between different layers of the application.
@@ -14,6 +16,7 @@ public class MealIngredientDTO {
     private final String foodItemName;
     private final double quantity;
     private final FoodItemDTO foodItem;
+    private final BigDecimal itemCost;
 
     // Constructor
 
@@ -25,14 +28,16 @@ public class MealIngredientDTO {
      * @param foodItemId the ID of the food item associated with this ingredient.
      * @param foodItemName the name of the food item associated with this ingredient.
      * @param quantity the quantity of the food item in this meal.
+     * @param itemCost the calculated cost for this ingredient in the meal (pricePer100g × quantity / 100; 2 decimals; may be null)
      */
-    public MealIngredientDTO(Long id, Long mealId, Long foodItemId, String foodItemName, double quantity, FoodItemDTO foodItem) {
+    public MealIngredientDTO(Long id, Long mealId, Long foodItemId, String foodItemName, double quantity, FoodItemDTO foodItem, BigDecimal itemCost) {
         this.id = id;
         this.mealId = mealId;
         this.foodItemId = foodItemId;
         this.foodItemName = foodItemName;
         this.quantity = quantity;
         this.foodItem = foodItem;
+        this.itemCost = itemCost;
     }
 
     // Getters
@@ -84,5 +89,9 @@ public class MealIngredientDTO {
 
     public FoodItemDTO getFoodItem() {
         return foodItem;
+    }
+
+    public BigDecimal getItemCost() {
+        return itemCost;
     }
 }

@@ -11,6 +11,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+
 /**
  * Mapper class for converting between MealIngredient entities and DTOs.
  */
@@ -72,16 +75,33 @@ public class MealIngredientMapper {
     public MealIngredientDTO toDTO(MealIngredient mealIngredient) {
         log.info("Converting MealIngredient entity to MealIngredientDTO for meal ID {}.", mealIngredient.getMeal().getId());
 
+        // Map FoodItem -> DTO once (promo-aware pricePer100g lives here)
+        var foodItemDto = foodItemMapper.toDTO(mealIngredient.getFoodItem());
+
+        // Calculate itemCost from pricePer100g and quantity
+        BigDecimal itemCost = null; // null means “unknown”
+        BigDecimal pricePer100g = (foodItemDto != null) ? foodItemDto.getPricePer100g() : null;
+        double qty = mealIngredient.getQuantity(); // grams used in the meal
+
+        if (pricePer100g != null && qty > 0d) {
+            // itemCost = pricePer100g * quantity / 100
+            itemCost = pricePer100g
+                    .multiply(BigDecimal.valueOf(qty))
+                    .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
+        }
+
         MealIngredientDTO dto = new MealIngredientDTO(
                 mealIngredient.getId(),
                 mealIngredient.getMeal().getId(),
                 mealIngredient.getFoodItem().getId(),
                 mealIngredient.getFoodItem().getName(),
                 mealIngredient.getQuantity(),
-                foodItemMapper.toDTO(mealIngredient.getFoodItem())
+                foodItemDto,
+                itemCost
         );
 
         log.debug("Finished mapping MealIngredient entity to MealIngredientDTO: {}", dto);
         return dto;
     }
+
 }
