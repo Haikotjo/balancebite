@@ -71,7 +71,7 @@ public class MealMapper {
                 meal.getOriginalMealId(),
                 meal.getVersion(),
                 meal.getMealIngredients().stream()
-                        .map(this::toMealIngredientDTO)
+                        .map(mealIngredientMapper::toDTO)
                         .collect(Collectors.toList()),
                 meal.getCreatedBy()  != null ? userMapper.toPublicUserDTO(meal.getCreatedBy())   : null,
                 meal.getAdjustedBy() != null ? userMapper.toPublicUserDTO(meal.getAdjustedBy()) : null,
@@ -93,17 +93,6 @@ public class MealMapper {
                 saveCount,
                 weeklySaveCount,
                 monthlySaveCount
-        );
-    }
-
-    private MealIngredientDTO toMealIngredientDTO(MealIngredient mi) {
-        return new MealIngredientDTO(
-                mi.getId(),
-                mi.getMeal().getId(),
-                mi.getFoodItem() != null ? mi.getFoodItem().getId() : null,
-                mi.getFoodItemName(),
-                mi.getQuantity(),
-                mi.getFoodItem() != null ? foodItemMapper.toDTO(mi.getFoodItem()) : null
         );
     }
 
