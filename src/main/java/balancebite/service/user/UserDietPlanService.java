@@ -11,6 +11,7 @@ import balancebite.model.diet.DietDay;
 import balancebite.model.diet.DietPlan;
 import balancebite.model.diet.SavedDietPlan;
 import balancebite.model.foodItem.FoodItem;
+import balancebite.model.foodItem.PromotedFoodItem;
 import balancebite.model.meal.Meal;
 import balancebite.model.meal.references.Diet;
 import balancebite.model.user.User;
@@ -32,6 +33,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -52,6 +56,7 @@ public class UserDietPlanService implements IUserDietPlanService {
     private final MealAssignmentUtil mealAssignmentUtil;
     private final SavedDietPlanRepository savedDietPlanRepository;
     private final SharedDietPlanAccessRepository sharedDietPlanAccessRepository;
+    private final PromotedFoodItemRepository promotedFoodItemRepository;
 
 
     public UserDietPlanService(DietPlanRepository dietPlanRepository,
@@ -63,7 +68,8 @@ public class UserDietPlanService implements IUserDietPlanService {
                                UserMealService userMealService,
                                MealAssignmentUtil mealAssignmentUtil,
                                SavedDietPlanRepository savedDietPlanRepository,
-                               SharedDietPlanAccessRepository sharedDietPlanAccessRepository) {
+                               SharedDietPlanAccessRepository sharedDietPlanAccessRepository,
+                               PromotedFoodItemRepository promotedFoodItemRepository) {
         this.dietPlanRepository = dietPlanRepository;
         this.userRepository = userRepository;
         this.mealRepository = mealRepository;
@@ -74,6 +80,7 @@ public class UserDietPlanService implements IUserDietPlanService {
         this.mealAssignmentUtil = mealAssignmentUtil;
         this.savedDietPlanRepository = savedDietPlanRepository;
         this.sharedDietPlanAccessRepository = sharedDietPlanAccessRepository;
+        this.promotedFoodItemRepository = promotedFoodItemRepository;
     }
 
     @Override
@@ -523,22 +530,83 @@ public class UserDietPlanService implements IUserDietPlanService {
 
         boolean isOwner = (dietPlan.getCreatedBy() != null && dietPlan.getCreatedBy().getId().equals(userId)) ||
                 (dietPlan.getAdjustedBy() != null && dietPlan.getAdjustedBy().getId().equals(userId));
-
-        if (!isOwner) {
-            throw new SecurityException("You are not authorized to view this diet.");
-        }
+        if (!isOwner) throw new SecurityException("You are not authorized to view this diet.");
 
         Map<FoodItem, Double> shoppingMap = ShoppingCartCalculator.calculateShoppingList(dietPlan);
 
-        return shoppingMap.entrySet().stream()
-                .map(entry -> {
-                    Map<String, Object> item = new HashMap<>();
-                    item.put("name", entry.getKey().getName());
-                    item.put("quantity", entry.getValue());
-                    item.put("source", entry.getKey().getSource());
-                    return item;
-                })
-                .toList();
+        return shoppingMap.entrySet().stream().map(entry -> {
+            FoodItem fi = entry.getKey();
+            double requiredGramsD = entry.getValue();
+            BigDecimal requiredGrams = BigDecimal.valueOf(requiredGramsD);
+
+            // Find active promotion (now between start and end)
+            Optional<PromotedFoodItem> promoOpt = promotedFoodItemRepository.findByFoodItemId(fi.getId())
+                    .filter(p -> {
+                        LocalDateTime now = LocalDateTime.now();
+                        return (p.getStartDate() == null || !now.isBefore(p.getStartDate()))
+                                && (p.getEndDate()   == null || !now.isAfter(p.getEndDate()));
+                    });
+
+            // Effective unit price (per package)
+            BigDecimal unitPrice = computeEffectivePrice(fi.getPrice(), promoOpt.orElse(null));
+
+            // Package size in grams (how much you buy per unit)
+            BigDecimal packGrams = fi.getGrams();
+
+            Integer packsNeeded = null;
+            BigDecimal totalBoughtGrams = null;
+            BigDecimal leftoverGrams = null;
+            BigDecimal totalCost = null;
+
+            if (packGrams != null && packGrams.compareTo(BigDecimal.ZERO) > 0) {
+                // ceil(required / pack)
+                BigDecimal packs = requiredGrams.divide(packGrams, 0, RoundingMode.UP);
+                packsNeeded = packs.intValue();
+
+                totalBoughtGrams = packGrams.multiply(BigDecimal.valueOf(packsNeeded));
+                leftoverGrams = totalBoughtGrams.subtract(requiredGrams);
+
+                if (unitPrice != null) {
+                    totalCost = unitPrice.multiply(BigDecimal.valueOf(packsNeeded))
+                            .setScale(2, RoundingMode.HALF_UP);
+                }
+            }
+            // If packGrams or unitPrice is missing we leave packsNeeded/totalCost as null
+
+            boolean promoted = promoOpt.isPresent();
+            String saleDescription = promoOpt.map(PromotedFoodItem::getSaleDescription).orElse(null);
+
+            Map<String, Object> item = new HashMap<>();
+            item.put("foodItemId", fi.getId());
+            item.put("name", fi.getName());
+            item.put("source", fi.getSource());
+            item.put("requiredGrams", requiredGramsD);
+            item.put("packGrams", packGrams);               // may be null
+            item.put("packsNeeded", packsNeeded);           // may be null
+            item.put("totalBoughtGrams", totalBoughtGrams); // may be null
+            item.put("leftoverGrams", leftoverGrams);       // may be null
+            item.put("unitPrice", unitPrice);               // effective per-package price (may be null)
+            item.put("totalCost", totalCost);               // may be null
+            item.put("hasPrice", totalCost != null);
+            item.put("promoted", promoted);
+            item.put("saleDescription", saleDescription);
+            return item;
+        }).toList();
+    }
+
+    /** Same logic as your mappers: promoPrice > salePercentage > base price. */
+    private BigDecimal computeEffectivePrice(BigDecimal basePrice, PromotedFoodItem promo) {
+        if (promo == null) return basePrice; // no promotion
+        if (promo.getPromoPrice() != null) {
+            return promo.getPromoPrice().setScale(2, RoundingMode.HALF_UP);
+        }
+        Integer pct = promo.getSalePercentage();
+        if (basePrice != null && pct != null) {
+            BigDecimal pctLeft = BigDecimal.valueOf(100 - pct);
+            return basePrice.multiply(pctLeft)
+                    .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
+        }
+        return basePrice; // percentage without basePrice → fall back to base
     }
 
     @Override
