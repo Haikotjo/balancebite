@@ -184,6 +184,32 @@ public class FoodItemService implements IFoodItemService {
     }
 
     /**
+     * Updates only the base {@code price} of an existing {@link FoodItem}.
+     * @param id       the ID of the {@link FoodItem} to update
+     * @param newPrice the new base price (may be {@code null} to clear)
+     * @return the updated {@link FoodItemDTO}
+     * @throws jakarta.persistence.EntityNotFoundException if the item with the given {@code id} does not exist
+     */
+    @Transactional
+    public FoodItemDTO updateFoodItemPrice(Long id, java.math.BigDecimal newPrice) {
+        // Load the entity or fail fast if it does not exist
+        FoodItem item = foodItemRepository.findById(id)
+                .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("Food item " + id + " not found"));
+
+        // Update ONLY the base price:
+        // - If a value is provided, standardize to 2 decimals (HALF_UP).
+        // - If null is provided, clear the price on the entity.
+        item.setPrice(newPrice != null ? newPrice.setScale(2, java.math.RoundingMode.HALF_UP) : null);
+
+        // Persist the change
+        foodItemRepository.save(item);
+
+        // Return the mapped DTO; any derived fields are computed by the mapper
+        return foodItemMapper.toDTO(item);
+    }
+
+
+    /**
      * Fetches a single food item from the USDA API by its FDC ID and saves it.
      * If the food item already exists in the database, it will not be added again.
      *

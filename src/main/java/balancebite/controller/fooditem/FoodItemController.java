@@ -117,6 +117,29 @@ public class FoodItemController {
         }
     }
 
+    /**
+     * PATCH /api/food-items/{id}/price
+     * Updates only the base {@code price} of a {@link balancebite.model.foodItem.FoodItem}.
+     * This endpoint does not modify any other fields (grams, promotions, nutrients, images, etc.).
+     * @param id   the FoodItem ID to update
+     * @param body JSON object containing the new price (e.g. {@code {"price": 2.49}})
+     * @return {@link ResponseEntity} with the updated {@link balancebite.dto.fooditem.FoodItemDTO}
+     */
+    @PatchMapping("/api/food-items/{id}/price")
+    public ResponseEntity<FoodItemDTO> updatePrice(
+            @PathVariable Long id,
+            @RequestBody Map<String, java.math.BigDecimal> body // expects {"price": 2.49}
+    ) {
+        // Extract the price from the request body (may be null → clears the price)
+        java.math.BigDecimal price = body.get("price");
+
+        // Delegate to the service which handles rounding/clearing logic and persistence
+        FoodItemDTO updated = foodItemService.updateFoodItemPrice(id, price);
+
+        // Return the updated DTO
+        return ResponseEntity.ok(updated);
+    }
+
 
     /**
      * Endpoint to fetch and save a single FoodItem by FDC ID.
