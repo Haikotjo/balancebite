@@ -138,7 +138,7 @@ public class SecurityConfig {
                                 // FoodItem entity endpoints
                                 .requestMatchers(HttpMethod.POST,  "/fooditems").hasAnyRole("ADMIN","SUPERMARKET")
                                 .requestMatchers(HttpMethod.PATCH, "/fooditems/**").hasAnyRole("ADMIN","SUPERMARKET")
-                                .requestMatchers(HttpMethod.PATCH, "/food-items/*/price").hasAnyRole("ADMIN","SUPERMARKET")
+                                .requestMatchers(HttpMethod.PATCH, "/api/food-items/*/price").hasAnyRole("ADMIN","SUPERMARKET")
 
 
                         // ---- AUTHENTICATED EERST (specifieker dan wildcard) ----
