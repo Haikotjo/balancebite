@@ -9,6 +9,8 @@ import balancebite.errorHandling.EntityNotFoundException;
 import balancebite.model.foodItem.FoodCategory;
 import balancebite.model.foodItem.FoodSource;
 import balancebite.service.fooditem.FoodItemService;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -95,23 +97,38 @@ public class FoodItemController {
         }
     }
 
-
     /**
      * Updates a FoodItem by ID using a JSON body.
      * If you need file upload for images, switch to the multipart variant below.
      */
-    @PutMapping("/{id}")
-    public ResponseEntity<?> updateFoodItem(@PathVariable Long id,
-                                            @RequestBody @Valid FoodItemInputDTO inputDTO) {
-        log.info("Updating food item with ID: {}", id);
+    @PatchMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> updateFoodItemMultipart(@PathVariable Long id,
+                                                     @RequestPart("foodItemInputDTO") String jsonDTO,
+                                                     @RequestPart(value = "imageFile", required = false) MultipartFile imageFile) {
+        log.info("Updating FoodItem (multipart) with ID: {}", id);
         try {
+            ObjectMapper mapper = new ObjectMapper()
+                    .configure(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT, true);
+
+            FoodItemInputDTO inputDTO = mapper.readValue(jsonDTO, FoodItemInputDTO.class);
+
+            // BELANGRIJK: altijd deze setter aanroepen (ook als imageFile == null)
+            inputDTO.setImageFile(imageFile);
+
             FoodItemDTO updated = foodItemService.updateFoodItem(id, inputDTO);
             return ResponseEntity.ok(updated);
+
         } catch (EntityNotFoundException e) {
-            log.warn("Food item not found for update with ID: {}", id);
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+            log.warn("Food item not found for update with ID: {}", id, e);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", e.getMessage()));
+        } catch (IllegalArgumentException e) {
+            // bv. rule: precies één van (file|url|base64)
+            log.warn("Bad request updating FoodItem with ID {}: {}", id, e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
-            log.error("Unexpected error while updating food item with ID {}: {}", id, e.getMessage(), e);
+            log.error("Unexpected error while updating FoodItem with ID {}: {}", id, e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", "An unexpected error occurred."));
         }
