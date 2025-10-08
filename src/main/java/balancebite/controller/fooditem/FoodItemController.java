@@ -9,8 +9,6 @@ import balancebite.errorHandling.EntityNotFoundException;
 import balancebite.model.foodItem.FoodCategory;
 import balancebite.model.foodItem.FoodSource;
 import balancebite.service.fooditem.FoodItemService;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -69,40 +67,33 @@ public class FoodItemController {
         }
     }
 
-    /**
-     * Updates a FoodItem by ID using a JSON body.
-     * If you need file upload for images, switch to the multipart variant below.
-     */
     @PatchMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<?> updateFoodItemMultipart(@PathVariable Long id,
-                                                     @RequestPart("foodItemInputDTO") String jsonDTO,
-                                                     @RequestPart(value = "imageFile", required = false) MultipartFile imageFile) {
-        log.info("Updating FoodItem (multipart) with ID: {}", id);
+    public ResponseEntity<?> updateFoodItem(
+            @PathVariable Long id,
+            @RequestPart("foodItemInputDTO") String foodItemInputDTOJson,
+            @RequestPart(value = "imageFile", required = false) MultipartFile imageFile
+    ) {
         try {
-            ObjectMapper mapper = new ObjectMapper()
-                    .configure(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT, true);
+            com.fasterxml.jackson.databind.ObjectMapper om = new com.fasterxml.jackson.databind.ObjectMapper()
+                    .configure(com.fasterxml.jackson.databind.DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT, true);
 
-            FoodItemInputDTO inputDTO = mapper.readValue(jsonDTO, FoodItemInputDTO.class);
+            FoodItemInputDTO inputDTO = om.readValue(foodItemInputDTOJson, FoodItemInputDTO.class);
 
-            // BELANGRIJK: altijd deze setter aanroepen (ook als imageFile == null)
+            // BELANGRIJK: altijd zetten, ook als null (zoals bij meals)
             inputDTO.setImageFile(imageFile);
 
             FoodItemDTO updated = foodItemService.updateFoodItem(id, inputDTO);
             return ResponseEntity.ok(updated);
 
-        } catch (EntityNotFoundException e) {
-            log.warn("Food item not found for update with ID: {}", id, e);
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("error", e.getMessage()));
+        } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Invalid foodItemInputDTO JSON"));
+        } catch (balancebite.errorHandling.EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
         } catch (IllegalArgumentException e) {
-            // bv. rule: precies één van (file|url|base64)
-            log.warn("Bad request updating FoodItem with ID {}: {}", id, e.getMessage());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("error", e.getMessage()));
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
-            log.error("Unexpected error while updating FoodItem with ID {}: {}", id, e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "An unexpected error occurred."));
+            log.error("Unexpected error during food item update", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "Update failed."));
         }
     }
 

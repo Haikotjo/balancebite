@@ -110,16 +110,6 @@ public class FoodItemService implements IFoodItemService {
 
     /**
      * Updates an existing {@link FoodItem} using the supplied DTO.
-     * <p>
-     * Strategy:
-     * <ul>
-     *   <li>Load the entity by ID or throw {@link EntityNotFoundException}.</li>
-     *   <li>Overwrite all basic fields (name, fdcId, portion, weight, source, enums, flags).</li>
-     *   <li>Replace nutrients entirely (keep only entries that have a value).</li>
-     *   <li>Image precedence matches MealMapper: file → base64 → url.</li>
-     *   <li>Set price and grams as provided.</li>
-     * </ul>
-     *
      * @param id    the FoodItem ID to update
      * @param input the incoming values
      * @return the updated item as {@link FoodItemDTO}
