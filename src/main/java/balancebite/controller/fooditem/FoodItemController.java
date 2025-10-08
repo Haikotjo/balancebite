@@ -69,34 +69,6 @@ public class FoodItemController {
         }
     }
 
-    @PatchMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<?> updateFoodItem(
-            @PathVariable Long id,
-            @RequestPart("foodItemInputDTO") String foodItemInputDTOJson,
-            @RequestPart(value = "imageFile", required = false) MultipartFile imageFile
-    ) {
-        try {
-            com.fasterxml.jackson.databind.ObjectMapper om = new com.fasterxml.jackson.databind.ObjectMapper();
-            om.configure(com.fasterxml.jackson.databind.DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT, true);
-            FoodItemInputDTO inputDTO = om.readValue(foodItemInputDTOJson, FoodItemInputDTO.class);
-
-            // Always pass file (may be null)
-            inputDTO.setImageFile(imageFile);
-
-            FoodItemDTO updated = foodItemService.updateFoodItem(id, inputDTO);
-            return ResponseEntity.ok(updated);
-
-        } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Invalid foodItemInputDTO JSON"));
-        } catch (balancebite.errorHandling.EntityNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "Update failed."));
-        }
-    }
-
     /**
      * Updates a FoodItem by ID using a JSON body.
      * If you need file upload for images, switch to the multipart variant below.
