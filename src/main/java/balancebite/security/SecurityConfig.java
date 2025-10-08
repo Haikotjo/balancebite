@@ -138,8 +138,10 @@ public class SecurityConfig {
                                 // FoodItem entity endpoints
                                 .requestMatchers(HttpMethod.POST,  "/fooditems").hasAnyRole("ADMIN","SUPERMARKET")
                                 .requestMatchers(HttpMethod.PATCH, "/fooditems/**").hasAnyRole("ADMIN","SUPERMARKET")
+                                .requestMatchers(HttpMethod.PATCH, "/api/food-items/*/price").hasAnyRole("ADMIN","SUPERMARKET")
 
-                                // ---- AUTHENTICATED EERST (specifieker dan wildcard) ----
+
+                        // ---- AUTHENTICATED EERST (specifieker dan wildcard) ----
                                 .requestMatchers(HttpMethod.GET,  "/fooditems/fetch/**").hasAnyRole("ADMIN")
                                 .requestMatchers(HttpMethod.POST, "/fooditems/bulk-fetch-items").hasAnyRole("ADMIN")
 
