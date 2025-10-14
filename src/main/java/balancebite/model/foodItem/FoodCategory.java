@@ -18,5 +18,6 @@ public enum FoodCategory {
     READY_MEAL,
     SNACK,
     SUPPLEMENT,
+    PROTEIN_SUPPLEMENT,
     OTHER
 }
