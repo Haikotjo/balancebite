@@ -15,7 +15,6 @@ public class DbFixConfig {
         return args -> {
             try { jdbc.execute("SET statement_timeout = 5000"); } catch (Exception ignore) {}
 
-            // 1) Vind de daadwerkelijke CHECK-constraint op public.food_items.food_category
             String dropSql = jdbc.query(
                     """
                     SELECT 'ALTER TABLE public.food_items DROP CONSTRAINT ' || quote_ident(conname) || ';' AS sql
@@ -37,7 +36,6 @@ public class DbFixConfig {
                 log.info("No existing CHECK constraint found on public.food_items.food_category");
             }
 
-            // 2) Voeg de nieuwe CHECK toe (schema-gekwalificeerd)
             try {
                 jdbc.execute("""
           ALTER TABLE public.food_items
