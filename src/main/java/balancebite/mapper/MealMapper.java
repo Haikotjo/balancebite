@@ -116,7 +116,9 @@ public class MealMapper {
                 weeklySaveCount,
                 monthlySaveCount,
                 mealPrice,
-                hasUnknownPrices
+                hasUnknownPrices,
+                meal.getVideoUrl(),
+                meal.getSourceUrl()
         );
     }
 
@@ -159,6 +161,13 @@ public class MealMapper {
             meal.setImage(dto.getImage()); // if you still support base64 storage
         }
         // dto.getImageFile() is intentionally ignored here.
+
+        if (dto.getVideoUrl() != null && !dto.getVideoUrl().isBlank()) {
+            meal.setVideoUrl(dto.getVideoUrl());
+        }
+        if (dto.getSourceUrl() != null && !dto.getSourceUrl().isBlank()) {
+            meal.setSourceUrl(dto.getSourceUrl());
+        }
 
         // Ingredients
         List<MealIngredient> mealIngredients = dto.getMealIngredients().stream()

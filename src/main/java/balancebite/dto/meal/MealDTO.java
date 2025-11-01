@@ -120,7 +120,6 @@ public class MealDTO {
     private final double totalSaturatedFat;
     private final double totalUnsaturatedFat;
 
-
     /**
      * A concatenated string of food item names in the meal.
      * This allows for searching and sorting based on included food items.
@@ -139,6 +138,16 @@ public class MealDTO {
 
     private final BigDecimal mealPrice;
     private final boolean hasUnknownPrices;
+
+    /**
+     * External video URL (we only store the link).
+     */
+    private final String videoUrl;
+
+    /**
+     * Source URL pointing to the original meal page (e.g., Allerhande).
+     */
+    private final String sourceUrl;
 
     /**
      * Constructor for creating a MealDTO with essential meal information.
@@ -171,7 +180,7 @@ public class MealDTO {
     public MealDTO(Long id, String name, String mealDescription, String image, String imageUrl, Long originalMealId,
                    LocalDateTime version, List<MealIngredientDTO> mealIngredients, PublicUserDTO createdBy,
                    PublicUserDTO adjustedBy ,boolean  isTemplate, boolean  isPrivate, boolean  isRestricted, Set<MealType> mealTypes, Set<Cuisine> cuisines, Set<Diet> diets, double totalCalories, double totalProtein, double totalCarbs, double totalSugars, double totalSaturatedFat, double totalUnsaturatedFat,
-                   double totalFat, String foodItemsString, String preparationTime, long saveCount, long weeklySaveCount, long monthlySaveCount, BigDecimal mealPrice, boolean hasUnknownPrices ) {
+                   double totalFat, String foodItemsString, String preparationTime, long saveCount, long weeklySaveCount, long monthlySaveCount, BigDecimal mealPrice, boolean hasUnknownPrices, String videoUrl, String sourceUrl ) {
         this.id = id;
         this.name = name;
         this.mealDescription = mealDescription;
@@ -202,6 +211,8 @@ public class MealDTO {
         this.monthlySaveCount = monthlySaveCount;
         this.mealPrice = mealPrice;
         this.hasUnknownPrices = hasUnknownPrices;
+        this.videoUrl = videoUrl;
+        this.sourceUrl = sourceUrl;
     }
 
     /**
@@ -410,4 +421,7 @@ public class MealDTO {
     public boolean isHasUnknownPrices() {
         return hasUnknownPrices;
     }
+
+    public String getVideoUrl() { return videoUrl; }
+    public String getSourceUrl() { return sourceUrl; }
 }

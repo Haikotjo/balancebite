@@ -200,6 +200,21 @@ public class Meal {
     }
 
     /**
+     * External video URL for this meal (we only store the link).
+     */
+    @Column(name = "video_url", length = 2048)
+    // Optional: validate URL format (Hibernate Validator)
+    // @org.hibernate.validator.constraints.URL(regexp = "https?://.*", message = "Must be a valid HTTP/HTTPS URL")
+    private String videoUrl;
+
+    /**
+     * Source URL pointing to the original meal page (e.g., Allerhande).
+     */
+    @Column(name = "source_url", length = 2048)
+    // @org.hibernate.validator.constraints.URL(regexp = "https?://.*", message = "Must be a valid HTTP/HTTPS URL")
+    private String sourceUrl;
+
+    /**
      * No-argument constructor required by JPA.
      */
     public Meal() {}
@@ -622,5 +637,17 @@ public class Meal {
 
     @Override
     public int hashCode() { return 31; }
+
+    /** Returns the external video URL (if any). */
+    public String getVideoUrl() { return videoUrl; }
+
+    /** Sets the external video URL. */
+    public void setVideoUrl(String videoUrl) { this.videoUrl = videoUrl; }
+
+    /** Returns the original source URL (if any). */
+    public String getSourceUrl() { return sourceUrl; }
+
+    /** Sets the original source URL. */
+    public void setSourceUrl(String sourceUrl) { this.sourceUrl = sourceUrl; }
 
 }

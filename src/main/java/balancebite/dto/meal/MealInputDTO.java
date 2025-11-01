@@ -97,6 +97,15 @@ public class MealInputDTO {
      */
     private String preparationTime;
 
+    @Size(max = 2048, message = "Video URL must not exceed 2048 characters.")
+// Optie A (aan te raden als Hibernate Validator aanwezig is):
+// @URL(regexp = "https?://.*", message = "Must be a valid HTTP/HTTPS URL")
+    private String videoUrl;
+
+    @Size(max = 2048, message = "Source URL must not exceed 2048 characters.")
+// @URL(regexp = "https?://.*", message = "Must be a valid HTTP/HTTPS URL")
+    private String sourceUrl;
+
 
     // Constructor, getters, and setters
 
@@ -315,4 +324,10 @@ public class MealInputDTO {
     public void setPreparationTime(String preparationTime) {
         this.preparationTime = preparationTime;
     }
+
+    public String getVideoUrl() { return videoUrl; }
+    public void setVideoUrl(String videoUrl) { this.videoUrl = videoUrl; }
+
+    public String getSourceUrl() { return sourceUrl; }
+    public void setSourceUrl(String sourceUrl) { this.sourceUrl = sourceUrl; }
 }
