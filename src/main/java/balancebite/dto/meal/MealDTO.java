@@ -149,6 +149,9 @@ public class MealDTO {
      */
     private final String sourceUrl;
 
+    private final String mealPreparation;
+    private final String preparationVideoUrl;
+
     /**
      * Constructor for creating a MealDTO with essential meal information.
      *
@@ -180,7 +183,7 @@ public class MealDTO {
     public MealDTO(Long id, String name, String mealDescription, String image, String imageUrl, Long originalMealId,
                    LocalDateTime version, List<MealIngredientDTO> mealIngredients, PublicUserDTO createdBy,
                    PublicUserDTO adjustedBy ,boolean  isTemplate, boolean  isPrivate, boolean  isRestricted, Set<MealType> mealTypes, Set<Cuisine> cuisines, Set<Diet> diets, double totalCalories, double totalProtein, double totalCarbs, double totalSugars, double totalSaturatedFat, double totalUnsaturatedFat,
-                   double totalFat, String foodItemsString, String preparationTime, long saveCount, long weeklySaveCount, long monthlySaveCount, BigDecimal mealPrice, boolean hasUnknownPrices, String videoUrl, String sourceUrl ) {
+                   double totalFat, String foodItemsString, String preparationTime, long saveCount, long weeklySaveCount, long monthlySaveCount, BigDecimal mealPrice, boolean hasUnknownPrices, String videoUrl, String sourceUrl, String mealPreparation, String preparationVideoUrl ) {
         this.id = id;
         this.name = name;
         this.mealDescription = mealDescription;
@@ -213,6 +216,8 @@ public class MealDTO {
         this.hasUnknownPrices = hasUnknownPrices;
         this.videoUrl = videoUrl;
         this.sourceUrl = sourceUrl;
+        this.mealPreparation = mealPreparation;
+        this.preparationVideoUrl = preparationVideoUrl;
     }
 
     /**
@@ -424,4 +429,12 @@ public class MealDTO {
 
     public String getVideoUrl() { return videoUrl; }
     public String getSourceUrl() { return sourceUrl; }
+
+    public String getMealPreparation() {
+        return mealPreparation;
+    }
+
+    public String getPreparationVideoUrl() {
+        return preparationVideoUrl;
+    }
 }

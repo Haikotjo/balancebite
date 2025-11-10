@@ -118,7 +118,9 @@ public class MealMapper {
                 mealPrice,
                 hasUnknownPrices,
                 meal.getVideoUrl(),
-                meal.getSourceUrl()
+                meal.getSourceUrl(),
+                meal.getMealPreparation(),
+                meal.getPreparationVideoUrl()
         );
     }
 
@@ -167,6 +169,11 @@ public class MealMapper {
         }
         if (dto.getSourceUrl() != null && !dto.getSourceUrl().isBlank()) {
             meal.setSourceUrl(dto.getSourceUrl());
+        }
+
+        meal.setMealPreparation(dto.getMealPreparation());
+        if (dto.getPreparationVideoUrl() != null && !dto.getPreparationVideoUrl().isBlank()) {
+            meal.setPreparationVideoUrl(dto.getPreparationVideoUrl());
         }
 
         // Ingredients

@@ -214,6 +214,14 @@ public class Meal {
     // @org.hibernate.validator.constraints.URL(regexp = "https?://.*", message = "Must be a valid HTTP/HTTPS URL")
     private String sourceUrl;
 
+    @Lob
+    @Column(name = "meal_preparation") // CLOB/TEXT
+    private String mealPreparation;
+
+    /** External video specifically showing the preparation steps. */
+    @Column(name = "preparation_video_url", length = 2048)
+    private String preparationVideoUrl;
+
     /**
      * No-argument constructor required by JPA.
      */
@@ -649,5 +657,10 @@ public class Meal {
 
     /** Sets the original source URL. */
     public void setSourceUrl(String sourceUrl) { this.sourceUrl = sourceUrl; }
+
+    public String getMealPreparation() { return mealPreparation; }
+    public void setMealPreparation(String mealPreparation) { this.mealPreparation = mealPreparation; }
+    public String getPreparationVideoUrl() { return preparationVideoUrl; }
+    public void setPreparationVideoUrl(String preparationVideoUrl) { this.preparationVideoUrl = preparationVideoUrl; }
 
 }

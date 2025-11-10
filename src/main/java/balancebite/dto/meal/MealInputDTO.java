@@ -9,6 +9,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Size;
+import org.hibernate.validator.constraints.URL;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
@@ -98,13 +99,21 @@ public class MealInputDTO {
     private String preparationTime;
 
     @Size(max = 2048, message = "Video URL must not exceed 2048 characters.")
-// Optie A (aan te raden als Hibernate Validator aanwezig is):
-// @URL(regexp = "https?://.*", message = "Must be a valid HTTP/HTTPS URL")
+
+    @URL(regexp = "https?://.*", message = "Must be a valid HTTP/HTTPS URL")
     private String videoUrl;
 
     @Size(max = 2048, message = "Source URL must not exceed 2048 characters.")
-// @URL(regexp = "https?://.*", message = "Must be a valid HTTP/HTTPS URL")
+    @URL(regexp = "https?://.*", message = "Must be a valid HTTP/HTTPS URL")
     private String sourceUrl;
+
+    @Size(max = 2048, message = "Preparation video URL must not exceed 2048 characters.")
+    @URL(regexp = "https?://.*", message = "Must be a valid HTTP/HTTPS URL")
+    private String preparationVideoUrl;
+
+    /** Optional long preparation instructions (free text). */
+    @Size(max = 20000, message = "Preparation text is too long.")
+    private String mealPreparation;
 
 
     // Constructor, getters, and setters
@@ -325,9 +334,35 @@ public class MealInputDTO {
         this.preparationTime = preparationTime;
     }
 
-    public String getVideoUrl() { return videoUrl; }
-    public void setVideoUrl(String videoUrl) { this.videoUrl = videoUrl; }
+    public @Size(max = 2048, message = "Video URL must not exceed 2048 characters.") @URL(regexp = "https?://.*", message = "Must be a valid HTTP/HTTPS URL") String getVideoUrl() {
+        return videoUrl;
+    }
 
-    public String getSourceUrl() { return sourceUrl; }
-    public void setSourceUrl(String sourceUrl) { this.sourceUrl = sourceUrl; }
+    public void setVideoUrl(@Size(max = 2048, message = "Video URL must not exceed 2048 characters.") @URL(regexp = "https?://.*", message = "Must be a valid HTTP/HTTPS URL") String videoUrl) {
+        this.videoUrl = videoUrl;
+    }
+
+    public @Size(max = 2048, message = "Source URL must not exceed 2048 characters.") @URL(regexp = "https?://.*", message = "Must be a valid HTTP/HTTPS URL") String getSourceUrl() {
+        return sourceUrl;
+    }
+
+    public void setSourceUrl(@Size(max = 2048, message = "Source URL must not exceed 2048 characters.") @URL(regexp = "https?://.*", message = "Must be a valid HTTP/HTTPS URL") String sourceUrl) {
+        this.sourceUrl = sourceUrl;
+    }
+
+    public @Size(max = 2048, message = "Preparation video URL must not exceed 2048 characters.") @URL(regexp = "https?://.*", message = "Must be a valid HTTP/HTTPS URL") String getPreparationVideoUrl() {
+        return preparationVideoUrl;
+    }
+
+    public void setPreparationVideoUrl(@Size(max = 2048, message = "Preparation video URL must not exceed 2048 characters.") @URL(regexp = "https?://.*", message = "Must be a valid HTTP/HTTPS URL") String preparationVideoUrl) {
+        this.preparationVideoUrl = preparationVideoUrl;
+    }
+
+    public @Size(max = 20000, message = "Preparation text is too long.") String getMealPreparation() {
+        return mealPreparation;
+    }
+
+    public void setMealPreparation(@Size(max = 20000, message = "Preparation text is too long.") String mealPreparation) {
+        this.mealPreparation = mealPreparation;
+    }
 }
