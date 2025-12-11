@@ -70,15 +70,23 @@ public class RegistrationService implements IRegistrationService {
             throw new EntityAlreadyExistsException("A user with email " + registrationDTO.getEmail() + " already exists.");
         }
 
+        // Determine final username (same logic as in the constructor)
+        String requestedUserName = registrationDTO.getUserName() != null && !registrationDTO.getUserName().isBlank()
+                ? registrationDTO.getUserName()
+                : registrationDTO.getEmail();
+
+        //  Username check (case-insensitive)
+        if (userRepository.existsByUserNameIgnoreCase(requestedUserName)) {
+            log.warn("Registration failed: Username '{}' already exists (case-insensitive check).", requestedUserName);
+            throw new EntityAlreadyExistsException("A user with username " + requestedUserName + " already exists.");
+        }
+
         // Hash the password
         String hashedPassword = passwordEncoder.encode(registrationDTO.getPassword());
 
         // Create a new User entity and populate fields from DTO
-        // Nieuwe manier: alles direct in de constructor zetten
         User user = new User(
-                registrationDTO.getUserName() != null && !registrationDTO.getUserName().isBlank()
-                        ? registrationDTO.getUserName()
-                        : registrationDTO.getEmail(),
+                requestedUserName,  // ← gebruik hetzelfde resultaat dat je al had berekend
                 registrationDTO.getEmail(),
                 hashedPassword,
                 registrationDTO.getRoles() != null && !registrationDTO.getRoles().isEmpty()
