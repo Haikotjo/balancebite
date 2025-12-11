@@ -127,8 +127,8 @@ public class RegistrationService implements IRegistrationService {
 
         String refreshToken = jwtService.generateRefreshToken(
                 user.getId(),
-                user.getUserName(), // Voeg de username toe
-                user.getEmail() // Voeg de email toe
+                user.getUserName(),
+                user.getEmail()
         );
 
         log.info("JWT tokens generated for userId: {}", user.getId());
