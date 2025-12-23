@@ -53,6 +53,19 @@ public class DbFixConfig {
     }
 
     @Bean
+    public org.springframework.boot.CommandLineRunner makeMealImagePublicIdNullable(JdbcTemplate jdbc) {
+        return args -> {
+            try {
+                jdbc.execute("ALTER TABLE public.meal_images ALTER COLUMN public_id DROP NOT NULL");
+                log.info("✅ meal_images.public_id is now nullable");
+            } catch (Exception e) {
+                log.warn("public_id already nullable or alter failed: {}", e.getMessage());
+            }
+        };
+    }
+
+
+    @Bean
     public org.springframework.boot.CommandLineRunner fixMealImagesFromImageUrl(JdbcTemplate jdbc) {
         return args -> {
             log.info("Starting one-time Meal → MealImage migration");
