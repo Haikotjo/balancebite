@@ -1,5 +1,6 @@
 package balancebite.service.user;
 
+import balancebite.dto.CloudinaryUploadResult;
 import balancebite.dto.diet.DietDayInputDTO;
 import balancebite.dto.diet.DietPlanDTO;
 import balancebite.dto.diet.DietPlanInputDTO;
@@ -16,10 +17,11 @@ import balancebite.model.diet.SharedDietPlanAccess;
 import balancebite.model.meal.Meal;
 import balancebite.model.MealIngredient;
 import balancebite.model.meal.SharedMealAccess;
+import balancebite.model.meal.mealImage.MealImage;
 import balancebite.model.user.PendingClient;
 import balancebite.model.user.User;
 import balancebite.repository.*;
-import balancebite.service.util.ImageHandlerService;
+import balancebite.service.CloudinaryService;
 import balancebite.service.interfaces.meal.IDietitianService;
 import balancebite.utils.CheckForDuplicateTemplateMealUtil;
 import balancebite.utils.MealAssignmentUtil;
@@ -27,6 +29,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -49,7 +52,7 @@ public class UserDietitianService implements IDietitianService {
     private final DietPlanMapper dietPlanMapper;
     private final DietDayMapper dietDayMapper;
     private final SharedDietPlanAccessRepository sharedDietPlanAccessRepository;
-    private final ImageHandlerService imageHandlerService;
+    private final CloudinaryService cloudinaryService;
 
 
     public UserDietitianService(
@@ -64,7 +67,7 @@ public class UserDietitianService implements IDietitianService {
             DietPlanMapper dietPlanMapper,
             DietDayMapper dietDayMapper,
             SharedDietPlanAccessRepository sharedDietPlanAccessRepository,
-            ImageHandlerService imageHandlerService
+            CloudinaryService cloudinaryService
     ) {
         this.pendingClientRepository = pendingClientRepository;
         this.userRepository = userRepository;
@@ -77,8 +80,10 @@ public class UserDietitianService implements IDietitianService {
         this.dietPlanMapper = dietPlanMapper;
         this.dietDayMapper = dietDayMapper;
         this.sharedDietPlanAccessRepository = sharedDietPlanAccessRepository;
-        this.imageHandlerService = imageHandlerService;
+        this.cloudinaryService = cloudinaryService;
     }
+
+
     @Override
     @Transactional
     public void inviteClientByEmail(ClientLinkRequestDTO requestDTO, User dietitian) {
@@ -126,35 +131,35 @@ public class UserDietitianService implements IDietitianService {
                                          List<String> sharedEmails) {
         log.info("Dietitian ID {} is creating a new private meal", dietitianId);
 
-        // 1) Enforce single image source (file | url | base64)
-        int sources = 0;
-        if (mealInputDTO.getImageFile() != null && !mealInputDTO.getImageFile().isEmpty()) sources++;
-        if (mealInputDTO.getImageUrl() != null && !mealInputDTO.getImageUrl().isBlank())  sources++;
-        if (mealInputDTO.getImage() != null && !mealInputDTO.getImage().isBlank())        sources++;
-        if (sources > 1) {
-            throw new IllegalArgumentException("Provide exactly one of: imageFile, imageUrl, or image (base64).");
-        }
-
-        // 2) Map DTO -> entity (mapper already sets mealTypes/cuisines/diets)
         Meal meal = mealMapper.toEntity(mealInputDTO);
         meal.setVersion(LocalDateTime.now());
 
-        // 3) Image handling (same as createMealForUser)
-        String finalUrl = imageHandlerService.handleImage(
-                null,                               // currentUrl (create flow)
-                mealInputDTO.getImageFile(),        // may be null
-                mealInputDTO.getImageUrl(),         // may be null/blank
-                true                                // isCreate
-        );
-        meal.setImageUrl(finalUrl);
-        // keep base64 only if it was the only provided source and no URL resulted
-        if (finalUrl != null) {
-            meal.setImage(null);
-        } else {
-            meal.setImage((sources == 1 && mealInputDTO.getImage() != null && !mealInputDTO.getImage().isBlank())
-                    ? mealInputDTO.getImage()
-                    : null);
+
+        // 1) Upload meal images
+        List<MultipartFile> files = mealInputDTO.getImageFiles();
+        Integer primaryIndex = mealInputDTO.getPrimaryIndex();
+
+        if (files != null && !files.isEmpty()) {
+            for (int i = 0; i < files.size(); i++) {
+                MultipartFile file = files.get(i);
+                if (file == null || file.isEmpty()) continue;
+
+                CloudinaryUploadResult upload = cloudinaryService.uploadFile(file);
+
+                MealImage image = new MealImage(meal, upload.getImageUrl(), upload.getPublicId());
+                image.setOrderIndex(i);
+
+                boolean isPrimary =
+                        primaryIndex != null
+                                && primaryIndex >= 0
+                                && primaryIndex < files.size()
+                                && i == primaryIndex;
+
+                image.setPrimary(isPrimary);
+                meal.addImage(image);
+            }
         }
+
 
         // 4) Preparation time
         meal.setPreparationTime(

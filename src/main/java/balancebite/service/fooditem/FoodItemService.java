@@ -1,5 +1,6 @@
 package balancebite.service.fooditem;
 
+import balancebite.dto.CloudinaryUploadResult;
 import balancebite.dto.fooditem.FoodItemDTO;
 import balancebite.dto.UsdaFoodResponseDTO;
 import balancebite.dto.fooditem.FoodItemInputDTO;
@@ -17,7 +18,6 @@ import balancebite.service.CloudinaryService;
 import balancebite.service.UsdaApiService;
 import balancebite.service.interfaces.fooditem.IFoodItemService;
 import balancebite.errorHandling.EntityNotFoundException;
-import balancebite.service.util.ImageHandlerService;
 import balancebite.utils.FoodItemBulkFetchUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,7 +42,6 @@ public class FoodItemService implements IFoodItemService {
     private final FoodItemRepository foodItemRepository;
     private final UsdaApiService usdaApiService;
     private final FoodItemMapper foodItemMapper;
-    private final ImageHandlerService imageHandlerService;
     private final CloudinaryService cloudinaryService;
     private final PromotedFoodItemRepository promotedFoodItemRepository;
 
@@ -53,11 +52,10 @@ public class FoodItemService implements IFoodItemService {
      * @param usdaApiService Service for interacting with the USDA API.
      * @param foodItemMapper Mapper for converting between FoodItem entities and DTOs.
      */
-    public FoodItemService(FoodItemRepository foodItemRepository, UsdaApiService usdaApiService, FoodItemMapper foodItemMapper, ImageHandlerService imageHandlerService, CloudinaryService cloudinaryService, PromotedFoodItemRepository promotedFoodItemRepository) {
+    public FoodItemService(FoodItemRepository foodItemRepository, UsdaApiService usdaApiService, FoodItemMapper foodItemMapper, CloudinaryService cloudinaryService, PromotedFoodItemRepository promotedFoodItemRepository) {
         this.foodItemRepository = foodItemRepository;
         this.usdaApiService = usdaApiService;
         this.foodItemMapper = foodItemMapper;
-        this.imageHandlerService = imageHandlerService;
         this.cloudinaryService = cloudinaryService;
         this.promotedFoodItemRepository = promotedFoodItemRepository;
     }
@@ -76,31 +74,24 @@ public class FoodItemService implements IFoodItemService {
         int sources = 0;
         if (inputDTO.getImageFile() != null && !inputDTO.getImageFile().isEmpty()) sources++;
         if (inputDTO.getImageUrl() != null && !inputDTO.getImageUrl().isBlank())  sources++;
-        if (inputDTO.getImage() != null && !inputDTO.getImage().isBlank())        sources++;
         if (sources > 1) {
-            throw new IllegalArgumentException("Provide exactly one of: imageFile, imageUrl, or image (base64).");
+            throw new IllegalArgumentException("Provide exactly one of: imageFile or imageUrl.");
         }
 
         // 2) Map DTO -> entity (mapper does NOT upload files)
         FoodItem foodItem = foodItemMapper.toEntity(inputDTO);
 
         // 3) Image handling (create flow => currentUrl = null)
-        String finalUrl = imageHandlerService.handleImage(
-                null,                       // currentUrl on create
-                inputDTO.getImageFile(),    // may be null/empty
-                inputDTO.getImageUrl(),     // may be null/blank
-                true                        // isCreate = true
-        );
-        foodItem.setImageUrl(finalUrl);
+        String finalUrl = null;
 
-        // Do not keep base64 if we have a URL; else keep base64 only if it was the single source
-        if (finalUrl != null) {
-            foodItem.setImage(null);
-        } else {
-            foodItem.setImage((sources == 1 && inputDTO.getImage() != null && !inputDTO.getImage().isBlank())
-                    ? inputDTO.getImage()
-                    : null);
+        if (inputDTO.getImageFile() != null && !inputDTO.getImageFile().isEmpty()) {
+            CloudinaryUploadResult r = cloudinaryService.uploadFile(inputDTO.getImageFile());
+            finalUrl = r.getImageUrl();
+        } else if (inputDTO.getImageUrl() != null && !inputDTO.getImageUrl().isBlank()) {
+            finalUrl = inputDTO.getImageUrl().trim();
         }
+
+        foodItem.setImageUrl(finalUrl);
 
         // 4) Persist and return
         foodItemRepository.save(foodItem);
@@ -123,9 +114,8 @@ public class FoodItemService implements IFoodItemService {
         int sources = 0;
         if (input.getImageFile() != null && !input.getImageFile().isEmpty()) sources++;
         if (input.getImageUrl() != null && !input.getImageUrl().isBlank())  sources++;
-        if (input.getImage() != null && !input.getImage().isBlank())        sources++;
         if (sources > 1) {
-            throw new IllegalArgumentException("Provide exactly one of: imageFile, imageUrl, or image (base64).");
+            throw new IllegalArgumentException("Provide exactly one of: imageFile or imageUrl.");
         }
 
         // --- 1) Basic fields ---
@@ -148,22 +138,16 @@ public class FoodItemService implements IFoodItemService {
         existing.getNutrients().addAll(nutrients);
 
         // --- 3) Image handling via central handler (update flow => may delete old when switching/clearing) ---
-        String finalUrl = imageHandlerService.handleImage(
-                existing.getImageUrl(),     // current URL (may be null)
-                input.getImageFile(),       // new file (may be null/empty)
-                input.getImageUrl(),        // new direct URL (may be null/blank)
-                false                       // isCreate = false (so handler can delete old)
-        );
-        existing.setImageUrl(finalUrl);
+        String finalUrl = existing.getImageUrl(); // behouden wat er is
 
-        // Keep base64 only if it is the single provided source and no URL resulted
-        if (finalUrl != null) {
-            existing.setImage(null); // URL wins -> do not store base64
-        } else {
-            existing.setImage((sources == 1 && input.getImage() != null && !input.getImage().isBlank())
-                    ? input.getImage()
-                    : null);
+        if (input.getImageFile() != null && !input.getImageFile().isEmpty()) {
+            CloudinaryUploadResult r = cloudinaryService.uploadFile(input.getImageFile());
+            finalUrl = r.getImageUrl();
+        } else if (input.getImageUrl() != null && !input.getImageUrl().isBlank()) {
+            finalUrl = input.getImageUrl().trim();
         }
+
+        existing.setImageUrl(finalUrl);
 
         // --- 4) Pricing ---
         existing.setPrice(input.getPrice());
