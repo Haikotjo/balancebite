@@ -73,7 +73,7 @@ public class UserDietitianController {
     @PreAuthorize("hasRole('DIETITIAN') or hasRole('ADMIN')")
     public ResponseEntity<?> createMealAsDietitian(
             @RequestPart("mealInputDTO") String mealInputDTOJson,
-            @RequestPart(value = "imageFile", required = false) MultipartFile imageFile,
+            @RequestPart(value = "imageFiles", required = false) List<MultipartFile> imageFiles,
             @RequestParam(value = "sharedUserIds", required = false) List<Long> sharedUserIds,
             @RequestParam(value = "sharedEmails", required = false) List<String> sharedEmails,
             @RequestHeader("Authorization") String authorizationHeader
@@ -84,8 +84,8 @@ public class UserDietitianController {
             ObjectMapper objectMapper = new ObjectMapper();
             MealInputDTO mealInputDTO = objectMapper.readValue(mealInputDTOJson, MealInputDTO.class);
 
-            if (imageFile != null && !imageFile.isEmpty()) {
-                mealInputDTO.setImageFile(imageFile);
+            if (imageFiles != null && !imageFiles.isEmpty()) {
+                mealInputDTO.setImageFiles(imageFiles);
             }
 
             String token = authorizationHeader.substring(7);

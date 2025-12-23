@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
  * IMPORTANT:
  * - This mapper NEVER uploads files. It only copies fields.
  * - If a MultipartFile was provided on the DTO (dto.getImageFile()),
- *   your Service layer must upload it (e.g., Cloudinary via ImageHandlerService)
+ *   your Service layer must upload it (e.g., Cloudinary)
  *   and set entity.setImageUrl(...) BEFORE saving the entity.
  * - Direct imageUrl and base64 image are passed through if present.
  */

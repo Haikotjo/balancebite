@@ -110,7 +110,7 @@ public class FoodItemService implements IFoodItemService {
         FoodItem existing = foodItemRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Food item with ID " + id + " not found."));
 
-        // --- 0) Enforce image source exclusivity: at most ONE of (file | url | base64) ---
+        // --- 0) Enforce image source exclusivity: at most ONE of (file | url ) ---
         int sources = 0;
         if (input.getImageFile() != null && !input.getImageFile().isEmpty()) sources++;
         if (input.getImageUrl() != null && !input.getImageUrl().isBlank())  sources++;
