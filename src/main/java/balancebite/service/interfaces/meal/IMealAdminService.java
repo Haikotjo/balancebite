@@ -33,25 +33,29 @@ public interface IMealAdminService {
     /**
      * Updates an existing Meal entity with new information.
      *
-     * @param id           The ID of the meal to be updated.
+     * @param mealId           The ID of the meal to be updated.
      * @param mealInputDTO The DTO containing the updated meal information.
      * @return The updated MealDTO containing the new meal data.
      * @throws EntityNotFoundException  If the meal with the given ID is not found.
      * @throws InvalidFoodItemException If any food item ID in the ingredients is invalid.
      */
-    MealDTO updateMeal(Long id, MealInputDTO mealInputDTO) throws EntityNotFoundException, InvalidFoodItemException;
+    MealDTO updateMealForAdmin(
+            Long authenticatedUserId,
+            Long mealId,
+            MealInputDTO mealInputDTO
+    ) throws EntityNotFoundException, InvalidFoodItemException;
 
     /**
      * Assigns a copy of an existing meal to a user's meal list.
      *
-     * @param userId The ID of the user to assign the meal to.
+     * @param targetUserId The ID of the user to assign the meal to.
      * @param mealId The ID of the meal to copy and assign.
      * @return UserDTO with the updated user data.
      * @throws UserNotFoundException  if the user is not found.
      * @throws MealNotFoundException  if the meal is not found.
      * @throws DuplicateMealException if the user already has a meal with the same content.
      */
-    UserDTO addMealToUser(Long userId, Long mealId)
+    UserDTO addMealToUserAsAdmin(Long targetUserId, Long mealId, Long adminUserId)
             throws UserNotFoundException, MealNotFoundException, DuplicateMealException;
 
 

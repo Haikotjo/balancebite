@@ -26,4 +26,24 @@ public interface DietDayRepository extends JpaRepository<DietDay, Long> {
     @Query("SELECT DISTINCT dd.diet.name FROM DietDay dd WHERE :meal MEMBER OF dd.meals")
     List<String> findDietNamesByMeal(@Param("meal") Meal meal);
 
+    @Query("""
+        SELECT dd
+        FROM DietDay dd
+        JOIN dd.diet dp
+        WHERE COALESCE(dp.adjustedBy.id, dp.createdBy.id) = :userId
+          AND :meal MEMBER OF dd.meals
+    """)
+    List<DietDay> findByOwnerUserIdAndMealsContaining(@Param("userId") Long userId,
+                                                      @Param("meal") Meal meal);
+
+    @Query("""
+        SELECT (COUNT(dd) > 0)
+        FROM DietDay dd
+        JOIN dd.diet dp
+        WHERE :meal MEMBER OF dd.meals
+          AND COALESCE(dp.adjustedBy.id, dp.createdBy.id) <> :userId
+    """)
+    boolean existsMealInOtherUsersDiets(@Param("userId") Long userId,
+                                        @Param("meal") Meal meal);
+
 }

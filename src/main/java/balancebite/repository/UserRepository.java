@@ -54,4 +54,15 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     boolean existsByUserNameIgnoreCase(String userName);
 
+
+    @Query("""
+        SELECT (COUNT(u) > 0)
+        FROM User u
+        JOIN u.meals m
+        WHERE m = :meal
+          AND u.id <> :userId
+    """)
+    boolean existsMealInOtherUsersMealLists(@Param("userId") Long userId,
+                                            @Param("meal") Meal meal);
 }
+

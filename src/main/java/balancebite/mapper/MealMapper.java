@@ -15,6 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
+import balancebite.model.meal.mealImage.MealImage;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -25,13 +26,12 @@ import java.util.stream.Collectors;
 
 /**
  * Maps between Meal entities and DTOs.
- *
+ /**
  * IMPORTANT:
  * - This mapper NEVER uploads files. It only copies fields.
- * - If a MultipartFile was provided (dto.getImageFile()),
- *   your Service layer must upload it (e.g., Cloudinary) and set meal.setImageUrl(...)
- *   BEFORE saving the entity.
- * - Direct imageUrl and base64 image are passed through if present.
+ * - If MultipartFiles were provided (dto.getImageFiles()),
+ *   your Service layer must upload them (e.g., Cloudinary) and create MealImage entities
+ *   BEFORE saving the Meal.
  */
 @Component
 public class MealMapper {
@@ -86,12 +86,19 @@ public class MealMapper {
         boolean hasUnknownPrices = items.stream()
                 .anyMatch(i -> i.getItemCost() == null);
 
+        List<String> imageUrls = meal.getImages() == null
+                ? List.of()
+                : meal.getImages().stream()
+                .sorted(java.util.Comparator.comparingInt(MealImage::getOrderIndex))
+                .map(MealImage::getImageUrl)
+                .collect(Collectors.toList());
+
+
         return new MealDTO(
                 meal.getId(),
                 meal.getName(),
                 meal.getMealDescription(),
-                meal.getImage(),
-                meal.getImageUrl(),
+                imageUrls,
                 meal.getOriginalMealId(),
                 meal.getVersion(),
                 items, // use the mapped list
@@ -133,7 +140,6 @@ public class MealMapper {
      * IMAGE RULES:
      * - No upload is performed here.
      * - If dto.imageUrl is present, it is copied to entity.imageUrl.
-     * - If dto.image (base64) is present, it is copied to entity.image.
      * - If dto.imageFile is present, DO NOTHING here (Service must upload and set imageUrl).
      */
     public Meal toEntity(MealInputDTO dto) {
@@ -154,15 +160,6 @@ public class MealMapper {
         if (dto.getPreparationTime() != null && !dto.getPreparationTime().isBlank()) {
             meal.setPreparationTime(java.time.Duration.parse(dto.getPreparationTime()));
         }
-
-        // Image pass-through (NO upload here)
-        if (dto.getImageUrl() != null && !dto.getImageUrl().isBlank()) {
-            meal.setImageUrl(dto.getImageUrl());
-        }
-        if (dto.getImage() != null) {
-            meal.setImage(dto.getImage()); // if you still support base64 storage
-        }
-        // dto.getImageFile() is intentionally ignored here.
 
         if (dto.getVideoUrl() != null && !dto.getVideoUrl().isBlank()) {
             meal.setVideoUrl(dto.getVideoUrl());
@@ -204,15 +201,15 @@ public class MealMapper {
     }
 
     // If you still need this for other mappers, keep it; otherwise you can remove it.
-    @SuppressWarnings("unused")
-    private MealIngredient toMealIngredientEntity(MealIngredientInputDTO inputDTO) {
-        MealIngredient ingredient = new MealIngredient();
-        ingredient.setQuantity(inputDTO.getQuantity());
-
-        FoodItem foodItem = foodItemRepository.findById(inputDTO.getFoodItemId())
-                .orElseThrow(() -> new InvalidFoodItemException("Invalid food item ID: " + inputDTO.getFoodItemId()));
-        ingredient.setFoodItem(foodItem);
-
-        return ingredient;
-    }
+//    @SuppressWarnings("unused")
+//    private MealIngredient toMealIngredientEntity(MealIngredientInputDTO inputDTO) {
+//        MealIngredient ingredient = new MealIngredient();
+//        ingredient.setQuantity(inputDTO.getQuantity());foodItemMapper
+//
+//        FoodItem foodItem = foodItemRepository.findById(inputDTO.getFoodItemId())
+//                .orElseThrow(() -> new InvalidFoodItemException("Invalid food item ID: " + inputDTO.getFoodItemId()));
+//        ingredient.setFoodItem(foodItem);
+//
+//        return ingredient;
+//    }
 }

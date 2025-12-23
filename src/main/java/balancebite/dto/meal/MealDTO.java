@@ -35,16 +35,9 @@ public class MealDTO {
     private final String mealDescription;
 
     /**
-     * Base64-encoded image representing the meal.
-     * This field is optional.
+     * URLs of images representing the meal.
      */
-    private final String image;
-
-    /**
-     * URL of the image representing the meal.
-     * This field is optional.
-     */
-    private final String imageUrl;
+    private final List<String> imageUrls;
 
     private final Long originalMealId;
 
@@ -158,8 +151,7 @@ public class MealDTO {
      * @param id               the unique identifier of the meal.
      * @param name             the name of the meal.
      * @param mealDescription  the description of the meal.
-     * @param image            the Base64-encoded image of the meal (optional).
-     * @param imageUrl         the URL of the meal image (optional).
+     * @param imageUrls         the URLs of the meal images (optional).
      * @param originalMealId
      * @param version          the version timestamp of the meal, used to track updates.
      * @param mealIngredients  the list of ingredients in the meal.
@@ -180,15 +172,14 @@ public class MealDTO {
      * @param totalUnsaturatedFat  the total calculated unsaturated fat content of the meal (grams).
      * @param foodItemsString  the concatenated string of food items in the meal.
      */
-    public MealDTO(Long id, String name, String mealDescription, String image, String imageUrl, Long originalMealId,
+    public MealDTO(Long id, String name, String mealDescription, List<String> imageUrls, Long originalMealId,
                    LocalDateTime version, List<MealIngredientDTO> mealIngredients, PublicUserDTO createdBy,
                    PublicUserDTO adjustedBy ,boolean  isTemplate, boolean  isPrivate, boolean  isRestricted, Set<MealType> mealTypes, Set<Cuisine> cuisines, Set<Diet> diets, double totalCalories, double totalProtein, double totalCarbs, double totalSugars, double totalSaturatedFat, double totalUnsaturatedFat,
                    double totalFat, String foodItemsString, String preparationTime, long saveCount, long weeklySaveCount, long monthlySaveCount, BigDecimal mealPrice, boolean hasUnknownPrices, String videoUrl, String sourceUrl, String mealPreparation, String preparationVideoUrl ) {
         this.id = id;
         this.name = name;
         this.mealDescription = mealDescription;
-        this.image = image;
-        this.imageUrl = imageUrl;
+        this.imageUrls = imageUrls != null ? List.copyOf(imageUrls) : List.of();
         this.originalMealId = originalMealId;
         this.version = version;
         this.mealIngredients = (mealIngredients != null) ? List.copyOf(mealIngredients) : List.of(); // Use an unmodifiable list
@@ -248,22 +239,14 @@ public class MealDTO {
     }
 
     /**
-     * Gets the Base64-encoded image of the meal.
+     * Gets the URLs of the images representing the meal.
      *
-     * @return the Base64-encoded image of the meal.
+     * @return the URLs of the images.
      */
-    public String getImage() {
-        return image;
+    public List<String> getImageUrls() {
+        return imageUrls;
     }
 
-    /**
-     * Gets the URL of the image representing the meal.
-     *
-     * @return the URL of the image.
-     */
-    public String getImageUrl() {
-        return imageUrl;
-    }
 
     public Long getOriginalMealId() { return originalMealId; }
 

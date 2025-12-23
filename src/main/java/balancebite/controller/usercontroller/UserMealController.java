@@ -37,6 +37,8 @@ public class UserMealController {
     private final UserMealService userMealService;
     private final ConsumeMealService consumeMealService;
     private final JwtService jwtService;
+    private final ObjectMapper objectMapper;
+
 
     /**
      * Constructor to initialize the UserMealController with the necessary services.
@@ -44,10 +46,11 @@ public class UserMealController {
      * @param userMealService     The service responsible for managing meals for a user.
      * @param consumeMealService  The service responsible for handling meal consumption logic.
      */
-    public UserMealController(UserMealService userMealService, ConsumeMealService consumeMealService, JwtService jwtService) {
+    public UserMealController(UserMealService userMealService, ConsumeMealService consumeMealService, JwtService jwtService, ObjectMapper objectMapper) {
         this.userMealService = userMealService;
         this.consumeMealService = consumeMealService;
         this.jwtService = jwtService;
+        this.objectMapper = objectMapper;
     }
 
     /**
@@ -63,25 +66,23 @@ public class UserMealController {
      * - Handles specific business exceptions for clean frontend feedback
      *
      * @param mealInputDTOJson      JSON string representing the MealInputDTO
-     * @param imageFile             Optional image file representing the meal
+     * @param imageFiles             Optional image files representing the meal
      * @param authorizationHeader   The Authorization header containing the JWT token
      * @return                      ResponseEntity with the created meal or error message
      */
     @PostMapping(value = "/create-meal", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> createMealForAuthenticatedUser(
             @RequestPart("mealInputDTO") String mealInputDTOJson,
-            @RequestPart(value = "imageFile", required = false) MultipartFile imageFile,
+            @RequestPart(value = "imageFiles", required = false) List<MultipartFile> imageFiles,
             @RequestHeader("Authorization") String authorizationHeader) {
         try {
             log.info("Received request to create a new meal for the authenticated user.");
 
-            // Parse JSON string into MealInputDTO
-            ObjectMapper objectMapper = new ObjectMapper();
+            // Parse JSON string into MealInputDTO (use Spring-injected ObjectMapper)
             MealInputDTO mealInputDTO = objectMapper.readValue(mealInputDTOJson, MealInputDTO.class);
 
-            // Attach the uploaded image to the DTO if present
-            if (imageFile != null && !imageFile.isEmpty()) {
-                mealInputDTO.setImageFile(imageFile);
+            if (imageFiles != null && !imageFiles.isEmpty()) {
+                mealInputDTO.setImageFiles(imageFiles);
             }
 
             // Extract user ID from the JWT token in the Authorization header
@@ -153,43 +154,50 @@ public class UserMealController {
     }
 
     /**
-     * Updates a user's meal by ID, only allowing updates to meals in their list.
+     * Updates a user's meal by ID (multipart/form-data).
      *
-     * @param mealId       The ID of the meal to update.
-     * @param authorizationHeader The Authorization header containing the JWT token.
-     * @return ResponseEntity containing the updated MealDTO with 200 status code, or an error response with an appropriate status.
+     * Expects:
+     * - "mealInputDTO"  : JSON string (includes keepImageIds, replaceOrderIndexes, primaryIndex, etc.)
+     * - "imageFiles"    : optional list of files to upload/replace
      */
     @PatchMapping(value = "/update-meal/{mealId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> updateUserMeal(
             @PathVariable Long mealId,
             @RequestPart("mealInputDTO") String mealInputDTOJson,
-            @RequestPart(value = "imageFile", required = false) MultipartFile imageFile,
+            @RequestPart(value = "imageFiles", required = false) List<MultipartFile> imageFiles,
             @RequestHeader("Authorization") String authorizationHeader) {
+
         try {
             log.info("Received request to update meal with ID: {}", mealId);
 
             String token = authorizationHeader.substring(7); // Remove "Bearer " prefix
             Long userId = jwtService.extractUserId(token);
 
-            // ✅ Parse JSON string to DTO
-            ObjectMapper objectMapper = new ObjectMapper();
-            objectMapper.configure(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT, true);
+            // Parse JSON string into MealInputDTO (use Spring-injected ObjectMapper)
             MealInputDTO mealInputDTO = objectMapper.readValue(mealInputDTOJson, MealInputDTO.class);
 
-
-            // ✅ Verwerk image
-            mealInputDTO.setImageFile(imageFile); // 🔥 Deze regel moet **altijd** meegegeven worden, zelfs als null
+            // Attach uploaded files (if any)
+            if (imageFiles != null && !imageFiles.isEmpty()) {
+                mealInputDTO.setImageFiles(imageFiles);
+            }
 
             MealDTO updatedMeal = userMealService.updateUserMeal(userId, mealId, mealInputDTO);
 
             log.info("Successfully updated meal with ID: {} for user ID: {}", mealId, userId);
             return ResponseEntity.ok(updatedMeal);
 
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+        } catch (DuplicateMealException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
+        } catch (InvalidFoodItemException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
             log.error("Unexpected error during meal update", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "Update failed."));
         }
     }
+
 
     /**
      * Updates the privacy status of a meal belonging to the authenticated user.
@@ -421,21 +429,24 @@ public class UserMealController {
             @PathVariable Long mealId,
             @RequestHeader("Authorization") String authorizationHeader) {
         try {
-            log.info("Received request to remove meal ID {} from the authenticated user's list.", mealId);
-
             String token = authorizationHeader.substring(7);
             Long userId = jwtService.extractUserId(token);
 
             userMealService.removeMealFromUser(userId, mealId);
-
-            log.info("Successfully removed meal ID {} from authenticated user ID: {}", mealId, userId);
             return ResponseEntity.noContent().build();
 
+        } catch (MealStillInUseException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
+                    "error", e.getMessage(),
+                    "diets", e.getDiets()
+            ));
         } catch (UserNotFoundException | MealNotFoundException e) {
-            log.warn("Error occurred during meal removal for authenticated user: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "An unexpected error occurred."));
         }
     }
+
 
     @DeleteMapping("/meal/{mealId}/force")
     public ResponseEntity<?> forceRemoveMealFromUser(
@@ -457,7 +468,6 @@ public class UserMealController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
         }
     }
-
 
     /**
      * Processes the consumption of a meal by the authenticated user.

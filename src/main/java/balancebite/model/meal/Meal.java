@@ -2,6 +2,7 @@ package balancebite.model.meal;
 
 import balancebite.config.DurationConverter;
 import balancebite.model.MealIngredient;
+import balancebite.model.meal.mealImage.MealImage;
 import balancebite.model.meal.references.Cuisine;
 import balancebite.model.meal.references.Diet;
 import balancebite.model.meal.references.MealType;
@@ -47,18 +48,6 @@ public class Meal {
     private String mealDescription;
 
     /**
-     * Base64-encoded image representing the meal.
-     * This field is optional and can be used to store an image of the meal.
-     */
-    private String image;
-
-    /**
-     * URL of the image representing the meal.
-     * This field is optional and can be used instead of a Base64-encoded image.
-     */
-    private String imageUrl;
-
-    /**
      * The original identifier of the meal.
      * Used to track updates and ensure the correct versioning of meals.
      */
@@ -78,6 +67,13 @@ public class Meal {
      */
     @OneToMany(mappedBy = "meal", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<MealIngredient> mealIngredients = new ArrayList<>();
+
+    /**
+     * Images associated with this meal.
+     * Stored separately and removed automatically when the meal is deleted.
+     */
+    @OneToMany(mappedBy = "meal", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<MealImage> images = new ArrayList<>();
 
     /**
      * The user who created this meal.
@@ -348,24 +344,6 @@ public class Meal {
     }
 
     /**
-     * Gets the image of the meal.
-     *
-     * @return the Base64-encoded image of the meal.
-     */
-    public String getImage() {
-        return image;
-    }
-
-    /**
-     * Sets the image of the meal.
-     *
-     * @param image the Base64-encoded image of the meal.
-     */
-    public void setImage(String image) {
-        this.image = image;
-    }
-
-    /**
      * Gets the ID of the original meal.
      * This field is used to track whether this meal is a copy of another meal.
      * If this meal is an original, the value will be null.
@@ -408,24 +386,6 @@ public class Meal {
     }
 
     /**
-     * Gets the imageUrl of the meal.
-     *
-     * @return the imageUrl for the image of the meal.
-     */
-    public String getImageUrl() {
-        return imageUrl;
-    }
-
-    /**
-     * Sets the image url of the meal.
-     *
-     * @param imageUrl for the image of the meal.
-     */
-    public void setImageUrl(String imageUrl) {
-        this.imageUrl = imageUrl;
-    }
-
-    /**
      * Gets the list of ingredients associated with the meal.
      *
      * @return the list of meal ingredients.
@@ -457,6 +417,46 @@ public class Meal {
         for (MealIngredient mealIngredient : mealIngredients) {
             addMealIngredient(mealIngredient);
         }
+    }
+
+    /**
+     * Adds an image to this meal and maintains the bidirectional relationship.
+     *
+     * @param image the meal image to add
+     */
+    public void addImage(MealImage image) {
+        if (image == null) return;
+        images.add(image);
+        image.setMeal(this);
+    }
+
+    /**
+     * Removes an image from this meal and maintains the bidirectional relationship.
+     *
+     * @param image the meal image to remove
+     */
+    public void removeImage(MealImage image) {
+        images.remove(image);
+        image.setMeal(null);
+    }
+
+
+    /**
+     * Returns the images associated with this meal.
+     *
+     * @return list of meal images
+     */
+    public List<MealImage> getImages() {
+        return images;
+    }
+
+    /**
+     * Sets the images for this meal.
+     *
+     * @param images list of meal images
+     */
+    public void setImages(List<MealImage> images) {
+        this.images = images;
     }
 
     /**

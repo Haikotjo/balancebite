@@ -1,5 +1,6 @@
 package balancebite.service.user;
 
+import balancebite.dto.CloudinaryUploadResult;
 import balancebite.dto.meal.MealDTO;
 import balancebite.dto.meal.MealInputDTO;
 import balancebite.dto.mealingredient.MealIngredientInputDTO;
@@ -12,13 +13,13 @@ import balancebite.model.diet.DietDay;
 import balancebite.model.meal.Meal;
 import balancebite.model.MealIngredient;
 import balancebite.model.meal.SavedMeal;
+import balancebite.model.meal.mealImage.MealImage;
 import balancebite.model.user.Role;
 import balancebite.model.user.User;
 import balancebite.repository.*;
 import balancebite.model.user.UserRole;
 import balancebite.service.CloudinaryService;
 import balancebite.service.interfaces.user.IUserMealService;
-import balancebite.service.util.ImageHandlerService;
 import balancebite.utils.CheckForDuplicateTemplateMealUtil;
 import balancebite.utils.UserUpdateHelper;
 import jakarta.persistence.EntityNotFoundException;
@@ -30,6 +31,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -56,7 +58,6 @@ public class UserMealService implements IUserMealService {
     private final UserUpdateHelper userUpdateHelper;
     private final SavedMealRepository savedMealRepository;
     private final CloudinaryService cloudinaryService;
-    private final ImageHandlerService imageHandlerService;
 
     public UserMealService(UserRepository userRepository,
                            MealRepository mealRepository,
@@ -67,8 +68,7 @@ public class UserMealService implements IUserMealService {
                            CheckForDuplicateTemplateMealUtil checkForDuplicateTemplateMeal,
                            UserUpdateHelper userUpdateHelper,
                            SavedMealRepository savedMealRepository,
-                           CloudinaryService cloudinaryService,
-                           ImageHandlerService imageHandlerService) {
+                           CloudinaryService cloudinaryService) {
         this.userRepository = userRepository;
         this.mealRepository = mealRepository;
         this.dietDayRepository = dietDayRepository;
@@ -79,23 +79,12 @@ public class UserMealService implements IUserMealService {
         this.userUpdateHelper = userUpdateHelper;
         this.savedMealRepository = savedMealRepository;
         this.cloudinaryService = cloudinaryService;
-        this.imageHandlerService = imageHandlerService;
     }
 
     @Override
     @Transactional
     public MealDTO createMealForUser(MealInputDTO mealInputDTO, Long userId) {
         log.info("Attempting to create a new meal for user ID: {}", userId);
-
-        // --- 1) Enforce image source exclusivity: at most ONE of (imageFile | imageUrl | image base64) ---
-        int sources = 0;
-        if (mealInputDTO.getImageFile() != null && !mealInputDTO.getImageFile().isEmpty()) sources++;
-        if (mealInputDTO.getImageUrl() != null && !mealInputDTO.getImageUrl().isBlank())  sources++;
-        if (mealInputDTO.getImage() != null && !mealInputDTO.getImage().isBlank())        sources++;
-        if (sources > 1) {
-            log.error("Multiple image sources provided (imageFile/imageUrl/image). Only one is allowed.");
-            throw new IllegalArgumentException("Provide exactly one of: imageFile, imageUrl, or image (base64).");
-        }
 
         // --- 2) Map DTO -> Entity (mapper does NOT upload files; only copies simple fields) ---
         Meal meal = mealMapper.toEntity(mealInputDTO);
@@ -106,23 +95,28 @@ public class UserMealService implements IUserMealService {
         // Set versioning timestamp for this create
         meal.setVersion(LocalDateTime.now());
 
-        // --- 3) Image handling via Cloudinary (create flow => currentUrl = null) ---
-        // Upload if imageFile present, otherwise accept direct URL, otherwise null.
-        String finalUrl = imageHandlerService.handleImage(
-                null,                               // no current image on create
-                mealInputDTO.getImageFile(),        // may be null/empty
-                mealInputDTO.getImageUrl(),         // may be null/blank
-                true                                // isCreate = true
-        );
-        meal.setImageUrl(finalUrl);
+        List<MultipartFile> files = mealInputDTO.getImageFiles();
+        Integer primaryIndex = mealInputDTO.getPrimaryIndex();
 
-        // If we have a final URL, do not keep base64; else keep base64 only if it was the single provided source
-        if (finalUrl != null) {
-            meal.setImage(null);
-        } else {
-            meal.setImage((sources == 1 && mealInputDTO.getImage() != null && !mealInputDTO.getImage().isBlank())
-                    ? mealInputDTO.getImage()
-                    : null);
+        if (files != null && !files.isEmpty()) {
+            for (int i = 0; i < files.size(); i++) {
+                MultipartFile file = files.get(i);
+                if (file == null || file.isEmpty()) continue;
+
+                CloudinaryUploadResult upload = cloudinaryService.uploadFile(file);
+
+                MealImage image = new MealImage(meal, upload.getImageUrl(), upload.getPublicId());
+                image.setOrderIndex(i);
+                boolean isPrimary =
+                        primaryIndex != null
+                                && primaryIndex >= 0
+                                && primaryIndex < files.size()
+                                && i == primaryIndex;
+
+                image.setPrimary(isPrimary);
+
+                meal.addImage(image);
+            }
         }
 
         // --- 4) Validate ingredients: no duplicates by (name + quantity) ---
@@ -177,7 +171,6 @@ public class UserMealService implements IUserMealService {
         log.info("Successfully created meal {} for user ID: {}", savedMeal.getId(), userId);
         return mealMapper.toDTO(savedMeal);
     }
-
 
     /**
      * Adds an existing meal to a user's list of meals.
@@ -245,8 +238,13 @@ public class UserMealService implements IUserMealService {
         Meal copy = new Meal();
         copy.setName(originalMeal.getName());
         copy.setMealDescription(originalMeal.getMealDescription());
-        copy.setImage(originalMeal.getImage());
-        copy.setImageUrl(originalMeal.getImageUrl());
+        for (MealImage img : originalMeal.getImages()) {
+            MealImage newImg = new MealImage(copy, img.getImageUrl(), img.getPublicId());
+            newImg.setOrderIndex(img.getOrderIndex());
+            newImg.setPrimary(img.isPrimary());
+            copy.addImage(newImg);
+        }
+
         copy.setPreparationTime(originalMeal.getPreparationTime());
         copy.setCuisines(new HashSet<>(originalMeal.getCuisines()));
         copy.setDiets(new HashSet<>(originalMeal.getDiets()));
@@ -323,15 +321,6 @@ public class UserMealService implements IUserMealService {
             checkForDuplicateTemplateMeal.checkForDuplicateTemplateMeal(foodItemIds, mealId);
         }
 
-        // --- Image input exclusivity: at most one of (file | url | base64) ---
-        int sources = 0;
-        if (mealInputDTO.getImageFile() != null && !mealInputDTO.getImageFile().isEmpty()) sources++;
-        if (mealInputDTO.getImageUrl() != null && !mealInputDTO.getImageUrl().isBlank())  sources++;
-        if (mealInputDTO.getImage() != null && !mealInputDTO.getImage().isBlank())        sources++;
-        if (sources > 1) {
-            throw new IllegalArgumentException("Provide exactly one of: imageFile, imageUrl, or image (base64).");
-        }
-
         // --- Update simple fields (only when provided) ---
         if (mealInputDTO.getName() != null)               meal.setName(mealInputDTO.getName());
         if (mealInputDTO.getMealDescription() != null)    meal.setMealDescription(mealInputDTO.getMealDescription());
@@ -350,23 +339,58 @@ public class UserMealService implements IUserMealService {
         meal.setAdjustedBy(user);
         meal.setVersion(LocalDateTime.now());
 
-        // --- Image handling (create=false so handler may delete old when switching/clearing) ---
-        String newFinalUrl = imageHandlerService.handleImage(
-                meal.getImageUrl(),                 // currentUrl
-                mealInputDTO.getImageFile(),        // new file (may be null/empty)
-                mealInputDTO.getImageUrl(),         // new direct URL (may be null/blank)
-                false                               // update flow
-        );
-        meal.setImageUrl(newFinalUrl);
+        // --- Images update (multi-image) ---
+        List<Long> keepIds = mealInputDTO.getKeepImageIds();
+        if (keepIds == null) keepIds = List.of();
 
-        // Keep base64 only if it is the single provided source and no URL resulted
-        if (newFinalUrl != null) {
-            meal.setImage(null); // URL wins -> do not store base64
-        } else {
-            meal.setImage((sources == 1 && mealInputDTO.getImage() != null && !mealInputDTO.getImage().isBlank())
-                    ? mealInputDTO.getImage()
-                    : null);
+        for (MealImage img : new ArrayList<>(meal.getImages())) {
+            if (!keepIds.contains(img.getId())) {
+                cloudinaryService.deleteFileIfUnused(img.getPublicId());
+                meal.getImages().remove(img); // orphanRemoval deletes DB row
+            }
         }
+
+        List<MultipartFile> files = mealInputDTO.getImageFiles();
+        List<Integer> replaceSlots = mealInputDTO.getReplaceOrderIndexes();
+
+        if (files != null && !files.isEmpty()) {
+            if (replaceSlots == null || replaceSlots.size() != files.size()) {
+                throw new IllegalArgumentException("replaceOrderIndexes must match imageFiles size.");
+            }
+
+            for (int i = 0; i < files.size(); i++) {
+                MultipartFile file = files.get(i);
+                if (file == null || file.isEmpty()) continue;
+
+                int slot = replaceSlots.get(i);
+                if (slot < 0 || slot > 4) {
+                    throw new IllegalArgumentException("replaceOrderIndexes must be in range 0..4");
+                }
+
+                MealImage existing = meal.getImages().stream()
+                        .filter(img -> img.getOrderIndex() == slot)
+                        .findFirst()
+                        .orElse(null);
+
+                if (existing != null) {
+                    cloudinaryService.deleteFileIfUnused(existing.getPublicId());
+                    meal.getImages().remove(existing);
+                }
+
+                CloudinaryUploadResult upload = cloudinaryService.uploadFile(file);
+
+                MealImage newImg = new MealImage(meal, upload.getImageUrl(), upload.getPublicId());
+                newImg.setOrderIndex(slot);
+                meal.addImage(newImg);
+            }
+        }
+
+        // Primary
+        Integer primaryIndex = mealInputDTO.getPrimaryIndex();
+        if (primaryIndex != null) {
+            meal.getImages().forEach(img -> img.setPrimary(img.getOrderIndex() == primaryIndex));
+        }
+
 
         // --- Replace ingredients entirely (current approach) ---
         meal.getMealIngredients().clear();
@@ -382,7 +406,6 @@ public class UserMealService implements IUserMealService {
         Meal saved = mealRepository.save(meal);
         return mealMapper.toDTO(saved);
     }
-
 
     /**
      * Updates the privacy status of a specific Meal.
@@ -709,6 +732,10 @@ public class UserMealService implements IUserMealService {
                 );
             }
 
+            for (MealImage img : meal.getImages()) {
+                cloudinaryService.deleteFileIfUnused(img.getPublicId());
+            }
+
             log.info("Meal ID {} is NOT a template, deleting it permanently.", mealId);
             user.getMeals().remove(meal);
             mealRepository.delete(meal);
@@ -745,33 +772,52 @@ public class UserMealService implements IUserMealService {
                 .findFirst()
                 .orElseThrow(() -> new MealNotFoundException("Meal not found in user's list."));
 
-        // ✅ Verwijder meal uit alle DietDays waarin hij voorkomt
-        List<DietDay> daysWithMeal = dietDayRepository.findByMealsContainingWithDietFetched(meal);
-        for (DietDay day : daysWithMeal) {
+        // 1) Haal deze meal alleen uit DietDays van DEZE user (niet van anderen)
+        List<DietDay> myDietDays = dietDayRepository.findByOwnerUserIdAndMealsContaining(userId, meal);
+        for (DietDay day : myDietDays) {
             day.getMeals().remove(meal);
+            day.updateNutrients(); // optioneel, maar netjes
         }
-        dietDayRepository.saveAll(daysWithMeal); // belangrijk!
+        dietDayRepository.saveAll(myDietDays);
 
-        if (!meal.isTemplate()) {
-            log.info("Meal ID {} is NOT a template, deleting it permanently.", mealId);
-            user.getMeals().remove(meal);
-            mealRepository.delete(meal);
-
-            if (meal.getOriginalMealId() != null) {
-                savedMealRepository.deleteLatestByMealId(meal.getOriginalMealId());
-                Meal original = mealRepository.findById(meal.getOriginalMealId())
-                        .orElseThrow(() -> new MealNotFoundException("Original meal not found"));
-                long totalSaves = savedMealRepository.countByMeal(original);
-                original.setSaveCount(totalSaves);
-                mealRepository.saveAndFlush(original);
-            }
-        } else {
-            log.info("Meal ID {} is a template, unlinking from user.", mealId);
-            user.getMeals().remove(meal);
-        }
-
+        // 2) Unlink user ↔ meal (altijd)
+        user.getMeals().remove(meal);
         userRepository.save(user);
-        log.info("Force-removal completed for meal ID {} and user ID {}", mealId, userId);
+
+        // 3) Alleen deleten als het een copy is én nergens meer gebruikt wordt
+        if (!meal.isTemplate()) {
+
+            boolean usedInAnyDietDay = dietDayRepository.existsByMealsContaining(meal);
+            boolean usedInOtherUsersMealLists = userRepository.existsMealInOtherUsersMealLists(userId, meal);
+
+            // als iemand anders hem nog gebruikt -> meal moet blijven bestaan
+            if (!usedInAnyDietDay && !usedInOtherUsersMealLists) {
+
+                // images opruimen (alleen als ongebruikt)
+                for (MealImage img : new ArrayList<>(meal.getImages())) {
+                    cloudinaryService.deleteFileIfUnused(img.getPublicId());
+                }
+
+                mealRepository.delete(meal);
+
+                // saveCount origineel bijwerken (zoals je al deed)
+                if (meal.getOriginalMealId() != null) {
+                    savedMealRepository.deleteLatestByMealId(meal.getOriginalMealId());
+
+                    Meal original = mealRepository.findById(meal.getOriginalMealId())
+                            .orElseThrow(() -> new MealNotFoundException("Original meal not found"));
+
+                    long total = savedMealRepository.countByMeal(original);
+                    original.setSaveCount(total);
+                    mealRepository.saveAndFlush(original);
+                }
+            } else {
+                log.info("Skip delete meal {}: still used (dietDay={}, otherUsersList={})",
+                        mealId, usedInAnyDietDay, usedInOtherUsersMealLists);
+            }
+        }
+
+        log.info("Force-removal completed safely for meal ID {} and user ID {}", mealId, userId);
     }
 
     @Override
@@ -802,12 +848,8 @@ public class UserMealService implements IUserMealService {
         owner.getSavedMeals().remove(meal);
 
         // Image cleanup
-        if (meal.getImageUrl() != null && !meal.getImageUrl().isBlank()) {
-            try {
-                imageHandlerService.deleteImage(meal.getImageUrl());
-            } catch (Exception ex) {
-                log.warn("Image cleanup failed for meal {}: {}", mealId, ex.getMessage());
-            }
+        for (MealImage img : new ArrayList<>(meal.getImages())) {
+            cloudinaryService.deleteFileIfUnused(img.getPublicId());
         }
 
         // Helemaal weggooien

@@ -44,24 +44,30 @@ public class MealInputDTO {
     private String mealDescription;
 
     /**
-     * Base64-encoded image representing the meal.
-     * Optional field for meal creation or update.
-     */
-    @Size(max = 500000, message = "Image size must not exceed 500 KB.")
-    private String image;
-
-    /**
-     * URL of the image representing the meal.
-     * Optional field for meal creation or update.
-     */
-    @Size(max = 2048, message = "Image URL must not exceed 2048 characters.")
-    private String imageUrl;
-
-    /**
-     * MultipartFile for handling direct file uploads of the meal's image.
+     * MultipartFiles for handling direct file uploads of the meal's images.
      * This field is optional.
      */
-    private MultipartFile imageFile;
+    private List<MultipartFile> imageFiles;
+
+    /**
+     * Index of the primary image in imageFiles (0-based).
+     * Optional. If null, the first image will be primary.
+     */
+    private Integer primaryIndex;
+
+    /**
+     * IDs of existing MealImages that should be kept during update.
+     * Any existing image NOT in this list will be deleted.
+     * Optional. Used only for update.
+     */
+    private List<Long> keepImageIds;
+
+    /**
+     * For each uploaded imageFile: the orderIndex (slot 0–4) it should replace.
+     * Must have same size/order as imageFiles.
+     * Optional. Used only for update.
+     */
+    private List<Integer> replaceOrderIndexes;
 
     /**
      * The user who created this meal (if applicable).
@@ -177,58 +183,26 @@ public class MealInputDTO {
         this.mealDescription = mealDescription;
     }
 
-    /**
-     * Gets the Base64-encoded image of the meal.
-     *
-     * @return The Base64-encoded image of the meal.
-     */
-    public String getImage() {
-        return image;
+    public List<MultipartFile> getImageFiles() { return imageFiles; }
+    public void setImageFiles(List<MultipartFile> imageFiles) { this.imageFiles = imageFiles; }
+
+    public Integer getPrimaryIndex() { return primaryIndex; }
+    public void setPrimaryIndex(Integer primaryIndex) { this.primaryIndex = primaryIndex; }
+
+    public List<Long> getKeepImageIds() {
+        return keepImageIds;
     }
 
-    /**
-     * Sets the Base64-encoded image of the meal.
-     *
-     * @param image The Base64-encoded image of the meal.
-     */
-    public void setImage(String image) {
-        this.image = image;
+    public void setKeepImageIds(List<Long> keepImageIds) {
+        this.keepImageIds = keepImageIds;
     }
 
-    /**
-     * Gets the URL of the image representing the meal.
-     *
-     * @return The URL of the image.
-     */
-    public String getImageUrl() {
-        return imageUrl;
+    public List<Integer> getReplaceOrderIndexes() {
+        return replaceOrderIndexes;
     }
 
-    /**
-     * Sets the URL of the image representing the meal.
-     *
-     * @param imageUrl The URL of the image.
-     */
-    public void setImageUrl(String imageUrl) {
-        this.imageUrl = imageUrl;
-    }
-
-    /**
-     * Gets the uploaded file of the image.
-     *
-     * @return The MultipartFile containing the uploaded image.
-     */
-    public MultipartFile getImageFile() {
-        return imageFile;
-    }
-
-    /**
-     * Sets the uploaded file of the image.
-     *
-     * @param imageFile The MultipartFile containing the uploaded image.
-     */
-    public void setImageFile(MultipartFile imageFile) {
-        this.imageFile = imageFile;
+    public void setReplaceOrderIndexes(List<Integer> replaceOrderIndexes) {
+        this.replaceOrderIndexes = replaceOrderIndexes;
     }
 
     /**
