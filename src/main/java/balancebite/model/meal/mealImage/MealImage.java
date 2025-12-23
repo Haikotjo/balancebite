@@ -53,7 +53,7 @@ public class MealImage {
     /**
      * Cloudinary public ID used for reliable deletion.
      */
-    @Column(name = "public_id", length = 512, nullable = false)
+    @Column(name = "public_id", length = 512, nullable = true)
     private String publicId;
 
 

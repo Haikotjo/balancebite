@@ -59,23 +59,23 @@ public class DbFixConfig {
 
             try {
                 int inserted = jdbc.update("""
-                INSERT INTO public.meal_images (meal_id, image_url, public_id, is_primary, order_index)
-                SELECT m.id, m.image_url, NULL, true, 0
-                FROM public.meals m
+                INSERT INTO meal_images (meal_id, image_url, is_primary, order_index)
+                SELECT m.id, m.image_url, true, 0
+                FROM meals m
                 WHERE m.image_url IS NOT NULL
                   AND m.image_url <> ''
                   AND NOT EXISTS (
-                      SELECT 1 FROM public.meal_images mi WHERE mi.meal_id = m.id
+                      SELECT 1 FROM meal_images mi WHERE mi.meal_id = m.id
                   )
             """);
 
                 log.info("MealImage migration done. Inserted rows: {}", inserted);
+
             } catch (Exception e) {
                 log.error("MealImage migration failed", e);
             }
         };
     }
-
 
 }
 
