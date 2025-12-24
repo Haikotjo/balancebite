@@ -2,6 +2,7 @@ package balancebite.config;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -11,7 +12,7 @@ public class DbFixConfig {
     private static final Logger log = LoggerFactory.getLogger(DbFixConfig.class);
 
     @Bean
-    public org.springframework.boot.CommandLineRunner fixFoodCategoryCheck(JdbcTemplate jdbc) {
+    public CommandLineRunner fixFoodCategoryCheck(JdbcTemplate jdbc) {
         return args -> {
             try { jdbc.execute("SET statement_timeout = 5000"); } catch (Exception ignore) {}
 
@@ -38,13 +39,13 @@ public class DbFixConfig {
 
             try {
                 jdbc.execute("""
-          ALTER TABLE public.food_items
-          ADD CONSTRAINT food_items_food_category_check
-          CHECK (food_category IN (
-            'VEGETABLE','FRUIT','MEAT','FISH','DAIRY','GRAIN','LEGUME','NUT','EGG','SWEET',
-            'DRINK','SAUCE','OIL','SPICE','READY_MEAL','SNACK','SUPPLEMENT','PROTEIN_SUPPLEMENT','OTHER'
-          ))
-        """);
+                    ALTER TABLE public.food_items
+                    ADD CONSTRAINT food_items_food_category_check
+                    CHECK (food_category IN (
+                      'VEGETABLE','FRUIT','MEAT','FISH','DAIRY','GRAIN','LEGUME','NUT','EGG','SWEET',
+                      'DRINK','SAUCE','OIL','SPICE','READY_MEAL','SNACK','SUPPLEMENT','PROTEIN_SUPPLEMENT','OTHER'
+                    ))
+                """);
                 log.info("Added CHECK constraint with PROTEIN_SUPPLEMENT");
             } catch (Exception e) {
                 log.warn("Add CHECK failed (maybe already correct): {}", e.getMessage());
@@ -53,7 +54,7 @@ public class DbFixConfig {
     }
 
     @Bean
-    public org.springframework.boot.CommandLineRunner makeMealImagePublicIdNullable(JdbcTemplate jdbc) {
+    public CommandLineRunner makeMealImagePublicIdNullable(JdbcTemplate jdbc) {
         return args -> {
             try {
                 jdbc.execute("ALTER TABLE public.meal_images ALTER COLUMN public_id DROP NOT NULL");
@@ -64,31 +65,45 @@ public class DbFixConfig {
         };
     }
 
-
     @Bean
-    public org.springframework.boot.CommandLineRunner fixMealImagesFromImageUrl(JdbcTemplate jdbc) {
+    public CommandLineRunner fixMealImagesFromImageUrl(JdbcTemplate jdbc) {
         return args -> {
             log.info("Starting one-time Meal → MealImage migration");
 
             try {
+                // 1) Update existing meal_images rows that have empty/null image_url, using meals.image_url
+                int updated = jdbc.update("""
+                    UPDATE meal_images mi
+                    SET image_url = m.image_url,
+                        is_primary = true,
+                        order_index = 0
+                    FROM meals m
+                    WHERE mi.meal_id = m.id
+                      AND (mi.image_url IS NULL OR mi.image_url = '')
+                      AND m.image_url IS NOT NULL
+                      AND m.image_url <> ''
+                """);
+
+                // 2) Insert missing meal_images rows (only if there is no existing image_url row for that meal)
                 int inserted = jdbc.update("""
-                INSERT INTO meal_images (meal_id, image_url, is_primary, order_index)
-                SELECT m.id, m.image_url, true, 0
-                FROM meals m
-                WHERE m.image_url IS NOT NULL
-                  AND m.image_url <> ''
-                  AND NOT EXISTS (
-                      SELECT 1 FROM meal_images mi WHERE mi.meal_id = m.id
-                  )
-            """);
+                    INSERT INTO meal_images (meal_id, image_url, is_primary, order_index)
+                    SELECT m.id, m.image_url, true, 0
+                    FROM meals m
+                    WHERE m.image_url IS NOT NULL
+                      AND m.image_url <> ''
+                      AND NOT EXISTS (
+                        SELECT 1
+                        FROM meal_images mi
+                        WHERE mi.meal_id = m.id
+                          AND mi.image_url IS NOT NULL
+                          AND mi.image_url <> ''
+                      )
+                """);
 
-                log.info("MealImage migration done. Inserted rows: {}", inserted);
-
+                log.info("MealImage migration done. Updated rows: {}, Inserted rows: {}", updated, inserted);
             } catch (Exception e) {
                 log.error("MealImage migration failed", e);
             }
         };
     }
-
 }
-
