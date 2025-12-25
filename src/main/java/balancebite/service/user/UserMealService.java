@@ -363,9 +363,10 @@ public class UserMealService implements IUserMealService {
                 if (file == null || file.isEmpty()) continue;
 
                 int slot = replaceSlots.get(i);
-                if (slot < 0 || slot > 4) {
-                    throw new IllegalArgumentException("replaceOrderIndexes must be in range 0..4");
+                if (slot < 0) {
+                    throw new IllegalArgumentException("replaceOrderIndexes must be >= 0");
                 }
+
 
                 MealImage existing = meal.getImages().stream()
                         .filter(img -> img.getOrderIndex() == slot)
@@ -385,12 +386,29 @@ public class UserMealService implements IUserMealService {
             }
         }
 
-        // Primary
-        Integer primaryIndex = mealInputDTO.getPrimaryIndex();
-        if (primaryIndex != null) {
-            meal.getImages().forEach(img -> img.setPrimary(img.getOrderIndex() == primaryIndex));
+        // Reindex + Primary (do this once, after keep/remove + replace/add)
+        meal.getImages().sort(Comparator.comparingInt(MealImage::getOrderIndex));
+
+// Reindex 0..n-1
+        for (int i = 0; i < meal.getImages().size(); i++) {
+            meal.getImages().get(i).setOrderIndex(i);
         }
 
+// Primary after reindex
+        Integer primaryIndex = mealInputDTO.getPrimaryIndex();
+        meal.getImages().forEach(img -> img.setPrimary(false));
+
+        if (primaryIndex != null) {
+            meal.getImages().stream()
+                    .filter(img -> img.getOrderIndex() == primaryIndex)
+                    .findFirst()
+                    .ifPresent(img -> img.setPrimary(true));
+        }
+
+// Fallback: if none set, make first primary
+        if (!meal.getImages().isEmpty() && meal.getImages().stream().noneMatch(MealImage::isPrimary)) {
+            meal.getImages().get(0).setPrimary(true);
+        }
 
         // --- Replace ingredients entirely (current approach) ---
         meal.getMealIngredients().clear();
