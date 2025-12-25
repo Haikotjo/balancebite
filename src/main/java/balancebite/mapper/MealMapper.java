@@ -1,5 +1,6 @@
 package balancebite.mapper;
 
+import balancebite.dto.MealImageDTO;
 import balancebite.dto.meal.MealDTO;
 import balancebite.dto.meal.MealInputDTO;
 import balancebite.dto.mealingredient.MealIngredientDTO;
@@ -19,6 +20,7 @@ import balancebite.model.meal.mealImage.MealImage;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -93,12 +95,25 @@ public class MealMapper {
                 .map(MealImage::getImageUrl)
                 .collect(Collectors.toList());
 
+        List<MealImageDTO> images = meal.getImages() == null
+                ? List.of()
+                : meal.getImages().stream()
+                .sorted(Comparator.comparingInt(MealImage::getOrderIndex))
+                .map(img -> new MealImageDTO(
+                        img.getId(),
+                        img.getImageUrl(),
+                        img.getOrderIndex(),
+                        img.isPrimary()
+                ))
+                .toList();
+
 
         return new MealDTO(
                 meal.getId(),
                 meal.getName(),
                 meal.getMealDescription(),
                 imageUrls,
+                images,
                 meal.getOriginalMealId(),
                 meal.getVersion(),
                 items, // use the mapped list

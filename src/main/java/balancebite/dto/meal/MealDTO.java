@@ -1,5 +1,6 @@
 package balancebite.dto.meal;
 
+import balancebite.dto.MealImageDTO;
 import balancebite.dto.mealingredient.MealIngredientDTO;
 import balancebite.dto.user.PublicUserDTO;
 import balancebite.dto.user.UserDTO;
@@ -144,6 +145,7 @@ public class MealDTO {
 
     private final String mealPreparation;
     private final String preparationVideoUrl;
+    private final List<MealImageDTO> images;
 
     /**
      * Constructor for creating a MealDTO with essential meal information.
@@ -172,14 +174,47 @@ public class MealDTO {
      * @param totalUnsaturatedFat  the total calculated unsaturated fat content of the meal (grams).
      * @param foodItemsString  the concatenated string of food items in the meal.
      */
-    public MealDTO(Long id, String name, String mealDescription, List<String> imageUrls, Long originalMealId,
-                   LocalDateTime version, List<MealIngredientDTO> mealIngredients, PublicUserDTO createdBy,
-                   PublicUserDTO adjustedBy ,boolean  isTemplate, boolean  isPrivate, boolean  isRestricted, Set<MealType> mealTypes, Set<Cuisine> cuisines, Set<Diet> diets, double totalCalories, double totalProtein, double totalCarbs, double totalSugars, double totalSaturatedFat, double totalUnsaturatedFat,
-                   double totalFat, String foodItemsString, String preparationTime, long saveCount, long weeklySaveCount, long monthlySaveCount, BigDecimal mealPrice, boolean hasUnknownPrices, String videoUrl, String sourceUrl, String mealPreparation, String preparationVideoUrl ) {
+    public MealDTO(
+            Long id,
+            String name,
+            String mealDescription,
+            List<String> imageUrls,
+            List<MealImageDTO> images,
+            Long originalMealId,
+            LocalDateTime version,
+            List<MealIngredientDTO> mealIngredients,
+            PublicUserDTO createdBy,
+            PublicUserDTO adjustedBy ,
+            boolean  isTemplate,
+            boolean  isPrivate,
+            boolean  isRestricted,
+            Set<MealType> mealTypes,
+            Set<Cuisine> cuisines,
+            Set<Diet> diets,
+            double totalCalories,
+            double totalProtein,
+            double totalCarbs,
+            double totalSugars,
+            double totalSaturatedFat,
+            double totalUnsaturatedFat,
+            double totalFat,
+            String foodItemsString,
+            String preparationTime,
+            long saveCount,
+            long weeklySaveCount,
+            long monthlySaveCount,
+            BigDecimal mealPrice,
+            boolean hasUnknownPrices,
+            String videoUrl,
+            String sourceUrl,
+            String mealPreparation,
+            String preparationVideoUrl
+    ) {
         this.id = id;
         this.name = name;
         this.mealDescription = mealDescription;
         this.imageUrls = imageUrls != null ? List.copyOf(imageUrls) : List.of();
+        this.images = images != null ? List.copyOf(images) : List.of();
         this.originalMealId = originalMealId;
         this.version = version;
         this.mealIngredients = (mealIngredients != null) ? List.copyOf(mealIngredients) : List.of(); // Use an unmodifiable list
@@ -247,6 +282,9 @@ public class MealDTO {
         return imageUrls;
     }
 
+    public List<MealImageDTO> getImages() {
+        return List.copyOf(images);
+    }
 
     public Long getOriginalMealId() { return originalMealId; }
 
