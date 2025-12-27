@@ -77,10 +77,10 @@ public class FoodItem {
     private FoodCategory foodCategory;
 
     @Column
-    private String image; // Base64-encoded image
+    private String image;
 
     @Column
-    private String imageUrl; // externe of interne URL
+    private String imageUrl;
 
     private BigDecimal price;
 

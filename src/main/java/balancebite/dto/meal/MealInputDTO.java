@@ -69,6 +69,8 @@ public class MealInputDTO {
      */
     private List<Integer> replaceOrderIndexes;
 
+    private Long primaryImageId;
+
     /**
      * The user who created this meal (if applicable).
      * This field is managed by the system and should not be set by the client directly.
@@ -203,6 +205,14 @@ public class MealInputDTO {
 
     public void setReplaceOrderIndexes(List<Integer> replaceOrderIndexes) {
         this.replaceOrderIndexes = replaceOrderIndexes;
+    }
+
+    public Long getPrimaryImageId() {
+        return primaryImageId;
+    }
+
+    public void setPrimaryImageId(Long primaryImageId) {
+        this.primaryImageId = primaryImageId;
     }
 
     /**

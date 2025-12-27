@@ -395,20 +395,29 @@ public class UserMealService implements IUserMealService {
         }
 
 // Primary after reindex
-        Integer primaryIndex = mealInputDTO.getPrimaryIndex();
         meal.getImages().forEach(img -> img.setPrimary(false));
 
-        if (primaryIndex != null) {
+        Long primaryImageId = mealInputDTO.getPrimaryImageId();
+        Integer primaryIndex = mealInputDTO.getPrimaryIndex();
+
+        if (primaryImageId != null) {
+            meal.getImages().stream()
+                    .filter(img -> img.getId().equals(primaryImageId))
+                    .findFirst()
+                    .ifPresent(img -> img.setPrimary(true));
+        } else if (primaryIndex != null) {
             meal.getImages().stream()
                     .filter(img -> img.getOrderIndex() == primaryIndex)
                     .findFirst()
                     .ifPresent(img -> img.setPrimary(true));
         }
 
-// Fallback: if none set, make first primary
         if (!meal.getImages().isEmpty() && meal.getImages().stream().noneMatch(MealImage::isPrimary)) {
             meal.getImages().get(0).setPrimary(true);
         }
+
+
+// Fallback: if none set, make first primary
 
         // --- Replace ingredients entirely (current approach) ---
         meal.getMealIngredients().clear();
