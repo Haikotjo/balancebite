@@ -249,14 +249,17 @@ public class MealAdminService implements IMealAdminService {
 
         // --- Images update (multi-image) ---
         List<Long> keepIds = mealInputDTO.getKeepImageIds();
-        if (keepIds == null) keepIds = List.of();
 
-        for (MealImage img : new ArrayList<>(meal.getImages())) {
-            if (!keepIds.contains(img.getId())) {
-                cloudinaryService.deleteFileIfUnused(img.getPublicId());
-                meal.getImages().remove(img);
+// Only touch existing images if the client explicitly provided keepImageIds
+        if (keepIds != null) {
+            for (MealImage img : new ArrayList<>(meal.getImages())) {
+                if (!keepIds.contains(img.getId())) {
+                    cloudinaryService.deleteFileIfUnused(img.getPublicId());
+                    meal.getImages().remove(img); // orphanRemoval deletes DB row
+                }
             }
         }
+
 
         List<MultipartFile> files = mealInputDTO.getImageFiles();
         List<Integer> replaceSlots = mealInputDTO.getReplaceOrderIndexes();
