@@ -230,6 +230,10 @@ public class MealAdminService implements IMealAdminService {
         if (mealInputDTO.getMealTypes() != null)       meal.setMealTypes(mealInputDTO.getMealTypes());
         if (mealInputDTO.getCuisines() != null)        meal.setCuisines(mealInputDTO.getCuisines());
         if (mealInputDTO.getDiets() != null)           meal.setDiets(mealInputDTO.getDiets());
+        if (mealInputDTO.getVideoUrl() != null)            meal.setVideoUrl(mealInputDTO.getVideoUrl());
+        if (mealInputDTO.getSourceUrl() != null)           meal.setSourceUrl(mealInputDTO.getSourceUrl());
+        if (mealInputDTO.getPreparationVideoUrl() != null) meal.setPreparationVideoUrl(mealInputDTO.getPreparationVideoUrl());
+        if (mealInputDTO.getMealPreparation() != null)     meal.setMealPreparation(mealInputDTO.getMealPreparation());
 
         if (mealInputDTO.getPreparationTime() != null) {
             meal.setPreparationTime(
