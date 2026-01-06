@@ -31,7 +31,8 @@ public class RecommendedDailyIntakeMapper {
         // Create and return a DTO with the set of nutrients and the createdAt timestamp
         return new RecommendedDailyIntakeDTO(
                 recommendedDailyIntake.getNutrients(), // Nutrients to be included in the DTO
-                recommendedDailyIntake.getCreatedAt()  // Creation date to be formatted in the DTO
+                recommendedDailyIntake.getCreatedAt(),  // Creation date to be formatted in the DTO
+                recommendedDailyIntake.getConsumedMeals()
         );
     }
 
