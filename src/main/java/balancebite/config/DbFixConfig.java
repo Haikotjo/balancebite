@@ -106,4 +106,32 @@ public class DbFixConfig {
             }
         };
     }
+
+    @Bean
+    public CommandLineRunner createConsumedMealTable(JdbcTemplate jdbc) {
+        return args -> {
+            jdbc.execute("""
+            CREATE TABLE IF NOT EXISTS consumed_meal (
+                id BIGSERIAL PRIMARY KEY,
+                recommended_daily_intake_id BIGINT NOT NULL,
+                meal_id BIGINT NOT NULL,
+                meal_name VARCHAR(255) NOT NULL,
+                total_calories DOUBLE PRECISION NOT NULL,
+                total_protein DOUBLE PRECISION NOT NULL,
+                total_carbs DOUBLE PRECISION NOT NULL,
+                total_fat DOUBLE PRECISION NOT NULL,
+                total_sugars DOUBLE PRECISION,
+                total_saturated_fat DOUBLE PRECISION,
+                total_unsaturated_fat DOUBLE PRECISION,
+                consumed_date DATE NOT NULL,
+                consumed_time TIME NOT NULL,
+                CONSTRAINT fk_consumed_rdi
+                    FOREIGN KEY (recommended_daily_intake_id)
+                    REFERENCES recommended_daily_intake(id)
+                    ON DELETE CASCADE
+            )
+        """);
+        };
+    }
+
 }

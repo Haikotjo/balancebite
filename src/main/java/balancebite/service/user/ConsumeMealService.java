@@ -8,6 +8,7 @@ import balancebite.errorHandling.UserNotFoundException;
 import balancebite.model.meal.Meal;
 import balancebite.model.Nutrient;
 import balancebite.model.RecommendedDailyIntake;
+import balancebite.model.meal.consumedMeal.ConsumedMeal;
 import balancebite.model.user.User;
 import balancebite.repository.MealRepository;
 import balancebite.repository.RecommendedDailyIntakeRepository;
@@ -109,6 +110,9 @@ public class ConsumeMealService implements IConsumeMealService {
                     return new DailyIntakeNotFoundException("Recommended daily intake not found for user with ID: " + userId);
                 });
         log.debug("Daily intake retrieved for user ID {}: {}", userId, dailyIntake);
+
+        dailyIntake.getConsumedMeals().add(new ConsumedMeal(dailyIntake, meal));
+
 
         // Map nutrients by normalized names
         Map<String, Nutrient> nutrientMap = dailyIntake.getNutrients().stream()

@@ -1,5 +1,6 @@
 package balancebite.model;
 
+import balancebite.model.meal.consumedMeal.ConsumedMeal;
 import balancebite.model.user.User;
 import jakarta.persistence.*;
 
@@ -40,6 +41,10 @@ public class RecommendedDailyIntake {
      * The timestamp when the recommended daily intake was created.
      */
     private LocalDate createdAt;
+
+    @OneToMany(mappedBy = "rdi", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<ConsumedMeal> consumedMeals = new HashSet<>();
+
 
     /**
      * Default constructor for creating a RecommendedDailyIntake entity.
@@ -238,5 +243,9 @@ public class RecommendedDailyIntake {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public Set<ConsumedMeal> getConsumedMeals() {
+        return consumedMeals;
     }
 }
