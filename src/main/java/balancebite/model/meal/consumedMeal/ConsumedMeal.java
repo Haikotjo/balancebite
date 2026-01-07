@@ -81,4 +81,41 @@ public class ConsumedMeal {
     public LocalTime getConsumedTime() {
         return consumedTime;
     }
+
+    public Long getMealId() {
+        return mealId;
+    }
+
+    public String getMealName() {
+        return mealName;
+    }
+
+    public double getTotalCalories() {
+        return totalCalories;
+    }
+
+    public double getTotalProtein() {
+        return totalProtein;
+    }
+
+    public double getTotalCarbs() {
+        return totalCarbs;
+    }
+
+    public double getTotalFat() {
+        return totalFat;
+    }
+
+    public Double getTotalSugars() {
+        return totalSugars;
+    }
+
+    public Double getTotalSaturatedFat() {
+        return totalSaturatedFat;
+    }
+
+    public Double getTotalUnsaturatedFat() {
+        return totalUnsaturatedFat;
+    }
+
 }
