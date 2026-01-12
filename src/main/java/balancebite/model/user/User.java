@@ -37,6 +37,7 @@ public class User {
 
     private List<WeightEntry> weightHistory = new ArrayList<>();
 
+    @Column(name = "target_weight")
     private Double targetWeight;
 
     private Integer age;

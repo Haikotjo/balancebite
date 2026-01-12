@@ -18,7 +18,7 @@ public class UserDTO {
     private final Integer age;
     private final Double height;
     private final List<WeightEntryDTO> weightHistory;
-    private Double targetWeight;
+    private final Double targetWeight;
     private final Gender gender;
     private final ActivityLevel activityLevel;
     private final Goal goal;
