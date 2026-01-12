@@ -1,9 +1,6 @@
 package balancebite.service.user;
 
-import balancebite.dto.user.UserRegistrationInputDTO;
-import balancebite.dto.user.UserDTO;
-import balancebite.dto.user.UserDetailsInputDTO;
-import balancebite.dto.user.UserSearchDTO;
+import balancebite.dto.user.*;
 import balancebite.errorHandling.UserNotFoundException;
 import balancebite.mapper.UserMapper;
 import balancebite.model.meal.Meal;
@@ -168,6 +165,34 @@ public class UserService implements IUserService {
         return userMapper.toDTO(updatedUser);
     }
 
+    /**
+     * Updates ONLY the weight of the currently logged-in user.
+     * This is used for quick daily updates.
+     *
+     * @param id                   The ID of the user (from JWT).
+     * @param weightUpdateInputDTO The small DTO containing only the new weight.
+     * @return The updated UserDTO including the new history point for the chart.
+     * @throws UserNotFoundException If no user with the specified ID is found.
+     */
+    @Override
+    public UserDTO updateWeightOnly(Long id, WeightEntryUpdateInputDTO weightUpdateInputDTO) {
+        log.info("Quick weight update for user ID: {}", id);
+
+        // Fetch the user or throw exception if not found
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new UserNotFoundException("Cannot update weight: No user found with ID " + id));
+
+        // Use the method in the Entity that updates both the field and the history list
+        user.addWeight(weightUpdateInputDTO.getWeight());
+
+        // Persist changes to the database
+        userRepository.save(user);
+
+        log.info("Successfully updated weight for user ID: {}. New weight: {}", id, weightUpdateInputDTO.getWeight());
+
+        // Return the full DTO so the frontend chart can refresh immediately
+        return userMapper.toDTO(user);
+    }
 
     /**
      * Retrieves the currently logged-in user's details.

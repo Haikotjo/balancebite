@@ -6,6 +6,7 @@ import balancebite.dto.recommendeddailyintake.RecommendedDailyIntakeDTO;
 import balancebite.model.user.Role;
 import balancebite.model.user.User;
 import balancebite.model.user.UserRole;
+import balancebite.model.user.WeightEntry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -51,6 +52,12 @@ public class UserMapper {
             return null;
         }
 
+        List<WeightEntryDTO> weightHistoryDTOs = user.getWeightHistory() != null
+                ? user.getWeightHistory().stream()
+                .map(this::toWeightEntryDTO)
+                .collect(Collectors.toList())
+                : List.of();
+
         List<MealDTO> mealDTOs = user.getMeals() != null
                 ? user.getMeals().stream()
                 .map(mealMapper::toDTO)
@@ -84,6 +91,7 @@ public class UserMapper {
                 user.getUserName(),
                 user.getEmail(),
                 user.getWeight(),
+                weightHistoryDTOs,
                 user.getAge(),
                 user.getHeight(),
                 user.getGender(),
@@ -135,7 +143,7 @@ public class UserMapper {
         log.info("Updating User entity with details from UserDetailsInputDTO for user ID: {}", user.getId());
 
         if (userDetailsInputDTO.getWeight() != null) {
-            user.setWeight(userDetailsInputDTO.getWeight());
+            user.addWeight(userDetailsInputDTO.getWeight());
         }
         if (userDetailsInputDTO.getAge() != null) {
             user.setAge(userDetailsInputDTO.getAge());
@@ -164,4 +172,7 @@ public class UserMapper {
         return new UserDTO(user.getId(), user.getUserName(), user.getEmail());
     }
 
+    private WeightEntryDTO toWeightEntryDTO(WeightEntry entry) {
+        return new WeightEntryDTO(entry.getWeight(), entry.getDate());
+    }
 }

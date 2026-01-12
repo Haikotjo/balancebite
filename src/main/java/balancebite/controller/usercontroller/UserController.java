@@ -1,9 +1,6 @@
 package balancebite.controller.usercontroller;
 
-import balancebite.dto.user.UserRegistrationInputDTO;
-import balancebite.dto.user.UserLoginInputDTO;
-import balancebite.dto.user.UserDTO;
-import balancebite.dto.user.UserDetailsInputDTO;
+import balancebite.dto.user.*;
 import balancebite.errorHandling.DailyIntakeNotFoundException;
 import balancebite.errorHandling.EntityAlreadyExistsException;
 import balancebite.errorHandling.MealNotFoundException;
@@ -119,6 +116,40 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
             log.error("Unexpected error during user detail update: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "An unexpected error occurred."));
+        }
+    }
+
+    /**
+     * Endpoint to update ONLY the weight of the currently logged-in user.
+     * This is used for quick daily weight updates.
+     *
+     * @param authorizationHeader  The Authorization header containing the JWT token.
+     * @param weightEntryUpdateInputDTO The input data containing the new weight.
+     * @return The updated UserDTO with 200 status code.
+     */
+    @PreAuthorize("isAuthenticated()")
+    @PatchMapping("/weight")
+    public ResponseEntity<?> updateWeightOnly(
+            @RequestHeader("Authorization") String authorizationHeader,
+            @Valid @RequestBody WeightEntryUpdateInputDTO weightEntryUpdateInputDTO) {
+        log.info("Quick weight update for the currently logged-in user.");
+
+        try {
+            // Extract user ID from the token
+            String token = authorizationHeader.substring(7); // Remove "Bearer " prefix
+            Long userId = jwtService.extractUserId(token);
+
+            // Call the service method
+            UserDTO updatedUser = userService.updateWeightOnly(userId, weightEntryUpdateInputDTO);
+
+            log.info("Successfully updated weight for logged-in user with ID: {}", userId);
+            return ResponseEntity.ok(updatedUser);
+        } catch (UserNotFoundException e) {
+            log.warn("User not found during quick weight update: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            log.error("Unexpected error during quick weight update: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "An unexpected error occurred."));
         }
     }

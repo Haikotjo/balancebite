@@ -9,6 +9,7 @@ import balancebite.model.user.userenums.Goal;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -33,6 +34,11 @@ public class User {
     private String password;
 
     private Double weight;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("date DESC")
+    private List<WeightEntry> weightHistory = new ArrayList<>();
+
     private Integer age;
     private Double height;
     @Enumerated(EnumType.STRING)
@@ -185,6 +191,14 @@ public class User {
 
     public void setWeight(Double weight) {
         this.weight = weight;
+    }
+
+    public List<WeightEntry> getWeightHistory() {
+        return weightHistory;
+    }
+
+    public void setWeightHistory(List<WeightEntry> weightHistory) {
+        this.weightHistory = weightHistory;
     }
 
     public Integer getAge() {
@@ -359,4 +373,9 @@ public class User {
     public void setLinkedin(String linkedin) { this.linkedin = linkedin; }
 
 
+    public void addWeight(Double weightValue) {
+        WeightEntry entry = new WeightEntry(weightValue, LocalDate.now(), this);
+        this.weightHistory.add(entry);
+        this.weight = weightValue; // Update ook het actuele gewicht veld
+    }
 }

@@ -1,9 +1,6 @@
 package balancebite.service.interfaces.user;
 
-import balancebite.dto.user.UserRegistrationInputDTO;
-import balancebite.dto.user.UserDetailsInputDTO;
-import balancebite.dto.user.UserDTO;
-import balancebite.dto.user.UserSearchDTO;
+import balancebite.dto.user.*;
 import balancebite.errorHandling.EntityAlreadyExistsException;
 import balancebite.errorHandling.UserNotFoundException;
 import balancebite.model.user.User;
@@ -37,6 +34,16 @@ public interface IUserService {
      * @throws UserNotFoundException If the user with the specified ID is not found.
      */
     UserDTO updateUserDetails(Long id, UserDetailsInputDTO userDetailsInputDTO);
+
+    /**
+     * Updates ONLY the weight of the currently logged-in user.
+     * This is used for quick daily updates.
+     *
+     * @param id                  The ID of the user (from JWT).
+     * @param weightUpdateInputDTO The small DTO containing only the new weight.
+     * @return The updated UserDTO including the new history point for the chart.
+     */
+    UserDTO updateWeightOnly(Long id, WeightEntryUpdateInputDTO weightUpdateInputDTO);
 
     /**
      * Retrieves the details of the currently logged-in user.

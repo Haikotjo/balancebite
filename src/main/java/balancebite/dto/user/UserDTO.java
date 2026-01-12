@@ -17,6 +17,7 @@ public class UserDTO {
     private final Double weight;
     private final Integer age;
     private final Double height;
+    private final List<WeightEntryDTO> weightHistory;
     private final Gender gender;
     private final ActivityLevel activityLevel;
     private final Goal goal;
@@ -28,13 +29,14 @@ public class UserDTO {
     private final List<UserDTO> dietitians;
 
 
-    public UserDTO(Long id, String userName, String email, Double weight, Integer age, Double height, Gender gender,
+    public UserDTO(Long id, String userName, String email, Double weight,List<WeightEntryDTO> weightHistory ,Integer age, Double height, Gender gender,
                    ActivityLevel activityLevel, Goal goal, List<MealDTO> meals, Collection<Role> roles,
                    List<RecommendedDailyIntakeDTO> recommendedDailyIntakes, RecommendedDailyIntakeDTO baseRecommendedDailyIntake, List<UserDTO> clients, List<UserDTO> dietitians) {
         this.id = id;
         this.userName = userName;
         this.email = email;
         this.weight = weight;
+        this.weightHistory = (weightHistory != null) ? List.copyOf(weightHistory) : List.of();
         this.age = age;
         this.height = height;
         this.gender = gender;
@@ -49,11 +51,11 @@ public class UserDTO {
     }
 
     public UserDTO(Long id, String userName, String email) {
-        this(id, userName, email, null, null, null, null, null, null, List.of(), List.of(), List.of(), null,   List.of(), List.of());
+        this(id, userName, email, null, null, null,null ,null, null, null, List.of(), List.of(), List.of(), null,   List.of(), List.of());
     }
 
     public UserDTO(Long id, String userName) {
-        this(id, userName, null, null, null, null, null, null, null, List.of(), List.of(), List.of(), null,    List.of(), List.of());
+        this(id, userName, null, null, null, null, null, null, null, null, List.of(), List.of(), List.of(), null,    List.of(), List.of());
     }
 
     public Long getId() {
@@ -70,6 +72,10 @@ public class UserDTO {
 
     public Double getWeight() {
         return weight;
+    }
+
+    public List<WeightEntryDTO> getWeightHistory() {
+        return weightHistory;
     }
 
     public Integer getAge() {
