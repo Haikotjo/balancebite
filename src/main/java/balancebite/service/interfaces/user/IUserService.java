@@ -45,6 +45,8 @@ public interface IUserService {
      */
     UserDTO updateWeightOnly(Long id, WeightEntryUpdateInputDTO weightUpdateInputDTO);
 
+    UserDTO updateTargetWeightOnly(Long id, TargetWeightUpdateInputDTO targetWeightUpdateDTO);
+
     /**
      * Retrieves the details of the currently logged-in user.
      *

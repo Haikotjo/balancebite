@@ -92,6 +92,7 @@ public class UserMapper {
                 user.getEmail(),
                 user.getWeight(),
                 weightHistoryDTOs,
+                user.getTargetWeight(),
                 user.getAge(),
                 user.getHeight(),
                 user.getGender(),
@@ -144,6 +145,9 @@ public class UserMapper {
 
         if (userDetailsInputDTO.getWeight() != null) {
             user.addWeight(userDetailsInputDTO.getWeight());
+        }
+        if (userDetailsInputDTO.getTargetWeight() != null) {
+            user.setTargetWeight(userDetailsInputDTO.getTargetWeight());
         }
         if (userDetailsInputDTO.getAge() != null) {
             user.setAge(userDetailsInputDTO.getAge());

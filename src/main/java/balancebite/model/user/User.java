@@ -34,16 +34,24 @@ public class User {
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("date DESC")
+
     private List<WeightEntry> weightHistory = new ArrayList<>();
 
+    private Double targetWeight;
+
     private Integer age;
+
     private Double height;
     @Enumerated(EnumType.STRING)
+
     private Gender gender;
+
     @Enumerated(EnumType.STRING)
     private ActivityLevel activityLevel;
+
     @Enumerated(EnumType.STRING)
     private Goal goal;
+
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
             name = "user_meals",
@@ -51,6 +59,7 @@ public class User {
             inverseJoinColumns = @JoinColumn(name = "meal_id")
     )
     @JsonIgnore
+
     private Set<Meal> meals = new HashSet<>();
 
     @ManyToMany(fetch = FetchType.EAGER)
@@ -143,8 +152,6 @@ public class User {
     @Column(length = 255)
     private String linkedin;
 
-
-
     public User() {}
 
     public User(String userName, String email, String password, Set<Role> roles) {
@@ -192,6 +199,14 @@ public class User {
 
     public List<WeightEntry> getWeightHistory() {
         return weightHistory;
+    }
+
+    public Double getTargetWeight() {
+        return targetWeight;
+    }
+
+    public void setTargetWeight(Double targetWeight) {
+        this.targetWeight = targetWeight;
     }
 
     public void setWeightHistory(List<WeightEntry> weightHistory) {

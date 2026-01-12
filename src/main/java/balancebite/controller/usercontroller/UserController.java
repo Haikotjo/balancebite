@@ -155,6 +155,39 @@ public class UserController {
     }
 
     /**
+     * Endpoint to update ONLY the target weight of the currently logged-in user.
+     * This is used for quick target weight updates.
+     *
+     * @param authorizationHeader        The Authorization header containing the JWT token.
+     * @param targetWeightUpdateInputDTO The input data containing the new target weight.
+     * @return The updated UserDTO with 200 status code.
+     */
+    @PreAuthorize("isAuthenticated()")
+    @PatchMapping("/target-weight")
+    public ResponseEntity<?> updateTargetWeightOnly(
+            @RequestHeader("Authorization") String authorizationHeader,
+            @Valid @RequestBody TargetWeightUpdateInputDTO targetWeightUpdateInputDTO) {
+        log.info("Quick target weight update for the currently logged-in user.");
+
+        try {
+            String token = authorizationHeader.substring(7);
+            Long userId = jwtService.extractUserId(token);
+
+            // Call de service
+            UserDTO updatedUser = userService.updateTargetWeightOnly(userId, targetWeightUpdateInputDTO);
+
+            log.info("Successfully updated target weight for logged-in user with ID: {}", userId);
+            return ResponseEntity.ok(updatedUser);
+        } catch (UserNotFoundException e) {
+            log.warn("User not found during target weight update: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            log.error("Unexpected error during target weight update: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "An unexpected error occurred."));
+        }
+    }
+
+    /**
      * Endpoint to retrieve the currently logged-in user's details.
      *
      * @param authorizationHeader The Authorization header containing the JWT token.

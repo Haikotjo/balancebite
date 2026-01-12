@@ -21,6 +21,13 @@ public class UserDetailsInputDTO {
     private Double weight;
 
     /**
+     * The user's target weight, in kilograms.
+     */
+    @NotNull(message = "Target weight must be provided. Please specify your desired weight.")
+    @Digits(integer = 3, fraction = 2, message = "Target weight must be a valid number with up to 3 digits and 2 decimal places.")
+    private Double targetWeight;
+
+    /**
      * The user's age, in years. This field is mandatory and must be an integer.
      */
     @NotNull(message = "Age must be provided. Please specify your age in years.")
@@ -61,6 +68,7 @@ public class UserDetailsInputDTO {
      * Full constructor for creating a UserDetailsInputDTO with all fields.
      *
      * @param weight         The user's weight in kilograms. Cannot be null.
+     * @param targetWeight   The user's target weight in kilograms.
      * @param age            The user's age in years. Cannot be null.
      * @param height         The user's height in centimeters. Cannot be null.
      * @param gender         The user's gender. Cannot be null.
@@ -68,14 +76,16 @@ public class UserDetailsInputDTO {
      * @param goal           The user's goal. Cannot be null.
      */
     public UserDetailsInputDTO(
-            @NotNull(message = "Weight must be provided.") Double weight,
-            @NotNull(message = "Age must be provided.") Integer age,
-            @NotNull(message = "Height must be provided.") Double height,
-            @NotNull(message = "Gender must be provided.") Gender gender,
-            @NotNull(message = "Activity level must be provided.") ActivityLevel activityLevel,
-            @NotNull(message = "Goal must be provided.") Goal goal
+            Double weight,
+            Double targetWeight,
+            Integer age,
+            Double height,
+            Gender gender,
+            ActivityLevel activityLevel,
+            Goal goal
     ) {
         this.weight = weight;
+        this.targetWeight = targetWeight;
         this.age = age;
         this.height = height;
         this.gender = gender;
@@ -99,6 +109,14 @@ public class UserDetailsInputDTO {
      */
     public void setWeight(Double weight) {
         this.weight = weight;
+    }
+
+    public Double getTargetWeight() {
+        return targetWeight;
+    }
+
+    public void setTargetWeight(Double targetWeight) {
+        this.targetWeight = targetWeight;
     }
 
     /**

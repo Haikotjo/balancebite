@@ -97,7 +97,8 @@ public class SecurityConfig {
 
                                 .requestMatchers(HttpMethod.GET, "/users/profile").authenticated()
                                 .requestMatchers(HttpMethod.PATCH, "/users/basic-info").authenticated()
-                        .requestMatchers(HttpMethod.PATCH, "/users/weight").authenticated()
+                                .requestMatchers(HttpMethod.PATCH, "/users/weight").authenticated()
+                                .requestMatchers(HttpMethod.PATCH, "/users/target-weight").authenticated()
 
                                 .requestMatchers(HttpMethod.POST, "/users/create-meal").authenticated()
                                 .requestMatchers(HttpMethod.PATCH, "/users/update-meal/{mealId}").authenticated()

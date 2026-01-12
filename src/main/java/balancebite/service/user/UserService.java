@@ -98,7 +98,6 @@ public class UserService implements IUserService {
         return userMapper.toDTO(updatedUser);
     }
 
-
     /**
      * Updates detailed information of the currently logged-in user.
      *
@@ -191,6 +190,33 @@ public class UserService implements IUserService {
         log.info("Successfully updated weight for user ID: {}. New weight: {}", id, weightUpdateInputDTO.getWeight());
 
         // Return the full DTO so the frontend chart can refresh immediately
+        return userMapper.toDTO(user);
+    }
+
+    /**
+     * Updates ONLY the target weight of the currently logged-in user.
+     *
+     * @param id                   The ID of the user (from JWT).
+     * @param targetWeightUpdateDTO A small DTO containing only the new target weight.
+     * @return The updated UserDTO.
+     * @throws UserNotFoundException If no user with the specified ID is found.
+     */
+    @Override
+    public UserDTO updateTargetWeightOnly(Long id, TargetWeightUpdateInputDTO targetWeightUpdateDTO) {
+        log.info("Quick target weight update for user ID: {}", id);
+
+        // Fetch user
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new UserNotFoundException("Cannot update target weight: No user found with ID " + id));
+
+        // Update het veld
+        user.setTargetWeight(targetWeightUpdateDTO.getTargetWeight());
+
+        // Opslaan
+        userRepository.save(user);
+
+        log.info("Successfully updated target weight for user ID: {}. New target: {}", id, targetWeightUpdateDTO.getTargetWeight());
+
         return userMapper.toDTO(user);
     }
 
