@@ -10,10 +10,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 @Entity
 @Table(name = "users")
@@ -374,8 +371,21 @@ public class User {
 
 
     public void addWeight(Double weightValue) {
-        WeightEntry entry = new WeightEntry(weightValue, LocalDate.now(), this);
-        this.weightHistory.add(entry);
-        this.weight = weightValue; // Update ook het actuele gewicht veld
+        this.weight = weightValue; // Update altijd het actuele gewicht veld
+        LocalDate today = LocalDate.now();
+
+        // Check of er vandaag al een entry bestaat in de lijst
+        Optional<WeightEntry> existingEntry = this.weightHistory.stream()
+                .filter(entry -> entry.getDate().equals(today))
+                .findFirst();
+
+        if (existingEntry.isPresent()) {
+            // Er is al een meting vandaag: update alleen de waarde
+            existingEntry.get().setWeight(weightValue);
+        } else {
+            // Er is nog geen meting vandaag: voeg een nieuwe toe aan de lijst
+            WeightEntry newEntry = new WeightEntry(weightValue, today, this);
+            this.weightHistory.add(newEntry);
+        }
     }
 }
