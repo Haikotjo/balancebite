@@ -187,6 +187,17 @@ public class UserService implements IUserService {
         // Persist changes to the database
         userRepository.save(user);
 
+        // Recalculate RDI for today with the new weight
+        RecommendedDailyIntake newOrUpdatedIntake = DailyIntakeCalculatorUtil.calculateDailyIntake(user);
+
+        // Check if an intake exists for today to ensure we overwrite instead of duplicate
+        recommendedDailyIntakeRepository.findByUser_IdAndCreatedAt(id, LocalDate.now())
+                .ifPresent(existing -> newOrUpdatedIntake.setId(existing.getId()));
+
+        newOrUpdatedIntake.setUser(user);
+        newOrUpdatedIntake.setCreatedAt(LocalDate.now());
+        recommendedDailyIntakeRepository.save(newOrUpdatedIntake);
+
         log.info("Successfully updated weight for user ID: {}. New weight: {}", id, weightUpdateInputDTO.getWeight());
 
         // Return the full DTO so the frontend chart can refresh immediately
