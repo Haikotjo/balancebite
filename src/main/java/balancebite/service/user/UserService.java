@@ -146,18 +146,19 @@ public class UserService implements IUserService {
         // Save the new RDI
         recommendedDailyIntakeRepository.save(newOrUpdatedIntake);
 
-        // Check if user already has a BaseRDI
-        if (updatedUser.getBaseRecommendedDailyIntake() == null) {
-            log.info("Creating BaseRecommendedDailyIntake for user ID {}", id);
-            RecommendedDailyIntake baseRDI = DailyIntakeCalculatorUtil.calculateDailyIntake(updatedUser);
-            baseRDI.setCreatedAt(LocalDate.now());
-            baseRDI.setUser(updatedUser);
+        RecommendedDailyIntake baseRDI = DailyIntakeCalculatorUtil.calculateDailyIntake(updatedUser);
 
-            // Save BaseRDI
-            recommendedDailyIntakeRepository.save(baseRDI);
-            updatedUser.setBaseRecommendedDailyIntake(baseRDI);
-            userRepository.save(updatedUser);
+// Use existing ID to overwrite the current BaseRDI
+        if (updatedUser.getBaseRecommendedDailyIntake() != null) {
+            baseRDI.setId(updatedUser.getBaseRecommendedDailyIntake().getId());
         }
+
+        baseRDI.setCreatedAt(LocalDate.now());
+        baseRDI.setUser(updatedUser);
+        recommendedDailyIntakeRepository.save(baseRDI);
+
+        updatedUser.setBaseRecommendedDailyIntake(baseRDI);
+        userRepository.save(updatedUser);
 
         log.info("Successfully saved intake and BaseRDI for user ID {}", id);
 
@@ -177,30 +178,35 @@ public class UserService implements IUserService {
     public UserDTO updateWeightOnly(Long id, WeightEntryUpdateInputDTO weightUpdateInputDTO) {
         log.info("Quick weight update for user ID: {}", id);
 
-        // Fetch the user or throw exception if not found
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException("Cannot update weight: No user found with ID " + id));
 
-        // Use the method in the Entity that updates both the field and the history list
         user.addWeight(weightUpdateInputDTO.getWeight());
-
-        // Persist changes to the database
         userRepository.save(user);
 
-        // Recalculate RDI for today with the new weight
-        RecommendedDailyIntake newOrUpdatedIntake = DailyIntakeCalculatorUtil.calculateDailyIntake(user);
-
-        // Check if an intake exists for today to ensure we overwrite instead of duplicate
+        // 1. Update Today's RDI
+        RecommendedDailyIntake todayIntake = DailyIntakeCalculatorUtil.calculateDailyIntake(user);
         recommendedDailyIntakeRepository.findByUser_IdAndCreatedAt(id, LocalDate.now())
-                .ifPresent(existing -> newOrUpdatedIntake.setId(existing.getId()));
+                .ifPresent(existing -> todayIntake.setId(existing.getId()));
 
-        newOrUpdatedIntake.setUser(user);
-        newOrUpdatedIntake.setCreatedAt(LocalDate.now());
-        recommendedDailyIntakeRepository.save(newOrUpdatedIntake);
+        todayIntake.setUser(user);
+        todayIntake.setCreatedAt(LocalDate.now());
+        recommendedDailyIntakeRepository.save(todayIntake);
 
-        log.info("Successfully updated weight for user ID: {}. New weight: {}", id, weightUpdateInputDTO.getWeight());
+        // 2. Update Base RDI (The part that was missing)
+        RecommendedDailyIntake baseRDI = DailyIntakeCalculatorUtil.calculateDailyIntake(user);
+        if (user.getBaseRecommendedDailyIntake() != null) {
+            baseRDI.setId(user.getBaseRecommendedDailyIntake().getId());
+        }
+        baseRDI.setUser(user);
+        baseRDI.setCreatedAt(LocalDate.now());
+        recommendedDailyIntakeRepository.save(baseRDI);
 
-        // Return the full DTO so the frontend chart can refresh immediately
+        user.setBaseRecommendedDailyIntake(baseRDI);
+        userRepository.save(user);
+
+        log.info("Successfully updated weight and BaseRDI for user ID: {}", id);
+
         return userMapper.toDTO(user);
     }
 
