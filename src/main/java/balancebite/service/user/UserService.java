@@ -3,6 +3,7 @@ package balancebite.service.user;
 import balancebite.dto.user.*;
 import balancebite.errorHandling.UserNotFoundException;
 import balancebite.mapper.UserMapper;
+import balancebite.model.Nutrient;
 import balancebite.model.meal.Meal;
 import balancebite.model.RecommendedDailyIntake;
 import balancebite.model.user.User;
@@ -24,6 +25,7 @@ import java.time.LocalDate;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -110,59 +112,41 @@ public class UserService implements IUserService {
     public UserDTO updateUserDetails(Long id, UserDetailsInputDTO userDetailsInputDTO) {
         log.info("Updating details for logged-in user with ID: {}", id);
 
-        // Fetch the user or throw exception if not found
-        User existingUser = userRepository.findById(id)
-                .orElseThrow(() -> new UserNotFoundException("Cannot update user details: No user found with ID " + id));
+        // 1. Fetch user
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new UserNotFoundException("User not found with ID " + id));
 
-        // Update user entity with details
-        userMapper.updateDetailsFromDTO(existingUser, userDetailsInputDTO);
-        userRepository.save(existingUser);
+        // 2. Update user entity fields
+        userMapper.updateDetailsFromDTO(user, userDetailsInputDTO);
+        user = userRepository.save(user);
 
-        // Fetch the updated user to ensure changes are persisted
-        User updatedUser = userRepository.findById(id)
-                .orElseThrow(() -> new UserNotFoundException("Failed to fetch updated user details"));
+        // 3. Calculate new intake based on your model (this returns a new RecommendedDailyIntake object)
+        RecommendedDailyIntake calculatedValues = DailyIntakeCalculatorUtil.calculateDailyIntake(user);
 
-        log.info("Updated user details: Gender={}, ActivityLevel={}, Goal={}, Height={}, Weight={}",
-                updatedUser.getGender(), updatedUser.getActivityLevel(), updatedUser.getGoal(),
-                updatedUser.getHeight(), updatedUser.getWeight());
+        // 4. Update Today's Intake (Sync values inside the existing set)
+        RecommendedDailyIntake todaysIntake = DailyIntakeCalculatorUtil.getOrCreateDailyIntakeForUser(user);
+        syncNutrientSet(todaysIntake.getNutrients(), calculatedValues.getNutrients());
+        recommendedDailyIntakeRepository.save(todaysIntake);
 
-        // Check if an intake exists for today
-        Optional<RecommendedDailyIntake> existingIntake = recommendedDailyIntakeRepository.findByUser_IdAndCreatedAt(id, LocalDate.now());
-        RecommendedDailyIntake newOrUpdatedIntake;
-
-        if (existingIntake.isPresent()) {
-            log.info("Overwriting existing RecommendedDailyIntake for user ID {} on date {}", id, LocalDate.now());
-            newOrUpdatedIntake = DailyIntakeCalculatorUtil.calculateDailyIntake(updatedUser);
-            newOrUpdatedIntake.setId(existingIntake.get().getId());
-            newOrUpdatedIntake.setUser(updatedUser);
-            newOrUpdatedIntake.setCreatedAt(LocalDate.now());
-        } else {
-            log.info("Creating new RecommendedDailyIntake for user ID {} on date {}", id, LocalDate.now());
-            newOrUpdatedIntake = DailyIntakeCalculatorUtil.calculateDailyIntake(updatedUser);
-            newOrUpdatedIntake.setCreatedAt(LocalDate.now());
-            newOrUpdatedIntake.setUser(updatedUser);
+        // 5. Handle BaseRDI (Always overwrite existing set)
+        RecommendedDailyIntake baseRDI = user.getBaseRecommendedDailyIntake();
+        if (baseRDI == null) {
+            log.info("Creating new BaseRDI for user ID {}", id);
+            baseRDI = new RecommendedDailyIntake();
+            baseRDI.setUser(user);
+            baseRDI.setCreatedAt(LocalDate.now());
+            user.setBaseRecommendedDailyIntake(baseRDI);
         }
 
-        // Save the new RDI
-        recommendedDailyIntakeRepository.save(newOrUpdatedIntake);
+        // Overwrite the values in the BaseRDI nutrient set
+        syncNutrientSet(baseRDI.getNutrients(), calculatedValues.getNutrients());
 
-        RecommendedDailyIntake baseRDI = DailyIntakeCalculatorUtil.calculateDailyIntake(updatedUser);
-
-// Use existing ID to overwrite the current BaseRDI
-        if (updatedUser.getBaseRecommendedDailyIntake() != null) {
-            baseRDI.setId(updatedUser.getBaseRecommendedDailyIntake().getId());
-        }
-
-        baseRDI.setCreatedAt(LocalDate.now());
-        baseRDI.setUser(updatedUser);
+        // 6. Save everything
         recommendedDailyIntakeRepository.save(baseRDI);
+        userRepository.save(user);
 
-        updatedUser.setBaseRecommendedDailyIntake(baseRDI);
-        userRepository.save(updatedUser);
-
-        log.info("Successfully saved intake and BaseRDI for user ID {}", id);
-
-        return userMapper.toDTO(updatedUser);
+        log.info("Successfully updated and synced BaseRDI for user ID {}", id);
+        return userMapper.toDTO(user);
     }
 
     /**
@@ -182,30 +166,21 @@ public class UserService implements IUserService {
                 .orElseThrow(() -> new UserNotFoundException("Cannot update weight: No user found with ID " + id));
 
         user.addWeight(weightUpdateInputDTO.getWeight());
-        userRepository.save(user);
+        user = userRepository.save(user);
 
-        // 1. Update Today's RDI
-        RecommendedDailyIntake todayIntake = DailyIntakeCalculatorUtil.calculateDailyIntake(user);
-        recommendedDailyIntakeRepository.findByUser_IdAndCreatedAt(id, LocalDate.now())
-                .ifPresent(existing -> todayIntake.setId(existing.getId()));
+        RecommendedDailyIntake calculatedValues = DailyIntakeCalculatorUtil.calculateDailyIntake(user);
 
-        todayIntake.setUser(user);
-        todayIntake.setCreatedAt(LocalDate.now());
-        recommendedDailyIntakeRepository.save(todayIntake);
+        // Update Today's Intake
+        RecommendedDailyIntake todaysIntake = DailyIntakeCalculatorUtil.getOrCreateDailyIntakeForUser(user);
+        syncNutrientSet(todaysIntake.getNutrients(), calculatedValues.getNutrients());
+        recommendedDailyIntakeRepository.save(todaysIntake);
 
-        // 2. Update Base RDI (The part that was missing)
-        RecommendedDailyIntake baseRDI = DailyIntakeCalculatorUtil.calculateDailyIntake(user);
-        if (user.getBaseRecommendedDailyIntake() != null) {
-            baseRDI.setId(user.getBaseRecommendedDailyIntake().getId());
+        // Update BaseRDI with new weight
+        RecommendedDailyIntake baseRDI = user.getBaseRecommendedDailyIntake();
+        if (baseRDI != null) {
+            syncNutrientSet(baseRDI.getNutrients(), calculatedValues.getNutrients());
+            recommendedDailyIntakeRepository.save(baseRDI);
         }
-        baseRDI.setUser(user);
-        baseRDI.setCreatedAt(LocalDate.now());
-        recommendedDailyIntakeRepository.save(baseRDI);
-
-        user.setBaseRecommendedDailyIntake(baseRDI);
-        userRepository.save(user);
-
-        log.info("Successfully updated weight and BaseRDI for user ID: {}", id);
 
         return userMapper.toDTO(user);
     }
@@ -226,10 +201,10 @@ public class UserService implements IUserService {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException("Cannot update target weight: No user found with ID " + id));
 
-        // Update het veld
+        // Update the field
         user.setTargetWeight(targetWeightUpdateDTO.getTargetWeight());
 
-        // Opslaan
+        // Save
         userRepository.save(user);
 
         log.info("Successfully updated target weight for user ID: {}. New target: {}", id, targetWeightUpdateDTO.getTargetWeight());
@@ -331,4 +306,18 @@ public class UserService implements IUserService {
                 .map(user -> new UserSearchDTO(user.getId(), user.getUserName()))
                 .collect(Collectors.toList());
     }
+
+    /**
+     * Helper method to update values within an existing nutrient set.
+     * This prevents "Multiple representations of the same entity" by not replacing the set/objects.
+     */
+    private void syncNutrientSet(Set<Nutrient> targetSet, Set<Nutrient> sourceSet) {
+        for (Nutrient source : sourceSet) {
+            targetSet.stream()
+                    .filter(target -> target.getName().equals(source.getName()))
+                    .findFirst()
+                    .ifPresent(target -> target.setValue(source.getValue()));
+        }
+    }
 }
+
