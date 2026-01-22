@@ -70,6 +70,8 @@ public class UserRegistrationInputDTO {
      */
     private String verificationToken;
 
+    private String foodSource;
+
     /**
      * Default no-argument constructor for frameworks that require it.
      */
@@ -85,13 +87,14 @@ public class UserRegistrationInputDTO {
      * @param roles              The roles assigned to the user as strings. This field is optional.
      * @param verificationToken  Optional token used to validate elevated roles (e.g., ADMIN, CHEF).
      */
-    public UserRegistrationInputDTO(Long id, String userName, String email, String password, Collection<String> roles, String verificationToken) {
+    public UserRegistrationInputDTO(Long id, String userName, String email, String password, Collection<String> roles, String verificationToken, String foodSource) {
         this.id = id;
         this.userName = userName;
         this.email = email;
         this.password = password;
         this.roles = roles;
         this.verificationToken = verificationToken;
+        this.foodSource = foodSource;
     }
 
     /**
@@ -202,5 +205,13 @@ public class UserRegistrationInputDTO {
      */
     public void setVerificationToken(String verificationToken) {
         this.verificationToken = verificationToken;
+    }
+
+    public String getFoodSource() {
+        return foodSource;
+    }
+
+    public void setFoodSource(String foodSource) {
+        this.foodSource = foodSource;
     }
 }

@@ -1,6 +1,7 @@
 package balancebite.model.user;
 
 import balancebite.model.diet.DietPlan;
+import balancebite.model.foodItem.FoodSource;
 import balancebite.model.meal.Meal;
 import balancebite.model.RecommendedDailyIntake;
 import balancebite.model.user.userenums.ActivityLevel;
@@ -22,7 +23,6 @@ public class User {
 
     @Column(name = "user_name", nullable = false, unique = true)
     private String userName;
-
 
     @Column(unique = true, nullable = false)
     private String email;
@@ -152,6 +152,10 @@ public class User {
 
     @Column(length = 255)
     private String linkedin;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "food_source")
+    private FoodSource foodSource;
 
     public User() {}
 
@@ -385,6 +389,13 @@ public class User {
     public String getLinkedin() { return linkedin; }
     public void setLinkedin(String linkedin) { this.linkedin = linkedin; }
 
+    public FoodSource getFoodSource() {
+        return foodSource;
+    }
+
+    public void setFoodSource(FoodSource foodSource) {
+        this.foodSource = foodSource;
+    }
 
     public void addWeight(Double weightValue) {
         this.weight = weightValue; // Update altijd het actuele gewicht veld

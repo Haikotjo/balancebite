@@ -3,6 +3,7 @@ package balancebite.mapper;
 import balancebite.dto.user.*;
 import balancebite.dto.meal.MealDTO;
 import balancebite.dto.recommendeddailyintake.RecommendedDailyIntakeDTO;
+import balancebite.model.foodItem.FoodSource;
 import balancebite.model.user.Role;
 import balancebite.model.user.User;
 import balancebite.model.user.UserRole;
@@ -103,7 +104,8 @@ public class UserMapper {
                 recommendedDailyIntakeDTOs,
                 baseRecommendedDailyIntakeDTO,
                 clientDTOs,
-                dietitianDTOs
+                dietitianDTOs,
+                user.getFoodSource()
         );
     }
 
@@ -126,13 +128,20 @@ public class UserMapper {
                 .map(roleName -> new Role(UserRole.valueOf(roleName)))
                 .collect(Collectors.toSet());
 
-        return new User(
+        User user = new User(
                 registrationDTO.getUserName(),
                 registrationDTO.getEmail(),
                 registrationDTO.getPassword(),
                 roles
         );
-    }
+
+
+        if (registrationDTO.getFoodSource() != null) {
+            user.setFoodSource(FoodSource.valueOf(registrationDTO.getFoodSource().toUpperCase()));
+        }
+
+        return user;
+        }
 
     /**
      * Updates an existing User entity with details from UserDetailsInputDTO.

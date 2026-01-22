@@ -5,6 +5,7 @@ import balancebite.dto.user.UserRegistrationInputDTO;
 import balancebite.errorHandling.EntityAlreadyExistsException;
 import balancebite.errorHandling.UserNotFoundException;
 import balancebite.mapper.UserMapper;
+import balancebite.model.foodItem.FoodSource;
 import balancebite.model.meal.Meal;
 import balancebite.model.user.Role;
 import balancebite.model.user.User;
@@ -211,26 +212,28 @@ public class UserAdminService implements IUserAdminService {
     }
 
     /**
-     * Updates the roles of a user based on their email address.
+     * Updates the roles and optionally the food source of a user based on their email address.
+     * If the role "SUPERMARKET" is assigned, a valid food source should be provided.
      *
      * @param email the email address of the user whose roles should be updated
-     * @param roleNames a list of role names to assign (e.g., ["USER", "ADMIN"])
+     * @param roleNames a list of role names to assign (e.g., ["USER", "SUPERMARKET"])
+     * @param foodSource the supermarket source (e.g., "DIRK"), can be null if not applicable
      * @throws UserNotFoundException if no user is found with the provided email
-     * @throws RuntimeException if one or more role names are invalid
+     * @throws RuntimeException if one or more role names or the food source are invalid
      */
     @Override
-    public void updateUserRolesByEmail(String email, List<String> roleNames) {
-        log.info("Admin attempting to update roles for user with email: {}", email);
+    public void updateUserRolesByEmail(String email, List<String> roleNames, String foodSource) {
+        log.info("Admin attempting to update roles and food source for user with email: {}", email);
 
         // Find user by email
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UserNotFoundException("User not found with email: " + email));
 
-        // Convert role names to Role entities
+        // Convert role names to Role entities and validate them
         Set<Role> updatedRoles = roleNames.stream()
                 .map(roleName -> {
                     try {
-                        return new Role(UserRole.valueOf(roleName));
+                        return new Role(UserRole.valueOf(roleName.toUpperCase()));
                     } catch (IllegalArgumentException e) {
                         log.warn("Invalid role provided: {}", roleName);
                         throw new RuntimeException("Invalid role: " + roleName);
@@ -238,18 +241,41 @@ public class UserAdminService implements IUserAdminService {
                 })
                 .collect(Collectors.toSet());
 
-        // Set new roles and save
+        // Update user roles
         user.setRoles(updatedRoles);
+
+        // Handle FoodSource logic: only assign if SUPERMARKET role is present
+        boolean isSupermarket = roleNames.stream()
+                .anyMatch(role -> role.equalsIgnoreCase("SUPERMARKET"));
+
+        if (isSupermarket && foodSource != null && !foodSource.isBlank()) {
+            try {
+                user.setFoodSource(FoodSource.valueOf(foodSource.toUpperCase()));
+                log.debug("Assigned food source {} to user {}", foodSource, email);
+            } catch (IllegalArgumentException e) {
+                log.warn("Invalid food source provided: {}", foodSource);
+                throw new RuntimeException("Invalid food source: " + foodSource);
+            }
+        } else {
+            // Clear food source if role is removed or no source is provided
+            user.setFoodSource(null);
+        }
+
+        // Save updated user entity
         userRepository.save(user);
 
-        log.info("Successfully updated roles for user with email: {} -> {}", email, roleNames);
+        log.info("Successfully updated roles and food source for user: {} -> Roles: {}, FoodSource: {}",
+                email, roleNames, user.getFoodSource());
     }
 
+
     /**
-     * Creates a new user with specified roles. Only accessible by admins.
+     * Creates a new user with specified roles and optionally a food source.
+     * Only accessible by admins.
      *
      * @param registrationDTO the user data to register
      * @throws EntityAlreadyExistsException if the email is already in use
+     * @throws RuntimeException if the food source is invalid
      */
     @Override
     public void registerUserAsAdmin(UserRegistrationInputDTO registrationDTO) {
@@ -261,9 +287,10 @@ public class UserAdminService implements IUserAdminService {
 
         String hashedPassword = passwordEncoder.encode(registrationDTO.getPassword());
 
+        // Convert roles and handle default
         Set<Role> roles = (registrationDTO.getRoles() != null && !registrationDTO.getRoles().isEmpty())
                 ? registrationDTO.getRoles().stream()
-                .map(roleName -> new Role(UserRole.valueOf(roleName)))
+                .map(roleName -> new Role(UserRole.valueOf(roleName.toUpperCase())))
                 .collect(Collectors.toSet())
                 : Collections.singleton(new Role(UserRole.USER));
 
@@ -276,8 +303,22 @@ public class UserAdminService implements IUserAdminService {
                 roles
         );
 
+        // Handle FoodSource logic: only assign if SUPERMARKET role is present during creation
+        boolean isSupermarket = registrationDTO.getRoles() != null &&
+                registrationDTO.getRoles().stream().anyMatch(role -> role.equalsIgnoreCase("SUPERMARKET"));
+
+        if (isSupermarket && registrationDTO.getFoodSource() != null && !registrationDTO.getFoodSource().isBlank()) {
+            try {
+                user.setFoodSource(FoodSource.valueOf(registrationDTO.getFoodSource().toUpperCase()));
+                log.debug("Assigned food source {} to new user {}", registrationDTO.getFoodSource(), registrationDTO.getEmail());
+            } catch (IllegalArgumentException e) {
+                log.warn("Invalid food source provided during registration: {}", registrationDTO.getFoodSource());
+                throw new RuntimeException("Invalid food source: " + registrationDTO.getFoodSource());
+            }
+        }
+
         userRepository.save(user);
-        log.info("User created successfully by admin: {}", user.getEmail());
+        log.info("User created successfully by admin with email: {} and roles: {}", user.getEmail(), registrationDTO.getRoles());
     }
 
 }

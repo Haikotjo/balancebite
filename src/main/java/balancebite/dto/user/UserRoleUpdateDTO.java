@@ -20,12 +20,15 @@ public class UserRoleUpdateDTO {
     @NotEmpty(message = "At least one role must be specified")
     private List<String> roles;
 
+    private String foodSource;
+
     // Constructors
     public UserRoleUpdateDTO() {}
 
-    public UserRoleUpdateDTO(String email, List<String> roles) {
+    public UserRoleUpdateDTO(String email, List<String> roles, String foodSource) {
         this.email = email;
         this.roles = roles;
+        this.foodSource = foodSource;
     }
 
     // Getters and setters
@@ -43,5 +46,13 @@ public class UserRoleUpdateDTO {
 
     public void setRoles(List<String> roles) {
         this.roles = roles;
+    }
+
+    public String getFoodSource() {
+        return foodSource;
+    }
+
+    public void setFoodSource(String foodSource) {
+        this.foodSource = foodSource;
     }
 }

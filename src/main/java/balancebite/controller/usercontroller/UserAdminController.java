@@ -120,14 +120,16 @@ public class UserAdminController {
     public ResponseEntity<?> updateUserRoles(@Valid @RequestBody UserRoleUpdateDTO dto) {
         log.info("Updating roles for user with email: {}", dto.getEmail());
         try {
-            userAdminService.updateUserRolesByEmail(dto.getEmail(), dto.getRoles());
+            // Voeg hier de derde parameter (foodSource) toe uit de DTO
+            userAdminService.updateUserRolesByEmail(dto.getEmail(), dto.getRoles(), dto.getFoodSource());
+
             log.info("Successfully updated roles for user: {}", dto.getEmail());
-            return ResponseEntity.ok(Map.of("message", "User roles updated successfully"));
+            return ResponseEntity.ok(Map.of("message", "User roles and food source updated successfully"));
         } catch (UserNotFoundException e) {
             log.warn("User not found during role update: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
         } catch (RuntimeException e) {
-            log.warn("Invalid role data provided: {}", e.getMessage());
+            log.warn("Invalid role or food source data provided: {}", e.getMessage());
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
             log.error("Unexpected error during role update: {}", e.getMessage(), e);
@@ -139,6 +141,7 @@ public class UserAdminController {
     public ResponseEntity<?> registerUserAsAdmin(@Valid @RequestBody UserRegistrationInputDTO dto) {
         log.info("Admin attempting to register new user: {}", dto.getEmail());
         try {
+            // De 'dto' bevat nu al de foodSource, dus de service kan er direct bij
             userAdminService.registerUserAsAdmin(dto);
             return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("message", "User created successfully."));
         } catch (EntityAlreadyExistsException e) {

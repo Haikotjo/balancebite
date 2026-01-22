@@ -39,22 +39,22 @@ public interface IUserAdminService {
 
 
     /**
-     * Updates the roles of a user based on their email address.
+     * Updates the roles and optionally the food source of a user based on their email address.
      *
      * @param email the email address of the user whose roles should be updated
      * @param roleNames a list of role names to assign (e.g., ["USER", "ADMIN"])
+     * @param foodSource the supermarket source (e.g., "DIRK"), can be null if not applicable
      * @throws UserNotFoundException if no user is found with the provided email
      * @throws RuntimeException if one or more role names are invalid
      */
-    void updateUserRolesByEmail(String email, List<String> roleNames);
+    void updateUserRolesByEmail(String email, List<String> roleNames, String foodSource);
 
     /**
-     * Registers a new user with the specified roles.
+     * Registers a new user with the specified roles and optionally a food source.
      * This method is intended for admin use only.
      *
      * @param registrationDTO The input DTO containing user registration details.
      * @throws EntityAlreadyExistsException If a user with the given email already exists.
      */
     void registerUserAsAdmin(UserRegistrationInputDTO registrationDTO);
-
 }

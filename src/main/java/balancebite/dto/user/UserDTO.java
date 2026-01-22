@@ -2,6 +2,7 @@ package balancebite.dto.user;
 
 import balancebite.dto.meal.MealDTO;
 import balancebite.dto.recommendeddailyintake.RecommendedDailyIntakeDTO;
+import balancebite.model.foodItem.FoodSource;
 import balancebite.model.user.Role;
 import balancebite.model.user.userenums.ActivityLevel;
 import balancebite.model.user.userenums.Gender;
@@ -28,12 +29,13 @@ public class UserDTO {
     private final RecommendedDailyIntakeDTO baseRecommendedDailyIntake;
     private final List<UserDTO> clients;
     private final List<UserDTO> dietitians;
+    private final FoodSource foodSource;
 
 
     public UserDTO(Long id, String userName, String email, Double weight,List<WeightEntryDTO> weightHistory,
                    Double targetWeight, Integer age, Double height, Gender gender,
                    ActivityLevel activityLevel, Goal goal, List<MealDTO> meals, Collection<Role> roles,
-                   List<RecommendedDailyIntakeDTO> recommendedDailyIntakes, RecommendedDailyIntakeDTO baseRecommendedDailyIntake, List<UserDTO> clients, List<UserDTO> dietitians) {
+                   List<RecommendedDailyIntakeDTO> recommendedDailyIntakes, RecommendedDailyIntakeDTO baseRecommendedDailyIntake, List<UserDTO> clients, List<UserDTO> dietitians, FoodSource foodSource) {
         this.id = id;
         this.userName = userName;
         this.email = email;
@@ -51,14 +53,15 @@ public class UserDTO {
         this.baseRecommendedDailyIntake = baseRecommendedDailyIntake;
         this.clients = (clients != null) ? List.copyOf(clients) : List.of();
         this.dietitians = (dietitians != null) ? List.copyOf(dietitians) : List.of();
+        this.foodSource = foodSource;
     }
 
     public UserDTO(Long id, String userName, String email) {
-        this(id, userName, email, null, null, null,null ,null, null, null, null, List.of(), List.of(), List.of(), null,   List.of(), List.of());
+        this(id, userName, email, null, null, null,null ,null, null, null, null, List.of(), List.of(), List.of(), null,   List.of(), List.of(), null);
     }
 
     public UserDTO(Long id, String userName) {
-        this(id, userName, null, null, null, null, null, null, null, null, null, List.of(), List.of(), List.of(), null,    List.of(), List.of());
+        this(id, userName, null, null, null, null, null, null, null, null, null, List.of(), List.of(), List.of(), null,    List.of(), List.of(), null);
     }
 
     public Long getId() {
@@ -127,5 +130,9 @@ public class UserDTO {
 
     public List<UserDTO> getDietitians() {
         return dietitians;
+    }
+
+    public FoodSource getFoodSource() {
+        return foodSource;
     }
 }
