@@ -303,16 +303,20 @@ public class UserAdminService implements IUserAdminService {
                 roles
         );
 
-        // Handle FoodSource logic: only assign if SUPERMARKET role is present during creation
+        // Handle FoodSource logic: gebruik .trim() om spaties van de frontend te negeren
         boolean isSupermarket = registrationDTO.getRoles() != null &&
-                registrationDTO.getRoles().stream().anyMatch(role -> role.equalsIgnoreCase("SUPERMARKET"));
+                registrationDTO.getRoles().stream()
+                        .anyMatch(role -> role.trim().equalsIgnoreCase("SUPERMARKET"));
 
         if (isSupermarket && registrationDTO.getFoodSource() != null && !registrationDTO.getFoodSource().isBlank()) {
             try {
-                user.setFoodSource(FoodSource.valueOf(registrationDTO.getFoodSource().toUpperCase()));
-                log.debug("Assigned food source {} to new user {}", registrationDTO.getFoodSource(), registrationDTO.getEmail());
+                // .trim() haalt de spaties weg voordat hij de Enum zoekt
+                String cleanSource = registrationDTO.getFoodSource().trim().toUpperCase();
+                user.setFoodSource(FoodSource.valueOf(cleanSource));
+
+                log.info("Assigned food source {} to new user {}", cleanSource, registrationDTO.getEmail());
             } catch (IllegalArgumentException e) {
-                log.warn("Invalid food source provided during registration: {}", registrationDTO.getFoodSource());
+                log.warn("Invalid food source provided: {}", registrationDTO.getFoodSource());
                 throw new RuntimeException("Invalid food source: " + registrationDTO.getFoodSource());
             }
         }
