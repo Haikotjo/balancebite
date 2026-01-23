@@ -14,6 +14,7 @@ import balancebite.model.foodItem.FoodItem;
 import balancebite.model.foodItem.FoodSource;
 import balancebite.repository.FoodItemRepository;
 import balancebite.repository.PromotedFoodItemRepository;
+import balancebite.repository.UserRepository;
 import balancebite.service.CloudinaryService;
 import balancebite.service.UsdaApiService;
 import balancebite.service.interfaces.fooditem.IFoodItemService;
@@ -23,6 +24,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.scheduling.annotation.Async;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -44,6 +47,7 @@ public class FoodItemService implements IFoodItemService {
     private final FoodItemMapper foodItemMapper;
     private final CloudinaryService cloudinaryService;
     private final PromotedFoodItemRepository promotedFoodItemRepository;
+    private final UserRepository userRepository;
 
     /**
      * Constructor for dependency injection.
@@ -52,12 +56,13 @@ public class FoodItemService implements IFoodItemService {
      * @param usdaApiService Service for interacting with the USDA API.
      * @param foodItemMapper Mapper for converting between FoodItem entities and DTOs.
      */
-    public FoodItemService(FoodItemRepository foodItemRepository, UsdaApiService usdaApiService, FoodItemMapper foodItemMapper, CloudinaryService cloudinaryService, PromotedFoodItemRepository promotedFoodItemRepository) {
+    public FoodItemService(FoodItemRepository foodItemRepository, UsdaApiService usdaApiService, FoodItemMapper foodItemMapper, CloudinaryService cloudinaryService, PromotedFoodItemRepository promotedFoodItemRepository, UserRepository userRepository) {
         this.foodItemRepository = foodItemRepository;
         this.usdaApiService = usdaApiService;
         this.foodItemMapper = foodItemMapper;
         this.cloudinaryService = cloudinaryService;
         this.promotedFoodItemRepository = promotedFoodItemRepository;
+        this.userRepository = userRepository;
     }
 
     /**
@@ -70,30 +75,44 @@ public class FoodItemService implements IFoodItemService {
     public FoodItemDTO createFoodItem(FoodItemInputDTO inputDTO) {
         log.info("Creating new FoodItem from user input: {}", inputDTO.getName());
 
-        // 1) Enforce image exclusivity: at most ONE of (file | url | base64)
+        // 1) Enforce image exclusivity: at most ONE of (file | url)
         int sources = 0;
         if (inputDTO.getImageFile() != null && !inputDTO.getImageFile().isEmpty()) sources++;
-        if (inputDTO.getImageUrl() != null && !inputDTO.getImageUrl().isBlank())  sources++;
+        if (inputDTO.getImageUrl() != null && !inputDTO.getImageUrl().isBlank()) sources++;
         if (sources > 1) {
             throw new IllegalArgumentException("Provide exactly one of: imageFile or imageUrl.");
         }
 
-        // 2) Map DTO -> entity (mapper does NOT upload files)
+        // 2) Map DTO -> entity
         FoodItem foodItem = foodItemMapper.toEntity(inputDTO);
 
-        // 3) Image handling (create flow => currentUrl = null)
-        String finalUrl = null;
+        // 3) Automatic FoodSource assignment based on the authenticated user
+        // The SecurityContextHolder contains the information processed by your JwtRequestFilter
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.isAuthenticated()) {
+            String currentUsername = auth.getName();
 
+            // Retrieve the user from the database to check for an assigned FoodSource
+            userRepository.findByUserName(currentUsername).ifPresent(user -> {
+                if (user.getFoodSource() != null) {
+                    foodItem.setFoodSource(user.getFoodSource());
+                    log.info("Automatically assigned FoodSource '{}' to item '{}' from user '{}'",
+                            user.getFoodSource(), foodItem.getName(), currentUsername);
+                }
+            });
+        }
+
+        // 4) Image handling
+        String finalUrl = null;
         if (inputDTO.getImageFile() != null && !inputDTO.getImageFile().isEmpty()) {
             CloudinaryUploadResult r = cloudinaryService.uploadFile(inputDTO.getImageFile());
             finalUrl = r.getImageUrl();
         } else if (inputDTO.getImageUrl() != null && !inputDTO.getImageUrl().isBlank()) {
             finalUrl = inputDTO.getImageUrl().trim();
         }
-
         foodItem.setImageUrl(finalUrl);
 
-        // 4) Persist and return
+        // 5) Persist and return
         foodItemRepository.save(foodItem);
         log.info("Successfully created FoodItem: {}", foodItem.getName());
         return foodItemMapper.toDTO(foodItem);
