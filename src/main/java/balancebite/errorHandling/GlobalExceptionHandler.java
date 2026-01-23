@@ -223,4 +223,18 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, String>> handleForbiddenActionException(ForbiddenActionException ex) {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", ex.getMessage()));
     }
+
+    /**
+     * Handles cases where a supermarket user tries to use ingredients from a different source.
+     *
+     * @param e The thrown {@link IllegalFoodSourceException}.
+     * @return A ResponseEntity with the error message and a BAD_REQUEST status.
+     */
+    @ExceptionHandler(IllegalFoodSourceException.class)
+    public ResponseEntity<Map<String, String>> handleIllegalFoodSourceException(IllegalFoodSourceException e) {
+        log.warn("IllegalFoodSourceException handler reached: {}", e.getMessage());
+        Map<String, String> response = new HashMap<>();
+        response.put("error", e.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
 }

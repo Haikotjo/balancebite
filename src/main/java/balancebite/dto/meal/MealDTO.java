@@ -4,6 +4,7 @@ import balancebite.dto.MealImageDTO;
 import balancebite.dto.mealingredient.MealIngredientDTO;
 import balancebite.dto.user.PublicUserDTO;
 import balancebite.dto.user.UserDTO;
+import balancebite.model.foodItem.FoodSource;
 import balancebite.model.meal.references.Cuisine;
 import balancebite.model.meal.references.Diet;
 import balancebite.model.meal.references.MealType;
@@ -147,6 +148,8 @@ public class MealDTO {
     private final String preparationVideoUrl;
     private final List<MealImageDTO> images;
 
+    private final FoodSource foodSource;
+
     /**
      * Constructor for creating a MealDTO with essential meal information.
      *
@@ -208,8 +211,9 @@ public class MealDTO {
             String videoUrl,
             String sourceUrl,
             String mealPreparation,
-            String preparationVideoUrl
-    ) {
+            String preparationVideoUrl,
+            FoodSource foodSource
+            ) {
         this.id = id;
         this.name = name;
         this.mealDescription = mealDescription;
@@ -244,6 +248,7 @@ public class MealDTO {
         this.sourceUrl = sourceUrl;
         this.mealPreparation = mealPreparation;
         this.preparationVideoUrl = preparationVideoUrl;
+        this.foodSource = foodSource;
     }
 
     /**
@@ -457,5 +462,9 @@ public class MealDTO {
 
     public String getPreparationVideoUrl() {
         return preparationVideoUrl;
+    }
+
+    public FoodSource getFoodSource() {
+        return foodSource;
     }
 }

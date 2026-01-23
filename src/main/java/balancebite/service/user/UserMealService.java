@@ -86,15 +86,11 @@ public class UserMealService implements IUserMealService {
     public MealDTO createMealForUser(MealInputDTO mealInputDTO, Long userId) {
         log.info("Attempting to create a new meal for user ID: {}", userId);
 
-        // --- 2) Map DTO -> Entity (mapper does NOT upload files; only copies simple fields) ---
+        // --- 1) Map DTO -> Entity ---
         Meal meal = mealMapper.toEntity(mealInputDTO);
-
-        // NOTE: mealTypes, cuisines, diets, preparationTime are already set by the mapper.
-        // Do NOT set them again here to avoid inconsistencies.
-
-        // Set versioning timestamp for this create
         meal.setVersion(LocalDateTime.now());
 
+        // --- 2) Handle Image Uploads ---
         List<MultipartFile> files = mealInputDTO.getImageFiles();
         Integer primaryIndex = mealInputDTO.getPrimaryIndex();
 
@@ -104,66 +100,80 @@ public class UserMealService implements IUserMealService {
                 if (file == null || file.isEmpty()) continue;
 
                 CloudinaryUploadResult upload = cloudinaryService.uploadFile(file);
-
                 MealImage image = new MealImage(meal, upload.getImageUrl(), upload.getPublicId());
                 image.setOrderIndex(i);
-                boolean isPrimary =
-                        primaryIndex != null
-                                && primaryIndex >= 0
-                                && primaryIndex < files.size()
-                                && i == primaryIndex;
 
+                boolean isPrimary = primaryIndex != null && primaryIndex == i;
                 image.setPrimary(isPrimary);
-
                 meal.addImage(image);
             }
         }
 
-        // --- 4) Validate ingredients: no duplicates by (name + quantity) ---
+        // --- 3) Basic Ingredient Validation (Duplicates) ---
         Set<String> uniqueFoodItems = new HashSet<>();
         for (MealIngredient ingredient : meal.getMealIngredients()) {
-            // Fallback to stored name if FoodItem is not loaded
             String itemName = ingredient.getFoodItem() != null
                     ? ingredient.getFoodItem().getName()
                     : ingredient.getFoodItemName();
+
             if (itemName == null) {
-                log.error("Ingredient without a valid FoodItem or name encountered.");
-                throw new InvalidFoodItemException("Ingredient must reference a valid FoodItem or provide a name.");
+                throw new InvalidFoodItemException("Ingredient must reference a valid FoodItem.");
             }
+
             String key = itemName + "-" + ingredient.getQuantity();
             if (!uniqueFoodItems.add(key)) {
-                throw new InvalidFoodItemException("Duplicate food item with same quantity: "
-                        + itemName + " (" + ingredient.getQuantity() + ")");
+                throw new InvalidFoodItemException("Duplicate food item with same quantity: " + itemName);
             }
         }
 
-        // --- 5) Duplicate template check by FoodItem IDs (order-insensitive) ---
+        // --- 4) Duplicate template check ---
         List<Long> foodItemIds = meal.getMealIngredients().stream()
                 .map(ingredient -> ingredient.getFoodItem().getId())
                 .collect(Collectors.toList());
         checkForDuplicateTemplateMeal.checkForDuplicateTemplateMeal(foodItemIds, null);
 
-        // --- 6) Fetch user and associate ---
+        // --- 5) Fetch user and apply Supermarket/Role logic ---
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> {
-                    log.error("User with ID {} not found", userId);
-                    return new UserNotFoundException("User not found with ID: " + userId);
-                });
+                .orElseThrow(() -> new UserNotFoundException("User not found with ID: " + userId));
+
         meal.setCreatedBy(user);
         user.getMeals().add(meal);
 
-        // --- 7) Compute aggregated nutrients before persisting ---
+        // --- NIEUW: FoodSource & Supermarket Validation ---
+        if (user.getFoodSource() != null) {
+            // Maaltijd krijgt automatisch de bron van de supermarkt-user
+            meal.setFoodSource(user.getFoodSource());
+            meal.setIsTemplate(true); // Supermarkt recepten zijn altijd templates
+
+            log.info("Validating ingredients for supermarket: {}", user.getFoodSource());
+
+            for (MealIngredient ingredient : meal.getMealIngredients()) {
+                var foodItem = ingredient.getFoodItem();
+
+                // Check of het ingredient van dezelfde bron is
+                if (foodItem.getFoodSource() == null || !foodItem.getFoodSource().equals(user.getFoodSource())) {
+                    throw new IllegalFoodSourceException(
+                            "Validation Error: As a " + user.getFoodSource() + " user, you can only use ingredients from your own assortment. " +
+                                    "Ingredient '" + foodItem.getName() + "' is from: " +
+                                    (foodItem.getFoodSource() != null ? foodItem.getFoodSource() : "Generic Source")
+                    );
+                }
+            }
+        }
+
+        // --- 6) Compute aggregated nutrients ---
         meal.updateNutrients();
 
-        // --- 8) Role-based flag: restaurant users produce restricted meals ---
-        boolean isRestricted = user.getRoles().stream()
+        // --- 7) Role-based flags (Restaurant) ---
+        boolean isRestaurant = user.getRoles().stream()
                 .map(Role::getRolename)
                 .anyMatch(role -> role == UserRole.RESTAURANT);
-        if (isRestricted) {
+
+        if (isRestaurant) {
             meal.setRestricted(true);
         }
 
-        // --- 9) Persist and return DTO ---
+        // --- 8) Persist and return ---
         Meal savedMeal = mealRepository.save(meal);
         user.getSavedMeals().add(savedMeal);
         userRepository.save(user);

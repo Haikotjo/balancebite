@@ -142,7 +142,8 @@ public class MealMapper {
                 meal.getVideoUrl(),
                 meal.getSourceUrl(),
                 meal.getMealPreparation(),
-                meal.getPreparationVideoUrl()
+                meal.getPreparationVideoUrl(),
+                meal.getFoodSource()
         );
     }
 

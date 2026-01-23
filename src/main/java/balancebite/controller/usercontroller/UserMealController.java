@@ -7,6 +7,7 @@ import balancebite.errorHandling.*;
 import balancebite.security.JwtService;
 import balancebite.service.user.ConsumeMealService;
 import balancebite.service.user.UserMealService;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.EntityNotFoundException;
@@ -71,50 +72,29 @@ public class UserMealController {
      * @return                      ResponseEntity with the created meal or error message
      */
     @PostMapping(value = "/create-meal", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<?> createMealForAuthenticatedUser(
+    public ResponseEntity<MealDTO> createMealForAuthenticatedUser(
             @RequestPart("mealInputDTO") String mealInputDTOJson,
             @RequestPart(value = "imageFiles", required = false) List<MultipartFile> imageFiles,
-            @RequestHeader("Authorization") String authorizationHeader) {
-        try {
-            log.info("Received request to create a new meal for the authenticated user.");
+            @RequestHeader("Authorization") String authorizationHeader) throws JsonProcessingException {
 
-            // Parse JSON string into MealInputDTO (use Spring-injected ObjectMapper)
-            MealInputDTO mealInputDTO = objectMapper.readValue(mealInputDTOJson, MealInputDTO.class);
+        log.info("Received request to create a new meal for the authenticated user.");
 
-            if (imageFiles != null && !imageFiles.isEmpty()) {
-                mealInputDTO.setImageFiles(imageFiles);
-            }
+        // 1. Parse JSON naar DTO
+        MealInputDTO mealInputDTO = objectMapper.readValue(mealInputDTOJson, MealInputDTO.class);
 
-            // Extract user ID from the JWT token in the Authorization header
-            String token = authorizationHeader.substring(7); // Remove "Bearer " prefix
-            Long userId = jwtService.extractUserId(token);
-
-            // Delegate meal creation to the service layer
-            MealDTO createdMeal = userMealService.createMealForUser(mealInputDTO, userId);
-
-            log.info("Successfully created meal for user ID: {}", userId);
-            return ResponseEntity.status(HttpStatus.CREATED).body(createdMeal);
-
-        } catch (EntityNotFoundException e) {
-            // Triggered if the user cannot be found in the database
-            log.warn("User not found or invalid: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
-
-        } catch (DuplicateMealException e) {
-            // Triggered if a similar template meal already exists
-            log.warn("Duplicate meal detected: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
-
-        } catch (InvalidFoodItemException e) {
-            // Triggered if the meal contains duplicated or invalid food items
-            log.warn("Invalid food item in meal: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
-
-        } catch (Exception e) {
-            // Catch-all for any other unexpected errors
-            log.error("Unexpected error occurred during meal creation: {}", e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", e.getMessage()));
+        if (imageFiles != null && !imageFiles.isEmpty()) {
+            mealInputDTO.setImageFiles(imageFiles);
         }
+
+        // 2. Extract user ID
+        String token = authorizationHeader.substring(7);
+        Long userId = jwtService.extractUserId(token);
+
+        // 3. Delegate naar service (Exceptions worden nu door GlobalExceptionHandler afgehandeld)
+        MealDTO createdMeal = userMealService.createMealForUser(mealInputDTO, userId);
+
+        log.info("Successfully created meal for user ID: {}", userId);
+        return ResponseEntity.status(HttpStatus.CREATED).body(createdMeal);
     }
 
     /**

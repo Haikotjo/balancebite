@@ -2,6 +2,7 @@ package balancebite.model.meal;
 
 import balancebite.config.DurationConverter;
 import balancebite.model.MealIngredient;
+import balancebite.model.foodItem.FoodSource;
 import balancebite.model.meal.mealImage.MealImage;
 import balancebite.model.meal.references.Cuisine;
 import balancebite.model.meal.references.Diet;
@@ -217,6 +218,10 @@ public class Meal {
     /** External video specifically showing the preparation steps. */
     @Column(name = "preparation_video_url", length = 2048)
     private String preparationVideoUrl;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "food_source")
+    private FoodSource foodSource;
 
     /**
      * No-argument constructor required by JPA.
@@ -664,4 +669,11 @@ public class Meal {
     public String getPreparationVideoUrl() { return preparationVideoUrl; }
     public void setPreparationVideoUrl(String preparationVideoUrl) { this.preparationVideoUrl = preparationVideoUrl; }
 
+    public FoodSource getFoodSource() {
+        return foodSource;
+    }
+
+    public void setFoodSource(FoodSource foodSource) {
+        this.foodSource = foodSource;
+    }
 }
