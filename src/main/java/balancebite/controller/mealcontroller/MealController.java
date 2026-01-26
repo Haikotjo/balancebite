@@ -88,19 +88,21 @@ public class MealController {
             @RequestParam(required = false) Double maxCarbs,
             @RequestParam(required = false) Double minFat,
             @RequestParam(required = false) Double maxFat,
+            @RequestParam(required = false) String foodSource,
             Pageable pageable
     ) {
         try {
-            log.info("Retrieving paginated template meals with filters and sorting.");
+            log.info("Retrieving meals. Filter foodSource: {}", foodSource);
 
             Page<MealDTO> mealDTOs = mealService.getAllMeals(
                     cuisines, diets, mealTypes, foodItems, sortBy, sortOrder, pageable, creatorId,
-                    minCalories, maxCalories, minProtein, maxProtein, minCarbs, maxCarbs, minFat, maxFat
+                    minCalories, maxCalories, minProtein, maxProtein, minCarbs, maxCarbs, minFat, maxFat,
+                    foodSource
             );
 
             return ResponseEntity.ok(mealDTOs);
         } catch (Exception e) {
-            log.error("Unexpected error during retrieval of meals: {}", e.getMessage(), e);
+            log.error("Error retrieving meals: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Page.empty());
         }
     }

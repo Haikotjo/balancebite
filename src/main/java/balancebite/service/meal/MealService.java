@@ -6,6 +6,7 @@ import balancebite.dto.NutrientInfoDTO;
 import balancebite.dto.meal.MealNameDTO;
 import balancebite.mapper.MealIngredientMapper;
 import balancebite.mapper.MealMapper;
+import balancebite.model.foodItem.FoodSource;
 import balancebite.model.meal.Meal;
 import balancebite.model.user.User;
 import balancebite.model.user.UserRole;
@@ -101,18 +102,37 @@ public class MealService implements IMealService {
             Double minCarbs,
             Double maxCarbs,
             Double minFat,
-            Double maxFat
+            Double maxFat,
+            String foodSource // Input van de controller (bijv. "ALBERT_HEIJN")
     )
     {
         log.info("Retrieving paginated template meals with filters and sorting.");
 
-        // Retrieve all template meals
         List<Meal> meals = mealRepository.findAllTemplateMeals();
 
         meals.removeIf(Meal::isPrivate);
-        meals.removeIf(Meal::isRestricted);
 
-        // ✅ **Filtering on cuisine, diet, and mealType**
+        // Als er GEEN foodSource filter is, verberg restricted meals
+        if (foodSource == null || foodSource.isEmpty()) {
+            meals.removeIf(Meal::isRestricted);
+        }
+
+        // ✅ DE FIX: Filteren op Enum basis
+        if (foodSource != null && !foodSource.isEmpty()) {
+            try {
+                // Zet de String om naar de Enum (bijv. "ALBERT_HEIJN" -> FoodSource.ALBERT_HEIJN)
+                FoodSource sourceEnum = FoodSource.valueOf(foodSource.toUpperCase());
+
+                meals.removeIf(meal -> meal.getFoodSource() == null ||
+                        !meal.getFoodSource().equals(sourceEnum));
+            } catch (IllegalArgumentException e) {
+                log.warn("Invalid foodSource provided: {}", foodSource);
+                // Als de bron niet bestaat in de Enum, geven we niks terug of negeren we het filter
+                meals.clear();
+            }
+        }
+
+        // --- De rest van je bestaande filters ---
         if (cuisines != null && !cuisines.isEmpty()) {
             Set<String> cuisineSet = cuisines.stream().map(String::toUpperCase).collect(Collectors.toSet());
             meals.removeIf(meal -> meal.getCuisines().stream()
@@ -120,7 +140,6 @@ public class MealService implements IMealService {
                     .noneMatch(cuisineSet::contains));
         }
 
-        // ✅ Filter on creatorId
         if (creatorId != null) {
             meals.removeIf(meal -> meal.getCreatedBy() == null || !meal.getCreatedBy().getId().equals(creatorId));
         }
@@ -139,39 +158,22 @@ public class MealService implements IMealService {
                     .noneMatch(mealTypeSet::contains));
         }
 
-        // ✅ **Filtering on food items (must contain at least one of the selected food items)**
         if (foodItems != null && !foodItems.isEmpty()) {
             meals.removeIf(meal -> foodItems.stream().noneMatch(item ->
                     Arrays.asList(meal.getFoodItemsString().split(" \\| ")).contains(item)
             ));
         }
 
-        if (minCalories != null) {
-            meals.removeIf(meal -> meal.getTotalCalories() < minCalories);
-        }
-        if (maxCalories != null) {
-            meals.removeIf(meal -> meal.getTotalCalories() > maxCalories);
-        }
-        if (minProtein != null) {
-            meals.removeIf(meal -> meal.getTotalProtein() < minProtein);
-        }
-        if (maxProtein != null) {
-            meals.removeIf(meal -> meal.getTotalProtein() > maxProtein);
-        }
-        if (minCarbs != null) {
-            meals.removeIf(meal -> meal.getTotalCarbs() < minCarbs);
-        }
-        if (maxCarbs != null) {
-            meals.removeIf(meal -> meal.getTotalCarbs() > maxCarbs);
-        }
-        if (minFat != null) {
-            meals.removeIf(meal -> meal.getTotalFat() < minFat);
-        }
-        if (maxFat != null) {
-            meals.removeIf(meal -> meal.getTotalFat() > maxFat);
-        }
+        if (minCalories != null) meals.removeIf(meal -> meal.getTotalCalories() < minCalories);
+        if (maxCalories != null) meals.removeIf(meal -> meal.getTotalCalories() > maxCalories);
+        if (minProtein != null) meals.removeIf(meal -> meal.getTotalProtein() < minProtein);
+        if (maxProtein != null) meals.removeIf(meal -> meal.getTotalProtein() > maxProtein);
+        if (minCarbs != null) meals.removeIf(meal -> meal.getTotalCarbs() < minCarbs);
+        if (maxCarbs != null) meals.removeIf(meal -> meal.getTotalCarbs() > maxCarbs);
+        if (minFat != null) meals.removeIf(meal -> meal.getTotalFat() < minFat);
+        if (maxFat != null) meals.removeIf(meal -> meal.getTotalFat() > maxFat);
 
-        // ✅ **Sorting**
+        // --- Sorting ---
         Comparator<Meal> comparator = switch (sortBy != null ? sortBy.toLowerCase() : "") {
             case "calories" -> Comparator.comparing(Meal::getTotalCalories);
             case "protein" -> Comparator.comparing(Meal::getTotalProtein);
@@ -183,13 +185,10 @@ public class MealService implements IMealService {
             default -> Comparator.comparing(Meal::getName);
         };
 
-
-        if ("desc".equalsIgnoreCase(sortOrder)) {
-            comparator = comparator.reversed();
-        }
+        if ("desc".equalsIgnoreCase(sortOrder)) comparator = comparator.reversed();
         meals.sort(comparator);
 
-        // ✅ **Pagination**
+        // --- Pagination ---
         int pageSize = pageable.getPageSize();
         int currentPage = pageable.getPageNumber();
         int startItem = currentPage * pageSize;
@@ -202,7 +201,7 @@ public class MealService implements IMealService {
             pagedMeals = meals.subList(startItem, toIndex);
         }
 
-        log.info("Returning {} meals after filtering, sorting, and pagination.", pagedMeals.size());
+        log.info("Returning {} meals after filtering.", pagedMeals.size());
         return new PageImpl<>(pagedMeals.stream().map(mealMapper::toDTO).toList(), pageable, meals.size());
     }
 
