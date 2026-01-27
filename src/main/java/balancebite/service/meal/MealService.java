@@ -111,7 +111,7 @@ public class MealService implements IMealService {
             Double minFat,
             Double maxFat,
             String foodSource,
-            Long currentUserId
+            String currentUsername
     ) {
         Specification<Meal> spec = Specification.where(MealSpecifications.isTemplateMeal())
                 .and(MealSpecifications.isNotPrivate());
@@ -127,9 +127,7 @@ public class MealService implements IMealService {
             spec = spec.and(MealSpecifications.isNotRestricted());
         }
 
-        if (creatorId != null) {
-            spec = spec.and(MealSpecifications.createdByUser(creatorId));
-        }
+        if (creatorId != null) spec = spec.and(MealSpecifications.createdByUser(creatorId));
 
         List<Cuisine> cuisineEnums = parseEnumList(cuisines, Cuisine.class, "cuisine");
         if (cuisines != null && !cuisines.isEmpty() && cuisineEnums.isEmpty()) return Page.empty(pageable);
@@ -158,20 +156,27 @@ public class MealService implements IMealService {
 
         Page<Meal> templateMeals = mealRepository.findAll(spec, sortedPageable);
 
-        if (currentUserId != null) {
-            List<Long> templateIds = templateMeals.getContent().stream()
-                    .map(Meal::getId)
-                    .toList();
+        // DIT IS HET STUK DAT GEFIXT IS:
+        if (currentUsername != null) {
+            // We halen de user op basis van de username String uit de database
+            balancebite.model.user.User user = userRepository.findByUserName(currentUsername).orElse(null);
 
-            List<Meal> userCopies = mealRepository.findByAdjustedBy_IdAndOriginalMealIdIn(currentUserId, templateIds);
+            if (user != null) {
+                Long userId = user.getId();
+                List<Long> templateIds = templateMeals.getContent().stream()
+                        .map(Meal::getId)
+                        .toList();
 
-            return templateMeals.map(template -> {
-                Meal finalMeal = userCopies.stream()
-                        .filter(copy -> copy.getOriginalMealId() != null && copy.getOriginalMealId().equals(template.getId()))
-                        .findFirst()
-                        .orElse(template);
-                return mealMapper.toDTO(finalMeal);
-            });
+                List<Meal> userCopies = mealRepository.findByAdjustedBy_IdAndOriginalMealIdIn(userId, templateIds);
+
+                return templateMeals.map(template -> {
+                    Meal finalMeal = userCopies.stream()
+                            .filter(copy -> copy.getOriginalMealId() != null && copy.getOriginalMealId().equals(template.getId()))
+                            .findFirst()
+                            .orElse(template);
+                    return mealMapper.toDTO(finalMeal);
+                });
+            }
         }
 
         return templateMeals.map(mealMapper::toDTO);
