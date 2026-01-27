@@ -166,6 +166,18 @@ public interface MealRepository extends JpaRepository<Meal, Long>, JpaSpecificat
 
     @Query("SELECT m FROM Meal m WHERE m.adjustedBy.id = :userId AND m.originalMealId IN :originalMealIds")
     List<Meal> findByAdjustedBy_IdAndOriginalMealIdIn(@Param("userId") Long userId, @Param("originalMealIds") List<Long> originalMealIds);
+
+    @Query("""
+    SELECT m
+    FROM Meal m
+    WHERE (m.createdBy.id = :userId OR m.adjustedBy.id = :userId)
+      AND m.originalMealId IN :originalMealIds
+""")
+    List<Meal> findUserCopiesForTemplates(
+            @Param("userId") Long userId,
+            @Param("originalMealIds") List<Long> originalMealIds
+    );
+
 }
 
 

@@ -151,7 +151,7 @@ public class MealService implements IMealService {
 
         if (userId != null) {
             List<Long> templateIds = templateMeals.getContent().stream().map(Meal::getId).toList();
-            List<Meal> userCopies = mealRepository.findByAdjustedBy_IdAndOriginalMealIdIn(userId, templateIds);
+            List<Meal> userCopies = mealRepository.findUserCopiesForTemplates(userId, templateIds);
 
             System.out.println("Aantal kopieën gevonden: " + userCopies.size());
             userCopies.forEach(c -> System.out.println("Match gevonden: Kopie " + c.getId() + " voor Template " + c.getOriginalMealId()));
