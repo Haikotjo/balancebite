@@ -38,6 +38,7 @@ import static balancebite.utils.QueryUtils.buildSort;
 import static balancebite.utils.QueryUtils.parseEnumList;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Service class for managing Meal entities.
@@ -107,16 +108,15 @@ public class MealService implements IMealService {
         }
         Long userId = (currentUser != null) ? currentUser.getId() : null;
 
-        System.out.println("--- DEBUG START ---");
-        System.out.println("User: " + currentUsername + " | ID: " + userId);
-
         Specification<Meal> spec = Specification.where(MealSpecifications.isTemplateMeal())
                 .and(MealSpecifications.isVisibleToUser(userId));
 
         if (foodSource != null && !foodSource.isBlank()) {
             try {
                 spec = spec.and(MealSpecifications.hasFoodSource(FoodSource.valueOf(foodSource.toUpperCase())));
-            } catch (IllegalArgumentException e) { log.warn("Invalid foodSource: {}", foodSource); }
+            } catch (IllegalArgumentException e) {
+                log.warn("Invalid foodSource: {}", foodSource);
+            }
         }
 
         if (creatorId != null) spec = spec.and(MealSpecifications.createdByUser(creatorId));
@@ -145,32 +145,32 @@ public class MealService implements IMealService {
 
         Sort sort = buildSort(sortBy, sortOrder, pageable);
         Pageable sortedPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), sort);
+
         Page<Meal> templateMeals = mealRepository.findAll(spec, sortedPageable);
 
-        System.out.println("Templates op pagina: " + templateMeals.getContent().stream().map(Meal::getId).toList());
-
-        if (userId != null) {
-            List<Long> templateIds = templateMeals.getContent().stream().map(Meal::getId).toList();
-            List<Meal> userCopies = mealRepository.findUserCopiesForTemplates(userId, templateIds);
-
-            System.out.println("Aantal kopieën gevonden: " + userCopies.size());
-            userCopies.forEach(c -> System.out.println("Match gevonden: Kopie " + c.getId() + " voor Template " + c.getOriginalMealId()));
-
-            return templateMeals.map(template -> {
-                Meal result = userCopies.stream()
-                        .filter(copy -> copy.getOriginalMealId() != null && copy.getOriginalMealId().equals(template.getId()))
-                        .findFirst()
-                        .orElse(template);
-
-                if (result != template) System.out.println("WISSEL: Template " + template.getId() + " -> Kopie " + result.getId());
-
-                return mealMapper.toDTO(result);
-            });
+        // No user -> return templates
+        if (userId == null) {
+            return templateMeals.map(mealMapper::toDTO);
         }
 
-        System.out.println("--- DEBUG END ---");
-        return templateMeals.map(mealMapper::toDTO);
+        // User present -> swap templates with user copies (if exists)
+        List<Long> templateIds = templateMeals.getContent().stream().map(Meal::getId).toList();
+        if (templateIds.isEmpty()) {
+            return templateMeals.map(mealMapper::toDTO);
+        }
+
+        List<Meal> userCopies = mealRepository.findUserCopiesForTemplates(userId, templateIds);
+
+        Map<Long, Meal> copyByOriginalId = userCopies.stream()
+                .filter(c -> c.getOriginalMealId() != null)
+                .collect(Collectors.toMap(Meal::getOriginalMealId, c -> c, (a, b) -> a));
+
+        return templateMeals.map(template -> {
+            Meal result = copyByOriginalId.getOrDefault(template.getId(), template);
+            return mealMapper.toDTO(result);
+        });
     }
+
 
     /**
      * Retrieves a Meal by its ID.

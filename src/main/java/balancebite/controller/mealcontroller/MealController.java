@@ -93,25 +93,34 @@ public class MealController {
             @RequestParam(required = false) String foodSource,
             Pageable pageable
     ) {
+        String currentUsername = null;
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.isAuthenticated() && !"anonymousUser".equals(auth.getPrincipal())) {
+            currentUsername = auth.getName();
+        }
+
         try {
-            String currentUsername = null;
-            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-
-            if (auth != null && auth.isAuthenticated() && !auth.getPrincipal().equals("anonymousUser")) {
-                currentUsername = auth.getName();
-            }
-
             Page<MealDTO> mealDTOs = mealService.getAllMeals(
-                    cuisines, diets, mealTypes, foodItems, sortBy, sortOrder, pageable, creatorId,
-                    minCalories, maxCalories, minProtein, maxProtein, minCarbs, maxCarbs, minFat, maxFat,
+                    cuisines, diets, mealTypes, foodItems,
+                    sortBy, sortOrder, pageable, creatorId,
+                    minCalories, maxCalories,
+                    minProtein, maxProtein,
+                    minCarbs, maxCarbs,
+                    minFat, maxFat,
                     foodSource, currentUsername
             );
 
             return ResponseEntity.ok(mealDTOs);
+
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Page.empty());
+            e.printStackTrace();
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Page.empty(pageable));
         }
     }
+
 
     /**
      * Retrieves any Meal entity by its ID.
