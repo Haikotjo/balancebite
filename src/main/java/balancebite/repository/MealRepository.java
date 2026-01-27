@@ -163,6 +163,8 @@ public interface MealRepository extends JpaRepository<Meal, Long>, JpaSpecificat
     @Transactional
     @Query(value = "DELETE FROM saved_meal WHERE meal_id = :mealId", nativeQuery = true)
     void deleteFromSavedMeal(long mealId);
+
+    List<Meal> findByAdjustedBy_IdAndOriginalMealIdIn(Long userId, List<Long> originalMealIds);
 }
 
 

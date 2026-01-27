@@ -19,6 +19,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -92,17 +94,21 @@ public class MealController {
             Pageable pageable
     ) {
         try {
-            log.info("Retrieving meals. Filter foodSource: {}", foodSource);
+            String currentUsername = null;
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+
+            if (auth != null && auth.isAuthenticated() && !auth.getPrincipal().equals("anonymousUser")) {
+                currentUsername = auth.getName();
+            }
 
             Page<MealDTO> mealDTOs = mealService.getAllMeals(
                     cuisines, diets, mealTypes, foodItems, sortBy, sortOrder, pageable, creatorId,
                     minCalories, maxCalories, minProtein, maxProtein, minCarbs, maxCarbs, minFat, maxFat,
-                    foodSource
+                    foodSource, currentUsername
             );
 
             return ResponseEntity.ok(mealDTOs);
         } catch (Exception e) {
-            log.error("Error retrieving meals: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Page.empty());
         }
     }

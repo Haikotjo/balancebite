@@ -62,7 +62,8 @@ public interface IMealService {
             Double maxCarbs,
             Double minFat,
             Double maxFat,
-            String foodSource
+            String foodSource,
+            Long currentUserId
     );
 
     /**

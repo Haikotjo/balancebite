@@ -110,23 +110,21 @@ public class MealService implements IMealService {
             Double maxCarbs,
             Double minFat,
             Double maxFat,
-            String foodSource // Input van de controller (bijv. "ALBERT_HEIJN")
+            String foodSource,
+            Long currentUserId
     ) {
-        log.info("Retrieving paginated template meals with filters and sorting.");
-
         Specification<Meal> spec = Specification.where(MealSpecifications.isTemplateMeal())
                 .and(MealSpecifications.isNotPrivate());
 
-        if (foodSource == null || foodSource.isBlank()) {
-            spec = spec.and(MealSpecifications.isNotRestricted());
-        } else {
+        if (foodSource != null && !foodSource.isBlank()) {
             try {
                 FoodSource sourceEnum = FoodSource.valueOf(foodSource.toUpperCase());
-
                 spec = spec.and(MealSpecifications.hasFoodSource(sourceEnum));
             } catch (IllegalArgumentException e) {
-                log.warn("Invalid foodSource provided: {}", foodSource);
+                log.warn("Invalid foodSource: {}", foodSource);
             }
+        } else {
+            spec = spec.and(MealSpecifications.isNotRestricted());
         }
 
         if (creatorId != null) {
@@ -134,34 +132,18 @@ public class MealService implements IMealService {
         }
 
         List<Cuisine> cuisineEnums = parseEnumList(cuisines, Cuisine.class, "cuisine");
-        if (cuisines != null && !cuisines.isEmpty() && cuisineEnums.isEmpty()) {
-            return Page.empty(pageable);
-        }
-
-        if (!cuisineEnums.isEmpty()) {
-            spec = spec.and(MealSpecifications.hasCuisineIn(cuisineEnums));
-        }
+        if (cuisines != null && !cuisines.isEmpty() && cuisineEnums.isEmpty()) return Page.empty(pageable);
+        if (!cuisineEnums.isEmpty()) spec = spec.and(MealSpecifications.hasCuisineIn(cuisineEnums));
 
         List<Diet> dietEnums = parseEnumList(diets, Diet.class, "diet");
-        if (diets != null && !diets.isEmpty() && dietEnums.isEmpty()) {
-            return Page.empty(pageable);
-        }
-        if (!dietEnums.isEmpty()) {
-            spec = spec.and(MealSpecifications.hasDietIn(dietEnums));
-        }
+        if (diets != null && !diets.isEmpty() && dietEnums.isEmpty()) return Page.empty(pageable);
+        if (!dietEnums.isEmpty()) spec = spec.and(MealSpecifications.hasDietIn(dietEnums));
 
         List<MealType> mealTypeEnums = parseEnumList(mealTypes, MealType.class, "mealType");
-        if (mealTypes != null && !mealTypes.isEmpty() && mealTypeEnums.isEmpty()) {
-            return Page.empty(pageable);
-        }
-        if (!mealTypeEnums.isEmpty()) {
-            spec = spec.and(MealSpecifications.hasMealTypeIn(mealTypeEnums));
-        }
+        if (mealTypes != null && !mealTypes.isEmpty() && mealTypeEnums.isEmpty()) return Page.empty(pageable);
+        if (!mealTypeEnums.isEmpty()) spec = spec.and(MealSpecifications.hasMealTypeIn(mealTypeEnums));
 
-        if (foodItems != null && !foodItems.isEmpty()) {
-            spec = spec.and(MealSpecifications.hasAnyFoodItem(foodItems));
-        }
-
+        if (foodItems != null && !foodItems.isEmpty()) spec = spec.and(MealSpecifications.hasAnyFoodItem(foodItems));
         if (minCalories != null) spec = spec.and(MealSpecifications.totalCaloriesMin(minCalories));
         if (maxCalories != null) spec = spec.and(MealSpecifications.totalCaloriesMax(maxCalories));
         if (minProtein != null) spec = spec.and(MealSpecifications.totalProteinMin(minProtein));
@@ -174,10 +156,25 @@ public class MealService implements IMealService {
         Sort sort = buildSort(sortBy, sortOrder, pageable);
         Pageable sortedPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), sort);
 
-        Page<MealDTO> mealPage = mealRepository.findAll(spec, sortedPageable)
-                .map(mealMapper::toDTO);
-        log.info("Returning {} meals after filtering.", mealPage.getNumberOfElements());
-        return mealPage;
+        Page<Meal> templateMeals = mealRepository.findAll(spec, sortedPageable);
+
+        if (currentUserId != null) {
+            List<Long> templateIds = templateMeals.getContent().stream()
+                    .map(Meal::getId)
+                    .toList();
+
+            List<Meal> userCopies = mealRepository.findByAdjustedBy_IdAndOriginalMealIdIn(currentUserId, templateIds);
+
+            return templateMeals.map(template -> {
+                Meal finalMeal = userCopies.stream()
+                        .filter(copy -> copy.getOriginalMealId() != null && copy.getOriginalMealId().equals(template.getId()))
+                        .findFirst()
+                        .orElse(template);
+                return mealMapper.toDTO(finalMeal);
+            });
+        }
+
+        return templateMeals.map(mealMapper::toDTO);
     }
 
     /**
