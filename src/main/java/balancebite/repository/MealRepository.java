@@ -12,6 +12,7 @@ import balancebite.model.user.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -25,7 +26,7 @@ import java.util.Optional;
  * Repository interface for accessing and managing Meal entities in the database.
  * Provides methods for saving, finding, and querying meals by specific criteria.
  */
-public interface MealRepository extends JpaRepository<Meal, Long> {
+public interface MealRepository extends JpaRepository<Meal, Long>, JpaSpecificationExecutor<Meal> {
 
     /**
      * Finds a meal by its name.
