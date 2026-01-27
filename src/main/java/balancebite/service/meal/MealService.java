@@ -94,41 +94,34 @@ public class MealService implements IMealService {
     @Override
     @Transactional(readOnly = true)
     public Page<MealDTO> getAllMeals(
-            List<String> cuisines,
-            List<String> diets,
-            List<String> mealTypes,
-            List<String> foodItems,
-            String sortBy,
-            String sortOrder,
-            Pageable pageable,
-            Long creatorId,
-            Double minCalories,
-            Double maxCalories,
-            Double minProtein,
-            Double maxProtein,
-            Double minCarbs,
-            Double maxCarbs,
-            Double minFat,
-            Double maxFat,
-            String foodSource,
-            String currentUsername
+            List<String> cuisines, List<String> diets, List<String> mealTypes,
+            List<String> foodItems, String sortBy, String sortOrder,
+            Pageable pageable, Long creatorId, Double minCalories,
+            Double maxCalories, Double minProtein, Double maxProtein,
+            Double minCarbs, Double maxCarbs, Double minFat, Double maxFat,
+            String foodSource, String currentUsername
     ) {
-        Specification<Meal> spec = Specification.where(MealSpecifications.isTemplateMeal())
-                .and(MealSpecifications.isNotPrivate());
+        // 1. Zoek de user op
+        User currentUser = null;
+        if (currentUsername != null) {
+            currentUser = userRepository.findByUserName(currentUsername).orElse(null);
+        }
+        Long userId = (currentUser != null) ? currentUser.getId() : null;
 
+        // 2. Basis specificatie
+        Specification<Meal> spec = Specification.where(MealSpecifications.isTemplateMeal())
+                .and(MealSpecifications.isVisibleToUser(userId));
+
+        // 3. Filters toepassen
         if (foodSource != null && !foodSource.isBlank()) {
             try {
-                FoodSource sourceEnum = FoodSource.valueOf(foodSource.toUpperCase());
-                spec = spec.and(MealSpecifications.hasFoodSource(sourceEnum));
-            } catch (IllegalArgumentException e) {
-                log.warn("Invalid foodSource: {}", foodSource);
-            }
-        } else {
-            spec = spec.and(MealSpecifications.isNotRestricted());
+                spec = spec.and(MealSpecifications.hasFoodSource(FoodSource.valueOf(foodSource.toUpperCase())));
+            } catch (IllegalArgumentException e) { log.warn("Invalid foodSource: {}", foodSource); }
         }
 
         if (creatorId != null) spec = spec.and(MealSpecifications.createdByUser(creatorId));
 
+        // Enum filters
         List<Cuisine> cuisineEnums = parseEnumList(cuisines, Cuisine.class, "cuisine");
         if (cuisines != null && !cuisines.isEmpty() && cuisineEnums.isEmpty()) return Page.empty(pageable);
         if (!cuisineEnums.isEmpty()) spec = spec.and(MealSpecifications.hasCuisineIn(cuisineEnums));
@@ -141,6 +134,7 @@ public class MealService implements IMealService {
         if (mealTypes != null && !mealTypes.isEmpty() && mealTypeEnums.isEmpty()) return Page.empty(pageable);
         if (!mealTypeEnums.isEmpty()) spec = spec.and(MealSpecifications.hasMealTypeIn(mealTypeEnums));
 
+        // Overige filters
         if (foodItems != null && !foodItems.isEmpty()) spec = spec.and(MealSpecifications.hasAnyFoodItem(foodItems));
         if (minCalories != null) spec = spec.and(MealSpecifications.totalCaloriesMin(minCalories));
         if (maxCalories != null) spec = spec.and(MealSpecifications.totalCaloriesMax(maxCalories));
@@ -151,32 +145,22 @@ public class MealService implements IMealService {
         if (minFat != null) spec = spec.and(MealSpecifications.totalFatMin(minFat));
         if (maxFat != null) spec = spec.and(MealSpecifications.totalFatMax(maxFat));
 
+        // 4. Sorteren en ophalen
         Sort sort = buildSort(sortBy, sortOrder, pageable);
         Pageable sortedPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), sort);
-
         Page<Meal> templateMeals = mealRepository.findAll(spec, sortedPageable);
 
-        // DIT IS HET STUK DAT GEFIXT IS:
-        if (currentUsername != null) {
-            // We halen de user op basis van de username String uit de database
-            balancebite.model.user.User user = userRepository.findByUserName(currentUsername).orElse(null);
+        // 5. De Wisseltruc
+        if (userId != null) {
+            List<Long> templateIds = templateMeals.getContent().stream().map(Meal::getId).toList();
+            List<Meal> userCopies = mealRepository.findByAdjustedBy_IdAndOriginalMealIdIn(userId, templateIds);
 
-            if (user != null) {
-                Long userId = user.getId();
-                List<Long> templateIds = templateMeals.getContent().stream()
-                        .map(Meal::getId)
-                        .toList();
-
-                List<Meal> userCopies = mealRepository.findByAdjustedBy_IdAndOriginalMealIdIn(userId, templateIds);
-
-                return templateMeals.map(template -> {
-                    Meal finalMeal = userCopies.stream()
-                            .filter(copy -> copy.getOriginalMealId() != null && copy.getOriginalMealId().equals(template.getId()))
-                            .findFirst()
-                            .orElse(template);
-                    return mealMapper.toDTO(finalMeal);
-                });
-            }
+            return templateMeals.map(template -> {
+                return userCopies.stream()
+                        .filter(copy -> copy.getOriginalMealId() != null && copy.getOriginalMealId().equals(template.getId()))
+                        .findFirst()
+                        .orElse(template);
+            }).map(mealMapper::toDTO);
         }
 
         return templateMeals.map(mealMapper::toDTO);

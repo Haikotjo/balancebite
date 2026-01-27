@@ -106,4 +106,25 @@ public class MealSpecifications {
     public static Specification<Meal> totalFatMax(Double max) {
         return (root, query, cb) -> cb.lessThanOrEqualTo(root.get("totalFat"), max);
     }
+
+    public static Specification<Meal> isVisibleToUser(Long userId) {
+        return (root, query, cb) -> {
+            // Basis: Maaltijd is publiek (niet private EN niet restricted)
+            Specification<Meal> isPublic = (r, q, c) -> c.and(
+                    c.isFalse(r.get("isPrivate")),
+                    c.isFalse(r.get("isRestricted"))
+            );
+
+            if (userId == null) {
+                return isPublic.toPredicate(root, query, cb);
+            }
+
+            // Als ingelogd: Publiek OF (Gemaakt door mij) OF (Aangepast door mij)
+            return cb.or(
+                    isPublic.toPredicate(root, query, cb),
+                    cb.equal(root.get("createdBy").get("id"), userId),
+                    cb.equal(root.get("adjustedBy").get("id"), userId)
+            );
+        };
+    }
 }
