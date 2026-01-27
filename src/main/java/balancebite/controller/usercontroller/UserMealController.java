@@ -269,38 +269,39 @@ public class UserMealController {
             @RequestParam(required = false) List<String> cuisines,
             @RequestParam(required = false) List<String> diets,
             @RequestParam(required = false) List<String> mealTypes,
-
             @RequestParam(required = false) List<String> foodItems,
             @RequestParam(required = false) String sortBy,
             @RequestParam(required = false, defaultValue = "asc") String sortOrder,
+            @RequestParam(required = false) Double minCalories,
+            @RequestParam(required = false) Double maxCalories,
+            @RequestParam(required = false) Double minProtein,
+            @RequestParam(required = false) Double maxProtein,
+            @RequestParam(required = false) Double minCarbs,
+            @RequestParam(required = false) Double maxCarbs,
+            @RequestParam(required = false) Double minFat,
+            @RequestParam(required = false) Double maxFat,
             Pageable pageable
     ) {
         try {
             log.info("Retrieving meals for authenticated user with filters and sorting.");
 
-            // Extract userId from the JWT token
-            String token = authorizationHeader.substring(7); // Remove "Bearer " prefix
+            String token = authorizationHeader.substring(7);
             Long userId = jwtService.extractUserId(token);
 
-            // Fetch meals with filtering, sorting, and pagination
             Page<MealDTO> mealDTOs = userMealService.getAllMealsForUser(
-                    userId, cuisines, diets, mealTypes, foodItems, sortBy, sortOrder, pageable
+                    userId, cuisines, diets, mealTypes, foodItems, sortBy, sortOrder, pageable,
+                    minCalories, maxCalories, minProtein, maxProtein, minCarbs, maxCarbs, minFat, maxFat
             );
 
             if (mealDTOs.isEmpty()) {
-                log.info("No meals found for authenticated user ID: {}", userId);
                 return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
             }
 
-            log.info("Successfully retrieved meals for authenticated user ID: {}", userId);
             return ResponseEntity.ok(mealDTOs);
 
         } catch (UserNotFoundException e) {
-            log.warn("User not found during meal retrieval: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Page.empty());
-        }
-        catch (Exception e) {
-            log.error("Unexpected error during meal retrieval: {}", e.getMessage(), e);
+        } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Page.empty());
         }
     }
