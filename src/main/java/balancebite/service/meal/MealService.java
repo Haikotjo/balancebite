@@ -107,7 +107,7 @@ public class MealService implements IMealService {
 
         User currentUser = null;
         if (currentUsername != null) {
-            currentUser = userRepository.findByUserName(currentUsername).orElse(null);
+            currentUser = userRepository.findByEmailIgnoreCase(currentUsername).orElse(null);
         }
         Long userId = (currentUser != null) ? currentUser.getId() : null;
 
