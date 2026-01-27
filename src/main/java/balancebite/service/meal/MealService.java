@@ -102,74 +102,154 @@ public class MealService implements IMealService {
             Double minCarbs, Double maxCarbs, Double minFat, Double maxFat,
             String foodSource, String currentUsername
     ) {
+        // IMPORTANT: use logger, not System.out, so it shows in Railway logs
+        log.info("=== getAllMeals START === username='{}'", currentUsername);
+
         User currentUser = null;
         if (currentUsername != null) {
             currentUser = userRepository.findByUserName(currentUsername).orElse(null);
         }
         Long userId = (currentUser != null) ? currentUser.getId() : null;
 
+        log.info("Auth user resolved: username='{}' userId={}", currentUsername, userId);
+
         Specification<Meal> spec = Specification.where(MealSpecifications.isTemplateMeal())
                 .and(MealSpecifications.isVisibleToUser(userId));
 
         if (foodSource != null && !foodSource.isBlank()) {
             try {
-                spec = spec.and(MealSpecifications.hasFoodSource(FoodSource.valueOf(foodSource.toUpperCase())));
+                FoodSource fs = FoodSource.valueOf(foodSource.toUpperCase());
+                spec = spec.and(MealSpecifications.hasFoodSource(fs));
+                log.info("Filter: foodSource={}", fs);
             } catch (IllegalArgumentException e) {
-                log.warn("Invalid foodSource: {}", foodSource);
+                log.warn("Invalid foodSource: '{}'", foodSource);
             }
         }
 
-        if (creatorId != null) spec = spec.and(MealSpecifications.createdByUser(creatorId));
+        if (creatorId != null) {
+            spec = spec.and(MealSpecifications.createdByUser(creatorId));
+            log.info("Filter: creatorId={}", creatorId);
+        }
 
         List<Cuisine> cuisineEnums = parseEnumList(cuisines, Cuisine.class, "cuisine");
-        if (cuisines != null && !cuisines.isEmpty() && cuisineEnums.isEmpty()) return Page.empty(pageable);
-        if (!cuisineEnums.isEmpty()) spec = spec.and(MealSpecifications.hasCuisineIn(cuisineEnums));
+        if (cuisines != null && !cuisines.isEmpty() && cuisineEnums.isEmpty()) {
+            log.info("Filter cuisines provided but none valid -> returning empty page");
+            return Page.empty(pageable);
+        }
+        if (!cuisineEnums.isEmpty()) {
+            spec = spec.and(MealSpecifications.hasCuisineIn(cuisineEnums));
+            log.info("Filter: cuisines={}", cuisineEnums);
+        }
 
         List<Diet> dietEnums = parseEnumList(diets, Diet.class, "diet");
-        if (diets != null && !diets.isEmpty() && dietEnums.isEmpty()) return Page.empty(pageable);
-        if (!dietEnums.isEmpty()) spec = spec.and(MealSpecifications.hasDietIn(dietEnums));
+        if (diets != null && !diets.isEmpty() && dietEnums.isEmpty()) {
+            log.info("Filter diets provided but none valid -> returning empty page");
+            return Page.empty(pageable);
+        }
+        if (!dietEnums.isEmpty()) {
+            spec = spec.and(MealSpecifications.hasDietIn(dietEnums));
+            log.info("Filter: diets={}", dietEnums);
+        }
 
         List<MealType> mealTypeEnums = parseEnumList(mealTypes, MealType.class, "mealType");
-        if (mealTypes != null && !mealTypes.isEmpty() && mealTypeEnums.isEmpty()) return Page.empty(pageable);
-        if (!mealTypeEnums.isEmpty()) spec = spec.and(MealSpecifications.hasMealTypeIn(mealTypeEnums));
+        if (mealTypes != null && !mealTypes.isEmpty() && mealTypeEnums.isEmpty()) {
+            log.info("Filter mealTypes provided but none valid -> returning empty page");
+            return Page.empty(pageable);
+        }
+        if (!mealTypeEnums.isEmpty()) {
+            spec = spec.and(MealSpecifications.hasMealTypeIn(mealTypeEnums));
+            log.info("Filter: mealTypes={}", mealTypeEnums);
+        }
 
-        if (foodItems != null && !foodItems.isEmpty()) spec = spec.and(MealSpecifications.hasAnyFoodItem(foodItems));
-        if (minCalories != null) spec = spec.and(MealSpecifications.totalCaloriesMin(minCalories));
-        if (maxCalories != null) spec = spec.and(MealSpecifications.totalCaloriesMax(maxCalories));
-        if (minProtein != null) spec = spec.and(MealSpecifications.totalProteinMin(minProtein));
-        if (maxProtein != null) spec = spec.and(MealSpecifications.totalProteinMax(maxProtein));
-        if (minCarbs != null) spec = spec.and(MealSpecifications.totalCarbsMin(minCarbs));
-        if (maxCarbs != null) spec = spec.and(MealSpecifications.totalCarbsMax(maxCarbs));
-        if (minFat != null) spec = spec.and(MealSpecifications.totalFatMin(minFat));
-        if (maxFat != null) spec = spec.and(MealSpecifications.totalFatMax(maxFat));
+        if (foodItems != null && !foodItems.isEmpty()) {
+            spec = spec.and(MealSpecifications.hasAnyFoodItem(foodItems));
+            log.info("Filter: foodItems={}", foodItems);
+        }
+
+        if (minCalories != null) { spec = spec.and(MealSpecifications.totalCaloriesMin(minCalories)); log.info("Filter: minCalories={}", minCalories); }
+        if (maxCalories != null) { spec = spec.and(MealSpecifications.totalCaloriesMax(maxCalories)); log.info("Filter: maxCalories={}", maxCalories); }
+        if (minProtein  != null) { spec = spec.and(MealSpecifications.totalProteinMin(minProtein));  log.info("Filter: minProtein={}", minProtein); }
+        if (maxProtein  != null) { spec = spec.and(MealSpecifications.totalProteinMax(maxProtein));  log.info("Filter: maxProtein={}", maxProtein); }
+        if (minCarbs    != null) { spec = spec.and(MealSpecifications.totalCarbsMin(minCarbs));    log.info("Filter: minCarbs={}", minCarbs); }
+        if (maxCarbs    != null) { spec = spec.and(MealSpecifications.totalCarbsMax(maxCarbs));    log.info("Filter: maxCarbs={}", maxCarbs); }
+        if (minFat      != null) { spec = spec.and(MealSpecifications.totalFatMin(minFat));        log.info("Filter: minFat={}", minFat); }
+        if (maxFat      != null) { spec = spec.and(MealSpecifications.totalFatMax(maxFat));        log.info("Filter: maxFat={}", maxFat); }
 
         Sort sort = buildSort(sortBy, sortOrder, pageable);
         Pageable sortedPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), sort);
 
+        log.info("Paging: page={} size={} sort={}", sortedPageable.getPageNumber(), sortedPageable.getPageSize(), sort);
+
         Page<Meal> templateMeals = mealRepository.findAll(spec, sortedPageable);
+
+        log.info("Templates page result: elementsOnPage={} totalElements={} totalPages={}",
+                templateMeals.getNumberOfElements(), templateMeals.getTotalElements(), templateMeals.getTotalPages());
+
+        // Log every meal returned from the template query
+        templateMeals.getContent().forEach(m ->
+                log.info("TEMPLATE_PAGE_ITEM id={} isTemplate={} originalMealId={} createdById={} adjustedById={}",
+                        m.getId(),
+                        m.isTemplate(),
+                        m.getOriginalMealId(),
+                        (m.getCreatedBy() != null ? m.getCreatedBy().getId() : null),
+                        (m.getAdjustedBy() != null ? m.getAdjustedBy().getId() : null)
+                )
+        );
 
         // No user -> return templates
         if (userId == null) {
+            log.info("No logged-in user -> returning templates without swap");
+            log.info("=== getAllMeals END ===");
             return templateMeals.map(mealMapper::toDTO);
         }
 
         // User present -> swap templates with user copies (if exists)
         List<Long> templateIds = templateMeals.getContent().stream().map(Meal::getId).toList();
+        log.info("Swap step: userId={} templateIds={}", userId, templateIds);
+
         if (templateIds.isEmpty()) {
+            log.info("No templates on this page -> returning empty mapped page");
+            log.info("=== getAllMeals END ===");
             return templateMeals.map(mealMapper::toDTO);
         }
 
         List<Meal> userCopies = mealRepository.findUserCopiesForTemplates(userId, templateIds);
+        log.info("User copies fetched: count={}", userCopies.size());
+
+        // Log every copy found
+        userCopies.forEach(c ->
+                log.info("USER_COPY id={} isTemplate={} originalMealId={} createdById={} adjustedById={}",
+                        c.getId(),
+                        c.isTemplate(),
+                        c.getOriginalMealId(),
+                        (c.getCreatedBy() != null ? c.getCreatedBy().getId() : null),
+                        (c.getAdjustedBy() != null ? c.getAdjustedBy().getId() : null)
+                )
+        );
 
         Map<Long, Meal> copyByOriginalId = userCopies.stream()
                 .filter(c -> c.getOriginalMealId() != null)
                 .collect(Collectors.toMap(Meal::getOriginalMealId, c -> c, (a, b) -> a));
 
-        return templateMeals.map(template -> {
-            Meal result = copyByOriginalId.getOrDefault(template.getId(), template);
+        // Log the swap decision per template
+        Page<MealDTO> resultPage = templateMeals.map(template -> {
+            Meal copy = copyByOriginalId.get(template.getId());
+            Meal result = (copy != null) ? copy : template;
+
+            log.info("SWAP_DECISION templateId={} -> resultId={} resultIsTemplate={} resultOriginalMealId={}",
+                    template.getId(),
+                    result.getId(),
+                    result.isTemplate(),
+                    result.getOriginalMealId()
+            );
+
             return mealMapper.toDTO(result);
         });
+
+        log.info("=== getAllMeals END ===");
+        return resultPage;
     }
+
 
 
     /**
