@@ -164,7 +164,8 @@ public interface MealRepository extends JpaRepository<Meal, Long>, JpaSpecificat
     @Query(value = "DELETE FROM saved_meal WHERE meal_id = :mealId", nativeQuery = true)
     void deleteFromSavedMeal(long mealId);
 
-    List<Meal> findByAdjustedBy_IdAndOriginalMealIdIn(Long userId, List<Long> originalMealIds);
+    @Query("SELECT m FROM Meal m WHERE m.adjustedBy.id = :userId AND m.originalMealId IN :originalMealIds")
+    List<Meal> findByAdjustedBy_IdAndOriginalMealIdIn(@Param("userId") Long userId, @Param("originalMealIds") List<Long> originalMealIds);
 }
 
 

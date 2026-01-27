@@ -6,7 +6,6 @@ import balancebite.model.meal.references.Cuisine;
 import balancebite.model.meal.references.Diet;
 import balancebite.model.meal.references.MealType;
 import org.springframework.data.jpa.domain.Specification;
-
 import java.util.List;
 
 public class MealSpecifications {
@@ -21,6 +20,19 @@ public class MealSpecifications {
 
     public static Specification<Meal> isNotRestricted() {
         return (root, query, cb) -> cb.isFalse(root.get("isRestricted"));
+    }
+
+    public static Specification<Meal> isVisibleToUser(Long userId) {
+        return (root, query, cb) -> {
+            if (userId == null) {
+                return cb.and(cb.isFalse(root.get("isPrivate")), cb.isFalse(root.get("isRestricted")));
+            }
+            return cb.or(
+                    cb.and(cb.isFalse(root.get("isPrivate")), cb.isFalse(root.get("isRestricted"))),
+                    cb.equal(root.get("createdBy").get("id"), userId),
+                    cb.equal(root.get("adjustedBy").get("id"), userId)
+            );
+        };
     }
 
     public static Specification<Meal> hasFoodSource(FoodSource foodSource) {
@@ -59,22 +71,6 @@ public class MealSpecifications {
         };
     }
 
-    public static Specification<Meal> totalCaloriesBetween(Double min, Double max) {
-        return (root, query, cb) -> cb.between(root.get("totalCalories"), min, max);
-    }
-
-    public static Specification<Meal> totalProteinBetween(Double min, Double max) {
-        return (root, query, cb) -> cb.between(root.get("totalProtein"), min, max);
-    }
-
-    public static Specification<Meal> totalCarbsBetween(Double min, Double max) {
-        return (root, query, cb) -> cb.between(root.get("totalCarbs"), min, max);
-    }
-
-    public static Specification<Meal> totalFatBetween(Double min, Double max) {
-        return (root, query, cb) -> cb.between(root.get("totalFat"), min, max);
-    }
-
     public static Specification<Meal> totalCaloriesMin(Double min) {
         return (root, query, cb) -> cb.greaterThanOrEqualTo(root.get("totalCalories"), min);
     }
@@ -105,26 +101,5 @@ public class MealSpecifications {
 
     public static Specification<Meal> totalFatMax(Double max) {
         return (root, query, cb) -> cb.lessThanOrEqualTo(root.get("totalFat"), max);
-    }
-
-    public static Specification<Meal> isVisibleToUser(Long userId) {
-        return (root, query, cb) -> {
-            // Basis: Maaltijd is publiek (niet private EN niet restricted)
-            Specification<Meal> isPublic = (r, q, c) -> c.and(
-                    c.isFalse(r.get("isPrivate")),
-                    c.isFalse(r.get("isRestricted"))
-            );
-
-            if (userId == null) {
-                return isPublic.toPredicate(root, query, cb);
-            }
-
-            // Als ingelogd: Publiek OF (Gemaakt door mij) OF (Aangepast door mij)
-            return cb.or(
-                    isPublic.toPredicate(root, query, cb),
-                    cb.equal(root.get("createdBy").get("id"), userId),
-                    cb.equal(root.get("adjustedBy").get("id"), userId)
-            );
-        };
     }
 }
