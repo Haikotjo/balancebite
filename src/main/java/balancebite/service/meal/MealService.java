@@ -34,6 +34,9 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 
+import static balancebite.utils.QueryUtils.buildSort;
+import static balancebite.utils.QueryUtils.parseEnumList;
+
 import java.util.*;
 
 /**
@@ -276,44 +279,4 @@ public class MealService implements IMealService {
                 .orElseThrow(() -> new EntityNotFoundException("User not found with ID: " + userId));
     }
 
-    private Sort buildSort(String sortBy, String sortOrder, Pageable pageable) {
-        Sort.Direction direction = "desc".equalsIgnoreCase(sortOrder) ? Sort.Direction.DESC : Sort.Direction.ASC;
-        if (sortBy == null || sortBy.isBlank()) {
-            if (pageable.getSort().isSorted()) {
-                return pageable.getSort();
-            }
-            return Sort.by(direction, "name");
-        }
-
-        String sortField = switch (sortBy.toLowerCase()) {
-            case "calories" -> "totalCalories";
-            case "protein" -> "totalProtein";
-            case "fat" -> "totalFat";
-            case "carbs" -> "totalCarbs";
-            case "savecount" -> "saveCount";
-            case "weeklysavecount" -> "weeklySaveCount";
-            case "monthlysavecount" -> "monthlySaveCount";
-            default -> "name";
-        };
-
-        return Sort.by(direction, sortField);
-    }
-
-    private <E extends Enum<E>> List<E> parseEnumList(List<String> values, Class<E> enumClass, String label) {
-        if (values == null || values.isEmpty()) {
-            return Collections.emptyList();
-        }
-        List<E> parsedValues = new ArrayList<>();
-        for (String value : values) {
-            if (value == null || value.isBlank()) {
-                continue;
-            }
-            try {
-                parsedValues.add(Enum.valueOf(enumClass, value.toUpperCase()));
-            } catch (IllegalArgumentException ex) {
-                log.warn("Invalid {} filter value: {}", label, value);
-            }
-        }
-        return parsedValues;
-    }
 }

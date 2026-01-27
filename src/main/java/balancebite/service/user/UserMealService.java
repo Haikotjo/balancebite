@@ -14,20 +14,23 @@ import balancebite.model.meal.Meal;
 import balancebite.model.MealIngredient;
 import balancebite.model.meal.SavedMeal;
 import balancebite.model.meal.mealImage.MealImage;
+import balancebite.model.meal.references.Cuisine;
+import balancebite.model.meal.references.Diet;
+import balancebite.model.meal.references.MealType;
 import balancebite.model.user.Role;
 import balancebite.model.user.User;
 import balancebite.repository.*;
 import balancebite.model.user.UserRole;
 import balancebite.service.CloudinaryService;
 import balancebite.service.interfaces.user.IUserMealService;
+import balancebite.specification.MealSpecifications;
 import balancebite.utils.CheckForDuplicateTemplateMealUtil;
 import balancebite.utils.UserUpdateHelper;
 import jakarta.persistence.EntityNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.*;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,6 +40,9 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static balancebite.utils.QueryUtils.buildSort;
+import static balancebite.utils.QueryUtils.parseEnumList;
 
 /**
  * Service class responsible for managing the relationship between users and meals.
@@ -533,73 +539,51 @@ public class UserMealService implements IUserMealService {
             List<String> foodItems,
             String sortBy,
             String sortOrder,
-            Pageable pageable
+            Pageable pageable,
+            Double minCalories,
+            Double maxCalories,
+            Double minProtein,
+            Double maxProtein,
+            Double minCarbs,
+            Double maxCarbs,
+            Double minFat,
+            Double maxFat
     ) {
-        log.info("Retrieving paginated user meals for user ID: {} with filters and sorting.", userId);
+        log.info("Retrieving paginated meals for user ID: {} using specifications.", userId);
 
-        // Fetch user and their saved meals
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException("User not found with ID: " + userId));
+        // Basis specificatie: Maaltijden die 'toebehoren' aan de gebruiker
+        // Let op: afhankelijk van je model is dit via 'createdBy' of een aparte relatie
+        Specification<Meal> spec = Specification.where(MealSpecifications.createdByUser(userId));
 
-        List<Meal> meals = new ArrayList<>(user.getMeals());
+        // Hergebruik je bestaande logica voor de filters
+        List<Cuisine> cuisineEnums = parseEnumList(cuisines, Cuisine.class, "cuisine");
+        if (!cuisineEnums.isEmpty()) spec = spec.and(MealSpecifications.hasCuisineIn(cuisineEnums));
 
-        // ✅ **Apply filters**
-        if (cuisines != null && !cuisines.isEmpty()) {
-            meals.removeIf(meal ->
-                    meal.getCuisines().stream().noneMatch(c -> cuisines.contains(c.name()))
-            );
-        }
+        List<Diet> dietEnums = parseEnumList(diets, Diet.class, "diet");
+        if (!dietEnums.isEmpty()) spec = spec.and(MealSpecifications.hasDietIn(dietEnums));
 
-        if (diets != null && !diets.isEmpty()) {
-            meals.removeIf(meal ->
-                    meal.getDiets().stream().noneMatch(d -> diets.contains(d.name()))
-            );
-        }
-
-        if (mealTypes != null && !mealTypes.isEmpty()) {
-            meals.removeIf(meal ->
-                    meal.getMealTypes().stream().noneMatch(mt -> mealTypes.contains(mt.name()))
-            );
-        }
+        List<MealType> mealTypeEnums = parseEnumList(mealTypes, MealType.class, "mealType");
+        if (!mealTypeEnums.isEmpty()) spec = spec.and(MealSpecifications.hasMealTypeIn(mealTypeEnums));
 
         if (foodItems != null && !foodItems.isEmpty()) {
-            meals.removeIf(meal -> foodItems.stream().noneMatch(item ->
-                    Arrays.asList(meal.getFoodItemsString().split(" \\| ")).contains(item)
-            ));
+            spec = spec.and(MealSpecifications.hasAnyFoodItem(foodItems));
         }
 
-        // ✅ **Apply sorting**
-        Comparator<Meal> comparator = switch (sortBy != null ? sortBy.toLowerCase() : "") {
-            case "calories" -> Comparator.comparing(Meal::getTotalCalories);
-            case "protein" -> Comparator.comparing(Meal::getTotalProtein);
-            case "fat" -> Comparator.comparing(Meal::getTotalFat);
-            case "carbs" -> Comparator.comparing(Meal::getTotalCarbs);
-            case "savecount"        -> Comparator.comparing(Meal::getSaveCount);
-            case "weeklysavecount"  -> Comparator.comparing(Meal::getWeeklySaveCount);
-            case "monthlysavecount" -> Comparator.comparing(Meal::getMonthlySaveCount);
-            default -> Comparator.comparing(Meal::getName);
-        };
+        // Macro-nutriënten filters
+        if (minCalories != null) spec = spec.and(MealSpecifications.totalCaloriesMin(minCalories));
+        if (maxCalories != null) spec = spec.and(MealSpecifications.totalCaloriesMax(maxCalories));
+        if (minProtein != null) spec = spec.and(MealSpecifications.totalProteinMin(minProtein));
+        if (maxProtein != null) spec = spec.and(MealSpecifications.totalProteinMax(maxProtein));
+        if (minCarbs != null) spec = spec.and(MealSpecifications.totalCarbsMin(minCarbs));
+        if (maxCarbs != null) spec = spec.and(MealSpecifications.totalCarbsMax(maxCarbs));
+        if (minFat != null) spec = spec.and(MealSpecifications.totalFatMin(minFat));
+        if (maxFat != null) spec = spec.and(MealSpecifications.totalFatMax(maxFat));
 
-        if ("desc".equalsIgnoreCase(sortOrder)) {
-            comparator = comparator.reversed();
-        }
-        meals.sort(comparator);
+        // Sortering en paginering via de database
+        Sort sort = buildSort(sortBy, sortOrder, pageable);
+        Pageable sortedPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), sort);
 
-        // ✅ **Apply pagination**
-        int pageSize = pageable.getPageSize();
-        int currentPage = pageable.getPageNumber();
-        int startItem = currentPage * pageSize;
-        List<Meal> pagedMeals;
-
-        if (meals.size() < startItem) {
-            pagedMeals = Collections.emptyList();
-        } else {
-            int toIndex = Math.min(startItem + pageSize, meals.size());
-            pagedMeals = meals.subList(startItem, toIndex);
-        }
-
-        log.info("Returning {} meals for user ID: {} after filtering, sorting, and pagination.", pagedMeals.size(), userId);
-        return new PageImpl<>(pagedMeals.stream().map(mealMapper::toDTO).toList(), pageable, meals.size());
+        return mealRepository.findAll(spec, sortedPageable).map(mealMapper::toDTO);
     }
 
     /**
