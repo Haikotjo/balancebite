@@ -101,18 +101,18 @@ public class MealService implements IMealService {
             Double minCarbs, Double maxCarbs, Double minFat, Double maxFat,
             String foodSource, String currentUsername
     ) {
-        // 1. Zoek de user op
         User currentUser = null;
         if (currentUsername != null) {
             currentUser = userRepository.findByUserName(currentUsername).orElse(null);
         }
         Long userId = (currentUser != null) ? currentUser.getId() : null;
 
-        // 2. Basis specificatie
+        System.out.println("--- DEBUG START ---");
+        System.out.println("User: " + currentUsername + " | ID: " + userId);
+
         Specification<Meal> spec = Specification.where(MealSpecifications.isTemplateMeal())
                 .and(MealSpecifications.isVisibleToUser(userId));
 
-        // 3. Filters toepassen
         if (foodSource != null && !foodSource.isBlank()) {
             try {
                 spec = spec.and(MealSpecifications.hasFoodSource(FoodSource.valueOf(foodSource.toUpperCase())));
@@ -121,7 +121,6 @@ public class MealService implements IMealService {
 
         if (creatorId != null) spec = spec.and(MealSpecifications.createdByUser(creatorId));
 
-        // Enum filters
         List<Cuisine> cuisineEnums = parseEnumList(cuisines, Cuisine.class, "cuisine");
         if (cuisines != null && !cuisines.isEmpty() && cuisineEnums.isEmpty()) return Page.empty(pageable);
         if (!cuisineEnums.isEmpty()) spec = spec.and(MealSpecifications.hasCuisineIn(cuisineEnums));
@@ -134,7 +133,6 @@ public class MealService implements IMealService {
         if (mealTypes != null && !mealTypes.isEmpty() && mealTypeEnums.isEmpty()) return Page.empty(pageable);
         if (!mealTypeEnums.isEmpty()) spec = spec.and(MealSpecifications.hasMealTypeIn(mealTypeEnums));
 
-        // Overige filters
         if (foodItems != null && !foodItems.isEmpty()) spec = spec.and(MealSpecifications.hasAnyFoodItem(foodItems));
         if (minCalories != null) spec = spec.and(MealSpecifications.totalCaloriesMin(minCalories));
         if (maxCalories != null) spec = spec.and(MealSpecifications.totalCaloriesMax(maxCalories));
@@ -145,24 +143,32 @@ public class MealService implements IMealService {
         if (minFat != null) spec = spec.and(MealSpecifications.totalFatMin(minFat));
         if (maxFat != null) spec = spec.and(MealSpecifications.totalFatMax(maxFat));
 
-        // 4. Sorteren en ophalen
         Sort sort = buildSort(sortBy, sortOrder, pageable);
         Pageable sortedPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), sort);
         Page<Meal> templateMeals = mealRepository.findAll(spec, sortedPageable);
 
-        // 5. De Wisseltruc
+        System.out.println("Templates op pagina: " + templateMeals.getContent().stream().map(Meal::getId).toList());
+
         if (userId != null) {
             List<Long> templateIds = templateMeals.getContent().stream().map(Meal::getId).toList();
             List<Meal> userCopies = mealRepository.findByAdjustedBy_IdAndOriginalMealIdIn(userId, templateIds);
 
+            System.out.println("Aantal kopieën gevonden: " + userCopies.size());
+            userCopies.forEach(c -> System.out.println("Match gevonden: Kopie " + c.getId() + " voor Template " + c.getOriginalMealId()));
+
             return templateMeals.map(template -> {
-                return userCopies.stream()
+                Meal result = userCopies.stream()
                         .filter(copy -> copy.getOriginalMealId() != null && copy.getOriginalMealId().equals(template.getId()))
                         .findFirst()
                         .orElse(template);
-            }).map(mealMapper::toDTO);
+
+                if (result != template) System.out.println("WISSEL: Template " + template.getId() + " -> Kopie " + result.getId());
+
+                return mealMapper.toDTO(result);
+            });
         }
 
+        System.out.println("--- DEBUG END ---");
         return templateMeals.map(mealMapper::toDTO);
     }
 
