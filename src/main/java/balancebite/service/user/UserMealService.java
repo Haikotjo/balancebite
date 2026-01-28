@@ -553,7 +553,9 @@ public class UserMealService implements IUserMealService {
 
         // Basis specificatie: Maaltijden die 'toebehoren' aan de gebruiker
         // Let op: afhankelijk van je model is dit via 'createdBy' of een aparte relatie
-        Specification<Meal> spec = Specification.where(MealSpecifications.createdByUser(userId));
+        Specification<Meal> spec = Specification
+                .where(MealSpecifications.createdByUser(userId))
+                .or(MealSpecifications.savedByUser(userId));
 
         // Hergebruik je bestaande logica voor de filters
         List<Cuisine> cuisineEnums = parseEnumList(cuisines, Cuisine.class, "cuisine");
