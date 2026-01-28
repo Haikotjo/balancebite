@@ -294,7 +294,7 @@ public class UserMealController {
             );
 
             if (mealDTOs.isEmpty()) {
-                return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+                return ResponseEntity.ok(Page.empty(pageable));
             }
 
             return ResponseEntity.ok(mealDTOs);
