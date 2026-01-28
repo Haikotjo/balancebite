@@ -46,10 +46,9 @@ public class MealSpecifications {
     public static Specification<Meal> savedByUser(Long userId) {
         return (root, query, cb) -> {
             query.distinct(true);
-            return cb.equal(root.join("savedByUsers").get("id"), userId);
+            return cb.equal(root.join("users").get("id"), userId);
         };
     }
-
 
     public static Specification<Meal> hasCuisineIn(List<Cuisine> cuisines) {
         return (root, query, cb) -> {
