@@ -5,6 +5,7 @@ import balancebite.model.meal.Meal;
 import balancebite.model.meal.references.Cuisine;
 import balancebite.model.meal.references.Diet;
 import balancebite.model.meal.references.MealType;
+import jakarta.persistence.criteria.JoinType;
 import org.springframework.data.jpa.domain.Specification;
 import java.util.List;
 
@@ -46,9 +47,13 @@ public class MealSpecifications {
     public static Specification<Meal> savedByUser(Long userId) {
         return (root, query, cb) -> {
             query.distinct(true);
-            return cb.equal(root.join("users").get("id"), userId);
+            return cb.equal(
+                    root.join("users", JoinType.LEFT).get("id"),
+                    userId
+            );
         };
     }
+
 
     public static Specification<Meal> hasCuisineIn(List<Cuisine> cuisines) {
         return (root, query, cb) -> {
