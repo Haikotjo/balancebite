@@ -134,4 +134,28 @@ public class DbFixConfig {
         };
     }
 
+    @Bean
+    public CommandLineRunner deleteMealsById(JdbcTemplate jdbc) {
+        return args -> {
+            // IMPORTANT: Remove this runner after it succeeded once
+            long[] ids = {260L, 287L, 262L, 290L, 263L, 261L, }; // <-- put the meal IDs you want to delete here
+
+            for (long id : ids) {
+                try {
+                    // Remove enum/join rows first (these block deletion)
+                    jdbc.update("DELETE FROM public.meal_diets WHERE meal_id = ?", id);
+                    jdbc.update("DELETE FROM public.meal_cuisines WHERE meal_id = ?", id);
+                    jdbc.update("DELETE FROM public.meal_meal_types WHERE meal_id = ?", id);
+
+                    // Now delete the meal
+                    int deleted = jdbc.update("DELETE FROM public.meals WHERE id = ?", id);
+
+                    log.info("✅ Deleted meal id={} deletedRows={}", id, deleted);
+                } catch (Exception e) {
+                    log.error("❌ Failed deleting meal id={}", id, e);
+                }
+            }
+        };
+    }
+
 }
