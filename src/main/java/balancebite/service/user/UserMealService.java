@@ -743,6 +743,7 @@ public class UserMealService implements IUserMealService {
 
                 String joinedNames = String.join(", ", dietNames);
                 log.warn("Meal ID {} is still used in diets: {}", mealId, joinedNames);
+
                 List<Map<String, Object>> diets = daysWithMeal.stream()
                         .map(DietDay::getDiet)
                         .distinct()
@@ -767,13 +768,17 @@ public class UserMealService implements IUserMealService {
             }
 
             log.info("Meal ID {} is NOT a template, deleting it permanently.", mealId);
+
+            // ✅ FIX: eerst saved_meal opruimen voor DEZE meal
+            savedMealRepository.deleteAllByMealId(meal.getId());
+
             user.getMeals().remove(meal);
             mealRepository.delete(meal);
 
             if (meal.getOriginalMealId() != null) {
-                savedMealRepository.deleteLatestByMealId(meal.getOriginalMealId());
                 Meal original = mealRepository.findById(meal.getOriginalMealId())
                         .orElseThrow(() -> new MealNotFoundException("Original meal not found"));
+
                 long totalSaves = savedMealRepository.countByMeal(original);
                 original.setSaveCount(totalSaves);
                 mealRepository.saveAndFlush(original);
@@ -788,6 +793,7 @@ public class UserMealService implements IUserMealService {
 
         return userMapper.toDTO(user);
     }
+
 
     @Override
     @Transactional
