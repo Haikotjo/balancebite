@@ -784,8 +784,13 @@ public class UserMealService implements IUserMealService {
                 mealRepository.saveAndFlush(original);
             }
         } else {
-            log.info("Meal ID {} is a template, unlinking from user.", mealId);
-            user.getMeals().remove(meal);
+            // template=true -> only allow unlink if caller owns the template
+            if (meal.getCreatedBy() != null && meal.getCreatedBy().getId().equals(userId)) {
+                log.info("Meal ID {} is a template owned by user {}, unlinking only.", mealId, userId);
+                user.getMeals().remove(meal);
+            } else {
+                throw new AccessDeniedException("You cannot remove this template meal.");
+            }
         }
 
         userRepository.save(user);
