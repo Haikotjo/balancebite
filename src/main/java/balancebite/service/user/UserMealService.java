@@ -549,29 +549,47 @@ public class UserMealService implements IUserMealService {
             Double minFat,
             Double maxFat
     ) {
-        log.info("Retrieving paginated meals for user ID: {} using specifications.", userId);
+        log.info("Retrieving paginated meals for user ID: {}", userId);
 
-        // Basis specificatie: Maaltijden die 'toebehoren' aan de gebruiker
-        // Let op: afhankelijk van je model is dit via 'createdBy' of een aparte relatie
-        Specification<Meal> spec = Specification
-                .where(MealSpecifications.createdByUser(userId))
-                .or(MealSpecifications.savedByUser(userId));
+        // 1️⃣ HAAL EERST ALLE 'MY MEALS' IDs OP (created + saved)
+        Set<Long> myMealIds = new HashSet<>();
 
-        // Hergebruik je bestaande logica voor de filters
+        mealRepository.findAll(MealSpecifications.createdByUser(userId))
+                .forEach(m -> myMealIds.add(m.getId()));
+
+        mealRepository.findAll(MealSpecifications.savedByUser(userId))
+                .forEach(m -> myMealIds.add(m.getId()));
+
+        // Geen meals? Klaar.
+        if (myMealIds.isEmpty()) {
+            return Page.empty(pageable);
+        }
+
+        // 2️⃣ BASIS SPEC: alleen mijn meals
+        Specification<Meal> spec =
+                (root, query, cb) -> root.get("id").in(myMealIds);
+
+        // 3️⃣ FILTERS (ongewijzigd)
         List<Cuisine> cuisineEnums = parseEnumList(cuisines, Cuisine.class, "cuisine");
-        if (!cuisineEnums.isEmpty()) spec = spec.and(MealSpecifications.hasCuisineIn(cuisineEnums));
+        if (!cuisineEnums.isEmpty()) {
+            spec = spec.and(MealSpecifications.hasCuisineIn(cuisineEnums));
+        }
 
         List<Diet> dietEnums = parseEnumList(diets, Diet.class, "diet");
-        if (!dietEnums.isEmpty()) spec = spec.and(MealSpecifications.hasDietIn(dietEnums));
+        if (!dietEnums.isEmpty()) {
+            spec = spec.and(MealSpecifications.hasDietIn(dietEnums));
+        }
 
         List<MealType> mealTypeEnums = parseEnumList(mealTypes, MealType.class, "mealType");
-        if (!mealTypeEnums.isEmpty()) spec = spec.and(MealSpecifications.hasMealTypeIn(mealTypeEnums));
+        if (!mealTypeEnums.isEmpty()) {
+            spec = spec.and(MealSpecifications.hasMealTypeIn(mealTypeEnums));
+        }
 
         if (foodItems != null && !foodItems.isEmpty()) {
             spec = spec.and(MealSpecifications.hasAnyFoodItem(foodItems));
         }
 
-        // Macro-nutriënten filters
+        // 4️⃣ MACRO FILTERS
         if (minCalories != null) spec = spec.and(MealSpecifications.totalCaloriesMin(minCalories));
         if (maxCalories != null) spec = spec.and(MealSpecifications.totalCaloriesMax(maxCalories));
         if (minProtein != null) spec = spec.and(MealSpecifications.totalProteinMin(minProtein));
@@ -581,12 +599,16 @@ public class UserMealService implements IUserMealService {
         if (minFat != null) spec = spec.and(MealSpecifications.totalFatMin(minFat));
         if (maxFat != null) spec = spec.and(MealSpecifications.totalFatMax(maxFat));
 
-        // Sortering en paginering via de database
+        // 5️⃣ SORT + PAGINATION
         Sort sort = buildSort(sortBy, sortOrder, pageable);
-        Pageable sortedPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), sort);
+        Pageable sortedPageable =
+                PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), sort);
 
-        return mealRepository.findAll(spec, sortedPageable).map(mealMapper::toDTO);
+        // 6️⃣ QUERY
+        return mealRepository.findAll(spec, sortedPageable)
+                .map(mealMapper::toDTO);
     }
+
 
     /**
      * Retrieves paginated and sorted meals created by a specific user with optional filtering.
