@@ -413,8 +413,8 @@ public class UserMealController {
             String token = authorizationHeader.substring(7);
             Long userId = jwtService.extractUserId(token);
 
-            userMealService.removeMealFromUser(userId, mealId);
-            return ResponseEntity.noContent().build();
+            UserDTO dto = userMealService.removeMealFromUser(userId, mealId);
+            return ResponseEntity.ok(dto);
 
         } catch (MealStillInUseException e) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
