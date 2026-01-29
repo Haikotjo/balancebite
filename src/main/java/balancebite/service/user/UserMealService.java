@@ -549,64 +549,13 @@ public class UserMealService implements IUserMealService {
             Double minFat,
             Double maxFat
     ) {
-        log.info("Retrieving paginated meals for user ID: {}", userId);
-
-        // 1️⃣ HAAL EERST ALLE 'MY MEALS' IDs OP (created + saved)
-        Set<Long> myMealIds = new HashSet<>();
-
-        mealRepository.findAll(MealSpecifications.createdByUser(userId))
-                .forEach(m -> myMealIds.add(m.getId()));
-
-        mealRepository.findAll(MealSpecifications.savedByUser(userId))
-                .forEach(m -> myMealIds.add(m.getId()));
-
-        // Geen meals? Klaar.
-        if (myMealIds.isEmpty()) {
-            return Page.empty(pageable);
-        }
-
-        // 2️⃣ BASIS SPEC: alleen mijn meals
-        Specification<Meal> spec =
-                (root, query, cb) -> root.get("id").in(myMealIds);
-
-        // 3️⃣ FILTERS (ongewijzigd)
-        List<Cuisine> cuisineEnums = parseEnumList(cuisines, Cuisine.class, "cuisine");
-        if (!cuisineEnums.isEmpty()) {
-            spec = spec.and(MealSpecifications.hasCuisineIn(cuisineEnums));
-        }
-
-        List<Diet> dietEnums = parseEnumList(diets, Diet.class, "diet");
-        if (!dietEnums.isEmpty()) {
-            spec = spec.and(MealSpecifications.hasDietIn(dietEnums));
-        }
-
-        List<MealType> mealTypeEnums = parseEnumList(mealTypes, MealType.class, "mealType");
-        if (!mealTypeEnums.isEmpty()) {
-            spec = spec.and(MealSpecifications.hasMealTypeIn(mealTypeEnums));
-        }
-
-        if (foodItems != null && !foodItems.isEmpty()) {
-            spec = spec.and(MealSpecifications.hasAnyFoodItem(foodItems));
-        }
-
-        // 4️⃣ MACRO FILTERS
-        if (minCalories != null) spec = spec.and(MealSpecifications.totalCaloriesMin(minCalories));
-        if (maxCalories != null) spec = spec.and(MealSpecifications.totalCaloriesMax(maxCalories));
-        if (minProtein != null) spec = spec.and(MealSpecifications.totalProteinMin(minProtein));
-        if (maxProtein != null) spec = spec.and(MealSpecifications.totalProteinMax(maxProtein));
-        if (minCarbs != null) spec = spec.and(MealSpecifications.totalCarbsMin(minCarbs));
-        if (maxCarbs != null) spec = spec.and(MealSpecifications.totalCarbsMax(maxCarbs));
-        if (minFat != null) spec = spec.and(MealSpecifications.totalFatMin(minFat));
-        if (maxFat != null) spec = spec.and(MealSpecifications.totalFatMax(maxFat));
-
-        // 5️⃣ SORT + PAGINATION
         Sort sort = buildSort(sortBy, sortOrder, pageable);
-        Pageable sortedPageable =
-                PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), sort);
+        Pageable sortedPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), sort);
 
-        // 6️⃣ QUERY
-        return mealRepository.findAll(spec, sortedPageable)
-                .map(mealMapper::toDTO);
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("User not found: " + userId));
+
+        return mealRepository.findMyMeals(user, sortedPageable).map(mealMapper::toDTO);
     }
 
 

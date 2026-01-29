@@ -178,6 +178,17 @@ public interface MealRepository extends JpaRepository<Meal, Long>, JpaSpecificat
             @Param("originalMealIds") List<Long> originalMealIds
     );
 
+    @Query("""
+    SELECT DISTINCT m
+    FROM Meal m
+    LEFT JOIN m.users u
+    WHERE m.createdBy = :user
+       OR m.adjustedBy = :user
+       OR u = :user
+""")
+    Page<Meal> findMyMeals(@Param("user") User user, Pageable pageable);
+
+
 }
 
 
