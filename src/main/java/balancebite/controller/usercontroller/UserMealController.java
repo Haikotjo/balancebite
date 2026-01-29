@@ -265,13 +265,13 @@ public class UserMealController {
      */
     @GetMapping("/meals")
     public ResponseEntity<Page<MealDTO>> getAllMealsForAuthenticatedUser(
-            @RequestHeader("Authorization") String authorizationHeader,
+            @RequestHeader(value = "Authorization", required = false) String authorizationHeader,
             @RequestParam(required = false) List<String> cuisines,
             @RequestParam(required = false) List<String> diets,
             @RequestParam(required = false) List<String> mealTypes,
             @RequestParam(required = false) List<String> foodItems,
             @RequestParam(required = false) String sortBy,
-            @RequestParam(required = false, defaultValue = "asc") String sortOrder,
+            @RequestParam(defaultValue = "asc") String sortOrder,
             @RequestParam(required = false) Double minCalories,
             @RequestParam(required = false) Double maxCalories,
             @RequestParam(required = false) Double minProtein,
@@ -282,28 +282,36 @@ public class UserMealController {
             @RequestParam(required = false) Double maxFat,
             Pageable pageable
     ) {
-        try {
-            log.info("Retrieving meals for authenticated user with filters and sorting.");
+        log.info("Retrieving meals for authenticated user with filters and sorting.");
 
-            String token = authorizationHeader.substring(7);
-            Long userId = jwtService.extractUserId(token);
-
-            Page<MealDTO> mealDTOs = userMealService.getAllMealsForUser(
-                    userId, cuisines, diets, mealTypes, foodItems, sortBy, sortOrder, pageable,
-                    minCalories, maxCalories, minProtein, maxProtein, minCarbs, maxCarbs, minFat, maxFat
-            );
-
-            if (mealDTOs.isEmpty()) {
-                return ResponseEntity.ok(Page.empty(pageable));
-            }
-
-            return ResponseEntity.ok(mealDTOs);
-
-        } catch (UserNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Page.empty());
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Page.empty());
+        if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
+
+        String token = authorizationHeader.substring(7);
+        Long userId = jwtService.extractUserId(token);
+
+        Page<MealDTO> mealDTOs = userMealService.getAllMealsForUser(
+                userId,
+                cuisines,
+                diets,
+                mealTypes,
+                foodItems,
+                sortBy,
+                sortOrder,
+                pageable,
+                minCalories,
+                maxCalories,
+                minProtein,
+                maxProtein,
+                minCarbs,
+                maxCarbs,
+                minFat,
+                maxFat
+        );
+
+        // Lege resultaten zijn GEEN fout
+        return ResponseEntity.ok(mealDTOs);
     }
 
     /**
