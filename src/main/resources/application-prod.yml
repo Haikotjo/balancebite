@@ -8,9 +8,9 @@ spring:
     import: optional:classpath:.env
 
   datasource:
-      url: jdbc:${DB_URL}
-      username: ${DB_USERNAME}
-      password: ${DB_PASSWORD}
+    url: jdbc:${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
 
   sql:
