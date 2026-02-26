@@ -8,9 +8,10 @@ spring:
     import: optional:classpath:.env
 
   datasource:
-    url: ${DB_URL}
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD}
+    datasource:
+      url: jdbc:${DB_URL}
+      username: ${DB_USERNAME}
+      password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
 
   sql:
@@ -35,7 +36,6 @@ spring:
 
 #    file:
 #      upload-dir: /var/www/uploads/
-
 cloudinary:
   cloud-name: ${CLOUDINARY_CLOUD_NAME}
   api-key: ${CLOUDINARY_API_KEY}

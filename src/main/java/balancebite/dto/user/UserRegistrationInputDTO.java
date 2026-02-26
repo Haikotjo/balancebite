@@ -50,7 +50,7 @@ public class UserRegistrationInputDTO {
      */
     @Pattern(
             regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[!@#$%^&*()_+=\\-])[A-Za-z\\d!@#$%^&*()_+=\\-]{5,}$",
-            message = "Password must be at least 6 characters long, include an uppercase letter, a lowercase letter, a number, and a special character."
+            message = "Password must be at least 5 characters long, include an uppercase letter, a lowercase letter, a number, and a special character."
     )
     private String password;
 

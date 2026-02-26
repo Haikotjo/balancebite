@@ -86,7 +86,7 @@ public class RegistrationService implements IRegistrationService {
 
         // Create a new User entity and populate fields from DTO
         User user = new User(
-                requestedUserName,  // ← gebruik hetzelfde resultaat dat je al had berekend
+                requestedUserName,
                 registrationDTO.getEmail(),
                 hashedPassword,
                 registrationDTO.getRoles() != null && !registrationDTO.getRoles().isEmpty()
