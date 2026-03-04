@@ -246,23 +246,6 @@ public class UserMealController {
     }
 
 
-    /**
-     * Retrieves paginated and sorted meals for the authenticated user with optional filtering.
-     *
-     * Users can filter meals by cuisine, diet, meal type, and food items.
-     * Meals can be sorted by name, total calories, protein, fat, or carbs.
-     * Results are paginated.
-     *
-     * @param authorizationHeader The Authorization header containing the JWT token.
-     * @param cuisines (Optional) Filter for meal cuisine.
-     * @param diets (Optional) Filter for meal diet.
-     * @param mealTypes (Optional) Filter for meal type (BREAKFAST, LUNCH, etc.).
-     * @param foodItems (Optional) List of food items to filter meals by (comma-separated).
-     * @param sortBy (Optional) Sorting field (calories, protein, fat, carbs, name).
-     * @param sortOrder (Optional) Sorting order ("asc" for ascending, "desc" for descending).
-     * @param pageable Pageable object for pagination and sorting.
-     * @return ResponseEntity containing a paginated list of MealDTO objects matching the filters.
-     */
     @GetMapping("/meals")
     public ResponseEntity<Page<MealDTO>> getAllMealsForAuthenticatedUser(
             @RequestHeader(value = "Authorization", required = false) String authorizationHeader,

@@ -513,23 +513,7 @@ public class UserMealService implements IUserMealService {
         mealRepository.save(meal);
     }
 
-    /**
-     * Retrieves paginated and sorted meals saved by a specific user with optional filtering.
-     *
-     * Users can filter meals by cuisine, diet, meal type, and food items.
-     * Meals can be sorted by name, total calories, protein, fat, or carbs.
-     * Results are paginated.
-     *
-     * @param userId The ID of the user whose saved meals are to be retrieved.
-     * @param cuisines Optional filter for meal cuisine.
-     * @param diets Optional filter for meal diet.
-     * @param mealTypes Optional filter for meal type (BREAKFAST, LUNCH, etc.).
-     * @param foodItems Optional list of food items to filter meals by (e.g., "Banana", "Peas").
-     * @param sortBy Sorting field (calories, protein, fat, carbs, name).
-     * @param sortOrder Sorting order ("asc" for ascending, "desc" for descending).
-     * @param pageable Pageable object for pagination and sorting.
-     * @return A paginated and sorted list of MealDTOs that match the filters.
-     */
+
     @Transactional(readOnly = true)
     public Page<MealDTO> getAllMealsForUser(
             Long userId,
@@ -549,14 +533,85 @@ public class UserMealService implements IUserMealService {
             Double minFat,
             Double maxFat
     ) {
-        Sort sort = buildSort(sortBy, sortOrder, pageable);
-        Pageable sortedPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), sort);
 
-        User user = userRepository.findById(userId)
+        Sort sort = buildSort(sortBy, sortOrder, pageable);
+        Pageable sortedPageable = PageRequest.of(
+                pageable.getPageNumber(),
+                pageable.getPageSize(),
+                sort
+        );
+
+        userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("User not found: " + userId));
 
-        return mealRepository.findMyMeals(user, sortedPageable).map(mealMapper::toDTO);
+        // Base specification: only meals created OR saved by user
+        Specification<Meal> spec = Specification.where(
+                MealSpecifications.savedByUser(userId)
+                        .or(MealSpecifications.createdByUser(userId))
+        );
+
+        // Convert String lists to Enums (if present)
+        if (cuisines != null && !cuisines.isEmpty()) {
+            List<Cuisine> cuisineEnums = cuisines.stream()
+                    .map(Cuisine::valueOf)
+                    .toList();
+            spec = spec.and(MealSpecifications.hasCuisineIn(cuisineEnums));
+        }
+
+        if (diets != null && !diets.isEmpty()) {
+            List<Diet> dietEnums = diets.stream()
+                    .map(Diet::valueOf)
+                    .toList();
+            spec = spec.and(MealSpecifications.hasDietIn(dietEnums));
+        }
+
+        if (mealTypes != null && !mealTypes.isEmpty()) {
+            List<MealType> mealTypeEnums = mealTypes.stream()
+                    .map(MealType::valueOf)
+                    .toList();
+            spec = spec.and(MealSpecifications.hasMealTypeIn(mealTypeEnums));
+        }
+
+        if (foodItems != null && !foodItems.isEmpty()) {
+            spec = spec.and(MealSpecifications.hasAnyFoodItem(foodItems));
+        }
+
+        if (minCalories != null) {
+            spec = spec.and(MealSpecifications.totalCaloriesMin(minCalories));
+        }
+
+        if (maxCalories != null) {
+            spec = spec.and(MealSpecifications.totalCaloriesMax(maxCalories));
+        }
+
+        if (minProtein != null) {
+            spec = spec.and(MealSpecifications.totalProteinMin(minProtein));
+        }
+
+        if (maxProtein != null) {
+            spec = spec.and(MealSpecifications.totalProteinMax(maxProtein));
+        }
+
+        if (minCarbs != null) {
+            spec = spec.and(MealSpecifications.totalCarbsMin(minCarbs));
+        }
+
+        if (maxCarbs != null) {
+            spec = spec.and(MealSpecifications.totalCarbsMax(maxCarbs));
+        }
+
+        if (minFat != null) {
+            spec = spec.and(MealSpecifications.totalFatMin(minFat));
+        }
+
+        if (maxFat != null) {
+            spec = spec.and(MealSpecifications.totalFatMax(maxFat));
+        }
+
+        return mealRepository.findAll(spec, sortedPageable)
+                .map(mealMapper::toDTO);
     }
+
 
 
     /**
