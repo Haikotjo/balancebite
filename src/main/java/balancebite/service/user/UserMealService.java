@@ -546,9 +546,11 @@ public class UserMealService implements IUserMealService {
 
         Specification<Meal> spec = Specification.where(
                 MealSpecifications.savedByUser(userId)
-                        .or(MealSpecifications.createdByUser(userId))
-                        .or((root, query, cb) ->
-                                cb.equal(root.get("adjustedBy").get("id"), userId))
+                        .or((root, query, cb) -> cb.equal(root.get("adjustedBy").get("id"), userId))
+                        .or((root, query, cb) -> cb.and(
+                                cb.equal(root.get("createdBy").get("id"), userId),
+                                cb.isNull(root.get("originalMealId")) // <-- key: exclude copies
+                        ))
         );
 
 
