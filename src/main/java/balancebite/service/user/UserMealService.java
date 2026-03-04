@@ -544,11 +544,13 @@ public class UserMealService implements IUserMealService {
         userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("User not found: " + userId));
 
-        // Base specification: only meals created OR saved by user
         Specification<Meal> spec = Specification.where(
                 MealSpecifications.savedByUser(userId)
                         .or(MealSpecifications.createdByUser(userId))
+                        .or((root, query, cb) ->
+                                cb.equal(root.get("adjustedBy").get("id"), userId))
         );
+
 
         // Convert String lists to Enums (if present)
         if (cuisines != null && !cuisines.isEmpty()) {
