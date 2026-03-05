@@ -635,9 +635,10 @@ public class UserMealService implements IUserMealService {
         userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("User not found: " + userId));
 
-        // Base: ONLY createdBy user
-        Specification<Meal> spec = Specification.where(
+        Specification<Meal> spec = Specification.<Meal>where(
                 (root, query, cb) -> cb.equal(root.get("createdBy").get("id"), userId)
+        ).and(
+                (root, query, cb) -> cb.isTrue(root.get("isTemplate").as(Boolean.class))
         );
 
         if (cuisines != null && !cuisines.isEmpty()) {
