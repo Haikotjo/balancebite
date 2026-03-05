@@ -618,23 +618,6 @@ public class UserMealService implements IUserMealService {
 
 
 
-    /**
-     * Retrieves paginated and sorted meals created by a specific user with optional filtering.
-     *
-     * Users can filter meals by cuisine, diet, meal type, and food items.
-     * Meals can be sorted by name, total calories, protein, fat, or carbs.
-     * Results are paginated.
-     *
-     * @param userId The ID of the user whose created meals are to be retrieved.
-     * @param cuisines Optional filter for meal cuisine.
-     * @param diets Optional filter for meal diet.
-     * @param mealTypes Optional filter for meal type (BREAKFAST, LUNCH, etc.).
-     * @param foodItems Optional list of food items to filter meals by (e.g., "Banana", "Peas").
-     * @param sortBy Sorting field (calories, protein, fat, carbs, name).
-     * @param sortOrder Sorting order ("asc" for ascending, "desc" for descending).
-     * @param pageable Pageable object for pagination and sorting.
-     * @return A paginated and sorted list of MealDTOs that match the filters.
-     */
     @Transactional(readOnly = true)
     public Page<MealDTO> getMealsCreatedByUser(
             Long userId,
@@ -646,73 +629,38 @@ public class UserMealService implements IUserMealService {
             String sortOrder,
             Pageable pageable
     ) {
-        log.info("Retrieving paginated meals created by user ID: {} with filters and sorting.", userId);
+        Sort sort = buildSort(sortBy, sortOrder, pageable);
+        Pageable sortedPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), sort);
 
-        // Fetch meals where createdBy matches the user ID
-        List<Meal> createdMeals = mealRepository.findByCreatedBy_Id(userId);
+        userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("User not found: " + userId));
 
-        createdMeals.removeIf(meal ->
-                meal.getAdjustedBy() != null && !meal.getAdjustedBy().getId().equals(userId)
+        // Base: ONLY createdBy user
+        Specification<Meal> spec = Specification.where(
+                (root, query, cb) -> cb.equal(root.get("createdBy").get("id"), userId)
         );
 
-        // ✅ **Apply filters**
         if (cuisines != null && !cuisines.isEmpty()) {
-            createdMeals.removeIf(meal ->
-                    meal.getCuisines().stream().noneMatch(c -> cuisines.contains(c.name()))
-            );
+            List<Cuisine> cuisineEnums = cuisines.stream().map(Cuisine::valueOf).toList();
+            spec = spec.and(MealSpecifications.hasCuisineIn(cuisineEnums));
         }
 
-// ✅ Filter op diets (meerdere toegelaten)
         if (diets != null && !diets.isEmpty()) {
-            createdMeals.removeIf(meal ->
-                    meal.getDiets().stream().noneMatch(d -> diets.contains(d.name()))
-            );
+            List<Diet> dietEnums = diets.stream().map(Diet::valueOf).toList();
+            spec = spec.and(MealSpecifications.hasDietIn(dietEnums));
         }
 
-// ✅ Filter op mealTypes (meerdere toegelaten)
         if (mealTypes != null && !mealTypes.isEmpty()) {
-            createdMeals.removeIf(meal ->
-                    meal.getMealTypes().stream().noneMatch(mt -> mealTypes.contains(mt.name()))
-            );
+            List<MealType> mealTypeEnums = mealTypes.stream().map(MealType::valueOf).toList();
+            spec = spec.and(MealSpecifications.hasMealTypeIn(mealTypeEnums));
         }
+
         if (foodItems != null && !foodItems.isEmpty()) {
-            createdMeals.removeIf(meal -> foodItems.stream().noneMatch(item ->
-                    Arrays.asList(meal.getFoodItemsString().split(" \\| ")).contains(item)
-            ));
+            spec = spec.and(MealSpecifications.hasAnyFoodItem(foodItems));
         }
 
-        // ✅ **Apply sorting**
-        Comparator<Meal> comparator = switch (sortBy != null ? sortBy.toLowerCase() : "") {
-            case "calories" -> Comparator.comparing(Meal::getTotalCalories);
-            case "protein" -> Comparator.comparing(Meal::getTotalProtein);
-            case "fat" -> Comparator.comparing(Meal::getTotalFat);
-            case "carbs" -> Comparator.comparing(Meal::getTotalCarbs);
-            case "savecount"        -> Comparator.comparing(Meal::getSaveCount);
-            case "weeklysavecount"  -> Comparator.comparing(Meal::getWeeklySaveCount);
-            case "monthlysavecount" -> Comparator.comparing(Meal::getMonthlySaveCount);
-            default -> Comparator.comparing(Meal::getName);
-        };
-
-        if ("desc".equalsIgnoreCase(sortOrder)) {
-            comparator = comparator.reversed();
-        }
-        createdMeals.sort(comparator);
-
-        // ✅ **Apply pagination**
-        int pageSize = pageable.getPageSize();
-        int currentPage = pageable.getPageNumber();
-        int startItem = currentPage * pageSize;
-        List<Meal> pagedMeals;
-
-        if (createdMeals.size() < startItem) {
-            pagedMeals = Collections.emptyList();
-        } else {
-            int toIndex = Math.min(startItem + pageSize, createdMeals.size());
-            pagedMeals = createdMeals.subList(startItem, toIndex);
-        }
-
-        log.info("Returning {} meals created by user ID: {} after filtering, sorting, and pagination.", pagedMeals.size(), userId);
-        return new PageImpl<>(pagedMeals.stream().map(mealMapper::toDTO).toList(), pageable, createdMeals.size());
+        return mealRepository.findAll(spec, sortedPageable)
+                .map(mealMapper::toDTO);
     }
 
 
