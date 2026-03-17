@@ -270,6 +270,7 @@ public class UserMealService implements IUserMealService {
         copy.setCreatedBy(originalMeal.getCreatedBy());
         copy.setAdjustedBy(user);
         copy.setVersion(LocalDateTime.now());
+        copy.setServings(originalMeal.getServings());
 
         // Copy ingredients
         for (MealIngredient ing : originalMeal.getMealIngredients()) {
@@ -354,6 +355,10 @@ public class UserMealService implements IUserMealService {
                             ? null
                             : Duration.parse(mealInputDTO.getPreparationTime())
             );
+        }
+
+        if (mealInputDTO.getServings() != null) {
+            meal.setServings(mealInputDTO.getServings());
         }
 
         meal.setAdjustedBy(user);

@@ -6,9 +6,7 @@ import balancebite.model.meal.references.Cuisine;
 import balancebite.model.meal.references.Diet;
 import balancebite.model.meal.references.MealType;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
 import org.hibernate.validator.constraints.URL;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -123,6 +121,9 @@ public class MealInputDTO {
     @Size(max = 20000, message = "Preparation text is too long.")
     private String mealPreparation;
 
+    @Min(value = 1, message = "Servings must be at least 1.")
+    @Max(value = 99, message = "Servings must not exceed 99.")
+    private Integer servings;
 
     // Constructor, getters, and setters
 
@@ -348,5 +349,13 @@ public class MealInputDTO {
 
     public void setMealPreparation(@Size(max = 20000, message = "Preparation text is too long.") String mealPreparation) {
         this.mealPreparation = mealPreparation;
+    }
+
+    public Integer getServings() {
+        return servings;
+    }
+
+    public void setServings(Integer servings) {
+        this.servings = servings;
     }
 }

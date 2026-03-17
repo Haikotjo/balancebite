@@ -143,7 +143,8 @@ public class MealMapper {
                 meal.getSourceUrl(),
                 meal.getMealPreparation(),
                 meal.getPreparationVideoUrl(),
-                meal.getFoodSource()
+                meal.getFoodSource(),
+                meal.getServings()
         );
     }
 
@@ -172,6 +173,7 @@ public class MealMapper {
         meal.setDiets(dto.getDiets());
         meal.setPrivate(dto.isPrivate());
         meal.setRestricted(dto.isRestricted());
+        meal.setServings(dto.getServings() != null ? dto.getServings() : 1);
 
         if (dto.getPreparationTime() != null && !dto.getPreparationTime().isBlank()) {
             meal.setPreparationTime(java.time.Duration.parse(dto.getPreparationTime()));

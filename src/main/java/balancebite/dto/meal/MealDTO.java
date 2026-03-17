@@ -150,6 +150,8 @@ public class MealDTO {
 
     private final FoodSource foodSource;
 
+    private final Integer servings;
+
     /**
      * Constructor for creating a MealDTO with essential meal information.
      *
@@ -212,7 +214,8 @@ public class MealDTO {
             String sourceUrl,
             String mealPreparation,
             String preparationVideoUrl,
-            FoodSource foodSource
+            FoodSource foodSource,
+            Integer servings
             ) {
         this.id = id;
         this.name = name;
@@ -249,6 +252,7 @@ public class MealDTO {
         this.mealPreparation = mealPreparation;
         this.preparationVideoUrl = preparationVideoUrl;
         this.foodSource = foodSource;
+        this.servings = servings;
     }
 
     /**
@@ -466,5 +470,9 @@ public class MealDTO {
 
     public FoodSource getFoodSource() {
         return foodSource;
+    }
+
+    public Integer getServings() {
+        return servings;
     }
 }

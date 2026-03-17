@@ -224,6 +224,12 @@ public class Meal {
     private FoodSource foodSource;
 
     /**
+     * Number of servings (persons or portions).
+     */
+    @Column(name = "servings")
+    private Integer servings;
+
+    /**
      * No-argument constructor required by JPA.
      */
     public Meal() {}
@@ -675,5 +681,13 @@ public class Meal {
 
     public void setFoodSource(FoodSource foodSource) {
         this.foodSource = foodSource;
+    }
+
+    public Integer getServings() {
+        return servings;
+    }
+
+    public void setServings(Integer servings) {
+        this.servings = servings;
     }
 }
