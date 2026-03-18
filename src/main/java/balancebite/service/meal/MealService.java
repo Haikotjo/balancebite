@@ -175,11 +175,14 @@ public class MealService implements IMealService {
         if (minFat      != null) { spec = spec.and(MealSpecifications.totalFatMin(minFat));        log.info("Filter: minFat={}", minFat); }
         if (maxFat      != null) { spec = spec.and(MealSpecifications.totalFatMax(maxFat));        log.info("Filter: maxFat={}", maxFat); }
 
-        Sort sort = buildSort(sortBy, sortOrder, pageable);
+        Sort sort = isMacroSort(sortBy)
+                ? Sort.unsorted()
+                : buildSort(sortBy, sortOrder, pageable);
         Pageable sortedPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), sort);
 
         log.info("Paging: page={} size={} sort={}", sortedPageable.getPageNumber(), sortedPageable.getPageSize(), sort);
 
+        spec = spec.and(MealSpecifications.withMacroSorting(sortBy, sortOrder));
         Page<Meal> templateMeals = mealRepository.findAll(spec, sortedPageable);
 
         log.info("Templates page result: elementsOnPage={} totalElements={} totalPages={}",
@@ -349,4 +352,14 @@ public class MealService implements IMealService {
                 .orElseThrow(() -> new EntityNotFoundException("User not found with ID: " + userId));
     }
 
+
+    //    Helper!!!
+    private boolean isMacroSort(String sortBy) {
+        if (sortBy == null) return false;
+
+        return switch (sortBy.toLowerCase()) {
+            case "calories", "protein", "carbs", "fat" -> true;
+            default -> false;
+        };
+    }
 }

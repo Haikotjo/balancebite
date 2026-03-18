@@ -5,7 +5,10 @@ import balancebite.model.meal.Meal;
 import balancebite.model.meal.references.Cuisine;
 import balancebite.model.meal.references.Diet;
 import balancebite.model.meal.references.MealType;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.JoinType;
+import jakarta.persistence.criteria.Root;
 import org.springframework.data.jpa.domain.Specification;
 import java.util.List;
 
@@ -84,34 +87,85 @@ public class MealSpecifications {
     }
 
     public static Specification<Meal> totalCaloriesMin(Double min) {
-        return (root, query, cb) -> cb.greaterThanOrEqualTo(root.get("totalCalories"), min);
+        return (root, query, cb) ->
+                cb.greaterThanOrEqualTo(perServing(root.get("totalCalories"), root, cb), min);
     }
 
     public static Specification<Meal> totalCaloriesMax(Double max) {
-        return (root, query, cb) -> cb.lessThanOrEqualTo(root.get("totalCalories"), max);
+        return (root, query, cb) ->
+                cb.lessThanOrEqualTo(perServing(root.get("totalCalories"), root, cb), max);
     }
 
     public static Specification<Meal> totalProteinMin(Double min) {
-        return (root, query, cb) -> cb.greaterThanOrEqualTo(root.get("totalProtein"), min);
+        return (root, query, cb) ->
+                cb.greaterThanOrEqualTo(perServing(root.get("totalProtein"), root, cb), min);
     }
 
     public static Specification<Meal> totalProteinMax(Double max) {
-        return (root, query, cb) -> cb.lessThanOrEqualTo(root.get("totalProtein"), max);
+        return (root, query, cb) ->
+                cb.lessThanOrEqualTo(perServing(root.get("totalProtein"), root, cb), max);
     }
 
     public static Specification<Meal> totalCarbsMin(Double min) {
-        return (root, query, cb) -> cb.greaterThanOrEqualTo(root.get("totalCarbs"), min);
+        return (root, query, cb) ->
+                cb.greaterThanOrEqualTo(perServing(root.get("totalCarbs"), root, cb), min);
     }
 
     public static Specification<Meal> totalCarbsMax(Double max) {
-        return (root, query, cb) -> cb.lessThanOrEqualTo(root.get("totalCarbs"), max);
+        return (root, query, cb) ->
+                cb.lessThanOrEqualTo(perServing(root.get("totalCarbs"), root, cb), max);
     }
 
     public static Specification<Meal> totalFatMin(Double min) {
-        return (root, query, cb) -> cb.greaterThanOrEqualTo(root.get("totalFat"), min);
+        return (root, query, cb) ->
+                cb.greaterThanOrEqualTo(perServing(root.get("totalFat"), root, cb), min);
     }
 
     public static Specification<Meal> totalFatMax(Double max) {
-        return (root, query, cb) -> cb.lessThanOrEqualTo(root.get("totalFat"), max);
+        return (root, query, cb) ->
+                cb.lessThanOrEqualTo(perServing(root.get("totalFat"), root, cb), max);
+    }
+
+    private static Expression<Double> perServing(Expression<Double> total, Root<Meal> root, CriteriaBuilder cb) {
+        Expression<Number> servings = cb.<Number>selectCase()
+                .when(cb.or(
+                        cb.isNull(root.get("servings")),
+                        cb.equal(root.get("servings"), 0)
+                ), 1)
+                .otherwise(root.get("servings"));
+
+        return cb.quot(total, servings).as(Double.class);
+    }
+
+    public static Specification<Meal> withMacroSorting(String sortBy, String sortOrder) {
+        return (root, query, cb) -> {
+
+            if (sortBy == null) return cb.conjunction();
+
+            Expression<Number> servings = cb.<Number>selectCase()
+                    .when(cb.or(
+                            cb.isNull(root.get("servings")),
+                            cb.equal(root.get("servings"), 0)
+                    ), 1)
+                    .otherwise(root.get("servings"));
+
+            boolean desc = "desc".equalsIgnoreCase(sortOrder);
+
+            Expression<Number> value;
+
+            switch (sortBy.toLowerCase()) {
+                case "calories" -> value = cb.quot(root.get("totalCalories"), servings);
+                case "protein" -> value = cb.quot(root.get("totalProtein"), servings);
+                case "carbs" -> value = cb.quot(root.get("totalCarbs"), servings);
+                case "fat" -> value = cb.quot(root.get("totalFat"), servings);
+                default -> {
+                    return cb.conjunction();
+                }
+            }
+
+            query.orderBy(desc ? cb.desc(value) : cb.asc(value));
+
+            return cb.conjunction();
+        };
     }
 }

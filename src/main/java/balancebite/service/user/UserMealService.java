@@ -539,7 +539,9 @@ public class UserMealService implements IUserMealService {
             Double maxFat
     ) {
 
-        Sort sort = buildSort(sortBy, sortOrder, pageable);
+        Sort sort = isMacroSort(sortBy)
+                ? Sort.unsorted()
+                : buildSort(sortBy, sortOrder, pageable);
         Pageable sortedPageable = PageRequest.of(
                 pageable.getPageNumber(),
                 pageable.getPageSize(),
@@ -617,10 +619,11 @@ public class UserMealService implements IUserMealService {
             spec = spec.and(MealSpecifications.totalFatMax(maxFat));
         }
 
+        spec = spec.and(MealSpecifications.withMacroSorting(sortBy, sortOrder));
+
         return mealRepository.findAll(spec, sortedPageable)
                 .map(mealMapper::toDTO);
     }
-
 
 
     @Transactional(readOnly = true)
@@ -634,7 +637,9 @@ public class UserMealService implements IUserMealService {
             String sortOrder,
             Pageable pageable
     ) {
-        Sort sort = buildSort(sortBy, sortOrder, pageable);
+        Sort sort = isMacroSort(sortBy)
+                ? Sort.unsorted()
+                : buildSort(sortBy, sortOrder, pageable);
         Pageable sortedPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), sort);
 
         userRepository.findById(userId)
@@ -664,6 +669,8 @@ public class UserMealService implements IUserMealService {
         if (foodItems != null && !foodItems.isEmpty()) {
             spec = spec.and(MealSpecifications.hasAnyFoodItem(foodItems));
         }
+
+        spec = spec.and(MealSpecifications.withMacroSorting(sortBy, sortOrder));
 
         return mealRepository.findAll(spec, sortedPageable)
                 .map(mealMapper::toDTO);
@@ -882,6 +889,16 @@ public class UserMealService implements IUserMealService {
         userRepository.save(owner);
 
         log.info("Meal ID {} fully cancelled and deleted for user ID {}", mealId, userId);
+    }
+
+    //    Helper!!!
+    private boolean isMacroSort(String sortBy) {
+        if (sortBy == null) return false;
+
+        return switch (sortBy.toLowerCase()) {
+            case "calories", "protein", "carbs", "fat" -> true;
+            default -> false;
+        };
     }
 
 }
