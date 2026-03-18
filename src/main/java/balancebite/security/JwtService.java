@@ -209,7 +209,7 @@ public class JwtService {
      * @return true if the token is valid, of type refresh, and not expired
      */
     public Boolean validateRefreshToken(String token) {
-        if (isTokenExpired(token) || isTokenBlacklisted(token)) {
+        if (isTokenExpired(token)) {
             return false;
         }
         final Claims claims = extractAllClaims(token);
