@@ -415,7 +415,13 @@ public class FoodItemService implements IFoodItemService {
     @Override
     public List<FoodItemDTO> getFoodItemsByFoodSource(FoodSource foodSource) {
         log.info("Retrieving food items by food source: {}", foodSource);
+
         List<FoodItem> foodItems = foodItemRepository.findByFoodSource(foodSource);
+
+        if (foodItems == null || foodItems.isEmpty()) {
+            return Collections.emptyList();
+        }
+
         return foodItems.stream()
                 .map(foodItemMapper::toDTO)
                 .collect(Collectors.toList());
