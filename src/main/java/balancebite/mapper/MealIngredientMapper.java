@@ -73,7 +73,7 @@ public class MealIngredientMapper {
      * @return the created MealIngredientDTO.
      */
     public MealIngredientDTO toDTO(MealIngredient mealIngredient) {
-        log.info("Converting MealIngredient entity to MealIngredientDTO for meal ID {}.", mealIngredient.getMeal().getId());
+        log.debug("Converting MealIngredient entity to MealIngredientDTO for meal ID {}.", mealIngredient.getMeal().getId());
 
         // Map FoodItem -> DTO once (promo-aware pricePer100g lives here)
         var foodItemDto = foodItemMapper.toDTO(mealIngredient.getFoodItem());
