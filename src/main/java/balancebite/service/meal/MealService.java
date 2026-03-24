@@ -90,6 +90,7 @@ public class MealService implements IMealService {
      * @param sortOrder Sorting order ("asc" for ascending, "desc" for descending).
      * @param pageable Pageable object for pagination and sorting.
      * @param creatorId
+     * @param includeUserCopies
      * @return A paginated and sorted list of MealDTOs that match the filters.
      */
     @Override
@@ -100,8 +101,9 @@ public class MealService implements IMealService {
             Pageable pageable, Long creatorId, Double minCalories,
             Double maxCalories, Double minProtein, Double maxProtein,
             Double minCarbs, Double maxCarbs, Double minFat, Double maxFat,
-            String foodSource, String currentUsername
-    ) {
+            String foodSource, String currentUsername,
+            boolean includeUserCopies
+            ) {
         // IMPORTANT: use logger, not System.out, so it shows in Railway logs
         log.info("=== getAllMeals START === username='{}'", currentUsername);
 
@@ -200,7 +202,7 @@ public class MealService implements IMealService {
         );
 
         // No user -> return templates
-        if (userId == null) {
+        if (!includeUserCopies || userId == null) {
             log.info("No logged-in user -> returning templates without swap");
             log.info("=== getAllMeals END ===");
             return templateMeals.map(mealMapper::toDTO);
