@@ -24,7 +24,6 @@ import org.springframework.stereotype.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -65,7 +64,8 @@ public class PublicDietPlanService implements IPublicDietPlanService {
             Double minCalories,
             Double maxCalories,
             Long createdByUserId,
-            String name
+            String name,
+            boolean includeUserCopies
     ) {
         Specification<DietPlan> spec = createdByUserId != null
                 ? Specification.where(DietPlanSpecification.isTemplateCreatedBy(createdByUserId))
@@ -169,7 +169,30 @@ public class PublicDietPlanService implements IPublicDietPlanService {
                 minCarbs, maxCarbs, minProtein, maxProtein, minFat, maxFat, minCalories, maxCalories
         );
 
-        return dietPlanRepository.findAll(spec, sortedPageable).map(dietPlanMapper::toDTO);
+        Page<DietPlan> templatePlans = dietPlanRepository.findAll(spec, sortedPageable);
+
+        Long userId = SecurityUtils.getCurrentAuthenticatedUserId();
+
+        if (!includeUserCopies || userId == null) {
+            return templatePlans.map(dietPlanMapper::toDTO);
+        }
+
+        List<Long> templateIds = templatePlans.getContent().stream()
+                .map(DietPlan::getId)
+                .collect(Collectors.toList());
+
+        Map<Long, DietPlan> copyByOriginalId = dietPlanRepository
+                .findUserCopiesForTemplates(userId, templateIds)
+                .stream()
+                .filter(c -> c.getOriginalDietId() != null)
+                .collect(Collectors.toMap(DietPlan::getOriginalDietId, c -> c, (a, b) -> a));
+
+        return templatePlans.map(template -> {
+            DietPlan copy = copyByOriginalId.get(template.getId());
+            DietPlan result = (copy != null) ? copy : template;
+            log.info("SWAP_DECISION templateId={} -> resultId={}", template.getId(), result.getId());
+            return dietPlanMapper.toDTO(result);
+        });
     }
 
     @Override

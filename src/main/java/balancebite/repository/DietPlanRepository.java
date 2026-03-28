@@ -24,4 +24,15 @@ public interface DietPlanRepository extends JpaRepository<DietPlan, Long>, JpaSp
             "FROM DietPlan d " +
             "WHERE d.isTemplate = true AND d.isPrivate = false")
     List<DietPlanNameDTO> findAllTemplateDietPlanNames();
+
+    @Query("""
+        SELECT d
+        FROM DietPlan d
+        WHERE (d.createdBy.id = :userId OR d.adjustedBy.id = :userId)
+          AND d.originalDietId IN :originalDietIds
+    """)
+    List<DietPlan> findUserCopiesForTemplates(
+            @Param("userId") Long userId,
+            @Param("originalDietIds") List<Long> originalDietIds
+    );
 }

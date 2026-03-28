@@ -48,7 +48,8 @@ public interface IPublicDietPlanService {
             Double minCalories,
             Double maxCalories,
             Long createdByUserId,
-            String name
+            String name,
+            boolean includeUserCopies
     );
     List<DietPlanNameDTO> getAllPublicDietPlanNames();
 
