@@ -26,6 +26,8 @@ public interface SavedDietPlanRepository extends JpaRepository<SavedDietPlan, Lo
 
     Optional<SavedDietPlan> findTopByDietPlanOrderByTimestampDesc(DietPlan dietPlan);
 
+    void deleteAllByDietPlan(DietPlan dietPlan);
+
     @Modifying
     @Query("DELETE FROM SavedDietPlan s WHERE s.id = (" +
             "SELECT s2.id FROM SavedDietPlan s2 WHERE s2.dietPlan.id = :dietPlanId " +

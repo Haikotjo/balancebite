@@ -35,4 +35,6 @@ public interface DietPlanRepository extends JpaRepository<DietPlan, Long>, JpaSp
             @Param("userId") Long userId,
             @Param("originalDietIds") List<Long> originalDietIds
     );
+
+    boolean existsByOriginalDietId(Long originalDietId);
 }

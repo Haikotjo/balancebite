@@ -218,18 +218,9 @@ public class UserDietPlanService implements IUserDietPlanService {
 
         // ── Als jij de creator bent: geen kopie, gewoon relinken
         if (original.getCreatedBy() != null && original.getCreatedBy().getId().equals(userId)) {
-            if (!user.getSavedDietPlans().contains(original)) {
+            if (user.getSavedDietPlans().stream().noneMatch(d -> d.getId().equals(dietPlanId))) {
                 user.getSavedDietPlans().add(original);
                 userRepository.save(user);
-
-                // ⏱️ Registreer save van het originele plan
-                SavedDietPlan savedRecord = new SavedDietPlan();
-                savedRecord.setDietPlan(original);
-                savedDietPlanRepository.save(savedRecord);
-
-                long totalSaves = savedDietPlanRepository.countByDietPlan(original);
-                original.setSaveCount(totalSaves);
-                dietPlanRepository.save(original);
             }
             return dietPlanMapper.toDTO(original);
         }
@@ -241,21 +232,7 @@ public class UserDietPlanService implements IUserDietPlanService {
                 .findFirst();
 
         if (existingCopy.isPresent()) {
-            DietPlan copy = existingCopy.get();
-            if (!user.getSavedDietPlans().contains(copy)) {
-                user.getSavedDietPlans().add(copy);
-                userRepository.save(user);
-
-                // ⏱️ Registreer save van het originele plan
-                SavedDietPlan savedRecord = new SavedDietPlan();
-                savedRecord.setDietPlan(original);
-                savedDietPlanRepository.save(savedRecord);
-
-                long totalSaves = savedDietPlanRepository.countByDietPlan(original);
-                original.setSaveCount(totalSaves);
-                dietPlanRepository.save(original);
-            }
-            return dietPlanMapper.toDTO(copy);
+            return dietPlanMapper.toDTO(existingCopy.get());
         }
 
         // ── Nieuwe kopie maken
@@ -749,9 +726,18 @@ public class UserDietPlanService implements IUserDietPlanService {
         }
 
         if (diet.isTemplate()) {
-            log.info("DietPlan is a template. Unlinking only, not deleting.");
             user.getSavedDietPlans().removeIf(d -> d.getId().equals(dietPlanId));
             user.getDietPlans().removeIf(d -> d.getId().equals(dietPlanId));
+            userRepository.saveAndFlush(user);
+
+            if (!dietPlanRepository.existsByOriginalDietId(dietPlanId)) {
+                log.info("Template {} has no copies. Deleting completely.", dietPlanId);
+                savedDietPlanRepository.deleteAllByDietPlan(diet);
+                dietPlanRepository.delete(diet);
+            } else {
+                log.info("Template {} has copies. Only unlinking creator.", dietPlanId);
+            }
+            return userMapper.toDTO(user);
         } else if (!isCreator) {
             log.info("User is not the creator and diet is not a template. Deleting the copied diet.");
             user.getSavedDietPlans().removeIf(d -> d.getId().equals(dietPlanId));
