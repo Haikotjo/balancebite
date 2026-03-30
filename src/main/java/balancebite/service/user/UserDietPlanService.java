@@ -240,8 +240,8 @@ public class UserDietPlanService implements IUserDietPlanService {
         copy.setName(original.getName());
         copy.setTemplate(false);
         copy.setOriginalDietId(original.getId());
-        copy.setCreatedBy(original.getCreatedBy());
-        copy.setAdjustedBy(user);
+        copy.setCreatedBy(user);
+        copy.setAdjustedBy(null);
         copy.setDietDescription(original.getDietDescription());
 
         List<DietDay> days = original.getDietDays().stream().map(origDay -> {
@@ -741,6 +741,7 @@ public class UserDietPlanService implements IUserDietPlanService {
         } else if (!isCreator) {
             log.info("User is not the creator and diet is not a template. Deleting the copied diet.");
             user.getSavedDietPlans().removeIf(d -> d.getId().equals(dietPlanId));
+            userRepository.save(user); // eerst FK-referentie verwijderen uit DB
 
             // Trek 1 save af van het originele dieet
             if (diet.getOriginalDietId() != null) {
