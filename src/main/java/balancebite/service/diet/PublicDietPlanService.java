@@ -188,7 +188,9 @@ public class PublicDietPlanService implements IPublicDietPlanService {
                 .collect(Collectors.toMap(DietPlan::getOriginalDietId, c -> c, (a, b) -> a));
 
         return templatePlans.map(template -> {
-            DietPlan copy = copyByOriginalId.get(template.getId());
+            boolean isCreator = template.getCreatedBy() != null &&
+                    template.getCreatedBy().getId().equals(userId);
+            DietPlan copy = isCreator ? null : copyByOriginalId.get(template.getId());
             DietPlan result = (copy != null) ? copy : template;
             log.info("SWAP_DECISION templateId={} -> resultId={}", template.getId(), result.getId());
             return dietPlanMapper.toDTO(result);
