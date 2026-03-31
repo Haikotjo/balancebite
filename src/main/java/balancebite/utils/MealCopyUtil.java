@@ -32,6 +32,16 @@ public class MealCopyUtil {
         mealCopy.setCreatedBy(originalMeal.getCreatedBy());
         mealCopy.setAdjustedBy(user);
         mealCopy.setIsTemplate(false);
+        mealCopy.setMealTypes(new java.util.HashSet<>(originalMeal.getMealTypes()));
+        mealCopy.setCuisines(new java.util.HashSet<>(originalMeal.getCuisines()));
+        mealCopy.setDiets(new java.util.HashSet<>(originalMeal.getDiets()));
+        mealCopy.setPreparationTime(originalMeal.getPreparationTime());
+        mealCopy.setMealPreparation(originalMeal.getMealPreparation());
+        mealCopy.setVideoUrl(originalMeal.getVideoUrl());
+        mealCopy.setSourceUrl(originalMeal.getSourceUrl());
+        mealCopy.setPreparationVideoUrl(originalMeal.getPreparationVideoUrl());
+        mealCopy.setFoodSource(originalMeal.getFoodSource());
+        mealCopy.setServings(originalMeal.getServings());
 
         // Copy ingredients
         originalMeal.getMealIngredients().forEach(ingredient -> {
