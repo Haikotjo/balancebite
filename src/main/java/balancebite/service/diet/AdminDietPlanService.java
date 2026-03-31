@@ -28,7 +28,8 @@ public class AdminDietPlanService implements IAdminDietPlanService {
                     dietPlan.getId(),
                     dietPlan.getName(),
                     creatorName,
-                    adjustedByName
+                    adjustedByName,
+                    dietPlan.isTemplate()
             );
         }).collect(Collectors.toList());
     }
