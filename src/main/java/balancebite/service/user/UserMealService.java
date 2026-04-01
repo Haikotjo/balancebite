@@ -271,6 +271,11 @@ public class UserMealService implements IUserMealService {
         copy.setAdjustedBy(user);
         copy.setVersion(LocalDateTime.now());
         copy.setServings(originalMeal.getServings());
+        copy.setMealPreparation(originalMeal.getMealPreparation());
+        copy.setVideoUrl(originalMeal.getVideoUrl());
+        copy.setSourceUrl(originalMeal.getSourceUrl());
+        copy.setPreparationVideoUrl(originalMeal.getPreparationVideoUrl());
+        copy.setFoodSource(originalMeal.getFoodSource());
 
         // Copy ingredients
         for (MealIngredient ing : originalMeal.getMealIngredients()) {
