@@ -263,6 +263,7 @@ public class UserMealController {
             @RequestParam(required = false) Double maxCarbs,
             @RequestParam(required = false) Double minFat,
             @RequestParam(required = false) Double maxFat,
+            @RequestParam(required = false) String foodSource,
             Pageable pageable
     ) {
         log.info("Retrieving meals for authenticated user with filters and sorting.");
@@ -290,7 +291,8 @@ public class UserMealController {
                 minCarbs,
                 maxCarbs,
                 minFat,
-                maxFat
+                maxFat,
+                foodSource
         );
 
         // Lege resultaten zijn GEEN fout
@@ -308,6 +310,15 @@ public class UserMealController {
             @RequestParam(required = false) List<String> foodItems,
             @RequestParam(required = false) String sortBy,
             @RequestParam(required = false, defaultValue = "asc") String sortOrder,
+            @RequestParam(required = false) String foodSource,
+            @RequestParam(required = false) Double minCalories,
+            @RequestParam(required = false) Double maxCalories,
+            @RequestParam(required = false) Double minProtein,
+            @RequestParam(required = false) Double maxProtein,
+            @RequestParam(required = false) Double minCarbs,
+            @RequestParam(required = false) Double maxCarbs,
+            @RequestParam(required = false) Double minFat,
+            @RequestParam(required = false) Double maxFat,
             Pageable pageable
     ) {
         try {
@@ -319,7 +330,8 @@ public class UserMealController {
 
             // Fetch meals with filtering, sorting, and pagination
             Page<MealDTO> mealDTOs = userMealService.getMealsCreatedByUser(
-                    userId, cuisines, diets, mealTypes, foodItems, sortBy, sortOrder, pageable
+                    userId, cuisines, diets, mealTypes, foodItems, sortBy, sortOrder, pageable,
+                    foodSource, minCalories, maxCalories, minProtein, maxProtein, minCarbs, maxCarbs, minFat, maxFat
             );
 
             if (mealDTOs.isEmpty()) {

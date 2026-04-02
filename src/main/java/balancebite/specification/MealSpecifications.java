@@ -7,8 +7,8 @@ import balancebite.model.meal.references.Diet;
 import balancebite.model.meal.references.MealType;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Expression;
-import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Root;
+import jakarta.persistence.criteria.Subquery;
 import org.springframework.data.jpa.domain.Specification;
 import java.util.List;
 
@@ -49,41 +49,57 @@ public class MealSpecifications {
 
     public static Specification<Meal> savedByUser(Long userId) {
         return (root, query, cb) -> {
-            query.distinct(true);
-            return cb.equal(
-                    root.join("users", JoinType.LEFT).get("id"),
-                    userId
-            );
+            Subquery<Long> subquery = query.subquery(Long.class);
+            Root<Meal> subRoot = subquery.correlate(root);
+            subquery.select(cb.literal(1L));
+            subquery.where(cb.equal(subRoot.join("users").get("id"), userId));
+            return cb.exists(subquery);
         };
     }
 
 
     public static Specification<Meal> hasCuisineIn(List<Cuisine> cuisines) {
         return (root, query, cb) -> {
-            query.distinct(true);
-            return root.join("cuisines").in(cuisines);
+            Subquery<Long> subquery = query.subquery(Long.class);
+            Root<Meal> subRoot = subquery.correlate(root);
+            subquery.select(cb.literal(1L));
+            subquery.where(subRoot.join("cuisines").in(cuisines));
+            return cb.exists(subquery);
         };
     }
 
     public static Specification<Meal> hasDietIn(List<Diet> diets) {
         return (root, query, cb) -> {
-            query.distinct(true);
-            return root.join("diets").in(diets);
+            Subquery<Long> subquery = query.subquery(Long.class);
+            Root<Meal> subRoot = subquery.correlate(root);
+            subquery.select(cb.literal(1L));
+            subquery.where(subRoot.join("diets").in(diets));
+            return cb.exists(subquery);
         };
     }
 
     public static Specification<Meal> hasMealTypeIn(List<MealType> mealTypes) {
         return (root, query, cb) -> {
-            query.distinct(true);
-            return root.join("mealTypes").in(mealTypes);
+            Subquery<Long> subquery = query.subquery(Long.class);
+            Root<Meal> subRoot = subquery.correlate(root);
+            subquery.select(cb.literal(1L));
+            subquery.where(subRoot.join("mealTypes").in(mealTypes));
+            return cb.exists(subquery);
         };
     }
 
     public static Specification<Meal> hasAnyFoodItem(List<String> foodItems) {
         return (root, query, cb) -> {
-            query.distinct(true);
-            return root.join("mealIngredients").join("foodItem").get("name").in(foodItems);
+            Subquery<Long> subquery = query.subquery(Long.class);
+            Root<Meal> subRoot = subquery.correlate(root);
+            subquery.select(cb.literal(1L));
+            subquery.where(subRoot.join("mealIngredients").join("foodItem").get("name").in(foodItems));
+            return cb.exists(subquery);
         };
+    }
+
+    public static Specification<Meal> hasName(String name) {
+        return (root, query, cb) -> cb.like(cb.lower(root.get("name")), "%" + name.toLowerCase() + "%");
     }
 
     public static Specification<Meal> totalCaloriesMin(Double min) {

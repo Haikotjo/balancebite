@@ -12,6 +12,7 @@ import balancebite.mapper.UserMapper;
 import balancebite.model.diet.DietDay;
 import balancebite.model.meal.Meal;
 import balancebite.model.MealIngredient;
+import balancebite.model.foodItem.FoodSource;
 import balancebite.model.meal.SavedMeal;
 import balancebite.model.meal.mealImage.MealImage;
 import balancebite.model.meal.references.Cuisine;
@@ -541,7 +542,8 @@ public class UserMealService implements IUserMealService {
             Double minCarbs,
             Double maxCarbs,
             Double minFat,
-            Double maxFat
+            Double maxFat,
+            String foodSource
     ) {
 
         Sort sort = isMacroSort(sortBy)
@@ -624,6 +626,13 @@ public class UserMealService implements IUserMealService {
             spec = spec.and(MealSpecifications.totalFatMax(maxFat));
         }
 
+        if (foodSource != null) {
+            try {
+                FoodSource fs = FoodSource.valueOf(foodSource.toUpperCase());
+                spec = spec.and(MealSpecifications.hasFoodSource(fs));
+            } catch (IllegalArgumentException ignored) {}
+        }
+
         spec = spec.and(MealSpecifications.withMacroSorting(sortBy, sortOrder));
 
         return mealRepository.findAll(spec, sortedPageable)
@@ -640,7 +649,16 @@ public class UserMealService implements IUserMealService {
             List<String> foodItems,
             String sortBy,
             String sortOrder,
-            Pageable pageable
+            Pageable pageable,
+            String foodSource,
+            Double minCalories,
+            Double maxCalories,
+            Double minProtein,
+            Double maxProtein,
+            Double minCarbs,
+            Double maxCarbs,
+            Double minFat,
+            Double maxFat
     ) {
         Sort sort = isMacroSort(sortBy)
                 ? Sort.unsorted()
@@ -674,6 +692,22 @@ public class UserMealService implements IUserMealService {
         if (foodItems != null && !foodItems.isEmpty()) {
             spec = spec.and(MealSpecifications.hasAnyFoodItem(foodItems));
         }
+
+        if (foodSource != null) {
+            try {
+                FoodSource fs = FoodSource.valueOf(foodSource.toUpperCase());
+                spec = spec.and(MealSpecifications.hasFoodSource(fs));
+            } catch (IllegalArgumentException ignored) {}
+        }
+
+        if (minCalories != null) { spec = spec.and(MealSpecifications.totalCaloriesMin(minCalories)); }
+        if (maxCalories != null) { spec = spec.and(MealSpecifications.totalCaloriesMax(maxCalories)); }
+        if (minProtein  != null) { spec = spec.and(MealSpecifications.totalProteinMin(minProtein)); }
+        if (maxProtein  != null) { spec = spec.and(MealSpecifications.totalProteinMax(maxProtein)); }
+        if (minCarbs    != null) { spec = spec.and(MealSpecifications.totalCarbsMin(minCarbs)); }
+        if (maxCarbs    != null) { spec = spec.and(MealSpecifications.totalCarbsMax(maxCarbs)); }
+        if (minFat      != null) { spec = spec.and(MealSpecifications.totalFatMin(minFat)); }
+        if (maxFat      != null) { spec = spec.and(MealSpecifications.totalFatMax(maxFat)); }
 
         spec = spec.and(MealSpecifications.withMacroSorting(sortBy, sortOrder));
 

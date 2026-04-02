@@ -92,6 +92,7 @@ public class MealController {
             @RequestParam(required = false) Double maxFat,
             @RequestParam(required = false) String foodSource,
             @RequestParam(required = false, defaultValue = "true") boolean includeUserCopies,
+            @RequestParam(required = false) String name,
             Pageable pageable
     ) {
         String currentUsername = null;
@@ -109,7 +110,7 @@ public class MealController {
                     minProtein, maxProtein,
                     minCarbs, maxCarbs,
                     minFat, maxFat,
-                    foodSource, currentUsername, includeUserCopies
+                    foodSource, currentUsername, includeUserCopies, name
             );
 
             return ResponseEntity.ok(mealDTOs);

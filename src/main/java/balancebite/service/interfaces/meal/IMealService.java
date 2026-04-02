@@ -64,7 +64,8 @@ public interface IMealService {
             Double maxFat,
             String foodSource,
             String currentUsername,
-            boolean includeUserCopies
+            boolean includeUserCopies,
+            String name
     );
 
     /**

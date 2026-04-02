@@ -102,7 +102,7 @@ public class MealService implements IMealService {
             Double maxCalories, Double minProtein, Double maxProtein,
             Double minCarbs, Double maxCarbs, Double minFat, Double maxFat,
             String foodSource, String currentUsername,
-            boolean includeUserCopies
+            boolean includeUserCopies, String name
             ) {
         // IMPORTANT: use logger, not System.out, so it shows in Railway logs
         log.info("=== getAllMeals START === username='{}'", currentUsername);
@@ -176,6 +176,11 @@ public class MealService implements IMealService {
         if (maxCarbs    != null) { spec = spec.and(MealSpecifications.totalCarbsMax(maxCarbs));    log.info("Filter: maxCarbs={}", maxCarbs); }
         if (minFat      != null) { spec = spec.and(MealSpecifications.totalFatMin(minFat));        log.info("Filter: minFat={}", minFat); }
         if (maxFat      != null) { spec = spec.and(MealSpecifications.totalFatMax(maxFat));        log.info("Filter: maxFat={}", maxFat); }
+
+        if (name != null && !name.isBlank()) {
+            spec = spec.and(MealSpecifications.hasName(name));
+            log.info("Filter: name={}", name);
+        }
 
         Sort sort = isMacroSort(sortBy)
                 ? Sort.unsorted()
