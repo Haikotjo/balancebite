@@ -110,7 +110,7 @@ public class UserMealService implements IUserMealService {
                 MealImage image = new MealImage(meal, upload.getImageUrl(), upload.getPublicId());
                 image.setOrderIndex(i);
 
-                boolean isPrimary = primaryIndex != null && primaryIndex == i;
+                boolean isPrimary = (primaryIndex != null) ? primaryIndex == i : i == 0;
                 image.setPrimary(isPrimary);
                 meal.addImage(image);
             }
@@ -286,16 +286,6 @@ public class UserMealService implements IUserMealService {
             copy.addMealIngredient(newIng);
         }
 
-        // Debug: print copied ingredients and nutrients
-        for (MealIngredient ing : copy.getMealIngredients()) {
-            System.out.println("- " + ing.getFoodItem().getName() + " x " + ing.getQuantity());
-            if (ing.getFoodItem().getNutrients() != null) {
-                ing.getFoodItem().getNutrients().forEach(n ->
-                        System.out.println("  🔸 " + n.getNutrientName() + ": " + n.getValue())
-                );
-            }
-        }
-
         // Update nutrient totals for the new meal
         copy.updateNutrients();
 
@@ -397,8 +387,8 @@ public class UserMealService implements IUserMealService {
                 if (file == null || file.isEmpty()) continue;
 
                 int slot = replaceSlots.get(i);
-                if (slot < 0) {
-                    throw new IllegalArgumentException("replaceOrderIndexes must be >= 0");
+                if (slot < 0 || slot > 4) {
+                    throw new IllegalArgumentException("replaceOrderIndexes must be in range 0..4");
                 }
 
 
@@ -453,12 +443,14 @@ public class UserMealService implements IUserMealService {
 
 // Fallback: if none set, make first primary
 
-        // --- Replace ingredients entirely (current approach) ---
-        meal.getMealIngredients().clear();
-        mealInputDTO.getMealIngredients().forEach(inputIngredient -> {
-            MealIngredient ingredient = mealIngredientMapper.toEntity(inputIngredient, meal);
-            meal.addMealIngredient(ingredient);
-        });
+        // --- Replace ingredients entirely (only when provided) ---
+        if (mealInputDTO.getMealIngredients() != null) {
+            meal.getMealIngredients().clear();
+            mealInputDTO.getMealIngredients().forEach(inputIngredient -> {
+                MealIngredient ingredient = mealIngredientMapper.toEntity(inputIngredient, meal);
+                meal.addMealIngredient(ingredient);
+            });
+        }
 
         // Optional: validate duplicates (name + quantity) similar to create-flow
 
