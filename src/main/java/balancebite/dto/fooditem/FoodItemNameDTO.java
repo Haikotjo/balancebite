@@ -1,6 +1,6 @@
 package balancebite.dto.fooditem;
 
 /**
- * DTO representing only the ID and name of a FoodItem.
+ * DTO representing the ID, name and gramWeight of a FoodItem.
  */
-public record FoodItemNameDTO(Long id, String name) {}
+public record FoodItemNameDTO(Long id, String name, Double gramWeight) {}

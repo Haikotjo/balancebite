@@ -40,11 +40,11 @@ public interface FoodItemRepository extends JpaRepository<FoodItem, Long> {
     boolean existsByFdcId(int fdcId);
 
     /**
-     * Retrieves all food items with only ID and name.
+     * Retrieves all food items with only ID, name and gramWeight.
      *
-     * @return A list of FoodItemNameDTOs containing only ID and name.
+     * @return A list of FoodItemNameDTOs containing ID, name and gramWeight.
      */
-    @Query("SELECT DISTINCT new balancebite.dto.fooditem.FoodItemNameDTO(f.id, f.name) FROM FoodItem f")
+    @Query("SELECT DISTINCT new balancebite.dto.fooditem.FoodItemNameDTO(f.id, f.name, f.gramWeight) FROM FoodItem f")
     List<FoodItemNameDTO> findAllFoodItemNames();
 
     /**
