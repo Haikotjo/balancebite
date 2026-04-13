@@ -6,12 +6,10 @@ import balancebite.dto.diet.DietPlanInputDTO;
 import balancebite.dto.user.PublicUserDTO;
 import balancebite.model.diet.DietPlan;
 import balancebite.model.user.User;
-import balancebite.repository.SavedDietPlanRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -22,12 +20,10 @@ public class DietPlanMapper {
 
     private final DietDayMapper dietDayMapper;
     private final UserMapper userMapper;
-    private final SavedDietPlanRepository savedDietPlanRepository;
 
-    public DietPlanMapper(DietDayMapper dietDayMapper, UserMapper userMapper, SavedDietPlanRepository savedDietPlanRepository) {
+    public DietPlanMapper(DietDayMapper dietDayMapper, UserMapper userMapper) {
         this.dietDayMapper = dietDayMapper;
         this.userMapper = userMapper;
-        this.savedDietPlanRepository = savedDietPlanRepository;
     }
 
     public DietPlanDTO toDTO(DietPlan dietPlan) {

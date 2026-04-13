@@ -21,7 +21,6 @@ public class DietPlan {
 
     private boolean isTemplate = true;
 
-    @Column(nullable = true)
     private boolean isPrivate = false;
 
     @Column(name = "isRestricted")

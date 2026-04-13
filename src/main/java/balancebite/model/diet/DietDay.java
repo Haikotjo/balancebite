@@ -1,13 +1,13 @@
 package balancebite.model.diet;
 
-import balancebite.dto.NutrientInfoDTO;
-import balancebite.model.MealIngredient;
 import balancebite.model.meal.Meal;
-import balancebite.utils.NutrientCalculatorUtil;
 import jakarta.persistence.*;
 
 import java.time.LocalDate;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 @Entity
 public class DietDay {
@@ -71,47 +71,17 @@ public class DietDay {
             return;
         }
 
-        this.totalCalories = meals.stream()
-                .map(Meal::getTotalCalories)
-                .filter(Objects::nonNull)
-                .mapToDouble(Double::doubleValue)
-                .sum();
+        this.totalCalories = meals.stream().mapToDouble(m -> perServing(m.getTotalCalories(), m.getServings())).sum();
+        this.totalProtein = meals.stream().mapToDouble(m -> perServing(m.getTotalProtein(), m.getServings())).sum();
+        this.totalCarbs = meals.stream().mapToDouble(m -> perServing(m.getTotalCarbs(), m.getServings())).sum();
+        this.totalFat = meals.stream().mapToDouble(m -> perServing(m.getTotalFat(), m.getServings())).sum();
+        this.totalSugars = meals.stream().mapToDouble(m -> perServing(m.getTotalSugars(), m.getServings())).sum();
+        this.totalSaturatedFat = meals.stream().mapToDouble(m -> perServing(m.getTotalSaturatedFat(), m.getServings())).sum();
+        this.totalUnsaturatedFat = meals.stream().mapToDouble(m -> perServing(m.getTotalUnsaturatedFat(), m.getServings())).sum();
+    }
 
-        this.totalProtein = meals.stream()
-                .map(Meal::getTotalProtein)
-                .filter(Objects::nonNull)
-                .mapToDouble(Double::doubleValue)
-                .sum();
-
-        this.totalCarbs = meals.stream()
-                .map(Meal::getTotalCarbs)
-                .filter(Objects::nonNull)
-                .mapToDouble(Double::doubleValue)
-                .sum();
-
-        this.totalFat = meals.stream()
-                .map(Meal::getTotalFat)
-                .filter(Objects::nonNull)
-                .mapToDouble(Double::doubleValue)
-                .sum();
-
-        this.totalSugars = meals.stream()
-                .map(Meal::getTotalSugars)
-                .filter(Objects::nonNull)
-                .mapToDouble(Double::doubleValue)
-                .sum();
-
-        this.totalSaturatedFat = meals.stream()
-                .map(Meal::getTotalSaturatedFat)
-                .filter(Objects::nonNull)
-                .mapToDouble(Double::doubleValue)
-                .sum();
-
-        this.totalUnsaturatedFat = meals.stream()
-                .map(Meal::getTotalUnsaturatedFat)
-                .filter(Objects::nonNull)
-                .mapToDouble(Double::doubleValue)
-                .sum();
+    private double perServing(double total, Integer servings) {
+        return (servings != null && servings > 1) ? total / servings : total;
     }
 
     // Getters and setters
