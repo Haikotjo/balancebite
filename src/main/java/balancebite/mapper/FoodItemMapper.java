@@ -77,6 +77,7 @@ public class FoodItemMapper {
                                 n.getNutrientId()))
                         .collect(Collectors.toList());
         foodItem.setNutrients(nutrients);
+        foodItem.refreshNutrientFlags();
 
         foodItem.setFoodCategory(dto.getFoodCategory());
 
@@ -175,7 +176,12 @@ public class FoodItemMapper {
                 promoPrice,
                 salePct,
                 saleDesc,
-                effectivePrice
+                effectivePrice,
+                // nutrient availability flags
+                foodItem.isHasSugarData(),
+                foodItem.isHasFiberData(),
+                foodItem.isHasSaturatedFatData(),
+                foodItem.isHasUnsaturatedFatData()
         );
     }
 

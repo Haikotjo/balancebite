@@ -88,10 +88,42 @@ public class FoodItem {
 
     private Boolean storeBrand;
 
+    private boolean hasSugarData;
+    private boolean hasFiberData;
+    private boolean hasSaturatedFatData;
+    private boolean hasUnsaturatedFatData;
+
     /**
      * No-argument constructor required by JPA.
      */
     public FoodItem() {}
+
+    /**
+     * Refreshes the nutrient availability flags based on the current nutrients list.
+     * Call this after setting or updating nutrients.
+     */
+    public void refreshNutrientFlags() {
+        if (nutrients == null) {
+            hasSugarData = false;
+            hasFiberData = false;
+            hasSaturatedFatData = false;
+            hasUnsaturatedFatData = false;
+            return;
+        }
+        hasSugarData = nutrients.stream().anyMatch(n ->
+                "Total Sugars".equalsIgnoreCase(n.getNutrientName()) ||
+                "Sugars, total".equalsIgnoreCase(n.getNutrientName()));
+        hasFiberData = nutrients.stream().anyMatch(n ->
+                "Fiber, total dietary".equalsIgnoreCase(n.getNutrientName()));
+        hasSaturatedFatData = nutrients.stream().anyMatch(n ->
+                "Fatty acids, total saturated".equalsIgnoreCase(n.getNutrientName()) ||
+                "Saturated Fat".equalsIgnoreCase(n.getNutrientName()));
+        hasUnsaturatedFatData = nutrients.stream().anyMatch(n ->
+                "Fatty acids, total monounsaturated".equalsIgnoreCase(n.getNutrientName()) ||
+                "Fatty acids, total polyunsaturated".equalsIgnoreCase(n.getNutrientName()) ||
+                "Fatty acids, total unsaturated".equalsIgnoreCase(n.getNutrientName()) ||
+                "Unsaturated Fat".equalsIgnoreCase(n.getNutrientName()));
+    }
 
     /**
      * Constructor to initialize a FoodItem with a name, FDC ID, portion description, and gram weight.
@@ -332,6 +364,11 @@ public class FoodItem {
 
     public Boolean getStoreBrand() { return storeBrand; }
     public void setStoreBrand(Boolean storeBrand) { this.storeBrand = storeBrand; }
+
+    public boolean isHasSugarData() { return hasSugarData; }
+    public boolean isHasFiberData() { return hasFiberData; }
+    public boolean isHasSaturatedFatData() { return hasSaturatedFatData; }
+    public boolean isHasUnsaturatedFatData() { return hasUnsaturatedFatData; }
 }
 
 

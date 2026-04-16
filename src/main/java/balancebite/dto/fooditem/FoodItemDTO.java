@@ -91,6 +91,11 @@ public class FoodItemDTO {
     private final String saleDescription;
     private final BigDecimal effectivePrice;
 
+    private final boolean hasSugarData;
+    private final boolean hasFiberData;
+    private final boolean hasSaturatedFatData;
+    private final boolean hasUnsaturatedFatData;
+
     /**
      * Parameterized constructor to create a FoodItemDTO.
      * Calculates the combined values for healthy and unhealthy fats.
@@ -106,7 +111,7 @@ public class FoodItemDTO {
      * @param image            the Base64-encoded image of the meal (optional).
      * @param imageUrl         the URL of the meal image (optional).
      */
-    public FoodItemDTO(Long id, String name, int fdcId, List<NutrientInfoDTO> nutrients, String portionDescription, double gramWeight, String source, FoodSource foodSource, boolean promoted, LocalDateTime promotionStartDate, LocalDateTime promotionEndDate, FoodCategory foodCategory, String image, String imageUrl, BigDecimal price, BigDecimal grams, BigDecimal pricePer100g, Boolean storeBrand, BigDecimal promoPrice, Integer salePercentage, String saleDescription, BigDecimal effectivePrice) {
+    public FoodItemDTO(Long id, String name, int fdcId, List<NutrientInfoDTO> nutrients, String portionDescription, double gramWeight, String source, FoodSource foodSource, boolean promoted, LocalDateTime promotionStartDate, LocalDateTime promotionEndDate, FoodCategory foodCategory, String image, String imageUrl, BigDecimal price, BigDecimal grams, BigDecimal pricePer100g, Boolean storeBrand, BigDecimal promoPrice, Integer salePercentage, String saleDescription, BigDecimal effectivePrice, boolean hasSugarData, boolean hasFiberData, boolean hasSaturatedFatData, boolean hasUnsaturatedFatData) {
         this.id = id;
         this.name = name;
         this.fdcId = fdcId;
@@ -129,6 +134,10 @@ public class FoodItemDTO {
         this.salePercentage = salePercentage;
         this.saleDescription = saleDescription;
         this.effectivePrice = effectivePrice;
+        this.hasSugarData = hasSugarData;
+        this.hasFiberData = hasFiberData;
+        this.hasSaturatedFatData = hasSaturatedFatData;
+        this.hasUnsaturatedFatData = hasUnsaturatedFatData;
     }
 
     /**
@@ -320,4 +329,9 @@ public class FoodItemDTO {
     public BigDecimal getEffectivePrice() {
         return effectivePrice;
     }
+
+    public boolean isHasSugarData() { return hasSugarData; }
+    public boolean isHasFiberData() { return hasFiberData; }
+    public boolean isHasSaturatedFatData() { return hasSaturatedFatData; }
+    public boolean isHasUnsaturatedFatData() { return hasUnsaturatedFatData; }
 }

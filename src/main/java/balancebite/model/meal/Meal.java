@@ -257,11 +257,12 @@ public class Meal {
         this.totalFat = getTotalByName("Total lipid (fat)");
 
         List<String> sugarNames = List.of("Total Sugars", "Sugars, total");
-        List<String> saturatedFatNames = List.of("Fatty acids, total saturated");
+        List<String> saturatedFatNames = List.of("Fatty acids, total saturated", "Saturated Fat");
         List<String> unsaturatedFatNames = List.of(
                 "Fatty acids, total monounsaturated",
                 "Fatty acids, total polyunsaturated",
-                "Fatty acids, total unsaturated"
+                "Fatty acids, total unsaturated",
+                "Unsaturated Fat"
         );
 
         this.totalSugars = getTotalByNames(sugarNames);

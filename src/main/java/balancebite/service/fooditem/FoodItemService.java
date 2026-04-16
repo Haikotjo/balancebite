@@ -155,6 +155,7 @@ public class FoodItemService implements IFoodItemService {
                 .collect(Collectors.toList());
         existing.getNutrients().clear();
         existing.getNutrients().addAll(nutrients);
+        existing.refreshNutrientFlags();
 
         // --- 3) Image handling via central handler (update flow => may delete old when switching/clearing) ---
         String finalUrl = existing.getImageUrl(); // behouden wat er is
@@ -238,6 +239,7 @@ public class FoodItemService implements IFoodItemService {
         // Convert the USDA response to a FoodItem entity and save it.
         FoodItem foodItem = balancebite.utils.FoodItemUtil.convertToFoodItem(response);
         foodItem.setFdcId(fdcIdInt); // Set the FDC ID.
+        foodItem.refreshNutrientFlags();
         foodItemRepository.save(foodItem);
 
         log.info("Successfully saved food item with name: {} and FDC ID: {}", response.getDescription(), fdcIdInt);
