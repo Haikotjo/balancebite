@@ -1,6 +1,11 @@
 server:
   port: ${PORT:8080}
 
+logging:
+  level:
+    root: WARN
+    balancebite: INFO
+
 spring:
   application:
     name: balancebite
