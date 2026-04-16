@@ -135,6 +135,21 @@ public class DbFixConfig {
     }
 
     @Bean
+    public CommandLineRunner addFoodItemBooleanColumns(JdbcTemplate jdbc) {
+        return args -> {
+            try {
+                jdbc.execute("ALTER TABLE public.food_items ADD COLUMN IF NOT EXISTS has_fiber_data BOOLEAN DEFAULT FALSE");
+                jdbc.execute("ALTER TABLE public.food_items ADD COLUMN IF NOT EXISTS has_sugar_data BOOLEAN DEFAULT FALSE");
+                jdbc.execute("ALTER TABLE public.food_items ADD COLUMN IF NOT EXISTS has_saturated_fat_data BOOLEAN DEFAULT FALSE");
+                jdbc.execute("ALTER TABLE public.food_items ADD COLUMN IF NOT EXISTS has_unsaturated_fat_data BOOLEAN DEFAULT FALSE");
+                log.info("food_items boolean columns ensured");
+            } catch (Exception e) {
+                log.warn("addFoodItemBooleanColumns failed: {}", e.getMessage());
+            }
+        };
+    }
+
+    @Bean
     public CommandLineRunner deleteMealsById(JdbcTemplate jdbc) {
         return args -> {
             // IMPORTANT: Remove this runner after it succeeded once
