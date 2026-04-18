@@ -241,7 +241,7 @@ public class UserDietPlanService implements IUserDietPlanService {
         copy.setTemplate(false);
         copy.setOriginalDietId(original.getId());
         copy.setCreatedBy(original.getCreatedBy());
-        copy.setAdjustedBy(null);
+        copy.setAdjustedBy(user);
         copy.setDietDescription(original.getDietDescription());
 
         List<DietDay> days = original.getDietDays().stream().map(origDay -> {
