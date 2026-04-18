@@ -760,6 +760,9 @@ public class UserDietPlanService implements IUserDietPlanService {
         } else {
             log.info("User is the creator. Unlinking and deleting the diet plan.");
             user.getDietPlans().removeIf(d -> d.getId().equals(dietPlanId));
+            user.getSavedDietPlans().removeIf(d -> d.getId().equals(dietPlanId));
+            userRepository.saveAndFlush(user);
+            savedDietPlanRepository.deleteAllByDietPlan(diet);
             dietPlanRepository.delete(diet);
         }
 
