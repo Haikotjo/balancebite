@@ -3,6 +3,8 @@ package balancebite.service.diet;
 import balancebite.dto.diet.DietPlanAdminListDTO;
 import balancebite.errorHandling.DietPlanNotFoundException;
 import balancebite.repository.DietPlanRepository;
+import balancebite.repository.SavedDietPlanRepository;
+import balancebite.repository.UserRepository;
 import balancebite.service.interfaces.diet.IAdminDietPlanService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,9 +16,15 @@ import java.util.stream.Collectors;
 public class AdminDietPlanService implements IAdminDietPlanService {
 
     private final DietPlanRepository dietPlanRepository;
+    private final SavedDietPlanRepository savedDietPlanRepository;
+    private final UserRepository userRepository;
 
-    public AdminDietPlanService(DietPlanRepository dietPlanRepository) {
+    public AdminDietPlanService(DietPlanRepository dietPlanRepository,
+                                SavedDietPlanRepository savedDietPlanRepository,
+                                UserRepository userRepository) {
         this.dietPlanRepository = dietPlanRepository;
+        this.savedDietPlanRepository = savedDietPlanRepository;
+        this.userRepository = userRepository;
     }
 
 @Override
@@ -40,7 +48,12 @@ public class AdminDietPlanService implements IAdminDietPlanService {
         var dietPlan = dietPlanRepository.findById(id)
                 .orElseThrow(() -> new DietPlanNotFoundException("No diet plan found with ID: " + id));
 
-        dietPlan.getUsers().forEach(user -> user.getSavedDietPlans().remove(dietPlan));
+        savedDietPlanRepository.deleteAllByDietPlan(dietPlan);
+
+        dietPlan.getUsers().forEach(user -> {
+            user.getSavedDietPlans().remove(dietPlan);
+            userRepository.save(user);
+        });
 
         dietPlanRepository.delete(dietPlan);
     }

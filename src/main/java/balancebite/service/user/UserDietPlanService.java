@@ -240,7 +240,7 @@ public class UserDietPlanService implements IUserDietPlanService {
         copy.setName(original.getName());
         copy.setTemplate(false);
         copy.setOriginalDietId(original.getId());
-        copy.setCreatedBy(user);
+        copy.setCreatedBy(original.getCreatedBy());
         copy.setAdjustedBy(null);
         copy.setDietDescription(original.getDietDescription());
 
