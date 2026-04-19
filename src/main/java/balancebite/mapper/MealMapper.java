@@ -144,7 +144,8 @@ public class MealMapper {
                 meal.getMealPreparation(),
                 meal.getPreparationVideoUrl(),
                 meal.getFoodSource(),
-                meal.getServings()
+                meal.getServings(),
+                meal.getGoal()
         );
     }
 

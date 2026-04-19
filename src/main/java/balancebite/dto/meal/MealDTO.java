@@ -8,6 +8,7 @@ import balancebite.model.foodItem.FoodSource;
 import balancebite.model.meal.references.Cuisine;
 import balancebite.model.meal.references.Diet;
 import balancebite.model.meal.references.MealType;
+import balancebite.model.user.userenums.Goal;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -152,6 +153,8 @@ public class MealDTO {
 
     private final Integer servings;
 
+    private final Goal goal;
+
     /**
      * Constructor for creating a MealDTO with essential meal information.
      *
@@ -215,7 +218,8 @@ public class MealDTO {
             String mealPreparation,
             String preparationVideoUrl,
             FoodSource foodSource,
-            Integer servings
+            Integer servings,
+            Goal goal
             ) {
         this.id = id;
         this.name = name;
@@ -253,6 +257,7 @@ public class MealDTO {
         this.preparationVideoUrl = preparationVideoUrl;
         this.foodSource = foodSource;
         this.servings = servings;
+        this.goal = goal;
     }
 
     /**
@@ -474,5 +479,9 @@ public class MealDTO {
 
     public Integer getServings() {
         return servings;
+    }
+
+    public Goal getGoal() {
+        return goal;
     }
 }
