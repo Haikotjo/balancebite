@@ -9,6 +9,7 @@ import balancebite.model.meal.references.Diet;
 import balancebite.model.meal.references.MealType;
 import balancebite.model.user.User;
 import balancebite.model.user.userenums.ActivityLevel;
+import balancebite.model.user.userenums.Goal;
 import jakarta.persistence.*;
 
 import java.time.Duration;
@@ -223,6 +224,9 @@ public class Meal {
     @Column(name = "food_source")
     private FoodSource foodSource;
 
+    @Enumerated(EnumType.STRING)
+    private Goal goal;
+
     /**
      * Number of servings (persons or portions).
      */
@@ -275,7 +279,59 @@ public class Meal {
                 .distinct()
                 .sorted()
                 .collect(Collectors.joining(", "));
+
+        this.goal = detectGoal(this.totalProtein, this.totalCarbs, this.totalFat);
     }
+
+    private Goal detectGoal(double protein, double carbs, double fat) {
+        double proteinKcal = protein * 4;
+        double carbsKcal   = carbs   * 4;
+        double fatKcal     = fat     * 9;
+        double totalKcal   = proteinKcal + carbsKcal + fatKcal;
+
+        if (totalKcal <= 0) return null;
+
+        double p = proteinKcal / totalKcal * 100;
+        double c = carbsKcal   / totalKcal * 100;
+        double f = fatKcal     / totalKcal * 100;
+
+        double[][] ranges = {
+            {20, 25, 40, 50, 25, 35}, // WEIGHT_LOSS
+            {25, 35, 35, 45, 25, 30}, // WEIGHT_LOSS_WITH_MUSCLE_MAINTENANCE
+            {15, 25, 45, 55, 25, 35}, // MAINTENANCE
+            {25, 30, 40, 50, 25, 30}, // MAINTENANCE_WITH_MUSCLE_FOCUS
+            {15, 20, 50, 60, 25, 30}, // WEIGHT_GAIN
+            {25, 30, 45, 55, 20, 30}, // WEIGHT_GAIN_WITH_MUSCLE_FOCUS
+        };
+        Goal[] goals = {
+            Goal.WEIGHT_LOSS,
+            Goal.WEIGHT_LOSS_WITH_MUSCLE_MAINTENANCE,
+            Goal.MAINTENANCE,
+            Goal.MAINTENANCE_WITH_MUSCLE_FOCUS,
+            Goal.WEIGHT_GAIN,
+            Goal.WEIGHT_GAIN_WITH_MUSCLE_FOCUS,
+        };
+
+        Goal best = null;
+        double bestDeviation = Double.MAX_VALUE;
+
+        for (int i = 0; i < ranges.length; i++) {
+            double[] r = ranges[i];
+            if (p >= r[0] && p <= r[1] && c >= r[2] && c <= r[3] && f >= r[4] && f <= r[5]) {
+                double deviation = Math.abs(p - (r[0] + r[1]) / 2)
+                        + Math.abs(c - (r[2] + r[3]) / 2)
+                        + Math.abs(f - (r[4] + r[5]) / 2);
+                if (deviation < bestDeviation) {
+                    bestDeviation = deviation;
+                    best = goals[i];
+                }
+            }
+        }
+        return best;
+    }
+
+    public Goal getGoal() { return goal; }
+    public void setGoal(Goal goal) { this.goal = goal; }
 
     private double getTotalByName(String name) {
         return mealIngredients.stream()

@@ -6,6 +6,7 @@ import balancebite.errorHandling.DietPlanNotFoundException;
 import balancebite.errorHandling.DuplicateDietPlanException;
 import balancebite.errorHandling.UserNotFoundException;
 import balancebite.model.meal.references.Diet;
+import balancebite.model.user.userenums.Goal;
 import balancebite.security.JwtService;
 import balancebite.service.interfaces.user.IUserDietPlanService;
 import jakarta.validation.Valid;
@@ -215,6 +216,7 @@ public class UserDietPlanController {
             @RequestParam(required = false) List<String> requiredDiets,
             @RequestParam(required = false) List<String> excludedDiets,
             @RequestParam(required = false) Diet dietFilter,
+            @RequestParam(required = false) Goal goal,
             @RequestParam(required = false) Double minCalories,
             @RequestParam(required = false) Double maxCalories,
             @RequestParam(required = false) Double minProtein,
@@ -253,7 +255,7 @@ public class UserDietPlanController {
             Page<DietPlanDTO> plans = userDietPlanService.getFilteredDietPlans(
                     requiredDiets,
                     excludedDiets,
-                    userId, mode, dietFilter,
+                    userId, mode, dietFilter, goal,
                     minCalories, maxCalories,
                     minProtein, maxProtein,
                     minCarbs, maxCarbs,

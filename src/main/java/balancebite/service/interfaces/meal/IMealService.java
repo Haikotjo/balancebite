@@ -5,6 +5,7 @@ import balancebite.dto.meal.MealInputDTO;
 import balancebite.dto.NutrientInfoDTO;
 import balancebite.dto.meal.MealNameDTO;
 import balancebite.errorHandling.InvalidFoodItemException;
+import balancebite.model.user.userenums.Goal;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -65,7 +66,8 @@ public interface IMealService {
             String foodSource,
             String currentUsername,
             boolean includeUserCopies,
-            String name
+            String name,
+            Goal goal
     );
 
     /**

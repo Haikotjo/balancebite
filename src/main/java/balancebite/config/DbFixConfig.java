@@ -162,6 +162,18 @@ public class DbFixConfig {
     }
 
     @Bean
+    public CommandLineRunner addGoalColumnToMeals(JdbcTemplate jdbc) {
+        return args -> {
+            try {
+                jdbc.execute("ALTER TABLE public.meals ADD COLUMN IF NOT EXISTS goal VARCHAR(50)");
+                log.info("meals.goal column ensured");
+            } catch (Exception e) {
+                log.warn("addGoalColumnToMeals failed: {}", e.getMessage());
+            }
+        };
+    }
+
+    @Bean
     public CommandLineRunner deleteMealsById(JdbcTemplate jdbc) {
         return args -> {
             // IMPORTANT: Remove this runner after it succeeded once

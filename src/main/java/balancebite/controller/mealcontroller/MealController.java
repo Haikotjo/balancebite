@@ -10,6 +10,7 @@ import balancebite.errorHandling.InvalidFoodItemException;
 import balancebite.model.meal.references.Cuisine;
 import balancebite.model.meal.references.Diet;
 import balancebite.model.meal.references.MealType;
+import balancebite.model.user.userenums.Goal;
 import balancebite.service.meal.MealService;
 import jakarta.persistence.EntityNotFoundException;
 import org.slf4j.Logger;
@@ -93,6 +94,7 @@ public class MealController {
             @RequestParam(required = false) String foodSource,
             @RequestParam(required = false, defaultValue = "true") boolean includeUserCopies,
             @RequestParam(required = false) String name,
+            @RequestParam(required = false) Goal goal,
             Pageable pageable
     ) {
         String currentUsername = null;
@@ -110,7 +112,7 @@ public class MealController {
                     minProtein, maxProtein,
                     minCarbs, maxCarbs,
                     minFat, maxFat,
-                    foodSource, currentUsername, includeUserCopies, name
+                    foodSource, currentUsername, includeUserCopies, name, goal
             );
 
             return ResponseEntity.ok(mealDTOs);

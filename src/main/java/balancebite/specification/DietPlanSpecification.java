@@ -2,6 +2,7 @@ package balancebite.specification;
 
 import balancebite.model.diet.DietPlan;
 import balancebite.model.meal.references.Diet;
+import balancebite.model.user.userenums.Goal;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Predicate;
@@ -108,6 +109,10 @@ public class DietPlanSpecification {
 
     public static Specification<DietPlan> isNotRestricted() {
         return (root, query, cb) -> cb.isFalse(root.get("isRestricted"));
+    }
+
+    public static Specification<DietPlan> hasGoal(Goal goal) {
+        return (root, query, cb) -> cb.equal(root.get("goal"), goal);
     }
 
 }

@@ -2,6 +2,7 @@ package balancebite.service.interfaces.diet;
 
 import balancebite.dto.diet.DietPlanDTO;
 import balancebite.dto.diet.DietPlanNameDTO;
+import balancebite.model.user.userenums.Goal;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -49,7 +50,8 @@ public interface IPublicDietPlanService {
             Double maxCalories,
             Long createdByUserId,
             String name,
-            boolean includeUserCopies
+            boolean includeUserCopies,
+            Goal goal
     );
     List<DietPlanNameDTO> getAllPublicDietPlanNames();
 

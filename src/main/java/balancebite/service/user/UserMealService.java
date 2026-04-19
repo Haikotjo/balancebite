@@ -18,6 +18,7 @@ import balancebite.model.meal.mealImage.MealImage;
 import balancebite.model.meal.references.Cuisine;
 import balancebite.model.meal.references.Diet;
 import balancebite.model.meal.references.MealType;
+import balancebite.model.user.userenums.Goal;
 import balancebite.model.user.Role;
 import balancebite.model.user.User;
 import balancebite.repository.*;
@@ -535,7 +536,9 @@ public class UserMealService implements IUserMealService {
             Double maxCarbs,
             Double minFat,
             Double maxFat,
-            String foodSource
+            String foodSource,
+            String name,
+            Goal goal
     ) {
 
         Sort sort = isMacroSort(sortBy)
@@ -623,6 +626,14 @@ public class UserMealService implements IUserMealService {
                 FoodSource fs = FoodSource.valueOf(foodSource.toUpperCase());
                 spec = spec.and(MealSpecifications.hasFoodSource(fs));
             } catch (IllegalArgumentException ignored) {}
+        }
+
+        if (name != null && !name.isBlank()) {
+            spec = spec.and(MealSpecifications.hasName(name));
+        }
+
+        if (goal != null) {
+            spec = spec.and(MealSpecifications.hasGoal(goal));
         }
 
         spec = spec.and(MealSpecifications.withMacroSorting(sortBy, sortOrder));

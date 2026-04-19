@@ -591,6 +591,7 @@ public class UserDietPlanService implements IUserDietPlanService {
             Long userId,
             String mode,
             Diet dietFilter,
+            Goal goal,
             // avg-waarden (zonder “Avg” in de naam)
             Double minCalories,      Double maxCalories,
             Double minProtein,       Double maxProtein,
@@ -608,6 +609,9 @@ public class UserDietPlanService implements IUserDietPlanService {
 
         if (dietFilter != null) {
             spec = spec.and(DietPlanSpecification.hasDiet(dietFilter));
+        }
+        if (goal != null) {
+            spec = spec.and(DietPlanSpecification.hasGoal(goal));
         }
         if (requiredDiets != null && !requiredDiets.isEmpty()) {
             spec = spec.and(DietPlanSpecification.mustIncludeAllDiets(

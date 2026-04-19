@@ -7,6 +7,7 @@ import balancebite.mapper.MealIngredientMapper;
 import balancebite.mapper.MealMapper;
 import balancebite.model.foodItem.FoodSource;
 import balancebite.model.meal.Meal;
+import balancebite.model.user.userenums.Goal;
 import balancebite.model.meal.references.Cuisine;
 import balancebite.model.meal.references.Diet;
 import balancebite.model.meal.references.MealType;
@@ -102,7 +103,8 @@ public class MealService implements IMealService {
             Double maxCalories, Double minProtein, Double maxProtein,
             Double minCarbs, Double maxCarbs, Double minFat, Double maxFat,
             String foodSource, String currentUsername,
-            boolean includeUserCopies, String name
+            boolean includeUserCopies, String name,
+            Goal goal
             ) {
         // IMPORTANT: use logger, not System.out, so it shows in Railway logs
         log.info("=== getAllMeals START === username='{}'", currentUsername);
@@ -180,6 +182,11 @@ public class MealService implements IMealService {
         if (name != null && !name.isBlank()) {
             spec = spec.and(MealSpecifications.hasName(name));
             log.info("Filter: name={}", name);
+        }
+
+        if (goal != null) {
+            spec = spec.and(MealSpecifications.hasGoal(goal));
+            log.info("Filter: goal={}", goal);
         }
 
         Sort sort = isMacroSort(sortBy)

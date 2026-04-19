@@ -4,6 +4,7 @@ import balancebite.dto.meal.MealDTO;
 import balancebite.dto.meal.MealInputDTO;
 import balancebite.dto.user.UserDTO;
 import balancebite.errorHandling.*;
+import balancebite.model.user.userenums.Goal;
 import balancebite.security.JwtService;
 import balancebite.service.user.ConsumeMealService;
 import balancebite.service.user.UserMealService;
@@ -264,6 +265,8 @@ public class UserMealController {
             @RequestParam(required = false) Double minFat,
             @RequestParam(required = false) Double maxFat,
             @RequestParam(required = false) String foodSource,
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) Goal goal,
             Pageable pageable
     ) {
         log.info("Retrieving meals for authenticated user with filters and sorting.");
@@ -292,7 +295,9 @@ public class UserMealController {
                 maxCarbs,
                 minFat,
                 maxFat,
-                foodSource
+                foodSource,
+                name,
+                goal
         );
 
         // Lege resultaten zijn GEEN fout

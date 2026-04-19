@@ -4,6 +4,7 @@ import balancebite.dto.diet.DietPlanDTO;
 import balancebite.dto.diet.DietPlanInputDTO;
 import balancebite.dto.user.UserDTO;
 import balancebite.model.meal.references.Diet;
+import balancebite.model.user.userenums.Goal;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -24,6 +25,7 @@ public interface IUserDietPlanService {
             Long userId,
             String mode,
             Diet dietFilter,
+            Goal goal,
             Double minCalories,
             Double maxCalories,
             Double minProtein,

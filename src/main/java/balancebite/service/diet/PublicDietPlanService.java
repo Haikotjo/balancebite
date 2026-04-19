@@ -7,6 +7,7 @@ import balancebite.mapper.DietPlanMapper;
 import balancebite.model.diet.DietPlan;
 import balancebite.model.meal.references.Diet;
 import balancebite.model.user.User;
+import balancebite.model.user.userenums.Goal;
 import balancebite.model.user.UserRole;
 import balancebite.repository.DietPlanRepository;
 import balancebite.repository.SharedDietPlanAccessRepository;
@@ -65,7 +66,8 @@ public class PublicDietPlanService implements IPublicDietPlanService {
             Double maxCalories,
             Long createdByUserId,
             String name,
-            boolean includeUserCopies
+            boolean includeUserCopies,
+            Goal goal
     ) {
         Specification<DietPlan> spec = createdByUserId != null
                 ? Specification.where(DietPlanSpecification.isTemplateCreatedBy(createdByUserId))
@@ -77,6 +79,10 @@ public class PublicDietPlanService implements IPublicDietPlanService {
         if (name != null && !name.isBlank()) {
             spec = spec.and((root, query, cb) ->
                     cb.like(cb.lower(root.get("name")), "%" + name.toLowerCase() + "%"));
+        }
+
+        if (goal != null) {
+            spec = spec.and(DietPlanSpecification.hasGoal(goal));
         }
 
         if (diets != null && !diets.isEmpty()) {

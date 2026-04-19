@@ -3,6 +3,7 @@ package balancebite.controller.diet;
 import balancebite.dto.diet.DietPlanDTO;
 import balancebite.dto.diet.DietPlanNameDTO;
 import balancebite.errorHandling.DietPlanNotFoundException;
+import balancebite.model.user.userenums.Goal;
 import balancebite.service.interfaces.diet.IPublicDietPlanService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,7 +47,8 @@ public class PublicDietPlanController {
             @RequestParam(required = false) Double maxCalories,
             @RequestParam(required = false) Long createdByUserId,
             @RequestParam(required = false) String name,
-            @RequestParam(defaultValue = "true") boolean includeUserCopies
+            @RequestParam(defaultValue = "true") boolean includeUserCopies,
+            @RequestParam(required = false) Goal goal
             ) {
         Map<String, String> sortFieldMap = Map.ofEntries(
                 Map.entry("avgProtein", "avgProtein"),
@@ -85,7 +87,8 @@ public class PublicDietPlanController {
                 minCalories, maxCalories,
                 createdByUserId,
                 name,
-                includeUserCopies
+                includeUserCopies,
+                goal
         );
 
         if (plans.isEmpty()) {

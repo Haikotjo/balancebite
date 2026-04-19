@@ -2,6 +2,7 @@ package balancebite.specification;
 
 import balancebite.model.foodItem.FoodSource;
 import balancebite.model.meal.Meal;
+import balancebite.model.user.userenums.Goal;
 import balancebite.model.meal.references.Cuisine;
 import balancebite.model.meal.references.Diet;
 import balancebite.model.meal.references.MealType;
@@ -100,6 +101,10 @@ public class MealSpecifications {
 
     public static Specification<Meal> hasName(String name) {
         return (root, query, cb) -> cb.like(cb.lower(root.get("name")), "%" + name.toLowerCase() + "%");
+    }
+
+    public static Specification<Meal> hasGoal(Goal goal) {
+        return (root, query, cb) -> cb.equal(root.get("goal"), goal);
     }
 
     public static Specification<Meal> totalCaloriesMin(Double min) {
