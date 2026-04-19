@@ -2,6 +2,7 @@ package balancebite.dto.diet;
 
 import balancebite.dto.user.PublicUserDTO;
 import balancebite.model.meal.references.Diet;
+import balancebite.model.user.userenums.Goal;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.time.LocalDateTime;
@@ -23,6 +24,7 @@ public class DietPlanDTO {
     private final List<DietDayDTO> dietDays;
     private final String dietDescription;
     private final Set<Diet> diets;
+    private final Goal goal;
     private final Double totalProtein;
     private final Double totalCarbs;
     private final Double totalFat;
@@ -54,6 +56,7 @@ public class DietPlanDTO {
                        List<DietDayDTO> dietDays,
                        String dietDescription,
                        Set<Diet> diets,
+                       Goal goal,
                        Double totalProtein,
                        Double totalCarbs,
                        Double totalFat,
@@ -84,6 +87,7 @@ public class DietPlanDTO {
         this.dietDays = (dietDays != null) ? List.copyOf(dietDays) : List.of();
         this.dietDescription = dietDescription;
         this.diets = diets;
+        this.goal = goal;
         this.totalProtein = totalProtein;
         this.totalCarbs = totalCarbs;
         this.totalFat = totalFat;
@@ -153,6 +157,10 @@ public class DietPlanDTO {
 
     public Set<Diet> getDiets() {
         return diets;
+    }
+
+    public Goal getGoal() {
+        return goal;
     }
 
     public Double getTotalProtein() {

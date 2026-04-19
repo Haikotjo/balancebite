@@ -24,6 +24,7 @@ import balancebite.specification.DietPlanSpecification;
 import balancebite.utils.MealAssignmentUtil;
 import balancebite.utils.NutrientCalculatorUtil;
 import balancebite.model.user.Role;
+import balancebite.model.user.userenums.Goal;
 import balancebite.utils.ShoppingCartCalculator;
 import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
@@ -97,22 +98,14 @@ public class UserDietPlanService implements IUserDietPlanService {
         dietPlan.setTemplate(true);
         dietPlan.setOriginalDietId(null);
         dietPlan.setDietDescription(input.getDietDescription());
-        dietPlan.setDiets(input.getDiets());
-
-        // Fallback: minstens één dag
-        if (input.getDietDays() == null || input.getDietDays().isEmpty()) {
-            DietDayInputDTO defaultDay = new DietDayInputDTO();
-            defaultDay.setDietDayDescription("Default day description");
-            defaultDay.setMealIds(new ArrayList<>());
-            input.setDietDays(List.of(defaultDay));
-        }
 
         List<DietDay> dietDays = new ArrayList<>();
 
         for (int i = 0; i < input.getDietDays().size(); i++) {
             DietDayInputDTO dayInput = input.getDietDays().get(i);
 
-            List<Meal> meals = dayInput.getMealIds().stream()
+            List<Long> mealIds = dayInput.getMealIds() != null ? dayInput.getMealIds() : List.of();
+            List<Meal> meals = mealIds.stream()
                     .map(id -> mealAssignmentUtil.getOrAddMealToUser(userId, id))
                     .collect(Collectors.toList());
 
@@ -182,6 +175,8 @@ public class UserDietPlanService implements IUserDietPlanService {
         dietPlan.setAvgSaturatedFat(round1(totalSaturatedFat / dayCount));
         dietPlan.setAvgUnsaturatedFat(round1(totalUnsaturatedFat / dayCount));
         dietPlan.setAvgSugars(round1(totalSugars / dayCount));
+
+        dietPlan.setGoal(detectGoal(totalProtein / dayCount, totalCarbs / dayCount, totalFat / dayCount));
 
         boolean isRestricted = user.getRoles().stream()
                 .map(Role::getRolename)
@@ -333,7 +328,7 @@ public class UserDietPlanService implements IUserDietPlanService {
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
 
         if (!user.getSavedDietPlans().contains(dietPlan)) {
-            throw new SecurityException("User is not authorized to update this diet plan.");
+            throw new AccessDeniedException("User is not authorized to update this diet plan.");
         }
 
         Optional<User> adjustedBy = userRepository.findById(adjustedByUserId);
@@ -415,6 +410,8 @@ public class UserDietPlanService implements IUserDietPlanService {
         dietPlan.setAvgUnsaturatedFat(round1(totalUnsaturatedFat / dayCount));
         dietPlan.setAvgSugars(round1(totalSugars / dayCount));
 
+        dietPlan.setGoal(detectGoal(totalProtein / dayCount, totalCarbs / dayCount, totalFat / dayCount));
+
         DietPlan updated = dietPlanRepository.save(dietPlan);
         return dietPlanMapper.toDTO(updated);
     }
@@ -494,7 +491,7 @@ public class UserDietPlanService implements IUserDietPlanService {
                 (dietPlan.getAdjustedBy() != null && dietPlan.getAdjustedBy().getId().equals(userId));
 
         if (!isOwner) {
-            throw new SecurityException("You are not authorized to view this diet.");
+            throw new AccessDeniedException("You are not authorized to view this diet.");
         }
 
         return dietPlanMapper.toDTO(dietPlan);
@@ -507,7 +504,7 @@ public class UserDietPlanService implements IUserDietPlanService {
 
         boolean isOwner = (dietPlan.getCreatedBy() != null && dietPlan.getCreatedBy().getId().equals(userId)) ||
                 (dietPlan.getAdjustedBy() != null && dietPlan.getAdjustedBy().getId().equals(userId));
-        if (!isOwner) throw new SecurityException("You are not authorized to view this diet.");
+        if (!isOwner) throw new AccessDeniedException("You are not authorized to view this diet.");
 
         Map<FoodItem, Double> shoppingMap = ShoppingCartCalculator.calculateShoppingList(dietPlan);
 
@@ -782,7 +779,7 @@ public class UserDietPlanService implements IUserDietPlanService {
         boolean isOwner = (dietPlan.getCreatedBy() != null && dietPlan.getCreatedBy().getId().equals(userId)) ||
                 (dietPlan.getAdjustedBy() != null && dietPlan.getAdjustedBy().getId().equals(userId));
         if (!isOwner) {
-            throw new SecurityException("Not allowed to modify this diet.");
+            throw new AccessDeniedException("Not allowed to modify this diet.");
         }
 
         return dietPlan;
@@ -802,6 +799,55 @@ public class UserDietPlanService implements IUserDietPlanService {
 
     private double round1(double value) {
         return Math.round(value * 10.0) / 10.0;
+    }
+
+    private Goal detectGoal(double avgProtein, double avgCarbs, double avgFat) {
+        double proteinKcal = avgProtein * 4;
+        double carbsKcal   = avgCarbs   * 4;
+        double fatKcal     = avgFat     * 9;
+        double totalKcal   = proteinKcal + carbsKcal + fatKcal;
+
+        if (totalKcal <= 0) return null;
+
+        double p = proteinKcal / totalKcal * 100;
+        double c = carbsKcal   / totalKcal * 100;
+        double f = fatKcal     / totalKcal * 100;
+
+        // [minProtein, maxProtein, minCarbs, maxCarbs, minFat, maxFat, midP, midC, midF]
+        double[][] ranges = {
+            {20, 25, 40, 50, 25, 35}, // WEIGHT_LOSS
+            {25, 35, 35, 45, 25, 30}, // WEIGHT_LOSS_WITH_MUSCLE_MAINTENANCE
+            {15, 25, 45, 55, 25, 35}, // MAINTENANCE
+            {25, 30, 40, 50, 25, 30}, // MAINTENANCE_WITH_MUSCLE_FOCUS
+            {15, 20, 50, 60, 25, 30}, // WEIGHT_GAIN
+            {25, 30, 45, 55, 20, 30}, // WEIGHT_GAIN_WITH_MUSCLE_FOCUS
+        };
+        Goal[] goals = {
+            Goal.WEIGHT_LOSS,
+            Goal.WEIGHT_LOSS_WITH_MUSCLE_MAINTENANCE,
+            Goal.MAINTENANCE,
+            Goal.MAINTENANCE_WITH_MUSCLE_FOCUS,
+            Goal.WEIGHT_GAIN,
+            Goal.WEIGHT_GAIN_WITH_MUSCLE_FOCUS,
+        };
+
+        Goal best = null;
+        double bestDeviation = Double.MAX_VALUE;
+
+        for (int i = 0; i < ranges.length; i++) {
+            double[] r = ranges[i];
+            if (p >= r[0] && p <= r[1] && c >= r[2] && c <= r[3] && f >= r[4] && f <= r[5]) {
+                double deviation = Math.abs(p - (r[0] + r[1]) / 2)
+                        + Math.abs(c - (r[2] + r[3]) / 2)
+                        + Math.abs(f - (r[4] + r[5]) / 2);
+                if (deviation < bestDeviation) {
+                    bestDeviation = deviation;
+                    best = goals[i];
+                }
+            }
+        }
+
+        return best;
     }
 
 }

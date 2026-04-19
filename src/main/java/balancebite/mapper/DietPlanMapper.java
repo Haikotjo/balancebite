@@ -63,6 +63,7 @@ public class DietPlanMapper {
                 dietDayDTOs,
                 dietPlan.getDietDescription(),
                 dietPlan.getDiets(),
+                dietPlan.getGoal(),
                 dietPlan.getTotalProtein(),
                 dietPlan.getTotalCarbs(),
                 dietPlan.getTotalFat(),
@@ -97,6 +98,7 @@ public class DietPlanMapper {
         dietPlan.setRestricted(input.isRestricted());
         dietPlan.setDietDescription(input.getDietDescription());
         dietPlan.setDiets(input.getDiets());
+        dietPlan.setGoal(input.getGoal());
 
         createdBy.ifPresent(dietPlan::setCreatedBy);
         adjustedBy.ifPresent(dietPlan::setAdjustedBy);
@@ -118,6 +120,7 @@ public class DietPlanMapper {
         dietPlan.setRestricted(input.isRestricted());
         dietPlan.setDietDescription(input.getDietDescription());
         dietPlan.setDiets(input.getDiets());
+        dietPlan.setGoal(input.getGoal());
 
         createdBy.ifPresent(dietPlan::setCreatedBy);
         adjustedBy.ifPresent(dietPlan::setAdjustedBy);

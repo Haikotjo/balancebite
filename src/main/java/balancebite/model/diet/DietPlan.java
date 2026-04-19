@@ -1,6 +1,7 @@
 package balancebite.model.diet;
 
 import balancebite.model.user.User;
+import balancebite.model.user.userenums.Goal;
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -45,6 +46,9 @@ public class DietPlan {
 
     @OneToMany(mappedBy = "diet", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<DietDay> dietDays = new ArrayList<>();
+
+    @Enumerated(EnumType.STRING)
+    private Goal goal;
 
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "dietplan_diets", joinColumns = @JoinColumn(name = "dietplan_id"))
@@ -169,6 +173,14 @@ public class DietPlan {
 
     public void setDietDays(List<DietDay> dietDays) {
         this.dietDays = dietDays;
+    }
+
+    public Goal getGoal() {
+        return goal;
+    }
+
+    public void setGoal(Goal goal) {
+        this.goal = goal;
     }
 
     public Set<balancebite.model.meal.references.Diet> getDiets() {

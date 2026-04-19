@@ -1,6 +1,7 @@
 package balancebite.dto.diet;
 
 import balancebite.model.meal.references.Diet;
+import balancebite.model.user.userenums.Goal;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Size;
@@ -35,11 +36,13 @@ public class DietPlanInputDTO {
 
     private Set<Diet> diets;
 
+    private Goal goal;
+
     public DietPlanInputDTO() {}
 
     public DietPlanInputDTO(String name, Long originalDietId, Long createdByUserId, Long adjustedByUserId,
                             boolean isTemplate, boolean isPrivate, boolean isRestricted, List<DietDayInputDTO> dietDays,
-                            String dietDescription, Set<Diet> diets) {
+                            String dietDescription, Set<Diet> diets, Goal goal) {
         this.name = name;
         this.originalDietId = originalDietId;
         this.createdByUserId = createdByUserId;
@@ -50,6 +53,7 @@ public class DietPlanInputDTO {
         this.dietDays = dietDays;
         this.dietDescription = dietDescription;
         this.diets = diets;
+        this.goal = goal;
     }
 
     // Getters & Setters
@@ -131,5 +135,13 @@ public class DietPlanInputDTO {
 
     public void setDiets(Set<Diet> diets) {
         this.diets = diets;
+    }
+
+    public Goal getGoal() {
+        return goal;
+    }
+
+    public void setGoal(Goal goal) {
+        this.goal = goal;
     }
 }
