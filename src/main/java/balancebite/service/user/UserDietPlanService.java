@@ -140,43 +140,7 @@ public class UserDietPlanService implements IUserDietPlanService {
         }
         dietPlan.setDiets(allDiets);
 
-        // ✅ Nieuwe nutriententotalen en gemiddelden
-        double totalCalories = 0;
-        double totalProtein = 0;
-        double totalCarbs = 0;
-        double totalFat = 0;
-        double totalSaturatedFat = 0;
-        double totalUnsaturatedFat = 0;
-        double totalSugars = 0;
-
-        for (DietDay day : dietDays) {
-            totalCalories += day.getTotalCalories();
-            totalProtein += day.getTotalProtein();
-            totalCarbs += day.getTotalCarbs();
-            totalFat += day.getTotalFat();
-            totalSaturatedFat += day.getTotalSaturatedFat();
-            totalUnsaturatedFat += day.getTotalUnsaturatedFat();
-            totalSugars += day.getTotalSugars();
-        }
-
-        int dayCount = dietDays.size();
-        dietPlan.setTotalCalories(totalCalories);
-        dietPlan.setTotalProtein(totalProtein);
-        dietPlan.setTotalCarbs(totalCarbs);
-        dietPlan.setTotalFat(totalFat);
-        dietPlan.setTotalSaturatedFat(totalSaturatedFat);
-        dietPlan.setTotalUnsaturatedFat(totalUnsaturatedFat);
-        dietPlan.setTotalSugars(totalSugars);
-
-        dietPlan.setAvgCalories(round1(totalCalories / dayCount));
-        dietPlan.setAvgProtein(round1(totalProtein / dayCount));
-        dietPlan.setAvgCarbs(round1(totalCarbs / dayCount));
-        dietPlan.setAvgFat(round1(totalFat / dayCount));
-        dietPlan.setAvgSaturatedFat(round1(totalSaturatedFat / dayCount));
-        dietPlan.setAvgUnsaturatedFat(round1(totalUnsaturatedFat / dayCount));
-        dietPlan.setAvgSugars(round1(totalSugars / dayCount));
-
-        dietPlan.setGoal(detectGoal(totalProtein / dayCount, totalCarbs / dayCount, totalFat / dayCount));
+        recalculatePlanNutrients(dietPlan);
 
         boolean isRestricted = user.getRoles().stream()
                 .map(Role::getRolename)
@@ -297,6 +261,7 @@ public class UserDietPlanService implements IUserDietPlanService {
         copy.setAvgProtein(original.getAvgProtein());
         copy.setAvgCarbs(original.getAvgCarbs());
         copy.setAvgFat(original.getAvgFat());
+        copy.setGoal(original.getGoal());
 
         DietPlan saved = dietPlanRepository.save(copy);
         user.getSavedDietPlans().add(saved);
@@ -372,45 +337,7 @@ public class UserDietPlanService implements IUserDietPlanService {
             dietPlan.setDiets(allDiets);
         }
 
-        // ✅ BEREKEN DIRECTE TOTALEN EN GEMIDDELDES
-        double totalCalories = 0;
-        double totalProtein = 0;
-        double totalCarbs = 0;
-        double totalFat = 0;
-        double totalSaturatedFat = 0;
-        double totalUnsaturatedFat = 0;
-        double totalSugars = 0;
-
-        List<DietDay> days = dietPlan.getDietDays();
-        int dayCount = days.size();
-
-        for (DietDay day : days) {
-            totalCalories += day.getTotalCalories();
-            totalProtein += day.getTotalProtein();
-            totalCarbs += day.getTotalCarbs();
-            totalFat += day.getTotalFat();
-            totalSaturatedFat += day.getTotalSaturatedFat();
-            totalUnsaturatedFat += day.getTotalUnsaturatedFat();
-            totalSugars += day.getTotalSugars();
-        }
-
-        dietPlan.setTotalCalories(totalCalories);
-        dietPlan.setTotalProtein(totalProtein);
-        dietPlan.setTotalCarbs(totalCarbs);
-        dietPlan.setTotalFat(totalFat);
-        dietPlan.setTotalSaturatedFat(totalSaturatedFat);
-        dietPlan.setTotalUnsaturatedFat(totalUnsaturatedFat);
-        dietPlan.setTotalSugars(totalSugars);
-
-        dietPlan.setAvgCalories(round1(totalCalories / dayCount));
-        dietPlan.setAvgProtein(round1(totalProtein / dayCount));
-        dietPlan.setAvgCarbs(round1(totalCarbs / dayCount));
-        dietPlan.setAvgFat(round1(totalFat / dayCount));
-        dietPlan.setAvgSaturatedFat(round1(totalSaturatedFat / dayCount));
-        dietPlan.setAvgUnsaturatedFat(round1(totalUnsaturatedFat / dayCount));
-        dietPlan.setAvgSugars(round1(totalSugars / dayCount));
-
-        dietPlan.setGoal(detectGoal(totalProtein / dayCount, totalCarbs / dayCount, totalFat / dayCount));
+        recalculatePlanNutrients(dietPlan);
 
         DietPlan updated = dietPlanRepository.save(dietPlan);
         return dietPlanMapper.toDTO(updated);
@@ -465,6 +392,8 @@ public class UserDietPlanService implements IUserDietPlanService {
         if (!targetDay.getMeals().contains(meal)) {
             targetDay.getMeals().add(meal);
         }
+        targetDay.updateNutrients();
+        recalculatePlanNutrients(dietPlan);
 
         DietPlan saved = dietPlanRepository.save(dietPlan);
         return dietPlanMapper.toDTO(saved);
@@ -477,6 +406,8 @@ public class UserDietPlanService implements IUserDietPlanService {
         DietDay targetDay = getDietDayOrThrow(dietPlan, dayIndex);
 
         targetDay.getMeals().removeIf(meal -> meal.getId().equals(mealId));
+        targetDay.updateNutrients();
+        recalculatePlanNutrients(dietPlan);
 
         DietPlan saved = dietPlanRepository.save(dietPlan);
         return dietPlanMapper.toDTO(saved);
@@ -702,8 +633,8 @@ public class UserDietPlanService implements IUserDietPlanService {
         DietDay targetDay = getDietDayOrThrow(dietPlan, dayIndex);
 
         dietPlan.getDietDays().remove(targetDay);
+        recalculatePlanNutrients(dietPlan);
 
-        // orphanRemoval = true zorgt ervoor dat de dag uit de DB wordt verwijderd
         DietPlan saved = dietPlanRepository.save(dietPlan);
         return dietPlanMapper.toDTO(saved);
     }
@@ -775,6 +706,42 @@ public class UserDietPlanService implements IUserDietPlanService {
 // =============================
 // 🔽 Private helper methods 🔽
 // =============================
+
+    private void recalculatePlanNutrients(DietPlan dietPlan) {
+        List<DietDay> days = dietPlan.getDietDays();
+        if (days == null || days.isEmpty()) {
+            dietPlan.setTotalCalories(0); dietPlan.setTotalProtein(0);
+            dietPlan.setTotalCarbs(0);    dietPlan.setTotalFat(0);
+            dietPlan.setTotalSaturatedFat(0); dietPlan.setTotalUnsaturatedFat(0);
+            dietPlan.setTotalSugars(0);
+            dietPlan.setAvgCalories(0);   dietPlan.setAvgProtein(0);
+            dietPlan.setAvgCarbs(0);      dietPlan.setAvgFat(0);
+            dietPlan.setAvgSaturatedFat(0); dietPlan.setAvgUnsaturatedFat(0);
+            dietPlan.setAvgSugars(0);
+            dietPlan.setGoal(null);
+            return;
+        }
+        double totCal = 0, totPro = 0, totCarb = 0, totFat = 0, totSat = 0, totUnsat = 0, totSug = 0;
+        for (DietDay d : days) {
+            totCal   += d.getTotalCalories();
+            totPro   += d.getTotalProtein();
+            totCarb  += d.getTotalCarbs();
+            totFat   += d.getTotalFat();
+            totSat   += d.getTotalSaturatedFat();
+            totUnsat += d.getTotalUnsaturatedFat();
+            totSug   += d.getTotalSugars();
+        }
+        int n = days.size();
+        dietPlan.setTotalCalories(totCal);  dietPlan.setTotalProtein(totPro);
+        dietPlan.setTotalCarbs(totCarb);    dietPlan.setTotalFat(totFat);
+        dietPlan.setTotalSaturatedFat(totSat); dietPlan.setTotalUnsaturatedFat(totUnsat);
+        dietPlan.setTotalSugars(totSug);
+        dietPlan.setAvgCalories(round1(totCal / n));  dietPlan.setAvgProtein(round1(totPro / n));
+        dietPlan.setAvgCarbs(round1(totCarb / n));    dietPlan.setAvgFat(round1(totFat / n));
+        dietPlan.setAvgSaturatedFat(round1(totSat / n)); dietPlan.setAvgUnsaturatedFat(round1(totUnsat / n));
+        dietPlan.setAvgSugars(round1(totSug / n));
+        dietPlan.setGoal(detectGoal(totPro / n, totCarb / n, totFat / n));
+    }
 
     private DietPlan getOwnedDietPlanOrThrow(Long userId, Long dietPlanId) {
         DietPlan dietPlan = dietPlanRepository.findById(dietPlanId)
