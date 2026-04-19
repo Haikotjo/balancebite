@@ -38,7 +38,9 @@ public class DietDayMapper {
                 dietDay.getTotalFat(),
                 dietDay.getTotalSaturatedFat(),
                 dietDay.getTotalUnsaturatedFat(),
-                dietDay.getTotalSugars()
+                dietDay.getTotalSugars(),
+                dietDay.getTotalFiber(),
+                dietDay.getTotalSodium()
         );
     }
 

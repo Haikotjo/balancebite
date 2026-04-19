@@ -71,6 +71,8 @@ public class DietPlanMapper {
                 dietPlan.getTotalSaturatedFat(),
                 dietPlan.getTotalUnsaturatedFat(),
                 dietPlan.getTotalSugars(),
+                dietPlan.getTotalFiber(),
+                dietPlan.getTotalSodium(),
                 dietPlan.getAvgProtein(),
                 dietPlan.getAvgCarbs(),
                 dietPlan.getAvgFat(),
@@ -78,6 +80,8 @@ public class DietPlanMapper {
                 dietPlan.getAvgSaturatedFat(),
                 dietPlan.getAvgUnsaturatedFat(),
                 dietPlan.getAvgSugars(),
+                dietPlan.getAvgFiber(),
+                dietPlan.getAvgSodium(),
                 saveCount,
                 weeklySaveCount,
                 monthlySaveCount

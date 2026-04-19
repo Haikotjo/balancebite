@@ -181,7 +181,8 @@ public class FoodItemMapper {
                 foodItem.isHasSugarData(),
                 foodItem.isHasFiberData(),
                 foodItem.isHasSaturatedFatData(),
-                foodItem.isHasUnsaturatedFatData()
+                foodItem.isHasUnsaturatedFatData(),
+                foodItem.isHasSodiumData()
         );
     }
 

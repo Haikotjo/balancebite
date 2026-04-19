@@ -158,6 +158,8 @@ public class Meal {
     private Double totalSugars;
     private Double totalSaturatedFat;
     private Double totalUnsaturatedFat;
+    private Double totalFiber;
+    private Double totalSodium;
 
 
     /**
@@ -251,6 +253,8 @@ public class Meal {
             this.totalSugars = 0.0;
             this.totalSaturatedFat = 0.0;
             this.totalUnsaturatedFat = 0.0;
+            this.totalFiber = 0.0;
+            this.totalSodium = 0.0;
             this.foodItemsString = "";
             return;
         }
@@ -269,9 +273,14 @@ public class Meal {
                 "Unsaturated Fat"
         );
 
+        List<String> fiberNames = List.of("Fiber, total dietary");
+        List<String> sodiumNames = List.of("Sodium, Na", "Sodium");
+
         this.totalSugars = getTotalByNames(sugarNames);
         this.totalSaturatedFat = getTotalByNames(saturatedFatNames);
         this.totalUnsaturatedFat = getTotalByNames(unsaturatedFatNames);
+        this.totalFiber = getTotalByNames(fiberNames);
+        this.totalSodium = getTotalByNames(sodiumNames);
 
         this.foodItemsString = mealIngredients.stream()
                 .filter(mi -> mi.getFoodItem() != null)
@@ -672,6 +681,22 @@ public class Meal {
 
     public Double getTotalUnsaturatedFat() {
         return totalUnsaturatedFat;
+    }
+
+    public Double getTotalFiber() {
+        return totalFiber;
+    }
+
+    public void setTotalFiber(Double totalFiber) {
+        this.totalFiber = totalFiber;
+    }
+
+    public Double getTotalSodium() {
+        return totalSodium;
+    }
+
+    public void setTotalSodium(Double totalSodium) {
+        this.totalSodium = totalSodium;
     }
 
     public String getFoodItemsString() { return foodItemsString; }

@@ -27,6 +27,8 @@ public class DietDayDTO {
     private final Double totalSaturatedFat;
     private final Double totalUnsaturatedFat;
     private final Double totalSugars;
+    private final Double totalFiber;
+    private final Double totalSodium;
 
     public DietDayDTO(
             Long id,
@@ -41,7 +43,9 @@ public class DietDayDTO {
             Double totalFat,
             Double totalSaturatedFat,
             Double totalUnsaturatedFat,
-            Double totalSugars
+            Double totalSugars,
+            Double totalFiber,
+            Double totalSodium
     ) {
         this.id = id;
         this.dayLabel = dayLabel;
@@ -56,6 +60,8 @@ public class DietDayDTO {
         this.totalSaturatedFat = totalSaturatedFat;
         this.totalUnsaturatedFat = totalUnsaturatedFat;
         this.totalSugars = totalSugars;
+        this.totalFiber = totalFiber;
+        this.totalSodium = totalSodium;
     }
 
     public Long getId() {
@@ -108,5 +114,13 @@ public class DietDayDTO {
 
     public Double getTotalSugars() {
         return totalSugars;
+    }
+
+    public Double getTotalFiber() {
+        return totalFiber;
+    }
+
+    public Double getTotalSodium() {
+        return totalSodium;
     }
 }

@@ -32,6 +32,8 @@ public class DietPlanDTO {
     private final Double totalSaturatedFat;
     private final Double totalUnsaturatedFat;
     private final Double totalSugars;
+    private final Double totalFiber;
+    private final Double totalSodium;
     private final Double avgProtein;
     private final Double avgCarbs;
     private final Double avgFat;
@@ -39,6 +41,8 @@ public class DietPlanDTO {
     private final Double avgSaturatedFat;
     private final Double avgUnsaturatedFat;
     private final Double avgSugars;
+    private final Double avgFiber;
+    private final Double avgSodium;
     private final long saveCount;
     private final long weeklySaveCount;
     private final long monthlySaveCount;
@@ -64,6 +68,8 @@ public class DietPlanDTO {
                        Double totalSaturatedFat,
                        Double totalUnsaturatedFat,
                        Double totalSugars,
+                       Double totalFiber,
+                       Double totalSodium,
                        Double avgProtein,
                        Double avgCarbs,
                        Double avgFat,
@@ -71,6 +77,8 @@ public class DietPlanDTO {
                        Double avgSaturatedFat,
                        Double avgUnsaturatedFat,
                        Double avgSugars,
+                       Double avgFiber,
+                       Double avgSodium,
                        long saveCount,
                        long weeklySaveCount,
                        long monthlySaveCount) {
@@ -95,6 +103,8 @@ public class DietPlanDTO {
         this.totalSaturatedFat = totalSaturatedFat;
         this.totalUnsaturatedFat = totalUnsaturatedFat;
         this.totalSugars = totalSugars;
+        this.totalFiber = totalFiber;
+        this.totalSodium = totalSodium;
         this.avgProtein = avgProtein;
         this.avgCarbs = avgCarbs;
         this.avgFat = avgFat;
@@ -102,6 +112,8 @@ public class DietPlanDTO {
         this.avgSaturatedFat = avgSaturatedFat;
         this.avgUnsaturatedFat = avgUnsaturatedFat;
         this.avgSugars = avgSugars;
+        this.avgFiber = avgFiber;
+        this.avgSodium = avgSodium;
         this.saveCount = saveCount;
         this.weeklySaveCount = weeklySaveCount;
         this.monthlySaveCount = monthlySaveCount;
@@ -229,6 +241,22 @@ public class DietPlanDTO {
 
     public Double getAvgSugars() {
         return avgSugars;
+    }
+
+    public Double getTotalFiber() {
+        return totalFiber;
+    }
+
+    public Double getAvgFiber() {
+        return avgFiber;
+    }
+
+    public Double getTotalSodium() {
+        return totalSodium;
+    }
+
+    public Double getAvgSodium() {
+        return avgSodium;
     }
 
 }

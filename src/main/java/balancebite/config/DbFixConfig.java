@@ -142,6 +142,7 @@ public class DbFixConfig {
                 jdbc.execute("ALTER TABLE public.food_items ADD COLUMN IF NOT EXISTS has_sugar_data BOOLEAN DEFAULT FALSE");
                 jdbc.execute("ALTER TABLE public.food_items ADD COLUMN IF NOT EXISTS has_saturated_fat_data BOOLEAN DEFAULT FALSE");
                 jdbc.execute("ALTER TABLE public.food_items ADD COLUMN IF NOT EXISTS has_unsaturated_fat_data BOOLEAN DEFAULT FALSE");
+                jdbc.execute("ALTER TABLE public.food_items ADD COLUMN IF NOT EXISTS has_sodium_data BOOLEAN DEFAULT FALSE");
                 log.info("food_items boolean columns ensured");
             } catch (Exception e) {
                 log.warn("addFoodItemBooleanColumns failed: {}", e.getMessage());

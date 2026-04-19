@@ -115,6 +115,8 @@ public class MealDTO {
     private final double totalSugars;
     private final double totalSaturatedFat;
     private final double totalUnsaturatedFat;
+    private final double totalFiber;
+    private final double totalSodium;
 
     /**
      * A concatenated string of food item names in the meal.
@@ -219,7 +221,9 @@ public class MealDTO {
             String preparationVideoUrl,
             FoodSource foodSource,
             Integer servings,
-            Goal goal
+            Goal goal,
+            double totalFiber,
+            double totalSodium
             ) {
         this.id = id;
         this.name = name;
@@ -258,6 +262,8 @@ public class MealDTO {
         this.foodSource = foodSource;
         this.servings = servings;
         this.goal = goal;
+        this.totalFiber = totalFiber;
+        this.totalSodium = totalSodium;
     }
 
     /**
@@ -483,5 +489,13 @@ public class MealDTO {
 
     public Goal getGoal() {
         return goal;
+    }
+
+    public double getTotalFiber() {
+        return totalFiber;
+    }
+
+    public double getTotalSodium() {
+        return totalSodium;
     }
 }

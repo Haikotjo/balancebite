@@ -39,11 +39,12 @@ public class UsdaFoodResponseDTO {
             "Energy", "Protein", "Total lipid (fat)", "Carbohydrates", "Total Sugars",
             "Fatty acids, total saturated", "Fatty acids, total monounsaturated",
             "Fatty acids, total polyunsaturated", "Fatty acids, total trans",
-            "Fiber, total dietary"
+            "Fiber, total dietary",
+            "Sodium, Na"
             // Uncomment the following lines if you wish to include them later:
 
             // "Calcium, Ca", "Iron, Fe", "Magnesium, Mg", "Phosphorus, P",
-            // "Potassium, K", "Sodium, Na", "Zinc, Zn", "Vitamin C, total ascorbic acid",
+            // "Potassium, K", "Zinc, Zn", "Vitamin C, total ascorbic acid",
             // "Vitamin D (D2 + D3)", "Vitamin B-12", "Vitamin A, RAE", "Vitamin E (alpha-tocopherol)"
             // "Copper, Cu", "Manganese, Mn", "Selenium, Se",
             // "Thiamin", "Riboflavin", "Niacin", "Pantothenic acid", "Vitamin B-6",

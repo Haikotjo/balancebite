@@ -92,6 +92,7 @@ public class FoodItem {
     private boolean hasFiberData;
     private boolean hasSaturatedFatData;
     private boolean hasUnsaturatedFatData;
+    private boolean hasSodiumData;
 
     /**
      * No-argument constructor required by JPA.
@@ -108,6 +109,7 @@ public class FoodItem {
             hasFiberData = false;
             hasSaturatedFatData = false;
             hasUnsaturatedFatData = false;
+            hasSodiumData = false;
             return;
         }
         hasSugarData = nutrients.stream().anyMatch(n ->
@@ -123,6 +125,9 @@ public class FoodItem {
                 "Fatty acids, total polyunsaturated".equalsIgnoreCase(n.getNutrientName()) ||
                 "Fatty acids, total unsaturated".equalsIgnoreCase(n.getNutrientName()) ||
                 "Unsaturated Fat".equalsIgnoreCase(n.getNutrientName()));
+        hasSodiumData = nutrients.stream().anyMatch(n ->
+                "Sodium, Na".equalsIgnoreCase(n.getNutrientName()) ||
+                "Sodium".equalsIgnoreCase(n.getNutrientName()));
     }
 
     /**
@@ -369,6 +374,7 @@ public class FoodItem {
     public boolean isHasFiberData() { return hasFiberData; }
     public boolean isHasSaturatedFatData() { return hasSaturatedFatData; }
     public boolean isHasUnsaturatedFatData() { return hasUnsaturatedFatData; }
+    public boolean isHasSodiumData() { return hasSodiumData; }
 }
 
 

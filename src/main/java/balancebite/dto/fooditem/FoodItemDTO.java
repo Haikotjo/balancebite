@@ -95,6 +95,7 @@ public class FoodItemDTO {
     private final boolean hasFiberData;
     private final boolean hasSaturatedFatData;
     private final boolean hasUnsaturatedFatData;
+    private final boolean hasSodiumData;
 
     /**
      * Parameterized constructor to create a FoodItemDTO.
@@ -111,7 +112,7 @@ public class FoodItemDTO {
      * @param image            the Base64-encoded image of the meal (optional).
      * @param imageUrl         the URL of the meal image (optional).
      */
-    public FoodItemDTO(Long id, String name, int fdcId, List<NutrientInfoDTO> nutrients, String portionDescription, double gramWeight, String source, FoodSource foodSource, boolean promoted, LocalDateTime promotionStartDate, LocalDateTime promotionEndDate, FoodCategory foodCategory, String image, String imageUrl, BigDecimal price, BigDecimal grams, BigDecimal pricePer100g, Boolean storeBrand, BigDecimal promoPrice, Integer salePercentage, String saleDescription, BigDecimal effectivePrice, boolean hasSugarData, boolean hasFiberData, boolean hasSaturatedFatData, boolean hasUnsaturatedFatData) {
+    public FoodItemDTO(Long id, String name, int fdcId, List<NutrientInfoDTO> nutrients, String portionDescription, double gramWeight, String source, FoodSource foodSource, boolean promoted, LocalDateTime promotionStartDate, LocalDateTime promotionEndDate, FoodCategory foodCategory, String image, String imageUrl, BigDecimal price, BigDecimal grams, BigDecimal pricePer100g, Boolean storeBrand, BigDecimal promoPrice, Integer salePercentage, String saleDescription, BigDecimal effectivePrice, boolean hasSugarData, boolean hasFiberData, boolean hasSaturatedFatData, boolean hasUnsaturatedFatData, boolean hasSodiumData) {
         this.id = id;
         this.name = name;
         this.fdcId = fdcId;
@@ -138,6 +139,7 @@ public class FoodItemDTO {
         this.hasFiberData = hasFiberData;
         this.hasSaturatedFatData = hasSaturatedFatData;
         this.hasUnsaturatedFatData = hasUnsaturatedFatData;
+        this.hasSodiumData = hasSodiumData;
     }
 
     /**
@@ -334,4 +336,5 @@ public class FoodItemDTO {
     public boolean isHasFiberData() { return hasFiberData; }
     public boolean isHasSaturatedFatData() { return hasSaturatedFatData; }
     public boolean isHasUnsaturatedFatData() { return hasUnsaturatedFatData; }
+    public boolean isHasSodiumData() { return hasSodiumData; }
 }

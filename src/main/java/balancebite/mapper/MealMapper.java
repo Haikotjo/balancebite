@@ -145,7 +145,9 @@ public class MealMapper {
                 meal.getPreparationVideoUrl(),
                 meal.getFoodSource(),
                 meal.getServings(),
-                meal.getGoal()
+                meal.getGoal(),
+                Optional.ofNullable(meal.getTotalFiber()).orElse(0.0),
+                Optional.ofNullable(meal.getTotalSodium()).orElse(0.0)
         );
     }
 

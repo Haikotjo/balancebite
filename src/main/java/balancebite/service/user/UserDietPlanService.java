@@ -261,6 +261,10 @@ public class UserDietPlanService implements IUserDietPlanService {
         copy.setAvgProtein(original.getAvgProtein());
         copy.setAvgCarbs(original.getAvgCarbs());
         copy.setAvgFat(original.getAvgFat());
+        copy.setTotalFiber(original.getTotalFiber());
+        copy.setAvgFiber(original.getAvgFiber());
+        copy.setTotalSodium(original.getTotalSodium());
+        copy.setAvgSodium(original.getAvgSodium());
         copy.setGoal(original.getGoal());
 
         DietPlan saved = dietPlanRepository.save(copy);
@@ -710,36 +714,38 @@ public class UserDietPlanService implements IUserDietPlanService {
     private void recalculatePlanNutrients(DietPlan dietPlan) {
         List<DietDay> days = dietPlan.getDietDays();
         if (days == null || days.isEmpty()) {
-            dietPlan.setTotalCalories(0); dietPlan.setTotalProtein(0);
-            dietPlan.setTotalCarbs(0);    dietPlan.setTotalFat(0);
-            dietPlan.setTotalSaturatedFat(0); dietPlan.setTotalUnsaturatedFat(0);
-            dietPlan.setTotalSugars(0);
-            dietPlan.setAvgCalories(0);   dietPlan.setAvgProtein(0);
-            dietPlan.setAvgCarbs(0);      dietPlan.setAvgFat(0);
-            dietPlan.setAvgSaturatedFat(0); dietPlan.setAvgUnsaturatedFat(0);
-            dietPlan.setAvgSugars(0);
+            dietPlan.setTotalCalories(0.0); dietPlan.setTotalProtein(0.0);
+            dietPlan.setTotalCarbs(0.0);    dietPlan.setTotalFat(0.0);
+            dietPlan.setTotalSaturatedFat(0.0); dietPlan.setTotalUnsaturatedFat(0.0);
+            dietPlan.setTotalSugars(0.0);   dietPlan.setTotalFiber(0.0);   dietPlan.setTotalSodium(0.0);
+            dietPlan.setAvgCalories(0.0);   dietPlan.setAvgProtein(0.0);
+            dietPlan.setAvgCarbs(0.0);      dietPlan.setAvgFat(0.0);
+            dietPlan.setAvgSaturatedFat(0.0); dietPlan.setAvgUnsaturatedFat(0.0);
+            dietPlan.setAvgSugars(0.0);     dietPlan.setAvgFiber(0.0);     dietPlan.setAvgSodium(0.0);
             dietPlan.setGoal(null);
             return;
         }
-        double totCal = 0, totPro = 0, totCarb = 0, totFat = 0, totSat = 0, totUnsat = 0, totSug = 0;
+        double totCal = 0, totPro = 0, totCarb = 0, totFat = 0, totSat = 0, totUnsat = 0, totSug = 0, totFiber = 0, totSodium = 0;
         for (DietDay d : days) {
-            totCal   += d.getTotalCalories();
-            totPro   += d.getTotalProtein();
-            totCarb  += d.getTotalCarbs();
-            totFat   += d.getTotalFat();
-            totSat   += d.getTotalSaturatedFat();
-            totUnsat += d.getTotalUnsaturatedFat();
-            totSug   += d.getTotalSugars();
+            totCal    += d.getTotalCalories();
+            totPro    += d.getTotalProtein();
+            totCarb   += d.getTotalCarbs();
+            totFat    += d.getTotalFat();
+            totSat    += d.getTotalSaturatedFat();
+            totUnsat  += d.getTotalUnsaturatedFat();
+            totSug    += d.getTotalSugars();
+            totFiber  += d.getTotalFiber()  != null ? d.getTotalFiber()  : 0.0;
+            totSodium += d.getTotalSodium() != null ? d.getTotalSodium() : 0.0;
         }
         int n = days.size();
         dietPlan.setTotalCalories(totCal);  dietPlan.setTotalProtein(totPro);
         dietPlan.setTotalCarbs(totCarb);    dietPlan.setTotalFat(totFat);
         dietPlan.setTotalSaturatedFat(totSat); dietPlan.setTotalUnsaturatedFat(totUnsat);
-        dietPlan.setTotalSugars(totSug);
+        dietPlan.setTotalSugars(totSug);    dietPlan.setTotalFiber(totFiber);    dietPlan.setTotalSodium(totSodium);
         dietPlan.setAvgCalories(round1(totCal / n));  dietPlan.setAvgProtein(round1(totPro / n));
         dietPlan.setAvgCarbs(round1(totCarb / n));    dietPlan.setAvgFat(round1(totFat / n));
         dietPlan.setAvgSaturatedFat(round1(totSat / n)); dietPlan.setAvgUnsaturatedFat(round1(totUnsat / n));
-        dietPlan.setAvgSugars(round1(totSug / n));
+        dietPlan.setAvgSugars(round1(totSug / n));    dietPlan.setAvgFiber(round1(totFiber / n));    dietPlan.setAvgSodium(round1(totSodium / n));
         dietPlan.setGoal(detectGoal(totPro / n, totCarb / n, totFat / n));
     }
 

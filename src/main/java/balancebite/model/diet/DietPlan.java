@@ -66,6 +66,8 @@ public class DietPlan {
     private Double totalSaturatedFat;
     private Double totalUnsaturatedFat;
     private Double totalSugars;
+    private Double totalFiber;
+    private Double totalSodium;
     private Double avgProtein;
     private Double avgCarbs;
     private Double avgFat;
@@ -73,6 +75,8 @@ public class DietPlan {
     private Double avgSaturatedFat;
     private Double avgUnsaturatedFat;
     private Double avgSugars;
+    private Double avgFiber;
+    private Double avgSodium;
     @Column(name = "save_count")
     private Long saveCount = 0L;
 
@@ -310,6 +314,38 @@ public class DietPlan {
 
     public void setAvgSugars(Double avgSugars) {
         this.avgSugars = avgSugars;
+    }
+
+    public Double getTotalFiber() {
+        return totalFiber;
+    }
+
+    public void setTotalFiber(Double totalFiber) {
+        this.totalFiber = totalFiber;
+    }
+
+    public Double getAvgFiber() {
+        return avgFiber;
+    }
+
+    public void setAvgFiber(Double avgFiber) {
+        this.avgFiber = avgFiber;
+    }
+
+    public Double getTotalSodium() {
+        return totalSodium;
+    }
+
+    public void setTotalSodium(Double totalSodium) {
+        this.totalSodium = totalSodium;
+    }
+
+    public Double getAvgSodium() {
+        return avgSodium;
+    }
+
+    public void setAvgSodium(Double avgSodium) {
+        this.avgSodium = avgSodium;
     }
 
     public Long getSaveCount() {

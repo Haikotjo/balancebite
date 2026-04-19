@@ -48,6 +48,8 @@ public class DietDay {
     private Double totalSaturatedFat;
     private Double totalUnsaturatedFat;
     private Double totalSugars;
+    private Double totalFiber;
+    private Double totalSodium;
 
 
     // Constructors
@@ -68,6 +70,8 @@ public class DietDay {
             this.totalSugars = 0.0;
             this.totalSaturatedFat = 0.0;
             this.totalUnsaturatedFat = 0.0;
+            this.totalFiber = 0.0;
+            this.totalSodium = 0.0;
             return;
         }
 
@@ -78,6 +82,8 @@ public class DietDay {
         this.totalSugars = meals.stream().mapToDouble(m -> perServing(m.getTotalSugars(), m.getServings())).sum();
         this.totalSaturatedFat = meals.stream().mapToDouble(m -> perServing(m.getTotalSaturatedFat(), m.getServings())).sum();
         this.totalUnsaturatedFat = meals.stream().mapToDouble(m -> perServing(m.getTotalUnsaturatedFat(), m.getServings())).sum();
+        this.totalFiber = meals.stream().mapToDouble(m -> perServing(m.getTotalFiber() != null ? m.getTotalFiber() : 0.0, m.getServings())).sum();
+        this.totalSodium = meals.stream().mapToDouble(m -> perServing(m.getTotalSodium() != null ? m.getTotalSodium() : 0.0, m.getServings())).sum();
     }
 
     private double perServing(double total, Integer servings) {
@@ -191,5 +197,21 @@ public class DietDay {
 
     public void setTotalSugars(Double totalSugars) {
         this.totalSugars = totalSugars;
+    }
+
+    public Double getTotalFiber() {
+        return totalFiber;
+    }
+
+    public void setTotalFiber(Double totalFiber) {
+        this.totalFiber = totalFiber;
+    }
+
+    public Double getTotalSodium() {
+        return totalSodium;
+    }
+
+    public void setTotalSodium(Double totalSodium) {
+        this.totalSodium = totalSodium;
     }
 }
