@@ -1,7 +1,10 @@
 {
   "permissions": {
     "allow": [
-      "Bash(xargs grep *)"
+      "Bash(xargs grep *)",
+      "Bash(./mvnw compile *)",
+      "Bash(mvn compile *)",
+      "Bash(./mvnw.cmd compile *)"
     ]
   }
 }

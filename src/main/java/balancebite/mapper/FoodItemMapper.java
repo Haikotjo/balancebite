@@ -77,6 +77,7 @@ public class FoodItemMapper {
                                 n.getNutrientId()))
                         .collect(Collectors.toList());
         foodItem.setNutrients(nutrients);
+        foodItem.applyFatDerivation();
         foodItem.refreshNutrientFlags();
 
         foodItem.setFoodCategory(dto.getFoodCategory());

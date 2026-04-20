@@ -13,6 +13,7 @@ import balancebite.model.foodItem.FoodCategory;
 import balancebite.model.foodItem.FoodItem;
 import balancebite.model.foodItem.FoodSource;
 import balancebite.repository.FoodItemRepository;
+import balancebite.repository.MealRepository;
 import balancebite.repository.PromotedFoodItemRepository;
 import balancebite.repository.UserRepository;
 import balancebite.service.CloudinaryService;
@@ -48,6 +49,7 @@ public class FoodItemService implements IFoodItemService {
     private final CloudinaryService cloudinaryService;
     private final PromotedFoodItemRepository promotedFoodItemRepository;
     private final UserRepository userRepository;
+    private final MealRepository mealRepository;
 
     /**
      * Constructor for dependency injection.
@@ -56,13 +58,14 @@ public class FoodItemService implements IFoodItemService {
      * @param usdaApiService Service for interacting with the USDA API.
      * @param foodItemMapper Mapper for converting between FoodItem entities and DTOs.
      */
-    public FoodItemService(FoodItemRepository foodItemRepository, UsdaApiService usdaApiService, FoodItemMapper foodItemMapper, CloudinaryService cloudinaryService, PromotedFoodItemRepository promotedFoodItemRepository, UserRepository userRepository) {
+    public FoodItemService(FoodItemRepository foodItemRepository, UsdaApiService usdaApiService, FoodItemMapper foodItemMapper, CloudinaryService cloudinaryService, PromotedFoodItemRepository promotedFoodItemRepository, UserRepository userRepository, MealRepository mealRepository) {
         this.foodItemRepository = foodItemRepository;
         this.usdaApiService = usdaApiService;
         this.foodItemMapper = foodItemMapper;
         this.cloudinaryService = cloudinaryService;
         this.promotedFoodItemRepository = promotedFoodItemRepository;
         this.userRepository = userRepository;
+        this.mealRepository = mealRepository;
     }
 
     /**
@@ -155,6 +158,7 @@ public class FoodItemService implements IFoodItemService {
                 .collect(Collectors.toList());
         existing.getNutrients().clear();
         existing.getNutrients().addAll(nutrients);
+        existing.applyFatDerivation();
         existing.refreshNutrientFlags();
 
         // --- 3) Image handling via central handler (update flow => may delete old when switching/clearing) ---
@@ -174,6 +178,12 @@ public class FoodItemService implements IFoodItemService {
         existing.setGrams(input.getGrams());
 
         foodItemRepository.save(existing);
+
+        mealRepository.findByFoodItemId(id).forEach(meal -> {
+            meal.updateNutrients();
+            mealRepository.save(meal);
+        });
+
         return foodItemMapper.toDTO(existing);
     }
 
@@ -239,6 +249,7 @@ public class FoodItemService implements IFoodItemService {
         // Convert the USDA response to a FoodItem entity and save it.
         FoodItem foodItem = balancebite.utils.FoodItemUtil.convertToFoodItem(response);
         foodItem.setFdcId(fdcIdInt); // Set the FDC ID.
+        foodItem.applyFatDerivation();
         foodItem.refreshNutrientFlags();
         foodItemRepository.save(foodItem);
 

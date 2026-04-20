@@ -157,6 +157,13 @@ public class MealDTO {
 
     private final Goal goal;
 
+    private final Double fiberPer100g;
+    private final Double sugarPer100g;
+    private final Double saturatedFatPer100g;
+    private final Boolean flagHighFiber;
+    private final Boolean flagLowSugar;
+    private final Boolean flagLowUnhealthyFats;
+
     /**
      * Constructor for creating a MealDTO with essential meal information.
      *
@@ -223,7 +230,13 @@ public class MealDTO {
             Integer servings,
             Goal goal,
             double totalFiber,
-            double totalSodium
+            double totalSodium,
+            Double fiberPer100g,
+            Double sugarPer100g,
+            Double saturatedFatPer100g,
+            Boolean flagHighFiber,
+            Boolean flagLowSugar,
+            Boolean flagLowUnhealthyFats
             ) {
         this.id = id;
         this.name = name;
@@ -264,6 +277,12 @@ public class MealDTO {
         this.goal = goal;
         this.totalFiber = totalFiber;
         this.totalSodium = totalSodium;
+        this.fiberPer100g = fiberPer100g;
+        this.sugarPer100g = sugarPer100g;
+        this.saturatedFatPer100g = saturatedFatPer100g;
+        this.flagHighFiber = flagHighFiber;
+        this.flagLowSugar = flagLowSugar;
+        this.flagLowUnhealthyFats = flagLowUnhealthyFats;
     }
 
     /**
@@ -498,4 +517,11 @@ public class MealDTO {
     public double getTotalSodium() {
         return totalSodium;
     }
+
+    public Double getFiberPer100g() { return fiberPer100g; }
+    public Double getSugarPer100g() { return sugarPer100g; }
+    public Double getSaturatedFatPer100g() { return saturatedFatPer100g; }
+    public Boolean getFlagHighFiber() { return flagHighFiber; }
+    public Boolean getFlagLowSugar() { return flagLowSugar; }
+    public Boolean getFlagLowUnhealthyFats() { return flagLowUnhealthyFats; }
 }

@@ -77,6 +77,15 @@ public class DietPlan {
     private Double avgSugars;
     private Double avgFiber;
     private Double avgSodium;
+    @Column(name = "flag_high_fiber")
+    private Boolean flagHighFiber;
+
+    @Column(name = "flag_low_sugar")
+    private Boolean flagLowSugar;
+
+    @Column(name = "flag_low_unhealthy_fats")
+    private Boolean flagLowUnhealthyFats;
+
     @Column(name = "save_count")
     private Long saveCount = 0L;
 
@@ -347,6 +356,15 @@ public class DietPlan {
     public void setAvgSodium(Double avgSodium) {
         this.avgSodium = avgSodium;
     }
+
+    public Boolean getFlagHighFiber() { return flagHighFiber; }
+    public void setFlagHighFiber(Boolean flagHighFiber) { this.flagHighFiber = flagHighFiber; }
+
+    public Boolean getFlagLowSugar() { return flagLowSugar; }
+    public void setFlagLowSugar(Boolean flagLowSugar) { this.flagLowSugar = flagLowSugar; }
+
+    public Boolean getFlagLowUnhealthyFats() { return flagLowUnhealthyFats; }
+    public void setFlagLowUnhealthyFats(Boolean flagLowUnhealthyFats) { this.flagLowUnhealthyFats = flagLowUnhealthyFats; }
 
     public Long getSaveCount() {
         return saveCount;

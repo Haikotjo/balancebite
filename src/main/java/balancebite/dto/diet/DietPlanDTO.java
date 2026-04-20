@@ -46,6 +46,9 @@ public class DietPlanDTO {
     private final long saveCount;
     private final long weeklySaveCount;
     private final long monthlySaveCount;
+    private final Boolean flagHighFiber;
+    private final Boolean flagLowSugar;
+    private final Boolean flagLowUnhealthyFats;
 
     public DietPlanDTO(Long id,
                        String name,
@@ -81,7 +84,10 @@ public class DietPlanDTO {
                        Double avgSodium,
                        long saveCount,
                        long weeklySaveCount,
-                       long monthlySaveCount) {
+                       long monthlySaveCount,
+                       Boolean flagHighFiber,
+                       Boolean flagLowSugar,
+                       Boolean flagLowUnhealthyFats) {
         this.id = id;
         this.name = name;
         this.originalDietId = originalDietId;
@@ -117,6 +123,9 @@ public class DietPlanDTO {
         this.saveCount = saveCount;
         this.weeklySaveCount = weeklySaveCount;
         this.monthlySaveCount = monthlySaveCount;
+        this.flagHighFiber = flagHighFiber;
+        this.flagLowSugar = flagLowSugar;
+        this.flagLowUnhealthyFats = flagLowUnhealthyFats;
     }
 
     public Long getId() {
@@ -259,4 +268,7 @@ public class DietPlanDTO {
         return avgSodium;
     }
 
+    public Boolean getFlagHighFiber() { return flagHighFiber; }
+    public Boolean getFlagLowSugar() { return flagLowSugar; }
+    public Boolean getFlagLowUnhealthyFats() { return flagLowUnhealthyFats; }
 }

@@ -375,6 +375,79 @@ public class FoodItem {
     public boolean isHasSaturatedFatData() { return hasSaturatedFatData; }
     public boolean isHasUnsaturatedFatData() { return hasUnsaturatedFatData; }
     public boolean isHasSodiumData() { return hasSodiumData; }
+
+    /**
+     * Reads a nutrient value per 100g from the nutrients list by name(s).
+     * Returns null if no matching nutrient is found.
+     */
+    public Double getNutrientValue(List<String> names) {
+        if (nutrients == null) return null;
+        return nutrients.stream()
+                .filter(n -> n.getValue() != null &&
+                        names.stream().anyMatch(name -> name.equalsIgnoreCase(n.getNutrientName())))
+                .mapToDouble(balancebite.model.NutrientInfo::getValue)
+                .filter(v -> v >= 0)
+                .boxed()
+                .findFirst()
+                .orElse(null);
+    }
+
+    /**
+     * Returns the fiber value per 100g from the nutrients list, or null if absent.
+     */
+    public Double getFiberPer100g() {
+        return getNutrientValue(List.of("Fiber, total dietary"));
+    }
+
+    /**
+     * Returns the sugar value per 100g from the nutrients list, or null if absent.
+     */
+    public Double getSugarPer100g() {
+        return getNutrientValue(List.of("Total Sugars", "Sugars, total"));
+    }
+
+    /**
+     * Returns the saturated fat value per 100g from the nutrients list, or null if absent.
+     */
+    public Double getSaturatedFatPer100g() {
+        return getNutrientValue(List.of("Fatty acids, total saturated", "Saturated Fat"));
+    }
+
+    /**
+     * If nutrients contain total fat + saturated fat but no unsaturated fat, adds a derived
+     * "Unsaturated Fat" entry (total − saturated). Vice versa for the missing saturated fat.
+     * Call this before refreshNutrientFlags() so the boolean flags are set correctly.
+     */
+    public void applyFatDerivation() {
+        if (nutrients == null) return;
+
+        Double totalFat = getNutrientValue(List.of("Total lipid (fat)"));
+        Double saturatedFat = getNutrientValue(List.of("Fatty acids, total saturated", "Saturated Fat"));
+        boolean hasUnsat = nutrients.stream().anyMatch(n ->
+                "Fatty acids, total monounsaturated".equalsIgnoreCase(n.getNutrientName()) ||
+                "Fatty acids, total polyunsaturated".equalsIgnoreCase(n.getNutrientName()) ||
+                "Fatty acids, total unsaturated".equalsIgnoreCase(n.getNutrientName()) ||
+                "Unsaturated Fat".equalsIgnoreCase(n.getNutrientName()));
+
+        if (totalFat != null && saturatedFat != null && !hasUnsat) {
+            double derived = Math.max(0.0, totalFat - saturatedFat);
+            nutrients.add(new balancebite.model.NutrientInfo("Unsaturated Fat", derived, "g", null));
+            return;
+        }
+
+        if (totalFat != null && hasUnsat && saturatedFat == null) {
+            double unsatTotal = nutrients.stream()
+                    .filter(n -> "Fatty acids, total monounsaturated".equalsIgnoreCase(n.getNutrientName()) ||
+                                 "Fatty acids, total polyunsaturated".equalsIgnoreCase(n.getNutrientName()) ||
+                                 "Fatty acids, total unsaturated".equalsIgnoreCase(n.getNutrientName()) ||
+                                 "Unsaturated Fat".equalsIgnoreCase(n.getNutrientName()))
+                    .filter(n -> n.getValue() != null)
+                    .mapToDouble(balancebite.model.NutrientInfo::getValue)
+                    .sum();
+            double derived = Math.max(0.0, totalFat - unsatTotal);
+            nutrients.add(new balancebite.model.NutrientInfo("Saturated Fat", derived, "g", null));
+        }
+    }
 }
 
 

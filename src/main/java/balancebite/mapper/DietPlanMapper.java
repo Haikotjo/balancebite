@@ -84,7 +84,10 @@ public class DietPlanMapper {
                 dietPlan.getAvgSodium(),
                 saveCount,
                 weeklySaveCount,
-                monthlySaveCount
+                monthlySaveCount,
+                dietPlan.getFlagHighFiber(),
+                dietPlan.getFlagLowSugar(),
+                dietPlan.getFlagLowUnhealthyFats()
         );
     }
 

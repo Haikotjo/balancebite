@@ -266,6 +266,9 @@ public class UserDietPlanService implements IUserDietPlanService {
         copy.setTotalSodium(original.getTotalSodium());
         copy.setAvgSodium(original.getAvgSodium());
         copy.setGoal(original.getGoal());
+        copy.setFlagHighFiber(original.getFlagHighFiber());
+        copy.setFlagLowSugar(original.getFlagLowSugar());
+        copy.setFlagLowUnhealthyFats(original.getFlagLowUnhealthyFats());
 
         DietPlan saved = dietPlanRepository.save(copy);
         user.getSavedDietPlans().add(saved);
@@ -723,6 +726,9 @@ public class UserDietPlanService implements IUserDietPlanService {
             dietPlan.setAvgSaturatedFat(0.0); dietPlan.setAvgUnsaturatedFat(0.0);
             dietPlan.setAvgSugars(0.0);     dietPlan.setAvgFiber(0.0);     dietPlan.setAvgSodium(0.0);
             dietPlan.setGoal(null);
+            dietPlan.setFlagHighFiber(null);
+            dietPlan.setFlagLowSugar(null);
+            dietPlan.setFlagLowUnhealthyFats(null);
             return;
         }
         double totCal = 0, totPro = 0, totCarb = 0, totFat = 0, totSat = 0, totUnsat = 0, totSug = 0, totFiber = 0, totSodium = 0;
@@ -747,6 +753,23 @@ public class UserDietPlanService implements IUserDietPlanService {
         dietPlan.setAvgSaturatedFat(round1(totSat / n)); dietPlan.setAvgUnsaturatedFat(round1(totUnsat / n));
         dietPlan.setAvgSugars(round1(totSug / n));    dietPlan.setAvgFiber(round1(totFiber / n));    dietPlan.setAvgSodium(round1(totSodium / n));
         dietPlan.setGoal(detectGoal(totPro / n, totCarb / n, totFat / n));
+
+        List<balancebite.model.meal.Meal> allMeals = days.stream()
+                .flatMap(d -> d.getMeals().stream())
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+
+        dietPlan.setFlagHighFiber(aggregateFlag(allMeals, balancebite.model.meal.Meal::getFlagHighFiber));
+        dietPlan.setFlagLowSugar(aggregateFlag(allMeals, balancebite.model.meal.Meal::getFlagLowSugar));
+        dietPlan.setFlagLowUnhealthyFats(aggregateFlag(allMeals, balancebite.model.meal.Meal::getFlagLowUnhealthyFats));
+    }
+
+    private Boolean aggregateFlag(List<balancebite.model.meal.Meal> meals,
+                                  java.util.function.Function<balancebite.model.meal.Meal, Boolean> flagGetter) {
+        if (meals.isEmpty()) return null;
+        if (meals.stream().anyMatch(m -> flagGetter.apply(m) == null)) return null;
+        if (meals.stream().allMatch(m -> Boolean.TRUE.equals(flagGetter.apply(m)))) return true;
+        return false;
     }
 
     private DietPlan getOwnedDietPlanOrThrow(Long userId, Long dietPlanId) {

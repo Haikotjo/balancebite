@@ -76,6 +76,8 @@ public class FoodItemBulkFetchUtil {
                                               List<Map<String, String>> savedItems) {
         // Convert the response to a FoodItem entity and save it
         FoodItem foodItem = balancebite.utils.FoodItemUtil.convertToFoodItem(response);
+        foodItem.applyFatDerivation();
+        foodItem.refreshNutrientFlags();
         foodItemRepository.save(foodItem);
 
         // Convert the response into a saved item map and add it to the list

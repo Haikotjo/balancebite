@@ -188,6 +188,9 @@ public interface MealRepository extends JpaRepository<Meal, Long>, JpaSpecificat
 """)
     Page<Meal> findMyMeals(@Param("user") User user, Pageable pageable);
 
+    @Query("SELECT DISTINCT m FROM Meal m JOIN m.mealIngredients mi WHERE mi.foodItem.id = :foodItemId")
+    List<Meal> findByFoodItemId(@Param("foodItemId") Long foodItemId);
+
 
 }
 

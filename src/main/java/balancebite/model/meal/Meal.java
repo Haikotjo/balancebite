@@ -235,6 +235,26 @@ public class Meal {
     @Column(name = "servings")
     private Integer servings;
 
+    // Nutrition per 100g of total meal weight (computed from FoodItem nutrient data)
+    @Column(name = "fiber_per_100g")
+    private Double fiberPer100g;
+
+    @Column(name = "sugar_per_100g")
+    private Double sugarPer100g;
+
+    @Column(name = "saturated_fat_per_100g")
+    private Double saturatedFatPer100g;
+
+    // Nutritional quality flags (null = insufficient data, false = below threshold, true = meets threshold)
+    @Column(name = "flag_high_fiber")
+    private Boolean flagHighFiber;
+
+    @Column(name = "flag_low_sugar")
+    private Boolean flagLowSugar;
+
+    @Column(name = "flag_low_unhealthy_fats")
+    private Boolean flagLowUnhealthyFats;
+
     /**
      * No-argument constructor required by JPA.
      */
@@ -256,6 +276,12 @@ public class Meal {
             this.totalFiber = 0.0;
             this.totalSodium = 0.0;
             this.foodItemsString = "";
+            this.fiberPer100g = null;
+            this.sugarPer100g = null;
+            this.saturatedFatPer100g = null;
+            this.flagHighFiber = null;
+            this.flagLowSugar = null;
+            this.flagLowUnhealthyFats = null;
             return;
         }
 
@@ -290,6 +316,78 @@ public class Meal {
                 .collect(Collectors.joining(", "));
 
         this.goal = detectGoal(this.totalProtein, this.totalCarbs, this.totalFat);
+
+        recalculateNutritionalFlags();
+    }
+
+    private void recalculateNutritionalFlags() {
+        double totalMealWeight = mealIngredients.stream()
+                .mapToDouble(MealIngredient::getQuantity)
+                .sum();
+
+        if (totalMealWeight <= 0) {
+            this.fiberPer100g = null;
+            this.sugarPer100g = null;
+            this.saturatedFatPer100g = null;
+            this.flagHighFiber = null;
+            this.flagLowSugar = null;
+            this.flagLowUnhealthyFats = null;
+            return;
+        }
+
+        // Fiber — uses hasFiberData flag and reads "Fiber, total dietary" from nutrient list
+        boolean allHaveFiber = mealIngredients.stream()
+                .filter(mi -> mi.getFoodItem() != null)
+                .allMatch(mi -> mi.getFoodItem().isHasFiberData());
+        if (allHaveFiber) {
+            double totalFiber = mealIngredients.stream()
+                    .filter(mi -> mi.getFoodItem() != null)
+                    .mapToDouble(mi -> {
+                        Double val = mi.getFoodItem().getFiberPer100g();
+                        return val != null ? val * mi.getQuantity() / 100.0 : 0.0;
+                    }).sum();
+            this.fiberPer100g = (totalFiber / totalMealWeight) * 100.0;
+            this.flagHighFiber = this.fiberPer100g >= 6.0;
+        } else {
+            this.fiberPer100g = null;
+            this.flagHighFiber = null;
+        }
+
+        // Sugar — uses hasSugarData flag and reads "Total Sugars"/"Sugars, total"
+        boolean allHaveSugar = mealIngredients.stream()
+                .filter(mi -> mi.getFoodItem() != null)
+                .allMatch(mi -> mi.getFoodItem().isHasSugarData());
+        if (allHaveSugar) {
+            double totalSugar = mealIngredients.stream()
+                    .filter(mi -> mi.getFoodItem() != null)
+                    .mapToDouble(mi -> {
+                        Double val = mi.getFoodItem().getSugarPer100g();
+                        return val != null ? val * mi.getQuantity() / 100.0 : 0.0;
+                    }).sum();
+            this.sugarPer100g = (totalSugar / totalMealWeight) * 100.0;
+            this.flagLowSugar = this.sugarPer100g <= 5.0;
+        } else {
+            this.sugarPer100g = null;
+            this.flagLowSugar = null;
+        }
+
+        // Saturated fat — uses hasSaturatedFatData flag (includes auto-derived values)
+        boolean allHaveSatFat = mealIngredients.stream()
+                .filter(mi -> mi.getFoodItem() != null)
+                .allMatch(mi -> mi.getFoodItem().isHasSaturatedFatData());
+        if (allHaveSatFat) {
+            double totalSatFat = mealIngredients.stream()
+                    .filter(mi -> mi.getFoodItem() != null)
+                    .mapToDouble(mi -> {
+                        Double val = mi.getFoodItem().getSaturatedFatPer100g();
+                        return val != null ? val * mi.getQuantity() / 100.0 : 0.0;
+                    }).sum();
+            this.saturatedFatPer100g = (totalSatFat / totalMealWeight) * 100.0;
+            this.flagLowUnhealthyFats = this.saturatedFatPer100g <= 1.5;
+        } else {
+            this.saturatedFatPer100g = null;
+            this.flagLowUnhealthyFats = null;
+        }
     }
 
     private Goal detectGoal(double protein, double carbs, double fat) {
@@ -772,4 +870,22 @@ public class Meal {
     public void setServings(Integer servings) {
         this.servings = servings;
     }
+
+    public Double getFiberPer100g() { return fiberPer100g; }
+    public void setFiberPer100g(Double fiberPer100g) { this.fiberPer100g = fiberPer100g; }
+
+    public Double getSugarPer100g() { return sugarPer100g; }
+    public void setSugarPer100g(Double sugarPer100g) { this.sugarPer100g = sugarPer100g; }
+
+    public Double getSaturatedFatPer100g() { return saturatedFatPer100g; }
+    public void setSaturatedFatPer100g(Double saturatedFatPer100g) { this.saturatedFatPer100g = saturatedFatPer100g; }
+
+    public Boolean getFlagHighFiber() { return flagHighFiber; }
+    public void setFlagHighFiber(Boolean flagHighFiber) { this.flagHighFiber = flagHighFiber; }
+
+    public Boolean getFlagLowSugar() { return flagLowSugar; }
+    public void setFlagLowSugar(Boolean flagLowSugar) { this.flagLowSugar = flagLowSugar; }
+
+    public Boolean getFlagLowUnhealthyFats() { return flagLowUnhealthyFats; }
+    public void setFlagLowUnhealthyFats(Boolean flagLowUnhealthyFats) { this.flagLowUnhealthyFats = flagLowUnhealthyFats; }
 }

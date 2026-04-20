@@ -147,7 +147,13 @@ public class MealMapper {
                 meal.getServings(),
                 meal.getGoal(),
                 Optional.ofNullable(meal.getTotalFiber()).orElse(0.0),
-                Optional.ofNullable(meal.getTotalSodium()).orElse(0.0)
+                Optional.ofNullable(meal.getTotalSodium()).orElse(0.0),
+                meal.getFiberPer100g(),
+                meal.getSugarPer100g(),
+                meal.getSaturatedFatPer100g(),
+                meal.getFlagHighFiber(),
+                meal.getFlagLowSugar(),
+                meal.getFlagLowUnhealthyFats()
         );
     }
 
