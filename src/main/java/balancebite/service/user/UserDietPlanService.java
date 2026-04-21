@@ -714,6 +714,15 @@ public class UserDietPlanService implements IUserDietPlanService {
 // 🔽 Private helper methods 🔽
 // =============================
 
+    @Transactional
+    public void recalculateAllDietPlanFlags() {
+        dietPlanRepository.findAll().forEach(dietPlan -> {
+            recalculatePlanNutrients(dietPlan);
+            dietPlanRepository.save(dietPlan);
+        });
+        log.info("Recalculated nutritional flags for all diet plans");
+    }
+
     private void recalculatePlanNutrients(DietPlan dietPlan) {
         List<DietDay> days = dietPlan.getDietDays();
         if (days == null || days.isEmpty()) {

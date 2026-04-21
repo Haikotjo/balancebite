@@ -1,11 +1,15 @@
 package balancebite.config;
 
+import balancebite.repository.MealRepository;
+import balancebite.service.user.UserDietPlanService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
 
 @Configuration
 public class DbFixConfig {
@@ -172,6 +176,28 @@ public class DbFixConfig {
                 log.warn("addGoalColumnToMeals failed: {}", e.getMessage());
             }
         };
+    }
+
+    @Bean
+    public CommandLineRunner recalculateMealNutritionalFlags(MealRepository mealRepository,
+                                                             PlatformTransactionManager txManager) {
+        return args -> {
+            TransactionTemplate tx = new TransactionTemplate(txManager);
+            tx.execute(status -> {
+                var meals = mealRepository.findAllWithIngredients();
+                meals.forEach(meal -> {
+                    meal.updateNutrients();
+                    mealRepository.save(meal);
+                });
+                log.info("Recalculated nutritional flags for {} meals", meals.size());
+                return null;
+            });
+        };
+    }
+
+    @Bean
+    public CommandLineRunner recalculateDietPlanNutritionalFlags(UserDietPlanService userDietPlanService) {
+        return args -> userDietPlanService.recalculateAllDietPlanFlags();
     }
 
     @Bean

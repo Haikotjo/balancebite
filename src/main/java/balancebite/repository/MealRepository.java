@@ -191,6 +191,9 @@ public interface MealRepository extends JpaRepository<Meal, Long>, JpaSpecificat
     @Query("SELECT DISTINCT m FROM Meal m JOIN m.mealIngredients mi WHERE mi.foodItem.id = :foodItemId")
     List<Meal> findByFoodItemId(@Param("foodItemId") Long foodItemId);
 
+    @Query("SELECT DISTINCT m FROM Meal m LEFT JOIN FETCH m.mealIngredients mi LEFT JOIN FETCH mi.foodItem")
+    List<Meal> findAllWithIngredients();
+
 
 }
 

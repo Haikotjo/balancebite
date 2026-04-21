@@ -4,7 +4,8 @@
       "Bash(xargs grep *)",
       "Bash(./mvnw compile *)",
       "Bash(mvn compile *)",
-      "Bash(./mvnw.cmd compile *)"
+      "Bash(./mvnw.cmd compile *)",
+      "Bash(grep -iv \"total\\\\|list\\\\|param\\\\|@\\\\|comment\\\\|//\")"
     ]
   }
 }
