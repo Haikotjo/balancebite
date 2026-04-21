@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
@@ -180,6 +181,7 @@ public class DbFixConfig {
     }
 
     @Bean
+    @Order(1)
     public CommandLineRunner refreshFoodItemNutrientFlags(FoodItemRepository foodItemRepository,
                                                           PlatformTransactionManager txManager) {
         return args -> {
@@ -198,6 +200,7 @@ public class DbFixConfig {
     }
 
     @Bean
+    @Order(2)
     public CommandLineRunner recalculateMealNutritionalFlags(MealRepository mealRepository,
                                                              PlatformTransactionManager txManager) {
         return args -> {
@@ -215,6 +218,7 @@ public class DbFixConfig {
     }
 
     @Bean
+    @Order(3)
     public CommandLineRunner recalculateDietPlanNutritionalFlags(UserDietPlanService userDietPlanService) {
         return args -> userDietPlanService.recalculateAllDietPlanFlags();
     }
