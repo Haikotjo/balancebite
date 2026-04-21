@@ -1,5 +1,6 @@
 package balancebite.config;
 
+import balancebite.repository.FoodItemRepository;
 import balancebite.repository.MealRepository;
 import balancebite.service.user.UserDietPlanService;
 import org.slf4j.Logger;
@@ -175,6 +176,24 @@ public class DbFixConfig {
             } catch (Exception e) {
                 log.warn("addGoalColumnToMeals failed: {}", e.getMessage());
             }
+        };
+    }
+
+    @Bean
+    public CommandLineRunner refreshFoodItemNutrientFlags(FoodItemRepository foodItemRepository,
+                                                          PlatformTransactionManager txManager) {
+        return args -> {
+            TransactionTemplate tx = new TransactionTemplate(txManager);
+            tx.execute(status -> {
+                var items = foodItemRepository.findAll();
+                items.forEach(item -> {
+                    item.applyFatDerivation();
+                    item.refreshNutrientFlags();
+                    foodItemRepository.save(item);
+                });
+                log.info("Refreshed nutrient flags for {} food items", items.size());
+                return null;
+            });
         };
     }
 
