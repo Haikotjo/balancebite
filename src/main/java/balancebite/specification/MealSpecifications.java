@@ -158,6 +158,18 @@ public class MealSpecifications {
         return cb.quot(total, servings).as(Double.class);
     }
 
+    public static Specification<Meal> flagHighFiber() {
+        return (root, query, cb) -> cb.isTrue(root.get("flagHighFiber"));
+    }
+
+    public static Specification<Meal> flagLowSugar() {
+        return (root, query, cb) -> cb.isTrue(root.get("flagLowSugar"));
+    }
+
+    public static Specification<Meal> flagLowUnhealthyFats() {
+        return (root, query, cb) -> cb.isTrue(root.get("flagLowUnhealthyFats"));
+    }
+
     public static Specification<Meal> withMacroSorting(String sortBy, String sortOrder) {
         return (root, query, cb) -> {
 

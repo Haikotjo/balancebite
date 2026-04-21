@@ -48,7 +48,10 @@ public class PublicDietPlanController {
             @RequestParam(required = false) Long createdByUserId,
             @RequestParam(required = false) String name,
             @RequestParam(defaultValue = "true") boolean includeUserCopies,
-            @RequestParam(required = false) Goal goal
+            @RequestParam(required = false) Goal goal,
+            @RequestParam(required = false) Boolean flagHighFiber,
+            @RequestParam(required = false) Boolean flagLowSugar,
+            @RequestParam(required = false) Boolean flagLowUnhealthyFats
             ) {
         Map<String, String> sortFieldMap = Map.ofEntries(
                 Map.entry("avgProtein", "avgProtein"),
@@ -88,7 +91,10 @@ public class PublicDietPlanController {
                 createdByUserId,
                 name,
                 includeUserCopies,
-                goal
+                goal,
+                flagHighFiber,
+                flagLowSugar,
+                flagLowUnhealthyFats
         );
 
         if (plans.isEmpty()) {

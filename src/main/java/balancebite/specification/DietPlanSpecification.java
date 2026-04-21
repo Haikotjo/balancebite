@@ -115,4 +115,16 @@ public class DietPlanSpecification {
         return (root, query, cb) -> cb.equal(root.get("goal"), goal);
     }
 
+    public static Specification<DietPlan> flagHighFiber() {
+        return (root, query, cb) -> cb.isTrue(root.get("flagHighFiber"));
+    }
+
+    public static Specification<DietPlan> flagLowSugar() {
+        return (root, query, cb) -> cb.isTrue(root.get("flagLowSugar"));
+    }
+
+    public static Specification<DietPlan> flagLowUnhealthyFats() {
+        return (root, query, cb) -> cb.isTrue(root.get("flagLowUnhealthyFats"));
+    }
+
 }

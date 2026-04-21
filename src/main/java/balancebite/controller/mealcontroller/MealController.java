@@ -95,6 +95,9 @@ public class MealController {
             @RequestParam(required = false, defaultValue = "true") boolean includeUserCopies,
             @RequestParam(required = false) String name,
             @RequestParam(required = false) Goal goal,
+            @RequestParam(required = false) Boolean flagHighFiber,
+            @RequestParam(required = false) Boolean flagLowSugar,
+            @RequestParam(required = false) Boolean flagLowUnhealthyFats,
             Pageable pageable
     ) {
         String currentUsername = null;
@@ -112,7 +115,8 @@ public class MealController {
                     minProtein, maxProtein,
                     minCarbs, maxCarbs,
                     minFat, maxFat,
-                    foodSource, currentUsername, includeUserCopies, name, goal
+                    foodSource, currentUsername, includeUserCopies, name, goal,
+                    flagHighFiber, flagLowSugar, flagLowUnhealthyFats
             );
 
             return ResponseEntity.ok(mealDTOs);

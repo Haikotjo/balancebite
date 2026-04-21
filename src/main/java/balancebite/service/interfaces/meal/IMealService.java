@@ -67,7 +67,10 @@ public interface IMealService {
             String currentUsername,
             boolean includeUserCopies,
             String name,
-            Goal goal
+            Goal goal,
+            Boolean flagHighFiber,
+            Boolean flagLowSugar,
+            Boolean flagLowUnhealthyFats
     );
 
     /**

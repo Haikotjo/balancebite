@@ -104,7 +104,8 @@ public class MealService implements IMealService {
             Double minCarbs, Double maxCarbs, Double minFat, Double maxFat,
             String foodSource, String currentUsername,
             boolean includeUserCopies, String name,
-            Goal goal
+            Goal goal,
+            Boolean flagHighFiber, Boolean flagLowSugar, Boolean flagLowUnhealthyFats
             ) {
         // IMPORTANT: use logger, not System.out, so it shows in Railway logs
         log.info("=== getAllMeals START === username='{}'", currentUsername);
@@ -188,6 +189,10 @@ public class MealService implements IMealService {
             spec = spec.and(MealSpecifications.hasGoal(goal));
             log.info("Filter: goal={}", goal);
         }
+
+        if (Boolean.TRUE.equals(flagHighFiber)) { spec = spec.and(MealSpecifications.flagHighFiber()); log.info("Filter: flagHighFiber=true"); }
+        if (Boolean.TRUE.equals(flagLowSugar)) { spec = spec.and(MealSpecifications.flagLowSugar()); log.info("Filter: flagLowSugar=true"); }
+        if (Boolean.TRUE.equals(flagLowUnhealthyFats)) { spec = spec.and(MealSpecifications.flagLowUnhealthyFats()); log.info("Filter: flagLowUnhealthyFats=true"); }
 
         Sort sort = isMacroSort(sortBy)
                 ? Sort.unsorted()

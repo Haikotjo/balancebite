@@ -67,7 +67,10 @@ public class PublicDietPlanService implements IPublicDietPlanService {
             Long createdByUserId,
             String name,
             boolean includeUserCopies,
-            Goal goal
+            Goal goal,
+            Boolean flagHighFiber,
+            Boolean flagLowSugar,
+            Boolean flagLowUnhealthyFats
     ) {
         Specification<DietPlan> spec = createdByUserId != null
                 ? Specification.where(DietPlanSpecification.isTemplateCreatedBy(createdByUserId))
@@ -84,6 +87,10 @@ public class PublicDietPlanService implements IPublicDietPlanService {
         if (goal != null) {
             spec = spec.and(DietPlanSpecification.hasGoal(goal));
         }
+
+        if (Boolean.TRUE.equals(flagHighFiber)) spec = spec.and(DietPlanSpecification.flagHighFiber());
+        if (Boolean.TRUE.equals(flagLowSugar)) spec = spec.and(DietPlanSpecification.flagLowSugar());
+        if (Boolean.TRUE.equals(flagLowUnhealthyFats)) spec = spec.and(DietPlanSpecification.flagLowUnhealthyFats());
 
         if (diets != null && !diets.isEmpty()) {
             spec = spec.and((root, query, cb) -> root.join("diets").in(diets));

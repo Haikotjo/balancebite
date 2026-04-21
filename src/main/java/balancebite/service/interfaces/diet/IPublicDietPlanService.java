@@ -51,7 +51,10 @@ public interface IPublicDietPlanService {
             Long createdByUserId,
             String name,
             boolean includeUserCopies,
-            Goal goal
+            Goal goal,
+            Boolean flagHighFiber,
+            Boolean flagLowSugar,
+            Boolean flagLowUnhealthyFats
     );
     List<DietPlanNameDTO> getAllPublicDietPlanNames();
 

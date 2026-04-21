@@ -267,6 +267,9 @@ public class UserMealController {
             @RequestParam(required = false) String foodSource,
             @RequestParam(required = false) String name,
             @RequestParam(required = false) Goal goal,
+            @RequestParam(required = false) Boolean flagHighFiber,
+            @RequestParam(required = false) Boolean flagLowSugar,
+            @RequestParam(required = false) Boolean flagLowUnhealthyFats,
             Pageable pageable
     ) {
         log.info("Retrieving meals for authenticated user with filters and sorting.");
@@ -297,7 +300,10 @@ public class UserMealController {
                 maxFat,
                 foodSource,
                 name,
-                goal
+                goal,
+                flagHighFiber,
+                flagLowSugar,
+                flagLowUnhealthyFats
         );
 
         // Lege resultaten zijn GEEN fout

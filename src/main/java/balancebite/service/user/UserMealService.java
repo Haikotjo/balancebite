@@ -538,7 +538,10 @@ public class UserMealService implements IUserMealService {
             Double maxFat,
             String foodSource,
             String name,
-            Goal goal
+            Goal goal,
+            Boolean flagHighFiber,
+            Boolean flagLowSugar,
+            Boolean flagLowUnhealthyFats
     ) {
 
         Sort sort = isMacroSort(sortBy)
@@ -635,6 +638,10 @@ public class UserMealService implements IUserMealService {
         if (goal != null) {
             spec = spec.and(MealSpecifications.hasGoal(goal));
         }
+
+        if (Boolean.TRUE.equals(flagHighFiber)) spec = spec.and(MealSpecifications.flagHighFiber());
+        if (Boolean.TRUE.equals(flagLowSugar)) spec = spec.and(MealSpecifications.flagLowSugar());
+        if (Boolean.TRUE.equals(flagLowUnhealthyFats)) spec = spec.and(MealSpecifications.flagLowUnhealthyFats());
 
         spec = spec.and(MealSpecifications.withMacroSorting(sortBy, sortOrder));
 
